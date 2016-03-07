@@ -9,37 +9,36 @@ import org.chocosolver.solver.variables.VariableFactory;
 import org.chocosolver.util.ESat;
 import org.chocosolver.util.tools.ArrayUtils;
 
+import manager.EventManager;
+import models.Event;
+import models.Match;
+import models.Player;
+import models.Schedule;
+
 public class EventSolver {
 	Solver solver;
 	
+	Event event;
+	
 	// Número de soluciones que queremos que se muestren (0: todas las soluciones)
-	int solutions = 1;
+	int solutions;
 	
 	// Número de partidos que debe jugar cada jugador
-	int nMatchesPerPlayer = 1;
+	int nMatchesPerPlayer;
 	
 	// Número de horas (timeslots) que ocupa cada partido
-	int nTimeslotsPerMatch = 2;
+	int nTimeslotsPerMatch;
 	
-	String[] players = { "Novak", "Andy", "Roger", "Stan", "Rafael", "Kei", "Tomas", "David" };
-	int[] courts = { 1, 2, 3 };
-	int[] timeslots = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };
+	Player[] players;
+	int[] courts;
+	int[] timeslots;
 	
-	int nPlayers = players.length;
-	int nCourts = courts.length;
-	int nTimeslots = timeslots.length;
+	int nPlayers;
+	int nCourts;
+	int nTimeslots;
 	
 	// Timeslots en los que el jugador_i no está disponible
-	int[][] unavailability = {
-		{ 0, 1, 5 },			// Novak
-		{ 8, 10, 11 },			// Andy
-		{ 1, 2, 11 },			// Roger
-		{ 0, 1 },				// Stan
-		{ 2, 3, 4, 5, 6 },		// Rafael
-		{ 3, 4, 9, 10, 11 },	// Kei
-		{ 4, 5 },				// Tomas
-		{ 2, 3 }				// David
-	};
+	int[][] unavailability;
 	
 	// Horario. x_p,c,t -> horario_jugador,pista,hora. Dominio [0, 1]
 	IntVar[][][] x;
@@ -50,10 +49,23 @@ public class EventSolver {
 	// Pista está ocupada. Dominio [0, 1]
 	IntVar[][] crt;
 	
-	public EventSolver(int nSolutions, int matches, int matchDuration) {
+	public EventSolver(Event event, int nSolutions) {
 		solutions = nSolutions;
-		nMatchesPerPlayer = matches;
-		nTimeslotsPerMatch = matchDuration;
+		
+		this.event = event;
+		
+		players = event.getPlayers();
+		courts = event.getLocalizationsAsIntArray();
+		timeslots = event.getTimeslotsAsIntArray();
+		
+		nPlayers = players.length;
+		nCourts = courts.length;
+		nTimeslots = timeslots.length;
+		
+		unavailability = event.getUnavailableTimeslotsAs2DIntArray();
+		
+		nMatchesPerPlayer = event.getMatchesPerPlayer();
+		nTimeslotsPerMatch = event.getMatchDuration();
 	}
 	
 	public void execute() {
@@ -250,6 +262,7 @@ public class EventSolver {
 		if (solver.isFeasible() == ESat.TRUE) {
 			int nSolutions = 0;
 			boolean showMatrices = false;
+			boolean showMatches = true;
 			
 			do {
 				sb.append("Matches:\n");
@@ -275,18 +288,14 @@ public class EventSolver {
 					}
 				}
 				
-				int[][] schedule = getSchedule();
+				Schedule schedule = new Schedule(event, x);
+				sb.append(schedule.toString()).append("\n");
 				
-				sb.append(String.format("%8s", " "));
-				for (int t = 0; t < nTimeslots; t++)
-					sb.append(String.format("%4s", "t" + t));
-				sb.append("\n");
-				
-				for (int p = 0; p < nPlayers; p++) {
-					sb.append(String.format("%8s", players[p]));
-					for (int t = 0; t < nTimeslots; t++)
-						sb.append(String.format("%4s", getMatchStringValue(schedule[p][t])));
-					sb.append("\n");
+				if (showMatches) {
+					sb.append(String.format("Match duration: %d timelots\n", event.getMatchDuration()));
+					Match[] matches = schedule.getMatches();
+					for (int i = 0; i < matches.length; i++)
+						sb.append(matches[i]).append("\n");
 				}
 				
 				sb.append("\n");
@@ -304,58 +313,13 @@ public class EventSolver {
 		System.out.println(sb.toString());
 	}
 	
-	/**
-	 * Método para ayudar al formateo de la solución
-	 * 
-	 * @param  matchVal		valor del partido (ver significado en getSchedule())
-	 * @return string		cadena con la representación del valor del partido donde
-	 *     ~:	 el jugador no está disponible en esa hora
-	 *     -:    el jugador no juega a esa hora
-	 *  1..n:    el jugador juega en esa pista (n es la última pista)
-	 */
-	private String getMatchStringValue(int matchVal) {
-		String match = String.valueOf(matchVal);
-		if (matchVal == -1)
-			match = "~";
-		else if (matchVal == 0)
-			match = "-";
-		return match;
-	}
-	
-	/**
-	 * Método que devuelve un horario final con las pistas donde juega cada
-	 * jugador a cada hora, a partir de la matriz 3D de Choco con la solución
-	 * 
-	 * @return int[][] con valores -1..n donde
-	 * 	  -1:	 el jugador no está disponible en esa hora
-	 * 	   0:    el jugador no juega a esa hora
-	 * 	1..n:    el jugador juega en esa pista (n es la última pista)
-	 */
-	private int[][] getSchedule() {
-		int[][] schedule = new int[nPlayers][nTimeslots];
-		
-		for (int p = 0; p < nPlayers; p++) {
-			for (int t = 0; t < nTimeslots; t++) {
-				if (isUnavailable(p, t))
-					schedule[p][t] = -1;
-				else {
-					schedule[p][t] = 0;
-					
-					for (int c = 0; c < nCourts; c++)
-						if (x[p][c][t].getValue() == 1)
-							schedule[p][t] = c + 1; // para que las pistas estén numeradas a partir de 1
-				}
-			}
-		}
-		
-		return schedule;
-	}
-	
 	public static void main(String[] args) {
-		int s = 5; // número de soluciones a mostrar
-		int n = 1; // número de partidos que cada jugador ha de jugar
-		int m = 2; // número de horas (timeslots) que dura cada partido
+		//Event event = EventManager.getInstance().getSampleEvent();
+		Event event = EventManager.getInstance().getSample32PlayersEvent();
+		//Event event = EventManager.getInstance().getSampleSmallEvent();
 		
-		new EventSolver(s, n, m).execute();
+		int nSol = 5; // número de soluciones a mostrar
+		
+		new EventSolver(event, nSol).execute();
 	}
 }
