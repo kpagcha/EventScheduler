@@ -23,6 +23,8 @@ public class Timeslot {
 	 */
 	private TimeUnit timeUnit = TimeUnit.HOURS;
 	
+	private boolean isBreak = false;
+	
 	public Timeslot() {}
 	
 	public Timeslot(int id, int lb, int ub) {
@@ -31,8 +33,21 @@ public class Timeslot {
 		upperBound = ub;
 	}
 	
+	public Timeslot(int id, int lb, int ub, boolean isBreak) {
+		this.id = id;
+		lowerBound = lb;
+		upperBound = ub;
+		this.isBreak = isBreak;
+	}
+	
 	public Timeslot(int id, int lb, int ub, TimeUnit timeUnit) {
 		this(id, lb, ub);
+		this.timeUnit = timeUnit;
+	}
+	
+	public Timeslot(int id, int lb, int ub, boolean isBreak, TimeUnit timeUnit) {
+		this(id, lb, ub);
+		this.isBreak = isBreak;
 		this.timeUnit = timeUnit;
 	}
 	
@@ -46,6 +61,18 @@ public class Timeslot {
 	
 	public int getUpperBound() {
 		return upperBound;
+	}
+	
+	public TimeUnit getTimeUnit() {
+		return timeUnit;
+	}
+	
+	public void setIsBreak(boolean isBreak) {
+		this.isBreak = isBreak;
+	}
+	
+	public boolean getIsBreak() {
+		return isBreak;
 	}
 	
 	public String getLowerBoundStr() {

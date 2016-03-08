@@ -97,6 +97,8 @@ public class EventSolver {
 		
 		setConstraintsPlayersUnavailable();
 		
+		setConstraintsBreaks();
+		
 		setConstraintsMapMatchesBeginning();
 		
 		setConstraintsMapMatches();
@@ -125,6 +127,23 @@ public class EventSolver {
 						
 						// Además, se marca con 0 las horas de la matriz de horario/partidos si el jugador no puede jugar
 						solver.post(IntConstraintFactory.arithm(x[p][c][t], "=", VariableFactory.fixed(0, solver)));
+					}
+				}
+			}
+		}
+	}
+	
+	/**
+	 * Define las restricciones para los timeslots que pertenecen a un break (período en el que no se juega)
+	 */
+	private void setConstraintsBreaks() {
+		for (int t = 0; t < nTimeslots; t++) {
+			// Si el timeslot_t es un break, entonces en él no se puede jugar y se marca como 0
+			if (event.getTimeslotAt(t).getIsBreak()) {
+				for (int p = 0; p < nPlayers; p++) {
+					for (int c = 0; c < nCourts; c++) {
+						solver.post(IntConstraintFactory.arithm(x[p][c][t], "=", VariableFactory.fixed(0, solver)));
+						solver.post(IntConstraintFactory.arithm(g[p][c][t], "=", VariableFactory.fixed(0, solver)));
 					}
 				}
 			}
@@ -313,9 +332,10 @@ public class EventSolver {
 	}
 	
 	public static void main(String[] args) {
-		Event event = EventManager.getInstance().getSampleEvent();
+		//Event event = EventManager.getInstance().getSampleEvent();
 		//Event event = EventManager.getInstance().getSample32PlayersEvent();
 		//Event event = EventManager.getInstance().getSampleSmallEvent();
+		Event event = EventManager.getInstance().getSampleEventWithBreaks();
 		
 		int nSol = 5; // número de soluciones a mostrar
 		

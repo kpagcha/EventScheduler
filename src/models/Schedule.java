@@ -12,8 +12,9 @@ public class Schedule {
 	private Event event;
 	
 	/**
-	 * Arry de enteros de dos dimensiones que represnta el horario con valores -2..n-1 donde
-	 * 	    -2:	 el jugador no está disponible en esa hora
+	 * Arry de enteros de dos dimensiones que represnta el horario con valores -3..n-1 donde
+	 *      -3:    el timeslot corresponde a un período en el que no se juega
+	 * 	    -2:	   el jugador no está disponible en esa hora
 	 * 	    -1:    el jugador no juega a esa hora
 	 * 	0..n-1:    el jugador juega en esa la pista con ese id
 	 */
@@ -37,9 +38,11 @@ public class Schedule {
 		schedule = new int[nPlayers][nTimeslots];
 		for (int p = 0; p < nPlayers; p++) {
 			for (int t = 0; t < nTimeslots; t++) {
-				if (event.isUnavailable(p, t))
+				if (event.getTimeslotAt(t).getIsBreak())
+					schedule[p][t] = -3;
+				else if (event.isUnavailable(p, t)) {
 					schedule[p][t] = -2;
-				else {
+				} else {
 					schedule[p][t] = -1;
 					
 					for (int c = 0; c < nCourts; c++)
@@ -145,13 +148,16 @@ public class Schedule {
 	 * 
 	 * @param  matchVal		valor del partido
 	 * @return string		cadena con la representación del valor del partido donde
+	 *     *:    el timeslot corresponde a un período en el que no se juega
 	 *     ~:	 el jugador no está disponible en esa hora
 	 *     -:    el jugador no juega a esa hora
 	 *  1..n:    el jugador juega en esa pista (n es la última pista)
 	 */
 	private String getMatchStringValue(int matchVal) {
 		String match = String.valueOf(matchVal);
-		if (matchVal == -2)
+		if (matchVal == -3)
+			match = "*";
+		else if (matchVal == -2)
 			match = "~";
 		else if (matchVal == -1)
 			match = "-";
