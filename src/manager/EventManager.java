@@ -49,7 +49,7 @@ public class EventManager {
 		Timeslot[] timeslots = new Timeslot[timeslotsInt.length];
 		int oneHour = 60 * 60 * 1000;
 		for (int i = 0; i < timeslotsInt.length; i++)
-			timeslots[i] = new Timeslot(i, oneHour * i, oneHour * (i + 1), Timeslot.TimeUnit.HOURS);
+			timeslots[i] = new Timeslot(i, oneHour * i, oneHour * (i + 1));
 		
 		Event event = new Event(players, localizations, timeslots);
 		
@@ -60,14 +60,14 @@ public class EventManager {
 			
 			int t = 0;
 			for (int timeslot : unavailabilityInt[p])
-				playerUnavailability[t++] = event.getTimeslotById(timeslot);
+				playerUnavailability[t++] = event.getTimeslotAt(timeslot);
 			
 			unavailability.put(player, playerUnavailability);
 		}
 		
 		event.setUnavailableTimeslots(unavailability);
 		event.setMatchesPerPlayer(1);
-		event.setMatchDuration(4);
+		event.setMatchDuration(1);
 		
 		return event;
 	}
@@ -119,7 +119,6 @@ public class EventManager {
 			{}
 		};
 		
-		
 		Player[] players = new Player[playerNames.length];
 		for (int i = 0; i < playerNames.length; i++)
 			players[i] = new Player(i, playerNames[i]);
@@ -131,7 +130,7 @@ public class EventManager {
 		Timeslot[] timeslots = new Timeslot[timeslotsInt.length];
 		int oneHour = 60 * 60 * 1000;
 		for (int i = 0; i < timeslotsInt.length; i++)
-			timeslots[i] = new Timeslot(i, oneHour * i, oneHour * (i + 1), Timeslot.TimeUnit.HOURS);
+			timeslots[i] = new Timeslot(i, oneHour * i, oneHour * (i + 1));
 		
 		Event event = new Event(players, localizations, timeslots);
 		
@@ -142,7 +141,7 @@ public class EventManager {
 			
 			int t = 0;
 			for (int timeslot : unavailabilityInt[p])
-				playerUnavailability[t++] = event.getTimeslotById(timeslot);
+				playerUnavailability[t++] = event.getTimeslotAt(timeslot);
 			
 			unavailability.put(player, playerUnavailability);
 		}
@@ -178,7 +177,7 @@ public class EventManager {
 		Timeslot[] timeslots = new Timeslot[timeslotsInt.length];
 		int oneHour = 60 * 60 * 1000;
 		for (int i = 0; i < timeslotsInt.length; i++)
-			timeslots[i] = new Timeslot(i, oneHour * i, oneHour * (i + 1), Timeslot.TimeUnit.HOURS);
+			timeslots[i] = new Timeslot(i, oneHour * i, oneHour * (i + 1));
 		
 		Event event = new Event(players, localizations, timeslots);
 		
@@ -189,7 +188,7 @@ public class EventManager {
 			
 			int t = 0;
 			for (int timeslot : unavailabilityInt[p])
-				playerUnavailability[t++] = event.getTimeslotById(timeslot);
+				playerUnavailability[t++] = event.getTimeslotAt(timeslot);
 			
 			unavailability.put(player, playerUnavailability);
 		}

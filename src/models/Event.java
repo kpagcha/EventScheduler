@@ -122,25 +122,16 @@ public class Event {
 	}
 	
 	
-	public Player getPlayerById(int id) {
-		for (Player player : players)
-			if (player.getId() == id)
-				return player;
-		return null;
+	public Player getPlayerAt(int index) {
+		return players[index];
 	}
 	
-	public Localization getLocalizationById(int id) {
-		for (Localization localization : localizations)
-			if (localization.getId() == id)
-				return localization;
-		return null;
+	public Localization getLocalizationAt(int index) {
+		return localizations[index];
 	}
 	
-	public Timeslot getTimeslotById(int id) {
-		for (Timeslot timeslot : timeslots)
-			if (timeslot.getId() == id)
-				return timeslot;
-		return null;
+	public Timeslot getTimeslotAt(int index) {
+		return timeslots[index];
 	}
 	
 	public int getNumberOfPlayers() {

@@ -25,10 +25,14 @@ public class Timeslot {
 	
 	public Timeslot() {}
 	
-	public Timeslot(int id, int lb, int ub, TimeUnit timeUnit) {
+	public Timeslot(int id, int lb, int ub) {
 		this.id = id;
 		lowerBound = lb;
 		upperBound = ub;
+	}
+	
+	public Timeslot(int id, int lb, int ub, TimeUnit timeUnit) {
+		this(id, lb, ub);
 		this.timeUnit = timeUnit;
 	}
 	

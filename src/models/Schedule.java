@@ -95,9 +95,9 @@ public class Schedule {
 							playerAlreadyMatched.add(playerB);
 							
 							matches[matchesIndex++] = new Match(
-								new Player[]{ event.getPlayerById(playerA), event.getPlayerById(playerB) },
-								event.getLocalizationById(scheduleBeginnings[playerB][t]),
-								event.getTimeslotById(t),
+								new Player[]{ event.getPlayerAt(playerA), event.getPlayerAt(playerB) },
+								event.getLocalizationAt(scheduleBeginnings[playerB][t]),
+								event.getTimeslotAt(t),
 								event.getMatchDuration()
 							);
 						}

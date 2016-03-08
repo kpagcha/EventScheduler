@@ -173,7 +173,6 @@ public class EventSolver {
 	}
 	
 	private void setConstraintsMapMatches() {
-		// Un partido no puede empezar en una hora t y una t + 1
 		// Mapear x_p,c,t a partir de los posibles comienzos de partido (g) cuyo rango "cubre" x_t
 		for (int p = 0; p < nPlayers; p++) {
 			for (int c = 0; c < nCourts; c++) {
@@ -314,8 +313,8 @@ public class EventSolver {
 	}
 	
 	public static void main(String[] args) {
-		//Event event = EventManager.getInstance().getSampleEvent();
-		Event event = EventManager.getInstance().getSample32PlayersEvent();
+		Event event = EventManager.getInstance().getSampleEvent();
+		//Event event = EventManager.getInstance().getSample32PlayersEvent();
 		//Event event = EventManager.getInstance().getSampleSmallEvent();
 		
 		int nSol = 5; // número de soluciones a mostrar
