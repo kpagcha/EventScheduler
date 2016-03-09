@@ -1,14 +1,14 @@
 package models;
 
 public class Localization {
+	private static int lastId = 0;
+	
 	private int id;
 	private String name;
 	
-	public Localization() {}
-	
-	public Localization(int id, String name) {
-		this.id = id;
+	public Localization(String name) {
 		this.name = name;
+		id = lastId++;
 	}
 	
 	public int getId() {

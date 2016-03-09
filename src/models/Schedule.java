@@ -13,7 +13,7 @@ public class Schedule {
 	
 	/**
 	 * Arry de enteros de dos dimensiones que represnta el horario con valores -3..n-1 donde
-	 *      -3:    el timeslot corresponde a un período en el que no se juega
+	 *  	-3:    el timeslot corresponde a un período en el que no se juega
 	 * 	    -2:	   el jugador no está disponible en esa hora
 	 * 	    -1:    el jugador no juega a esa hora
 	 * 	0..n-1:    el jugador juega en esa la pista con ese id
@@ -40,7 +40,7 @@ public class Schedule {
 			for (int t = 0; t < nTimeslots; t++) {
 				if (event.getTimeslotAt(t).getIsBreak())
 					schedule[p][t] = -3;
-				else if (event.isUnavailable(p, t)) {
+				else if (event.isUnavailable(event.getPlayerAt(p), event.getTimeslotAt(t))) {
 					schedule[p][t] = -2;
 				} else {
 					schedule[p][t] = -1;

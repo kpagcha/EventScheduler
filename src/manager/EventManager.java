@@ -40,16 +40,16 @@ public class EventManager {
 		
 		Player[] players = new Player[playerNames.length];
 		for (int i = 0; i < playerNames.length; i++)
-			players[i] = new Player(i, playerNames[i]);
+			players[i] = new Player(playerNames[i]);
 		
 		Localization[] localizations = new Localization[courts.length];
 		for (int i = 0; i < courts.length; i++)
-			localizations[i] = new Localization(i, "Court " + (i + 1));
+			localizations[i] = new Localization("Court " + (i + 1));
 		
 		Timeslot[] timeslots = new Timeslot[timeslotsInt.length];
 		int oneHour = 60 * 60 * 1000;
 		for (int i = 0; i < timeslotsInt.length; i++)
-			timeslots[i] = new Timeslot(i, oneHour * i, oneHour * (i + 1));
+			timeslots[i] = new Timeslot(oneHour * i, oneHour * (i + 1));
 		
 		Event event = new Event(players, localizations, timeslots);
 		
@@ -121,16 +121,16 @@ public class EventManager {
 		
 		Player[] players = new Player[playerNames.length];
 		for (int i = 0; i < playerNames.length; i++)
-			players[i] = new Player(i, playerNames[i]);
+			players[i] = new Player(playerNames[i]);
 		
 		Localization[] localizations = new Localization[courts.length];
 		for (int i = 0; i < courts.length; i++)
-			localizations[i] = new Localization(i, "Court " + (i + 1));
+			localizations[i] = new Localization("Court " + (i + 1));
 		
 		Timeslot[] timeslots = new Timeslot[timeslotsInt.length];
 		int oneHour = 60 * 60 * 1000;
 		for (int i = 0; i < timeslotsInt.length; i++)
-			timeslots[i] = new Timeslot(i, oneHour * i, oneHour * (i + 1));
+			timeslots[i] = new Timeslot(oneHour * i, oneHour * (i + 1));
 		
 		Event event = new Event(players, localizations, timeslots);
 		
@@ -168,16 +168,16 @@ public class EventManager {
 		
 		Player[] players = new Player[playerNames.length];
 		for (int i = 0; i < playerNames.length; i++)
-			players[i] = new Player(i, playerNames[i]);
+			players[i] = new Player(playerNames[i]);
 		
 		Localization[] localizations = new Localization[courts.length];
 		for (int i = 0; i < courts.length; i++)
-			localizations[i] = new Localization(i, "Court " + (i + 1));
+			localizations[i] = new Localization("Court " + (i + 1));
 		
 		Timeslot[] timeslots = new Timeslot[timeslotsInt.length];
 		int oneHour = 60 * 60 * 1000;
 		for (int i = 0; i < timeslotsInt.length; i++)
-			timeslots[i] = new Timeslot(i, oneHour * i, oneHour * (i + 1));
+			timeslots[i] = new Timeslot(oneHour * i, oneHour * (i + 1));
 		
 		Event event = new Event(players, localizations, timeslots);
 		
@@ -222,16 +222,16 @@ public class EventManager {
 		
 		Player[] players = new Player[playerNames.length];
 		for (int i = 0; i < playerNames.length; i++)
-			players[i] = new Player(i, playerNames[i]);
+			players[i] = new Player(playerNames[i]);
 		
 		Localization[] localizations = new Localization[courts.length];
 		for (int i = 0; i < courts.length; i++)
-			localizations[i] = new Localization(i, "Court " + (i + 1));
+			localizations[i] = new Localization("Court " + (i + 1));
 		
 		Timeslot[] timeslots = new Timeslot[timeslotsInt.length];
 		int oneHour = 60 * 60 * 1000;
 		for (int i = 0; i < timeslotsInt.length; i++) {
-			timeslots[i] = new Timeslot(i, oneHour * i, oneHour * (i + 1));
+			timeslots[i] = new Timeslot(oneHour * i, oneHour * (i + 1));
 			for (int j = 0; j < breaks.length; j++)
 				if (i == breaks[j]) {
 					timeslots[i].setIsBreak(true);
@@ -239,7 +239,6 @@ public class EventManager {
 				}
 		}
 					
-				
 		
 		Event event = new Event(players, localizations, timeslots);
 		

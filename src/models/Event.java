@@ -91,14 +91,14 @@ public class Event {
 	public int[] getLocalizationsAsIntArray() {
 		int[] localizationsInt = new int[localizations.length];
 		for (int i = 0; i < localizations.length; i++)
-			localizationsInt[i] = localizations[i].getId();
+			localizationsInt[i] = i;
 		return localizationsInt;
 	}
 	
 	public int[] getTimeslotsAsIntArray() {
 		int[] timeslotsInt = new int[timeslots.length];
 		for (int i = 0; i < timeslots.length; i++)
-			timeslotsInt[i] = timeslots[i].getId();
+			timeslotsInt[i] = i;
 		return timeslotsInt;
 	}
 	
@@ -107,15 +107,13 @@ public class Event {
 		int[][] unavailableTimeslotsInt = new int[n][];
 		
 		for (Map.Entry<Player, Timeslot[]> entry : unavailableTimeslots.entrySet()) {
-			Player player = entry.getKey();
+			int playerIndex = getPlayerIndex(entry.getKey());
 			Timeslot[] unavailability = entry.getValue();
 			
-			int playerId = player.getId();
-			
-			unavailableTimeslotsInt[playerId] = new int[unavailability.length];
+			unavailableTimeslotsInt[playerIndex] = new int[unavailability.length];
 			int i = 0;
 			for (Timeslot timeslot : unavailability)
-				unavailableTimeslotsInt[playerId][i++] = timeslot.getId();
+				unavailableTimeslotsInt[playerIndex][i++] = getTimeslotIndex(timeslot);
 		}
 		
 		return unavailableTimeslotsInt;
@@ -134,6 +132,20 @@ public class Event {
 		return timeslots[index];
 	}
 	
+	public int getPlayerIndex(Player player) {
+		for (int p = 0; p < players.length; p++)
+			if (players[p].equals(player))
+				return p;
+		return -1;
+	}
+	
+	public int getTimeslotIndex(Timeslot timeslot) {
+		for (int t = 0; t < timeslots.length; t++)
+			if (timeslots[t].equals(timeslot)) 
+				return t;
+		return -1;
+	}
+	
 	public int getNumberOfPlayers() {
 		return players.length;
 	}
@@ -146,17 +158,11 @@ public class Event {
 		return timeslots.length;
 	}
 	
-	public boolean isUnavailable(int playerId, int timeslotId) {
-		Player player = null;
-		for (Player p : players)
-			if (p.getId() == playerId)
-				player = p;
-		
+	public boolean isUnavailable(Player player, Timeslot timeslot) {
 		Timeslot[] unavailablePlayerTimeslots = unavailableTimeslots.get(player);
-		for (Timeslot timeslot : unavailablePlayerTimeslots)
-			if (timeslot.getId() == timeslotId)
+		for (Timeslot t : unavailablePlayerTimeslots)
+			if (t.equals(timeslot))
 				return true;
-		
 		return false;
 	}
 }

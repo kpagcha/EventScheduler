@@ -2,7 +2,12 @@ package models;
 
 public class Timeslot {
 	/**
-	 * Identificador del timeslot
+	 * Último id
+	 */
+	private static int lastId = 0;
+	
+	/**
+	 * Identificador
 	 */
 	private int id;
 	
@@ -25,30 +30,27 @@ public class Timeslot {
 	
 	private boolean isBreak = false;
 	
-	public Timeslot() {}
-	
-	public Timeslot(int id, int lb, int ub) {
-		this.id = id;
+	public Timeslot(int lb, int ub) {
 		lowerBound = lb;
 		upperBound = ub;
+		
+		id = lastId++;
 	}
 	
-	public Timeslot(int id, int lb, int ub, boolean isBreak) {
-		this.id = id;
-		lowerBound = lb;
-		upperBound = ub;
+	public Timeslot(int lb, int ub, boolean isBreak) {
+		this(lb, ub);
 		this.isBreak = isBreak;
 	}
 	
-	public Timeslot(int id, int lb, int ub, TimeUnit timeUnit) {
-		this(id, lb, ub);
+	public Timeslot(int lb, int ub, TimeUnit timeUnit) {
+		this(lb, ub);
 		this.timeUnit = timeUnit;
 	}
 	
-	public Timeslot(int id, int lb, int ub, boolean isBreak, TimeUnit timeUnit) {
-		this(id, lb, ub);
-		this.isBreak = isBreak;
+	public Timeslot(int lb, int ub, boolean isBreak, TimeUnit timeUnit) {
+		this(lb, ub);
 		this.timeUnit = timeUnit;
+		this.isBreak = isBreak;
 	}
 	
 	public int getId() {
@@ -85,6 +87,10 @@ public class Timeslot {
 	
 	public String toString() {
 		return getLowerBoundStr() + " - " + getUpperBoundStr();
+	}
+	
+	public boolean equals(Timeslot timeslot) {
+		return id == timeslot.getId();
 	}
 	
 	private String formatStringWithTimeUnit(int value) {
