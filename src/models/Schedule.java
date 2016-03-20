@@ -70,7 +70,7 @@ public class Schedule {
 		int[][] scheduleBeginnings = new int[nPlayers][nTimeslots];
 		for (int p = 0; p < nPlayers; p++) {
 			for (int t = 0; t < nTimeslots; t++) {
-				// si se juega un partido se marcan los siguientes con -1
+				// si se juega un partido se marcan los siguientes de su rango con -1
 				if (schedule[p][t] >= 0) {
 					scheduleBeginnings[p][t] = schedule[p][t];
 					for (int i = 1; i < matchDuration; i++)
@@ -82,28 +82,47 @@ public class Schedule {
 			}
 		}
 		
-		Match[] matches = new Match[(event.getNumberOfPlayers() / 2) * event.getMatchesPerPlayer()];
+		Match[] matches = new Match[(event.getNumberOfPlayers() / event.getPlayersPerMatch()) * event.getMatchesPerPlayer()];
 		
+		int nPlayersPerMatch = event.getPlayersPerMatch();
 		int matchesIndex = 0;
 		for (int t = 0; t < nTimeslots; t++) {
-			List<Integer> playerAlreadyMatched = new ArrayList<>();
+			List<Integer> playersAlreadyMatched = new ArrayList<>();
 			
-			for (int playerA = 0; playerA < nPlayers - 1; playerA++) {
-				if (scheduleBeginnings[playerA][t] >= 0) {
-					for (int playerB = playerA + 1; playerB < nPlayers; playerB++) {
-						// Si su pista coincide se crea un partido
-						if (scheduleBeginnings[playerB][t] >= 0 && !playerAlreadyMatched.contains(playerB) 
-							&& scheduleBeginnings[playerA][t] == scheduleBeginnings[playerB][t]) {
+			for (int thisPlayer = 0; thisPlayer < nPlayers - nPlayersPerMatch + 1; thisPlayer++) {
+				if (scheduleBeginnings[thisPlayer][t] >= 0) {
+					List<Integer> playersBelongingToMatch = new ArrayList<>();
+					playersBelongingToMatch.add(thisPlayer);
+					
+					boolean matchCompleted = false;
+					
+					for (int otherPlayer = thisPlayer + 1; otherPlayer < nPlayers; otherPlayer++) {
+						if (scheduleBeginnings[otherPlayer][t] >= 0 && !playersAlreadyMatched.contains(otherPlayer)
+								&& scheduleBeginnings[thisPlayer][t] == scheduleBeginnings[otherPlayer][t]) {
 							
-							playerAlreadyMatched.add(playerB);
+							playersAlreadyMatched.add(otherPlayer);
 							
-							matches[matchesIndex++] = new Match(
-								new Player[]{ event.getPlayerAt(playerA), event.getPlayerAt(playerB) },
-								event.getLocalizationAt(scheduleBeginnings[playerB][t]),
+							playersBelongingToMatch.add(otherPlayer);
+							
+							if (playersBelongingToMatch.size() == nPlayersPerMatch) {
+								matchCompleted = true;
+								break;
+							}
+						}
+					}
+					
+					if (matchCompleted || nPlayersPerMatch == 1) {
+						Player[] playersArray = new Player[nPlayersPerMatch];
+						int i = 0;
+						for (int playerIndex : playersBelongingToMatch)
+							playersArray[i++] = event.getPlayerAt(playerIndex);
+						
+						matches[matchesIndex++] = new Match(
+								playersArray,
+								event.getLocalizationAt(scheduleBeginnings[thisPlayer][t]),
 								event.getTimeslotAt(t),
 								event.getMatchDuration()
-							);
-						}
+						);
 					}
 				}
 			}

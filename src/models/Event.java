@@ -4,6 +4,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Event {
+	private String name;
+	
 	// Jugadores o equipos que participan en el evento
 	private Player[] players;
 	
@@ -22,16 +24,19 @@ public class Event {
 	// Número de timeslots que dura cada partido (preted. 2)
 	private int nTimeslotsPerMatch = 2;
 	
-	public Event() {}
+	// Número de jugadores que componen un partido (lo normal es 2)
+	private int nPlayersPerMatch = 2;
 	
-	public Event(Player[] players, Localization[] localizations, Timeslot[] timeslots) {
+	public Event(String name, Player[] players, Localization[] localizations, Timeslot[] timeslots) {
+		this.name = name;
 		this.players = players;
 		this.localizations = localizations;
 		this.timeslots = timeslots;
 		unavailableTimeslots = new HashMap<Player, Timeslot[]>(players.length);
 	}
 	
-	public Event(Player[] players, Localization[] localizations, Timeslot[] timeslots, Map<Player, Timeslot[]> unavailability, int nMatches, int matchDuration) {
+	public Event(String name, Player[] players, Localization[] localizations, Timeslot[] timeslots, Map<Player, Timeslot[]> unavailability, int nMatches, int matchDuration) {
+		this.name = name;
 		this.players = players;
 		this.localizations = localizations;
 		this.timeslots = timeslots;
@@ -72,8 +77,8 @@ public class Event {
 		return unavailableTimeslots;
 	}
 	
-	public void setMatchesPerPlayer(int n) {
-		nMatchesPerPlayer = n;
+	public void setMatchesPerPlayer(int nMatches) {
+		nMatchesPerPlayer = nMatches;
 	}
 	
 	public int getMatchesPerPlayer() {
@@ -86,6 +91,14 @@ public class Event {
 	
 	public int getMatchDuration() {
 		return nTimeslotsPerMatch;
+	}
+	
+	public void setPlayersPerMatch(int nPlayers) {
+		nPlayersPerMatch = nPlayers;
+	}
+	
+	public int getPlayersPerMatch() {
+		return nPlayersPerMatch;
 	}
 	
 	public int[] getLocalizationsAsIntArray() {
@@ -164,5 +177,9 @@ public class Event {
 			if (t.equals(timeslot))
 				return true;
 		return false;
+	}
+	
+	public String toString() {
+		return name;
 	}
 }

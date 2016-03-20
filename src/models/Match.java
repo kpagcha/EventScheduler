@@ -16,6 +16,10 @@ public class Match {
 	}
 	
 	public String toString() {
-		return String.format("At %s (%d) in %s: %s vs %s", timeslot.getLowerBoundStr(), matchDuration, localization, players[0], players[1]);
+		String matchStr = String.format("At %s (%d) in %s: ", timeslot.getLowerBoundStr(), matchDuration, localization);
+		for (Player player : players)
+			matchStr += String.format("%s, ", player);
+		
+		return matchStr.substring(0, matchStr.length() - 2);
 	}
 }

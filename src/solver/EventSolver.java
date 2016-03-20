@@ -9,7 +9,6 @@ import org.chocosolver.solver.variables.VariableFactory;
 import org.chocosolver.util.ESat;
 import org.chocosolver.util.tools.ArrayUtils;
 
-import manager.EventManager;
 import models.Event;
 import models.Match;
 import models.Player;
@@ -20,14 +19,14 @@ public class EventSolver {
 	
 	Event event;
 	
-	// Número de soluciones que queremos que se muestren (0: todas las soluciones)
-	int solutions;
-	
 	// Número de partidos que debe jugar cada jugador
 	int nMatchesPerPlayer;
 	
 	// Número de horas (timeslots) que ocupa cada partido
 	int nTimeslotsPerMatch;
+	
+	// Número de jugadores por partido (lo normal será 2)
+	int nPlayersPerMatch;
 	
 	Player[] players;
 	int[] courts;
@@ -49,9 +48,7 @@ public class EventSolver {
 	// Pista está ocupada. Dominio [0, 1]
 	IntVar[][] crt;
 	
-	public EventSolver(Event event, int nSolutions) {
-		solutions = nSolutions;
-		
+	public EventSolver(Event event) {
 		this.event = event;
 		
 		players = event.getPlayers();
@@ -66,6 +63,7 @@ public class EventSolver {
 		
 		nMatchesPerPlayer = event.getMatchesPerPlayer();
 		nTimeslotsPerMatch = event.getMatchDuration();
+		nPlayersPerMatch = event.getPlayersPerMatch();
 	}
 	
 	public void execute() {
@@ -73,7 +71,7 @@ public class EventSolver {
 		buildModel();
 		configureSearch();
 		solve();
-		output();
+		//outputAllSolutions();
 	}
 	
 	private void createSolver() {
@@ -219,7 +217,7 @@ public class EventSolver {
 	
 	private void setConstraintsPlayersInCourt() {
 		// Puede haber 0 jugadores (no hay partido) o 2 (hay partido)
-		crt = VariableFactory.enumeratedMatrix("OcuppiedCourts", nCourts, nTimeslots, new int[]{0, 2}, solver);
+		crt = VariableFactory.enumeratedMatrix("OcuppiedCourts", nCourts, nTimeslots, new int[]{0, nPlayersPerMatch}, solver);
 		
 		for (int c = 0; c < nCourts; c++) {
 			for (int t = 0; t < nTimeslots; t++) {
@@ -274,8 +272,12 @@ public class EventSolver {
 		solver.findSolution();
 	}
 	
-	private void output() {
+	@SuppressWarnings("unused")
+	private void printAllSolutions() {
 		StringBuilder sb = new StringBuilder("Tennis tournament\n\n");
+		
+		// Número de soluciones a mostrar (0: todas las soluciones)
+		int solutions = 5;
 		
 		if (solver.isFeasible() == ESat.TRUE) {
 			int nSolutions = 0;
@@ -331,14 +333,15 @@ public class EventSolver {
 		System.out.println(sb.toString());
 	}
 	
-	public static void main(String[] args) {
-		//Event event = EventManager.getInstance().getSampleEvent();
-		//Event event = EventManager.getInstance().getSample32PlayersEvent();
-		//Event event = EventManager.getInstance().getSampleSmallEvent();
-		Event event = EventManager.getInstance().getSampleEventWithBreaks();
-		
-		int nSol = 5; // número de soluciones a mostrar
-		
-		new EventSolver(event, nSol).execute();
+	public Schedule getSchedule() {
+		if (solver.isFeasible() == ESat.TRUE) {
+			Schedule schedule = new Schedule(event, x);
+			solver.nextSolution();
+				
+			return schedule;
+		} else {
+			System.out.println("Problem infeasible.");
+		}
+		return null;
 	}
 }
