@@ -1,96 +1,127 @@
 package manager;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import models.Event;
 import models.Match;
+import models.Player;
 import models.Schedule;
+import models.Timeslot;
 import solver.EventSolver;
 
 public class Tournament {
-	/**
-	 * Distintas categorías del evento
-	 */
-	
+	private String name;
 	private Event[] events;
-	/**
-	 * Una de las soluciones de los horarios calculados de cada categoría
-	 */
+
 	private Schedule[] currentSchedules;
 	
-	/**
-	 * Solvers para cada categoría
-	 */
-	private EventSolver[] solvers;
+	private EventSolver solver;
 	
-	public Tournament(Event[] categories) {
+	public Tournament(String name, Event[] categories) {
+		this.name = name;
 		events = categories;
 		
-		solvers = new EventSolver[events.length];
-		for (int i = 0; i < solvers.length; i++) {
-			solvers[i] = new EventSolver(events[i]);
-			solvers[i].execute();
+		solver = new EventSolver(this);
+		solver.execute();
+		
+		currentSchedules = new Schedule[categories.length];
+	}
+	
+	public Event[] getEvents() {
+		return events;
+	}
+	
+	/**
+	 * Devuelve todos los jugadores que componen las distintas categorías del torneo, teniendo en cuenta
+	 * a los jugadores que juegan en distintas categorías a la vez
+	 * 
+	 * @return lista de jugadores del torneo
+	 */
+	public List<Player> getAllPlayers() {
+		List<Player> players = new ArrayList<Player>();
+		
+		for (Event event : events) {
+			Player[] eventPlayers = event.getPlayers();
+			for (Player player : eventPlayers)
+				if (!players.contains(player))
+					players.add(player);
 		}
 		
-		currentSchedules = new Schedule[solvers.length];
+		return players;
+	}
+	
+	/**
+	 * Devuelve todos los timeslots que componen las distintas categorías del torneo, teniendo en cuenta
+	 * los timeslots compartidos por distintas categorías
+	 * @return lista de timeslots del torneo
+	 */
+	public List<Timeslot> getAllTimeslots() {
+		List<Timeslot> timeslots = new ArrayList<Timeslot>();
+		
+		for (Event event : events) {
+			Timeslot[] eventTimeslots = event.getTimeslots();
+			for (Timeslot timeslot : eventTimeslots)
+				if (!timeslots.contains(timeslot))
+					timeslots.add(timeslot);
+		}
+		
+		return timeslots;
 	}
 	
 	public Schedule[] getSchedules() {
-		for (int i = 0; i < solvers.length; i++) {
-			currentSchedules[i] = solvers[i].getSchedule();
-		}
+		currentSchedules = solver.getSchedules();
 		return currentSchedules;
 	}
 	
 	public void printCurrentSchedules() {
 		StringBuilder sb = new StringBuilder();
 		
-		for (int i = 0; i < currentSchedules.length; i++) {
-			Schedule schedule = currentSchedules[i];
-			
-			sb.append(String.format("Category %d\n\n", i));
-			if (schedule == null)
-				sb.append("No more solutions found for Category " + i + ".");
-			else
-				sb.append(schedule.toString());
-			
-			sb.append("\n");
-			
-			if (schedule != null) {
-				sb.append(String.format("Match duration: %d timelots\n", events[i].getMatchDuration()));
-				Match[] matches = schedule.getMatches();
-				for (int j = 0; j < matches.length; j++)
-					sb.append(matches[j]).append("\n");
-			}
+		if (currentSchedules == null)
+			sb.append("No more solutions found.\n");
+		else {
+			for (int i = 0; i < currentSchedules.length; i++) {
+				Schedule schedule = currentSchedules[i];
 				
-			sb.append("\n");
+				sb.append(schedule.toString());
+				
+				sb.append("\n");
+				
+				if (schedule != null) {
+					sb.append(String.format("Match duration: %d timelots\n", events[i].getMatchDuration()));
+					Match[] matches = schedule.getMatches();
+					for (int j = 0; j < matches.length; j++)
+						sb.append(matches[j]).append("\n");
+				}
+					
+				sb.append("\n");
+			}
 		}
 		
 		System.out.println(sb.toString());
 	}
 	
 	public String toString() {
-		return "Tournament with " + events.length + " categories";
+		return name;
 	}
 	
 	public static void main(String[] args) {
-		Event event = EventManager.getInstance().getSampleEvent();
-		//Event event = EventManager.getInstance().getSample32PlayersEvent();
-		//Event event = EventManager.getInstance().getSampleSmallEvent();
-		//Event event = EventManager.getInstance().getSampleEventWithBreaks();
-		//Event event2 = EventManager.getInstance().getSampleSmallEvent();
+		Tournament tournament = EventManager.getInstance().getSampleSmallTournament();
 		
-		//Tournament tournament = new Tournament(new Event[]{ event, event2 });
-		
-		//Event event = EventManager.getInstance().getSampleEventWith3PlayersMatches();
-		//Event event = EventManager.getInstance().getSampleEventWith1PlayerMatches();
-		
-		Tournament tournament = new Tournament(new Event[]{ event });
-		
-		int nSol = 1;
+		int nSol = 15;
+		int solutions = 0;
 		for (int i = 0; i < nSol; i++) {
 			tournament.getSchedules();
 			
+			if (tournament.currentSchedules == null)
+				break;
+			
+			System.out.println("-------------------------------------------------------");
 			System.out.println(tournament + "\n");
 			tournament.printCurrentSchedules();
+			
+			solutions++;
 		}
+		System.out.println(solutions + " solutions found.");
 	}
 }

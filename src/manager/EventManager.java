@@ -19,354 +19,99 @@ public class EventManager {
 		return instance;
 	}
 	
-	public Event getSampleEvent() {
-		String[] playerNames = { "Novak", "Andy", "Roger", "Stan", "Rafael", "Kei", "Tomas", "David" };
+	public Tournament getSampleSmallTournament() {
+		Player[] players = buildPlayers(new String[]{ "Novak", "Andy", "Rafael", "Stan", "David", "Tomas" });
 		
-		int[] courts = { 1, 2, 3 };
+		Player[] players1 = new Player[]{ players[0], players[1], players[2], players[3] };
 		
-		int[] timeslotsInt = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };
+		Localization[] localizations = buildLocalizations(new int[]{ 1 });
 		
-		int[][] unavailabilityInt = {
-			{ 0, 1, 5 },			// Novak
-			{ 8, 10, 11 },			// Andy
-			{ 1, 2, 11 },			// Roger
-			{ 0, 1 },				// Stan
-			{ 2, 3, 4, 5, 6 },		// Rafael
-			{ 3, 4, 9, 10, 11 },	// Kei
-			{ 4, 5 },				// Tomas
-			{ 2, 3 }				// David
-		};
+		Timeslot[] timeslots = buildTimeslots(
+			new int[]{ 0, 1, 2, 3 },
+			new int[]{ }
+		);
+		
+		Event event1 = new Event("Category 1", players1, localizations, timeslots);
+		
+		Map<Player, Timeslot[]> unavailability1 = buildUnavailability(
+			event1,
+			new int[][]
+			{
+				{ },
+				{ },
+				{ },
+				{ }
+			}
+		);
+		
+		event1.setUnavailableTimeslots(unavailability1);
+		event1.setMatchesPerPlayer(1);
+		event1.setMatchDuration(2);
 		
 		
-		Player[] players = new Player[playerNames.length];
-		for (int i = 0; i < playerNames.length; i++)
-			players[i] = new Player(playerNames[i]);
+		Player[] players2 = new Player[]{ players[0], players[1], players[2], players[3] };
 		
-		Localization[] localizations = new Localization[courts.length];
-		for (int i = 0; i < courts.length; i++)
-			localizations[i] = new Localization("Court " + (i + 1));
+		Event event2 = new Event("Category 2", players2, localizations, timeslots);
 		
-		Timeslot[] timeslots = new Timeslot[timeslotsInt.length];
-		int oneHour = 60 * 60 * 1000;
-		for (int i = 0; i < timeslotsInt.length; i++)
-			timeslots[i] = new Timeslot(oneHour * i, oneHour * (i + 1));
+		Map<Player, Timeslot[]> unavailability2 = buildUnavailability(
+			event2,
+			new int[][]
+			{
+				{ },
+				{ },
+				{ },
+				{ }
+			}
+		);
 		
-		Event event = new Event("SampleEvent", players, localizations, timeslots);
+		event2.setUnavailableTimeslots(unavailability2);
+		event2.setMatchesPerPlayer(1);
+		event2.setMatchDuration(2);
 		
-		Map<Player, Timeslot[]> unavailability = new HashMap<Player, Timeslot[]>(players.length);
-		for (int p = 0; p < unavailabilityInt.length; p++) {
-			Player player = players[p];
-			Timeslot[] playerUnavailability = new Timeslot[unavailabilityInt[p].length];
-			
-			int t = 0;
-			for (int timeslot : unavailabilityInt[p])
-				playerUnavailability[t++] = event.getTimeslotAt(timeslot);
-			
-			unavailability.put(player, playerUnavailability);
-		}
-		
-		event.setUnavailableTimeslots(unavailability);
-		event.setMatchesPerPlayer(1);
-		event.setMatchDuration(4);
-		
-		return event;
+		return new Tournament("Small Tournament", new Event[]{ event1, event2 });
 	}
 	
-	public Event getSample32PlayersEvent() {
-		String[] playerNames = {
-				"Djokovic", "Murray", "Federer", "Wawrinka", "Nadal", "Nishikori", "Berdych", "Ferrer",
-				"Tsonga", "Gasquet", "Isner", "Cilic", "Thiem", "Raonic", "Anderson", "Monfils",
-				"Bautista Agut", "Goffin", "Simon", "Tomic", "Lopez", "Paire", "Troicki", "Sock",
-				"Cuevas", "Dimitrov", "Kyrgios", "Klizan", "Dolgopolov", "Kohlschreiber", "Fognini", "Chardy"
-		};
-		
-		int[] courts = { 1, 2, 3, 4, 5, 6 };
-		
-		int[] timeslotsInt = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };
-		
-		int[][] unavailabilityInt = {
-			{ 3, 4, 5, 6, 7, 8, 9, 10, 11 },	// Djokovic		
-			{},
-			{},
-			{},
-			{},
-			{},
-			{},
-			{},
-			{},
-			{},
-			{},
-			{},
-			{},
-			{},
-			{},
-			{},
-			{},
-			{},
-			{},
-			{},
-			{},
-			{},
-			{},
-			{},
-			{},
-			{},
-			{},
-			{},
-			{},
-			{},
-			{},
-			{}
-		};
-		
-		Player[] players = new Player[playerNames.length];
-		for (int i = 0; i < playerNames.length; i++)
-			players[i] = new Player(playerNames[i]);
-		
-		Localization[] localizations = new Localization[courts.length];
-		for (int i = 0; i < courts.length; i++)
-			localizations[i] = new Localization("Court " + (i + 1));
-		
-		Timeslot[] timeslots = new Timeslot[timeslotsInt.length];
-		int oneHour = 60 * 60 * 1000;
-		for (int i = 0; i < timeslotsInt.length; i++)
-			timeslots[i] = new Timeslot(oneHour * i, oneHour * (i + 1));
-		
-		Event event = new Event("32-players Event", players, localizations, timeslots);
-		
-		Map<Player, Timeslot[]> unavailability = new HashMap<Player, Timeslot[]>(players.length);
-		for (int p = 0; p < unavailabilityInt.length; p++) {
-			Player player = players[p];
-			Timeslot[] playerUnavailability = new Timeslot[unavailabilityInt[p].length];
-			
-			int t = 0;
-			for (int timeslot : unavailabilityInt[p])
-				playerUnavailability[t++] = event.getTimeslotAt(timeslot);
-			
-			unavailability.put(player, playerUnavailability);
-		}
-		
-		event.setUnavailableTimeslots(unavailability);
-		event.setMatchesPerPlayer(1);
-		event.setMatchDuration(2);
-		
-		return event;
+	private Player[] buildPlayers(String[] playersArray) {
+		Player[] players = new Player[playersArray.length];
+		for (int i = 0; i < playersArray.length; i++)
+			players[i] = new Player(playersArray[i]);
+		return players;
 	}
 	
-	public Event getSampleSmallEvent() {
-		String[] playerNames = { "Novak", "Andy" };
-		
-		int[] courts = { 1, 2 };
-		
-		int[] timeslotsInt = { 0, 1, 2, 3 };
-		
-		int[][] unavailabilityInt = {
-			{ },			    // Novak
-			{ },			    // Andy
-		};
-		
-		
-		Player[] players = new Player[playerNames.length];
-		for (int i = 0; i < playerNames.length; i++)
-			players[i] = new Player(playerNames[i]);
-		
-		Localization[] localizations = new Localization[courts.length];
-		for (int i = 0; i < courts.length; i++)
+	private Localization[] buildLocalizations(int[] courtsArray) {
+		Localization[] localizations = new Localization[courtsArray.length];
+		for (int i = 0; i < courtsArray.length; i++)
 			localizations[i] = new Localization("Court " + (i + 1));
-		
-		Timeslot[] timeslots = new Timeslot[timeslotsInt.length];
-		int oneHour = 60 * 60 * 1000;
-		for (int i = 0; i < timeslotsInt.length; i++)
-			timeslots[i] = new Timeslot(oneHour * i, oneHour * (i + 1));
-		
-		Event event = new Event("Small Event", players, localizations, timeslots);
-		
-		Map<Player, Timeslot[]> unavailability = new HashMap<Player, Timeslot[]>(players.length);
-		for (int p = 0; p < unavailabilityInt.length; p++) {
-			Player player = players[p];
-			Timeslot[] playerUnavailability = new Timeslot[unavailabilityInt[p].length];
-			
-			int t = 0;
-			for (int timeslot : unavailabilityInt[p])
-				playerUnavailability[t++] = event.getTimeslotAt(timeslot);
-			
-			unavailability.put(player, playerUnavailability);
-		}
-		
-		event.setUnavailableTimeslots(unavailability);
-		event.setMatchesPerPlayer(1);
-		event.setMatchDuration(2);
-		
-		return event;
+		return localizations;
 	}
 	
-	public Event getSampleEventWithBreaks() {
-		String[] playerNames = { "Novak", "Andy", "Roger", "Stan", "Rafael", "Kei", "Tomas", "David" };
-		
-		int[] courts = { 1, 2, 3 };
-		
-		int[] timeslotsInt = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 };
-		int[] breaks = { 3, 7, 11 };
- 		
-		int[][] unavailabilityInt = {
-			{ 0, 1, 5 },			// Novak
-			{ 8, 10, 11 },			// Andy
-			{ 1, 2, 11 },			// Roger
-			{ 0, 1 },				// Stan
-			{ 2, 3, 4, 5, 6 },		// Rafael
-			{ 3, 4, 9, 10, 11 },	// Kei
-			{ 4, 5 },				// Tomas
-			{ 2, 3 }				// David
-		};
-		
-		
-		Player[] players = new Player[playerNames.length];
-		for (int i = 0; i < playerNames.length; i++)
-			players[i] = new Player(playerNames[i]);
-		
-		Localization[] localizations = new Localization[courts.length];
-		for (int i = 0; i < courts.length; i++)
-			localizations[i] = new Localization("Court " + (i + 1));
-		
-		Timeslot[] timeslots = new Timeslot[timeslotsInt.length];
+	private Timeslot[] buildTimeslots(int[] timeslotsArray, int[] breaks) {
+		Timeslot[] timeslots = new Timeslot[timeslotsArray.length];
 		int oneHour = 60 * 60 * 1000;
-		for (int i = 0; i < timeslotsInt.length; i++) {
+		for (int i = 0; i < timeslotsArray.length; i++) {
 			timeslots[i] = new Timeslot(oneHour * i, oneHour * (i + 1));
 			for (int j = 0; j < breaks.length; j++)
 				if (i == breaks[j]) {
 					timeslots[i].setIsBreak(true);
 					break;
 				}
-		}
-					
-		
-		Event event = new Event("SampleEvent with Breaks", players, localizations, timeslots);
-		
-		Map<Player, Timeslot[]> unavailability = new HashMap<Player, Timeslot[]>(players.length);
-		for (int p = 0; p < unavailabilityInt.length; p++) {
-			Player player = players[p];
-			Timeslot[] playerUnavailability = new Timeslot[unavailabilityInt[p].length];
-			
-			int t = 0;
-			for (int timeslot : unavailabilityInt[p])
-				playerUnavailability[t++] = event.getTimeslotAt(timeslot);
-			
-			unavailability.put(player, playerUnavailability);
-		}
-		
-		event.setUnavailableTimeslots(unavailability);
-		event.setMatchesPerPlayer(1);
-		event.setMatchDuration(3);
-		
-		return event;
+		}				
+		return timeslots;
 	}
 	
-	public Event getSampleEventWith3PlayersMatches() {
-		String[] playerNames = { "Novak", "Andy", "Roger", "Stan", "Rafael", "Kei", "Tomas", "David", "Jo-Wilfried" };
-		
-		int[] courts = { 1, 2, 3 };
-		
-		int[] timeslotsInt = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };
-		
-		int[][] unavailabilityInt = {
-			{ 0, 1, 5 },			// Novak
-			{ 8, 10, 11 },			// Andy
-			{ 1, 2, 11 },			// Roger
-			{ 0, 1 },				// Stan
-			{ 2, 3, 4, 5, 6 },		// Rafael
-			{ 3, 4, 9, 10, 11 },	// Kei
-			{ 4, 5 },				// Tomas
-			{ 2, 3 },				// David
-			{ }						// Jo-Wilfried
-		};
-		
-		
-		Player[] players = new Player[playerNames.length];
-		for (int i = 0; i < playerNames.length; i++)
-			players[i] = new Player(playerNames[i]);
-		
-		Localization[] localizations = new Localization[courts.length];
-		for (int i = 0; i < courts.length; i++)
-			localizations[i] = new Localization("Court " + (i + 1));
-		
-		Timeslot[] timeslots = new Timeslot[timeslotsInt.length];
-		int oneHour = 60 * 60 * 1000;
-		for (int i = 0; i < timeslotsInt.length; i++)
-			timeslots[i] = new Timeslot(oneHour * i, oneHour * (i + 1));
-		
-		Event event = new Event("SampleEvent", players, localizations, timeslots);
-		
+	private Map<Player, Timeslot[]> buildUnavailability(Event event, int[][] unavailabilityArray) {
+		Player[] players = event.getPlayers();
 		Map<Player, Timeslot[]> unavailability = new HashMap<Player, Timeslot[]>(players.length);
-		for (int p = 0; p < unavailabilityInt.length; p++) {
+		for (int p = 0; p < unavailabilityArray.length; p++) {
 			Player player = players[p];
-			Timeslot[] playerUnavailability = new Timeslot[unavailabilityInt[p].length];
+			Timeslot[] playerUnavailability = new Timeslot[unavailabilityArray[p].length];
 			
 			int t = 0;
-			for (int timeslot : unavailabilityInt[p])
+			for (int timeslot : unavailabilityArray[p])
 				playerUnavailability[t++] = event.getTimeslotAt(timeslot);
 			
 			unavailability.put(player, playerUnavailability);
 		}
-		
-		event.setUnavailableTimeslots(unavailability);
-		event.setMatchesPerPlayer(2);
-		event.setMatchDuration(2);
-		event.setPlayersPerMatch(3);
-		
-		return event;
-	}
-	
-	public Event getSampleEventWith1PlayerMatches() {
-		String[] playerNames = { "Novak", "Andy", "Roger", "Stan", "Rafael", "Kei", "Tomas", "David" };
-		
-		int[] courts = { 1, 2, 3 };
-		
-		int[] timeslotsInt = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };
-		
-		int[][] unavailabilityInt = {
-			{ 0, 1, 5 },			// Novak
-			{ 8, 10, 11 },			// Andy
-			{ 1, 2, 11 },			// Roger
-			{ 0, 1 },				// Stan
-			{ 2, 3, 4, 5, 6 },		// Rafael
-			{ 3, 4, 9, 10, 11 },	// Kei
-			{ 4, 5 },				// Tomas
-			{ 2, 3 }				// David
-		};
-		
-		
-		Player[] players = new Player[playerNames.length];
-		for (int i = 0; i < playerNames.length; i++)
-			players[i] = new Player(playerNames[i]);
-		
-		Localization[] localizations = new Localization[courts.length];
-		for (int i = 0; i < courts.length; i++)
-			localizations[i] = new Localization("Court " + (i + 1));
-		
-		Timeslot[] timeslots = new Timeslot[timeslotsInt.length];
-		int oneHour = 60 * 60 * 1000;
-		for (int i = 0; i < timeslotsInt.length; i++)
-			timeslots[i] = new Timeslot(oneHour * i, oneHour * (i + 1));
-		
-		Event event = new Event("SampleEvent", players, localizations, timeslots);
-		
-		Map<Player, Timeslot[]> unavailability = new HashMap<Player, Timeslot[]>(players.length);
-		for (int p = 0; p < unavailabilityInt.length; p++) {
-			Player player = players[p];
-			Timeslot[] playerUnavailability = new Timeslot[unavailabilityInt[p].length];
-			
-			int t = 0;
-			for (int timeslot : unavailabilityInt[p])
-				playerUnavailability[t++] = event.getTimeslotAt(timeslot);
-			
-			unavailability.put(player, playerUnavailability);
-		}
-		
-		event.setUnavailableTimeslots(unavailability);
-		event.setMatchesPerPlayer(2);
-		event.setMatchDuration(2);
-		event.setPlayersPerMatch(1);
-		
-		return event;
+		return unavailability;
 	}
 }

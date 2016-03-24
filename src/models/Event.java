@@ -100,7 +100,7 @@ public class Event {
 	public int getPlayersPerMatch() {
 		return nPlayersPerMatch;
 	}
-	
+	/*
 	public int[] getLocalizationsAsIntArray() {
 		int[] localizationsInt = new int[localizations.length];
 		for (int i = 0; i < localizations.length; i++)
@@ -114,6 +114,7 @@ public class Event {
 			timeslotsInt[i] = i;
 		return timeslotsInt;
 	}
+	*/
 	
 	public int[][] getUnavailableTimeslotsAs2DIntArray() {
 		int n = unavailableTimeslots.size();
@@ -131,7 +132,6 @@ public class Event {
 		
 		return unavailableTimeslotsInt;
 	}
-	
 	
 	public Player getPlayerAt(int index) {
 		return players[index];
@@ -169,6 +169,13 @@ public class Event {
 	
 	public int getNumberOfTimeslots() {
 		return timeslots.length;
+	}
+	
+	public boolean containsPlayer(Player player) {
+		for (Player p : players)
+			if (p.equals(player))
+				return true;
+		return false;
 	}
 	
 	public boolean isUnavailable(Player player, Timeslot timeslot) {

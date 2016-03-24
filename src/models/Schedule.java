@@ -140,9 +140,9 @@ public class Schedule {
 	 * @return representación en forma de cadena del horario
 	 */
 	private String scheduleToString(int[][] scheduleArray) {
-		StringBuilder sb = new StringBuilder();
+		StringBuilder sb = new StringBuilder(event.toString());
 		
-		sb.append(String.format("%8s", " "));
+		sb.append(String.format("\n\n%8s", " "));
 		for (int t = 0; t < nTimeslots; t++)
 			sb.append(String.format("%4s", "t" + t));
 		sb.append("\n");
