@@ -7,6 +7,7 @@ import models.Event;
 import models.Localization;
 import models.Player;
 import models.Timeslot;
+import models.Tournament;
 
 public class EventManager {
 	private static EventManager instance = null;
@@ -20,55 +21,91 @@ public class EventManager {
 	}
 	
 	public Tournament getSampleSmallTournament() {
-		Player[] players = buildPlayers(new String[]{ "Novak", "Andy", "Rafael", "Stan", "David", "Tomas" });
+		// EVENT 1 --------------------------------------------
 		
-		Player[] players1 = new Player[]{ players[0], players[1], players[2], players[3] };
-		
-		Localization[] localizations = buildLocalizations(new int[]{ 1 });
-		
+		Player[] players = buildPlayers(new String[]{ "Djokovic", "Federer", "Nadal", "Murray", "Wawrinka", "Ferrer", "Nishikori", "Berdych" });
+		Localization[] localizations = buildLocalizations(new int[]{ 1, 2 });
 		Timeslot[] timeslots = buildTimeslots(
-			new int[]{ 0, 1, 2, 3 },
+			new int[]{ 0, 1, 2, 3, 4, 5, 6, 7, 8 },
 			new int[]{ }
 		);
 		
-		Event event1 = new Event("Category 1", players1, localizations, timeslots);
-		
-		Map<Player, Timeslot[]> unavailability1 = buildUnavailability(
-			event1,
-			new int[][]
-			{
-				{ },
-				{ },
-				{ },
-				{ }
-			}
-		);
-		
-		event1.setUnavailableTimeslots(unavailability1);
+		Event event1 = new Event("Category 1", new Player[]{ players[0], players[1], players[2], players[3] }, localizations, timeslots);
 		event1.setMatchesPerPlayer(1);
 		event1.setMatchDuration(2);
 		
+		// EVENT 2 --------------------------------------------
 		
-		Player[] players2 = new Player[]{ players[0], players[1], players[2], players[3] };
-		
-		Event event2 = new Event("Category 2", players2, localizations, timeslots);
-		
-		Map<Player, Timeslot[]> unavailability2 = buildUnavailability(
-			event2,
-			new int[][]
-			{
-				{ },
-				{ },
-				{ },
-				{ }
-			}
-		);
-		
-		event2.setUnavailableTimeslots(unavailability2);
+		Event event2 = new Event("Category 2", new Player[]{ players[1], players[4], players[3], players[5] }, localizations, timeslots);
 		event2.setMatchesPerPlayer(1);
 		event2.setMatchDuration(2);
 		
-		return new Tournament("Small Tournament", new Event[]{ event1, event2 });
+		// EVENT 3 --------------------------------------------
+		
+		Event event3 = new Event(
+			"Category 3",
+			new Player[]{ players[6], players[7] },
+			localizations,
+			new Timeslot[]{ timeslots[2], timeslots[3], timeslots[4], timeslots[5] }
+		);
+		event3.setMatchesPerPlayer(1);
+		event3.setMatchDuration(1);
+		
+		return new Tournament("Small Tournament", new Event[]{ event1, event2, event3 });
+	}
+	
+	public Tournament getSampleTournamentWithOneCategory() {
+		Player[] players = buildPlayers(new String[]{ "Djokovic", "Murray", "Federer", "Wawrinka", "Nadal", "Nishikori", "Berdych", "Ferrer" });
+		Localization[] localizations = buildLocalizations(new int[]{ 1, 2 });
+		Timeslot[] timeslots = buildTimeslots(
+			new int[]{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
+			new int[]{ 3 }
+		);
+		
+		Event event = new Event("Main Category", players, localizations, timeslots);
+		
+		Map<Player, Timeslot[]> unavailability = buildUnavailability(
+			event,
+			new int[][]
+			{
+				{ 4, 5 }, // Djokovic
+				{ 4 },    // Murray
+				{ 7, 8 }, // Federer
+				{ 0, 6 }, // Wawrinka
+				{ 1, 2 }, // Nadal
+				{ 3 },    // Nishikori
+				{ },      // Berdych
+				{ 8, 9 }  // Ferrer
+			}
+		);
+		
+		event.setUnavailableTimeslots(unavailability);
+		event.setMatchesPerPlayer(1);
+		event.setMatchDuration(3);
+		
+		return new Tournament("Exhibition Tournament", new Event[]{ event });
+	}
+	
+	public Tournament getSampleTennisTournament() {
+		Player[] atpPlayers = buildPlayers(new String[]{ "Djokovic", "Murray", "Federer", "Wawrinka", "Nadal", "Nishikori", "Berdych", "Ferrer" });
+		Player[] wtaPlayers = buildPlayers(new String[]{ "Williams", "Radwanska", "Kerber", "Muguruza", "Halep", "Suárez Navarro", "Kvitova", "Azarenka" });
+		Localization[] localizations = buildLocalizations(new int[]{ 1, 2, 3 });
+		Timeslot[] timeslots = buildTimeslots(
+			new int[]{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
+			new int[]{ }
+		);
+		
+		Player[] allPlayers = new Player[atpPlayers.length + wtaPlayers.length];
+		for (int i = 0; i < atpPlayers.length; i++) allPlayers[i] = atpPlayers[i];
+		for (int i = 0; i < wtaPlayers.length;i++) allPlayers[i + atpPlayers.length] = wtaPlayers[i];
+		
+		Event mensDraw = new Event("Men's Draw", atpPlayers, localizations, timeslots);
+		Event womensDraw = new Event("Women's Draw", wtaPlayers, localizations, timeslots);
+		Event doublesDraw = new Event("Mixed Doubles Draw", allPlayers, localizations, timeslots);
+		
+		doublesDraw.setPlayersPerMatch(4);
+		
+		return new Tournament("Tennis Tournament", new Event[]{ mensDraw, womensDraw, doublesDraw });
 	}
 	
 	private Player[] buildPlayers(String[] playersArray) {

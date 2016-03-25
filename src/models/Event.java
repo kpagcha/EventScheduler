@@ -33,6 +33,9 @@ public class Event {
 		this.localizations = localizations;
 		this.timeslots = timeslots;
 		unavailableTimeslots = new HashMap<Player, Timeslot[]>(players.length);
+		
+		for (Player player : players)
+			unavailableTimeslots.put(player, new Timeslot[]{});
 	}
 	
 	public Event(String name, Player[] players, Localization[] localizations, Timeslot[] timeslots, Map<Player, Timeslot[]> unavailability, int nMatches, int matchDuration) {
@@ -43,6 +46,14 @@ public class Event {
 		unavailableTimeslots = unavailability;
 		nMatchesPerPlayer = nMatches;
 		nTimeslotsPerMatch = matchDuration;
+	}
+	
+	public void setName(String name) {
+		this.name = name;
+	}
+	
+	public String getName() {
+		return name;
 	}
 	
 	public void setPlayers(Player[] players) {
@@ -100,21 +111,6 @@ public class Event {
 	public int getPlayersPerMatch() {
 		return nPlayersPerMatch;
 	}
-	/*
-	public int[] getLocalizationsAsIntArray() {
-		int[] localizationsInt = new int[localizations.length];
-		for (int i = 0; i < localizations.length; i++)
-			localizationsInt[i] = i;
-		return localizationsInt;
-	}
-	
-	public int[] getTimeslotsAsIntArray() {
-		int[] timeslotsInt = new int[timeslots.length];
-		for (int i = 0; i < timeslots.length; i++)
-			timeslotsInt[i] = i;
-		return timeslotsInt;
-	}
-	*/
 	
 	public int[][] getUnavailableTimeslotsAs2DIntArray() {
 		int n = unavailableTimeslots.size();

@@ -1,14 +1,13 @@
-package manager;
+package models;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-import models.Event;
-import models.Match;
-import models.Player;
-import models.Schedule;
-import models.Timeslot;
-import solver.EventSolver;
+import manager.EventManager;
+import solver.TournamentSolver;
 
 public class Tournament {
 	private String name;
@@ -16,13 +15,13 @@ public class Tournament {
 
 	private Schedule[] currentSchedules;
 	
-	private EventSolver solver;
+	private TournamentSolver solver;
 	
 	public Tournament(String name, Event[] categories) {
 		this.name = name;
 		events = categories;
 		
-		solver = new EventSolver(this);
+		solver = new TournamentSolver(this);
 		solver.execute();
 		
 		currentSchedules = new Schedule[categories.length];
@@ -69,6 +68,33 @@ public class Tournament {
 		return timeslots;
 	}
 	
+	public List<Localization> getAllLocalizations() {
+		List<Localization> localizations = new ArrayList<Localization>();
+		
+		for (Event event : events) {
+			Localization[] eventLocalizations = event.getLocalizations();
+			for (Localization localization : eventLocalizations)
+				if (!localizations.contains(localization))
+					localizations.add(localization);
+		}
+		
+		return localizations;
+	}
+	
+	public Map<Integer, List<Event>> groupEventsByNumberOfPlayersPerMatch() {
+		Map<Integer, List<Event>> eventsByNumberOfPlayersPerMatch = new HashMap<Integer, List<Event>>();
+		
+		for (Event event : events) {
+			int n = event.getPlayersPerMatch();
+			if (eventsByNumberOfPlayersPerMatch.containsKey(n))
+				eventsByNumberOfPlayersPerMatch.get(n).add(event);
+			else
+				eventsByNumberOfPlayersPerMatch.put(n, new ArrayList<Event>(Arrays.asList(new Event[]{ event })));
+		}
+		
+		return eventsByNumberOfPlayersPerMatch;
+	}
+	
 	public Schedule[] getSchedules() {
 		currentSchedules = solver.getSchedules();
 		return currentSchedules;
@@ -106,9 +132,11 @@ public class Tournament {
 	}
 	
 	public static void main(String[] args) {
-		Tournament tournament = EventManager.getInstance().getSampleSmallTournament();
+		//Tournament tournament = EventManager.getInstance().getSampleSmallTournament();
+		//Tournament tournament = EventManager.getInstance().getSampleTournamentWithOneCategory();
+		Tournament tournament = EventManager.getInstance().getSampleTennisTournament();
 		
-		int nSol = 15;
+		int nSol = 5;
 		int solutions = 0;
 		for (int i = 0; i < nSol; i++) {
 			tournament.getSchedules();

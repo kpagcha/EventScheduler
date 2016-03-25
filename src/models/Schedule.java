@@ -144,7 +144,7 @@ public class Schedule {
 		
 		sb.append(String.format("\n\n%8s", " "));
 		for (int t = 0; t < nTimeslots; t++)
-			sb.append(String.format("%4s", "t" + t));
+			sb.append(String.format("%4s", "t" + event.getTimeslotAt(t).getLowerBoundStr()));
 		sb.append("\n");
 		
 		Player[] players = event.getPlayers();

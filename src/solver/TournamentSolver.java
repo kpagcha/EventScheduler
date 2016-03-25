@@ -2,6 +2,7 @@ package solver;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.chocosolver.solver.Solver;
 import org.chocosolver.solver.constraints.IntConstraintFactory;
@@ -12,20 +13,23 @@ import org.chocosolver.solver.variables.VariableFactory;
 import org.chocosolver.util.ESat;
 import org.chocosolver.util.tools.ArrayUtils;
 
-import manager.Tournament;
 import models.Event;
+import models.Localization;
 import models.Player;
 import models.Schedule;
 import models.Timeslot;
+import models.Tournament;
 
-public class EventSolver {
+public class TournamentSolver {
 	private Solver solver;
 	
+	private Tournament tournament;
 	private Event[] events;
 	
 	private int nCategories;
 	
 	private List<Player> allPlayers;
+	private List<Localization> allCourts;
 	private List<Timeslot> allTimeslots;
 	
 	private int[] nPlayers;
@@ -44,14 +48,12 @@ public class EventSolver {
 	// Número de jugadores por partido (lo normal será 2) (para cada categoría)
 	private int[] nPlayersPerMatch;
 	
+	
 	// Horario. x_e,p,c,t -> horario_categoria,jugador,pista,hora. Dominio [0, 1]
 	private IntVar[][][][] x;
 	
 	// Comienzos de partidos. Dominio [0, 1]
 	private IntVar[][][][] g;
-	
-	// Pista está ocupada. Dominio [0, 1]
-	private IntVar[][][] crt;
 	
 	
 	// Horarios calculados de la solución actual
@@ -65,15 +67,20 @@ public class EventSolver {
 	// Índices de cada timeslot en el array de timeslots correspondiente a cada categoría
 	private int[][] timeslotsIndices;
 	
+	// Índices de cada pista en el array de localidades de juego (pistas) correspondiente a cada categoría
+	private int[][] courtsIndices;
+	
 	private boolean lastSolutionFound = false;
 	
-	public EventSolver(Tournament tournament) {
+	public TournamentSolver(Tournament tournament) {
+		this.tournament = tournament;
 		events = tournament.getEvents();
 		
 		nCategories = events.length;
 		
 		allPlayers = tournament.getAllPlayers();
 		allTimeslots = tournament.getAllTimeslots();
+		allCourts = tournament.getAllLocalizations();
 		
 		nPlayers = new int[nCategories];
 		nCourts = new int[nCategories];
@@ -99,8 +106,6 @@ public class EventSolver {
 
 		x = new IntVar[nCategories][][][];
 		g = new IntVar[nCategories][][][];
-		
-		crt = new IntVar[nCategories][][];
 		
 		playersIndices = new int[allPlayers.size()][nCategories];
 		for (int i = 0; i < allPlayers.size(); i++) {
@@ -133,8 +138,24 @@ public class EventSolver {
 				}
 			}
 		}
-		/*
-		System.out.println("Players indices");
+		
+		courtsIndices = new int[allCourts.size()][nCategories];
+		for (int i = 0; i < allCourts.size(); i++) {
+			for (int e = 0; e < nCategories; e++) {
+				Localization[] eventCourts = events[e].getLocalizations();
+				Localization court = allCourts.get(i);
+				
+				for (int j = 0; j < eventCourts.length; j++) {
+					if (court.equals(eventCourts[j])) {
+						courtsIndices[i][e] = j;
+						break;
+					}
+					courtsIndices[i][e] = -1;
+				}
+			}
+		}
+		
+		/*System.out.println("Players indices");
 		for (int i = 0; i < playersIndices.length; i++) {
 			for (int j = 0; j < playersIndices[i].length; j++)
 				System.out.print(String.format("%3s", playersIndices[i][j]));
@@ -147,7 +168,13 @@ public class EventSolver {
 				System.out.print(String.format("%3s", timeslotsIndices[i][j]));
 			System.out.println();
 		}
-		*/
+		
+		System.out.println("Localizations indices");
+		for (int i = 0; i < courtsIndices.length; i++) {
+			for (int j = 0; j < courtsIndices[i].length; j++)
+				System.out.print(String.format("%3s", courtsIndices[i][j]));
+			System.out.println();
+		}*/
 	}
 	
 	public void execute() {
@@ -185,7 +212,10 @@ public class EventSolver {
 		
 		setConstraintsMapMatches();
 		
-		setConstraintsPlayersInCourt();
+		setConstraintsPlayersInCourtsForEachCategory();
+		
+		if (events.length > 1)
+			setConstraintsCourtsCollisions();
 		
 		setConstraintsPlayersNotSimultaneous();
 		
@@ -307,11 +337,8 @@ public class EventSolver {
 		}
 	}
 	
-	private void setConstraintsPlayersInCourt() {
+	private void setConstraintsPlayersInCourtsForEachCategory() {
 		for (int e = 0; e < nCategories; e++) {
-			// Puede haber 0 jugadores (no hay partido) o nPlayersPerMatch (hay partido)
-			crt[e] = VariableFactory.enumeratedMatrix("OcuppiedCourts", nCourts[e], nTimeslots[e], new int[]{0, nPlayersPerMatch[e]}, solver);
-			
 			for (int c = 0; c < nCourts[e]; c++) {
 				for (int t = 0; t < nTimeslots[e]; t++) {
 					// Las "participaciones" de todos los jugadores en la pista_c a la hora_t
@@ -322,7 +349,88 @@ public class EventSolver {
 					// Que la suma de las participaciones de todos los jugadores sea
 					// igual a 0 o el número de jugadores por partido, es decir, que nadie juegue o que jueguen
 					// el número de jugadores requeridos por partido
-					solver.post(IntConstraintFactory.sum(playerSum, crt[e][c][t]));
+					solver.post(IntConstraintFactory.sum(playerSum, VariableFactory.enumerated("Sum", new int[]{0, nPlayersPerMatch[e]}, solver)));
+				}
+			}
+		}
+	}
+	
+	private void setConstraintsCourtsCollisions() {
+		Map<Integer, List<Event>> eventsByNumberOfPlayersPerMatch = tournament.groupEventsByNumberOfPlayersPerMatch();
+		
+		/*System.out.println("\nCategories by number of players per match:");
+		for (Integer n : eventsByNumberOfPlayersPerMatch.keySet()) {
+			System.out.println(n + ":");
+			for (Event e : eventsByNumberOfPlayersPerMatch.get(n)) {
+				System.out.println(e);
+			}
+			System.out.println();
+		}*/
+		
+		// Posibles números de jugadores que componen un partido del torneo (incluye 0)
+		int[] allPossibleNumberOfPlayers = getAllPosibleNumberOfPlayersPerMatchArray(eventsByNumberOfPlayersPerMatch);
+		
+		int nAllCourts = allCourts.size();
+		int nAllTimeslots = allTimeslots.size();
+		
+		// Para cada pista del torneo explorar las participaciones de jugadores en cada categoría
+		// y controlar que no se juegue más de un partido en una pista a la misma hora
+		for (int c = 0; c < nAllCourts; c++) {
+			for (int t = 0; t < nAllTimeslots; t++) {
+				// Las posibles ocupaciones de los jugadores de la pista_c a la hora_t
+				List<IntVar> playerSum = new ArrayList<IntVar>();
+				
+				for (int e = 0; e < nCategories; e++)
+					// Si en el evento_e se puede jugar en la pista_c y a la hora_t
+					if (courtsIndices[c][e] != -1 && timeslotsIndices[t][e] != -1)
+						for (int p = 0; p < nPlayers[e]; p++)
+							playerSum.add(x[e][p][courtsIndices[c][e]][timeslotsIndices[t][e]]);
+				
+				// Que la suma de las participaciones sea o 0 (no se juega en la pista_c a la hora_t)
+				// o cualquier valor del conjunto de número de jugadores por partido (cada evento tiene el suyo)
+				solver.post(IntConstraintFactory.sum(
+					(IntVar[]) playerSum.toArray(new IntVar[playerSum.size()]),
+					VariableFactory.enumerated("PossibleNumberOfPlayersPerMatch", allPossibleNumberOfPlayers, solver))
+				);
+			}
+		}
+		
+		// Caso excepcional: puede ocurrir que se cumpla la condición de que la suma de las participaciones de
+		// jugadores en la pista_c a la hora_t sea una de las posibilidades, pero aún así sea una combinación inválida
+		// Por ejemplo: en un torneo con 2 categorías individuales (partidos de 2 jugadores) y 1 categoría de dobles
+		// (partidos de 4 jugadores), puede ocurrir que la suma de las participaciones sea 4, con lo cual según
+		// la restricción definida es correcto, pero no porque haya un partido de dobles, sino porque hay
+		// 2 partidos individuales, con lo cual sumarían participaciones de jugadores 2+2=4. Además, la restricción
+		// de jugadores para cada categoría (método setConstraintsPlayersInCourtsForEachCategory) se cumpliría
+		// porque el númeo de jugadores por partido para las 2 categorías individuales sería 2, y para la categoría
+		// de dobles sería 0.
+		// Solución: forzar que la suma de las participaciones en las categorías con el mismo número de jugadores
+		// por partido sea o 0 o el número de jugadores por partido de esa categoría
+		
+		// Por cada conjunto de categorías con el mismo número de jugadores por partido, la suma de participaciones
+		// de todos los jugadores en una pista_c a una hora_t es 0 o el número de jugadores por partido
+		for (Integer numberOfPlayersPerMatch : eventsByNumberOfPlayersPerMatch.keySet()) {
+			for (int c = 0; c < nAllCourts; c++) {
+				for (int t = 0; t < nAllTimeslots; t++) {
+					// Las posibles ocupaciones de los jugadores de la pista_c a la hora_t
+					List<IntVar> playerSum = new ArrayList<IntVar>();
+					
+					List<Event> eventList = eventsByNumberOfPlayersPerMatch.get(numberOfPlayersPerMatch);
+					for (Event event : eventList) {
+						int e = getEventIndex(event);
+						
+						// Si en el evento_e se puede jugar en la pista_c y a la hora_t
+						if (courtsIndices[c][e] != -1 && timeslotsIndices[t][e] != -1)
+							for (int p = 0; p < nPlayers[e]; p++)
+								playerSum.add(x[e][p][courtsIndices[c][e]][timeslotsIndices[t][e]]);
+					}
+					
+					// Que la suma de las participaciones sea o 0 (no se juega en la pista_c a la hora_t)
+					// o el número de jugadores por partido (de este conjunto de categorías con el mismo número)
+					solver.post(IntConstraintFactory.sum(
+						(IntVar[]) playerSum.toArray(new IntVar[playerSum.size()]),
+						VariableFactory.enumerated("PossibleNumberOfPlayersPerMatch", new int[]{ 0, numberOfPlayersPerMatch }, solver))
+					);
 				}
 			}
 		}
@@ -339,13 +447,11 @@ public class EventSolver {
 				// Las posibles ocupaciones de pistas del jugador_p a la hora_t
 				List<IntVar> courtSum = new ArrayList<IntVar>();
 				
-				for (int e = 0; e < nCategories; e++) {
+				for (int e = 0; e < nCategories; e++)
 					// Si el jugador_p juega en la categoría_e a la hora_t
-					if (playersIndices[p][e] != -1 && timeslotsIndices[t][e] != -1) {
+					if (playersIndices[p][e] != -1 && timeslotsIndices[t][e] != -1)
 						for (int c = 0; c < nCourts[e]; c++)
 							courtSum.add(x[e][playersIndices[p][e]][c][timeslotsIndices[t][e]]);
-					}
-				}
 				
 				// Que la suma de las ocupaciones de todas las pistas por parte del
 				// jugador_p a la hora_t sea o 0 (no juega a la hora_t) o 1 (el jugador
@@ -358,13 +464,13 @@ public class EventSolver {
 		}
 	}
 	
-	
 	private void setConstraintsPlayersMatchesNumber() {
 		// Que cada jugador juegue nMatchesPerPlayer partidos
 		for (int e = 0; e < nCategories; e++)
 			for (int p = 0; p < nPlayers[e]; p++)
 				solver.post(IntConstraintFactory.sum(ArrayUtils.flatten(g[e][p]), VariableFactory.fixed(nMatchesPerPlayer[e], solver)));
 	}
+	
 	private boolean isUnavailable(int category, int player, int timeslot) {
 		for (int t = 0; t < unavailability[category][player].length; t++)
 			if (unavailability[category][player][t] == timeslot)
@@ -372,13 +478,31 @@ public class EventSolver {
 		return false;
 	}
 	
+	private int[] getAllPosibleNumberOfPlayersPerMatchArray(Map<Integer, List<Event>> eventsByNumberOfPlayersPerMatch) {		
+		Integer[] keysArray = eventsByNumberOfPlayersPerMatch.keySet().toArray(new Integer[eventsByNumberOfPlayersPerMatch.keySet().size()]);
+		
+		int[] array = new int[keysArray.length + 1];
+		array[0] = 0;
+		for (int i = 1; i < array.length; i++)
+			array[i] = keysArray[i - 1];
+		
+		return array;
+	}
+	
+	private int getEventIndex(Event event) {
+		for (int i = 0; i < events.length; i++)
+			if (events[i].equals(event))
+				return i;
+		return -1;
+	}
+	
 	private void configureSearch() {	
 		IntVar[][][] concatX = new IntVar[nCategories][][];
 		for (int i = 0; i < nCategories; i++)
 			concatX[i] = ArrayUtils.flatten(x[i]);
 		
-		//solver.set(IntStrategyFactory.minDom_UB(ArrayUtils.flatten(x)));
-		//solver.set(IntStrategyFactory.minDom_LB(ArrayUtils.flatten(x)));
+		//solver.set(IntStrategyFactory.minDom_UB(ArrayUtils.flatten(concatX)));
+		//solver.set(IntStrategyFactory.minDom_LB(ArrayUtils.flatten(concatX)));
 		solver.set(IntStrategyFactory.domOverWDeg(ArrayUtils.flatten(concatX), 0));
 	}
 	
