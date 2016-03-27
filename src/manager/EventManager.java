@@ -27,16 +27,16 @@ public class EventManager {
 		Localization[] localizations = buildLocalizations(new int[]{ 1, 2 });
 		Timeslot[] timeslots = buildTimeslots(
 			new int[]{ 0, 1, 2, 3, 4, 5, 6, 7, 8 },
-			new int[]{ }
+			new int[]{ 4 }
 		);
 		
-		Event event1 = new Event("Category 1", new Player[]{ players[0], players[1], players[2], players[3] }, localizations, timeslots);
+		Event event1 = new Event("Category 1", new Player[]{ players[0], players[1] }, localizations, timeslots);
 		event1.setMatchesPerPlayer(1);
 		event1.setMatchDuration(2);
 		
 		// EVENT 2 --------------------------------------------
 		
-		Event event2 = new Event("Category 2", new Player[]{ players[1], players[4], players[3], players[5] }, localizations, timeslots);
+		Event event2 = new Event("Category 2", new Player[]{ players[2], players[3] }, localizations, timeslots);
 		event2.setMatchesPerPlayer(1);
 		event2.setMatchDuration(2);
 		
@@ -44,7 +44,7 @@ public class EventManager {
 		
 		Event event3 = new Event(
 			"Category 3",
-			new Player[]{ players[6], players[7] },
+			new Player[]{ players[3], players[0],  players[1], players[2] },
 			localizations,
 			new Timeslot[]{ timeslots[2], timeslots[3], timeslots[4], timeslots[5] }
 		);
@@ -97,7 +97,7 @@ public class EventManager {
 		
 		Player[] allPlayers = new Player[atpPlayers.length + wtaPlayers.length];
 		for (int i = 0; i < atpPlayers.length; i++) allPlayers[i] = atpPlayers[i];
-		for (int i = 0; i < wtaPlayers.length;i++) allPlayers[i + atpPlayers.length] = wtaPlayers[i];
+		for (int i = 0; i < wtaPlayers.length; i++) allPlayers[i + atpPlayers.length] = wtaPlayers[i];
 		
 		Event mensDraw = new Event("Men's Draw", atpPlayers, localizations, timeslots);
 		Event womensDraw = new Event("Women's Draw", wtaPlayers, localizations, timeslots);
@@ -108,6 +108,33 @@ public class EventManager {
 		return new Tournament("Tennis Tournament", new Event[]{ mensDraw, womensDraw, doublesDraw });
 	}
 	
+	public Tournament getSampleBigTennisTournament() {
+		Player[] benjamin = buildGenericPlayers(8, "Benj");
+		Player[] alevin = buildGenericPlayers(8, "Alev");
+		Player[] infantil = buildGenericPlayers(32, "Inf");
+		Player[] cadete = buildGenericPlayers(32, "Cad");
+		Player[] junior = buildGenericPlayers(8, "Jun");
+		Player[] absoluto = buildGenericPlayers(16, "Abs");
+		
+		Localization[] localizations = buildGenericLocalizations(8, "Pista");
+		Timeslot[] timeslots = buildTimeslots(27, new int[]{ 5, 13, 19 }); // 2 días de 9:00 a 21:00 con descanso a las 14:00 (y la noche entre d1 y d2)
+		
+		Event categoriaBenjamin = new Event("Categoría Benjamín", benjamin, localizations, timeslots);
+		Event categoriaAlevin = new Event("Categoría Alevín", alevin, localizations, timeslots);
+		Event categoriaInfantil = new Event("Categoría Infantil", infantil, localizations, timeslots);
+		Event categoriaCadete = new Event("Categoría Cadete", cadete, localizations, timeslots);
+		Event categoriaJunior = new Event("Categoría Junior", junior, localizations, timeslots);
+		Event categoriaAbsoluto = new Event("Categoría Absoluto", absoluto, localizations, timeslots);
+		
+		categoriaBenjamin.setMatchDuration(1);
+		categoriaAlevin.setMatchDuration(1);
+		
+		return new Tournament(
+			"Torneo de tenis", 
+			new Event[]{ categoriaBenjamin, categoriaAlevin, categoriaInfantil, categoriaCadete, categoriaJunior, categoriaAbsoluto }
+		);
+	}
+	
 	private Player[] buildPlayers(String[] playersArray) {
 		Player[] players = new Player[playersArray.length];
 		for (int i = 0; i < playersArray.length; i++)
@@ -115,10 +142,30 @@ public class EventManager {
 		return players;
 	}
 	
+	private Player[] buildGenericPlayers(int n, String placeholder) {
+		if (placeholder.isEmpty())
+			placeholder = "Player";
+		
+		Player[] players = new Player[n];
+		for (int i = 0; i < n; i++)
+			players[i] = new Player(placeholder + " " + (i + 1));
+		return players;
+	}
+	
 	private Localization[] buildLocalizations(int[] courtsArray) {
 		Localization[] localizations = new Localization[courtsArray.length];
 		for (int i = 0; i < courtsArray.length; i++)
 			localizations[i] = new Localization("Court " + (i + 1));
+		return localizations;
+	}
+	
+	private Localization[] buildGenericLocalizations(int n, String placeholder) {
+		if (placeholder.isEmpty())
+			placeholder = "Court";
+		
+		Localization[] localizations = new Localization[n];
+		for (int i = 0; i < n ; i++)
+			localizations[i] = new Localization(placeholder + " " + (i + 1));
 		return localizations;
 	}
 	
@@ -134,6 +181,13 @@ public class EventManager {
 				}
 		}				
 		return timeslots;
+	}
+	
+	private Timeslot[] buildTimeslots(int nTimeslots, int[] breaks) {
+		int[] timeslots = new int[nTimeslots];
+		for (int i = 0; i < nTimeslots; i++)
+			timeslots[i] = i;
+		return buildTimeslots(timeslots, breaks);
 	}
 	
 	private Map<Player, Timeslot[]> buildUnavailability(Event event, int[][] unavailabilityArray) {

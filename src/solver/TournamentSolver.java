@@ -7,6 +7,7 @@ import java.util.Map;
 import org.chocosolver.solver.Solver;
 import org.chocosolver.solver.constraints.IntConstraintFactory;
 import org.chocosolver.solver.search.strategy.IntStrategyFactory;
+import org.chocosolver.solver.trace.Chatterbox;
 import org.chocosolver.solver.variables.BoolVar;
 import org.chocosolver.solver.variables.IntVar;
 import org.chocosolver.solver.variables.VariableFactory;
@@ -14,9 +15,9 @@ import org.chocosolver.util.ESat;
 import org.chocosolver.util.tools.ArrayUtils;
 
 import models.Event;
+import models.EventSchedule;
 import models.Localization;
 import models.Player;
-import models.Schedule;
 import models.Timeslot;
 import models.Tournament;
 
@@ -57,7 +58,7 @@ public class TournamentSolver {
 	
 	
 	// Horarios calculados de la solución actual
-	private Schedule[] schedules;
+	private EventSchedule[] schedules;
 	
 	// Índices de cada jugador en el array de jugadores correspondiente a cada categoría
 	// p.e. playersIndices[2][1] = 3 significa que el índice del jugador número 3 en
@@ -154,27 +155,6 @@ public class TournamentSolver {
 				}
 			}
 		}
-		
-		/*System.out.println("Players indices");
-		for (int i = 0; i < playersIndices.length; i++) {
-			for (int j = 0; j < playersIndices[i].length; j++)
-				System.out.print(String.format("%3s", playersIndices[i][j]));
-			System.out.println();
-		}
-		
-		System.out.println("Timeslots indices");
-		for (int i = 0; i < timeslotsIndices.length; i++) {
-			for (int j = 0; j < timeslotsIndices[i].length; j++)
-				System.out.print(String.format("%3s", timeslotsIndices[i][j]));
-			System.out.println();
-		}
-		
-		System.out.println("Localizations indices");
-		for (int i = 0; i < courtsIndices.length; i++) {
-			for (int j = 0; j < courtsIndices[i].length; j++)
-				System.out.print(String.format("%3s", courtsIndices[i][j]));
-			System.out.println();
-		}*/
 	}
 	
 	public void execute() {
@@ -204,6 +184,8 @@ public class TournamentSolver {
 			}
 		}
 		
+		setConstraintsMatchesSum();
+		
 		setConstraintsPlayersUnavailable();
 		
 		setConstraintsBreaks();
@@ -220,6 +202,15 @@ public class TournamentSolver {
 		setConstraintsPlayersNotSimultaneous();
 		
 		setConstraintsPlayersMatchesNumber();
+	}
+	
+	private void setConstraintsMatchesSum() {
+		for (int e = 0; e < nCategories; e++) {
+			int eventNumberOfMatches = nPlayers[e] * nMatchesPerPlayer[e];
+			
+			solver.post(IntConstraintFactory.sum(ArrayUtils.flatten(g[e]), VariableFactory.fixed(eventNumberOfMatches, solver)));
+			solver.post(IntConstraintFactory.sum(ArrayUtils.flatten(x[e]), VariableFactory.fixed(eventNumberOfMatches * nTimeslotsPerMatch[e], solver)));
+		}
 	}
 	
 	private void setConstraintsPlayersUnavailable() {
@@ -357,15 +348,6 @@ public class TournamentSolver {
 	
 	private void setConstraintsCourtsCollisions() {
 		Map<Integer, List<Event>> eventsByNumberOfPlayersPerMatch = tournament.groupEventsByNumberOfPlayersPerMatch();
-		
-		/*System.out.println("\nCategories by number of players per match:");
-		for (Integer n : eventsByNumberOfPlayersPerMatch.keySet()) {
-			System.out.println(n + ":");
-			for (Event e : eventsByNumberOfPlayersPerMatch.get(n)) {
-				System.out.println(e);
-			}
-			System.out.println();
-		}*/
 		
 		// Posibles números de jugadores que componen un partido del torneo (incluye 0)
 		int[] allPossibleNumberOfPlayers = getAllPosibleNumberOfPlayersPerMatchArray(eventsByNumberOfPlayersPerMatch);
@@ -507,10 +489,12 @@ public class TournamentSolver {
 	}
 	
 	private void solve() {
+		//SearchMonitorFactory.limitTime(solver, 10000);
 		solver.findSolution();
+		Chatterbox.printStatistics(solver);
 	}
 	
-	public Schedule[] getSchedules() {
+	public EventSchedule[] getSchedules() {
 		if (lastSolutionFound)
 			schedules = null;
 		
@@ -519,7 +503,7 @@ public class TournamentSolver {
 			schedules = null;
 			
 		} else if (schedules == null) {
-			schedules = new Schedule[nCategories];
+			schedules = new EventSchedule[nCategories];
 			buildSchedules();
 		} else {
 			if (solver.nextSolution())
@@ -534,6 +518,6 @@ public class TournamentSolver {
 	
 	private void buildSchedules() {
 		for (int i = 0; i < nCategories; i++)
-			schedules[i] = new Schedule(events[i], x[i]);
+			schedules[i] = new EventSchedule(events[i], x[i]);
 	}
 }

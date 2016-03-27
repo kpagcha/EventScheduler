@@ -6,8 +6,6 @@ public class Match {
 	Timeslot timeslot;
 	int matchDuration;
 	
-	public Match() {}
-	
 	public Match(Player[] players, Localization localization, Timeslot timeslot, int matchDuration) {
 		this.players = players;
 		this.localization = localization;
@@ -15,6 +13,22 @@ public class Match {
 		this.matchDuration = matchDuration;
 	}
 	
+	public Player[] getPlayers() {
+		return players;
+	}
+
+	public Localization getLocalization() {
+		return localization;
+	}
+
+	public Timeslot getTimeslot() {
+		return timeslot;
+	}
+
+	public int getMatchDuration() {
+		return matchDuration;
+	}
+
 	public String toString() {
 		String matchStr = String.format("At %s (%d) in %s: ", timeslot.getLowerBoundStr(), matchDuration, localization);
 		for (Player player : players)

@@ -182,6 +182,10 @@ public class Event {
 		return false;
 	}
 	
+	public int getNumberOfMatches() {
+		return players.length / nPlayersPerMatch * nMatchesPerPlayer;
+	}
+	
 	public String toString() {
 		return name;
 	}

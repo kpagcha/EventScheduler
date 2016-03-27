@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Scanner;
 
 import manager.EventManager;
 import solver.TournamentSolver;
@@ -13,7 +14,7 @@ public class Tournament {
 	private String name;
 	private Event[] events;
 
-	private Schedule[] currentSchedules;
+	private EventSchedule[] currentSchedules;
 	
 	private TournamentSolver solver;
 	
@@ -24,7 +25,15 @@ public class Tournament {
 		solver = new TournamentSolver(this);
 		solver.execute();
 		
-		currentSchedules = new Schedule[categories.length];
+		currentSchedules = new EventSchedule[categories.length];
+	}
+	
+	public void setName(String name) {
+		this.name = name;
+	}
+	
+	public String getName() {
+		return name;
 	}
 	
 	public Event[] getEvents() {
@@ -95,9 +104,17 @@ public class Tournament {
 		return eventsByNumberOfPlayersPerMatch;
 	}
 	
-	public Schedule[] getSchedules() {
+	public boolean nextSchedules() {
 		currentSchedules = solver.getSchedules();
+		return currentSchedules != null;
+	}
+	
+	public EventSchedule[] getSchedules() {
 		return currentSchedules;
+	}
+	
+	public CombinedSchedule getCombinedSchedule() {
+		return new CombinedSchedule(this);
 	}
 	
 	public void printCurrentSchedules() {
@@ -107,7 +124,7 @@ public class Tournament {
 			sb.append("No more solutions found.\n");
 		else {
 			for (int i = 0; i < currentSchedules.length; i++) {
-				Schedule schedule = currentSchedules[i];
+				EventSchedule schedule = currentSchedules[i];
 				
 				sb.append(schedule.toString());
 				
@@ -115,6 +132,8 @@ public class Tournament {
 				
 				if (schedule != null) {
 					sb.append(String.format("Match duration: %d timelots\n", events[i].getMatchDuration()));
+					
+					schedule.calculateMatches();
 					Match[] matches = schedule.getMatches();
 					for (int j = 0; j < matches.length; j++)
 						sb.append(matches[j]).append("\n");
@@ -127,6 +146,13 @@ public class Tournament {
 		System.out.println(sb.toString());
 	}
 	
+	public int getNumberOfMatches() {
+		int numberOfMatches = 0;
+		for (Event event : events)
+			numberOfMatches += event.getNumberOfMatches();
+		return numberOfMatches;
+	}
+	
 	public String toString() {
 		return name;
 	}
@@ -134,22 +160,58 @@ public class Tournament {
 	public static void main(String[] args) {
 		//Tournament tournament = EventManager.getInstance().getSampleSmallTournament();
 		//Tournament tournament = EventManager.getInstance().getSampleTournamentWithOneCategory();
-		Tournament tournament = EventManager.getInstance().getSampleTennisTournament();
+		//Tournament tournament = EventManager.getInstance().getSampleTennisTournament();
+		Tournament tournament = EventManager.getInstance().getSampleBigTennisTournament();
 		
-		int nSol = 5;
-		int solutions = 0;
-		for (int i = 0; i < nSol; i++) {
-			tournament.getSchedules();
+		tournament.nextSchedules();
+		
+		Scanner sc = new Scanner(System.in);
+		
+		boolean printSolutions = true;
+		boolean askForInput = false;
+		int maxSolutions = 1; // 0 -> todas las soluciones
+		int foundSolutions = 0;
+		
+		do {
+			if (printSolutions) {
+				System.out.println("-------------------------------------------------------");
+				System.out.println(tournament + "\n");
+				tournament.printCurrentSchedules();
+				
+				CombinedSchedule combinedSchedule = tournament.getCombinedSchedule();
+				
+				System.out.println("All schedules combined in one");
+				System.out.println(combinedSchedule);
+				
+				combinedSchedule.calculateMatches();
+				Match[] matches = combinedSchedule.getMatches();
+				System.out.println("All matches (" + matches.length + ")");
+				for (Match match : matches)
+					System.out.println(match);
+				System.out.println();
+				
+				combinedSchedule.groupByLocalizations();
+				
+				System.out.println("Combined schedule grouped by courts");
+				System.out.println(combinedSchedule.groupedScheduleToString());
+			}
 			
-			if (tournament.currentSchedules == null)
+			foundSolutions++;
+			
+			if (askForInput) {
+				System.out.print("Show next solution (y/n)?: ");
+				String input = sc.next();
+				if (!input.equalsIgnoreCase("y"))
+					break;
+			}
+			
+			if (maxSolutions > 0 && foundSolutions >= maxSolutions)
 				break;
-			
-			System.out.println("-------------------------------------------------------");
-			System.out.println(tournament + "\n");
-			tournament.printCurrentSchedules();
-			
-			solutions++;
-		}
-		System.out.println(solutions + " solutions found.");
+		
+		} while (tournament.nextSchedules());
+		
+		sc.close();
+		
+		System.out.println(foundSolutions + " solutions found.");
 	}
 }
