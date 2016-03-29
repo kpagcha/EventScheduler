@@ -1,10 +1,15 @@
-package models;
+package models.schedules;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import models.Localization;
+import models.Match;
+import models.Player;
+import models.Timeslot;
 
 public abstract class Schedule {
 	
@@ -114,13 +119,17 @@ public abstract class Schedule {
 			for (int t = 0; t < nTimeslots; t++) {
 				Timeslot timeslot = timeslots.get(t);
 				
-				String strValue = "-";
+				String strValue = "";
 				if (timeslotMap.containsKey(timeslot)) {
 					strValue = "";
 					for (Player player : timeslotMap.get(timeslot))
 						strValue += players.indexOf(player) + ",";
 					
 					strValue = strValue.substring(0, strValue.length() - 1);
+				} else if (timeslot.getIsBreak()) {
+					strValue = "*";
+				} else {
+					strValue = "-";
 				}
 				sb.append(String.format("%" + padding + "s", strValue));
 			}
@@ -164,21 +173,24 @@ public abstract class Schedule {
 	/**
 	 * Método para ayudar al formateo del horario
 	 * 
-	 * @param  matchVal		valor del partido
+	 * @param  matchVal		valor del elemento del horario
 	 * @return string		cadena con la representación del valor del partido donde
-	 *     *:    el timeslot corresponde a un período en el que no se juega
-	 *     ~:	 el jugador no está disponible en esa hora
+	 *     x:    el timeslot no pertenece al rango de timeslots del evento
+	 *     *:    el timeslot corresponde a un período en el que no se juega (break)
+	 *     ~:    el jugador no está disponible en esa hora
 	 *     -:    el jugador no juega a esa hora
-	 *  1..n:    el jugador juega en esa pista (n es la última pista)
+	 *     n:    el jugador juega en la pista con índice n
 	 */
-	private String getMatchStringValue(int matchVal) {
-		String match = String.valueOf(matchVal);
-		if (matchVal == -3)
-			match = "*";
-		else if (matchVal == -2)
-			match = "~";
-		else if (matchVal == -1)
-			match = "-";
+	private String getMatchStringValue(int scheduleVal) {
+		String match = String.valueOf(scheduleVal);
+		
+		switch (scheduleVal) {
+			case -4: match = "x"; break;
+			case -3: match = "*"; break;
+			case -2: match = "~"; break;
+			case -1: match = "-"; break;
+		}
+
 		return match;
 	}
 }

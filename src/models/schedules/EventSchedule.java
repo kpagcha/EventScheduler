@@ -1,10 +1,14 @@
-package models;
+package models.schedules;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 import org.chocosolver.solver.variables.IntVar;
+
+import models.Event;
+import models.Match;
+import models.Player;
 
 public class EventSchedule extends Schedule {
 	/**

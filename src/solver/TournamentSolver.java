@@ -1,8 +1,11 @@
 package solver;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 import org.chocosolver.solver.Solver;
 import org.chocosolver.solver.constraints.IntConstraintFactory;
@@ -15,11 +18,11 @@ import org.chocosolver.util.ESat;
 import org.chocosolver.util.tools.ArrayUtils;
 
 import models.Event;
-import models.EventSchedule;
 import models.Localization;
 import models.Player;
 import models.Timeslot;
 import models.Tournament;
+import models.schedules.EventSchedule;
 
 public class TournamentSolver {
 	private Solver solver;
@@ -165,7 +168,7 @@ public class TournamentSolver {
 	}
 	
 	private void createSolver() {
-		solver = new Solver("Tennis tournament");
+		solver = new Solver("Tournament Solver");
 	}
 	
 	private void buildModel() {
@@ -183,6 +186,8 @@ public class TournamentSolver {
 				g[e][p] = VariableFactory.boundedMatrix("Player" + p + "GameStart", nCourts[e], nTimeslots[e], 0, 1, solver);
 			}
 		}
+		
+		setConstraintsPredefineMatchups();
 		
 		setConstraintsMatchesSum();
 		
@@ -202,6 +207,72 @@ public class TournamentSolver {
 		setConstraintsPlayersNotSimultaneous();
 		
 		setConstraintsPlayersMatchesNumber();
+	}
+	
+	/**
+	 * Emparejamientos por sorteo: predefine los jugadores que compondrán un partido. Esto tiene dos consecuencias:
+	 * 1. El cálculo del horario es mucho más rápido porque la restricción es más fuerte
+	 * 2. Se reducen las posibles combinaciones de horarios porque ya no puede ser emparejado cualquier jugador con cualquier otro
+	 * 2a. Puede provocar que no se encuentren soluciones
+	 */
+	private void setConstraintsPredefineMatchups() {
+		Map<Event, List<List<Player>>> predefinedMatchups = new HashMap<Event, List<List<Player>>>();
+		for (Event event : events) {
+			// Si el evento se organiza por sorteo
+			if (event.getRandomDrawings()) {
+				List<Player> players = new ArrayList<Player>(Arrays.asList(event.getPlayers()));
+				List<List<Player>> matchups = new ArrayList<List<Player>>(event.getNumberOfMatches());
+				
+				Random random = new Random();
+				int nPlayersPerMatch = event.getPlayersPerMatch();
+				while (!players.isEmpty()) {
+					List<Player> matchup = new ArrayList<Player>(nPlayersPerMatch);
+					
+					for (int i = 0; i < nPlayersPerMatch; i++) {
+						int randIndex = random.ints(0, players.size()).findFirst().getAsInt();
+						
+						matchup.add(players.get(randIndex));
+						
+						players.remove(randIndex);
+					}
+					
+					matchups.add(matchup);
+				}
+				
+				predefinedMatchups.put(event, matchups);
+			}
+		}
+		
+		/*for (Event e : predefinedMatchups.keySet()) {
+			System.out.println(e);
+			for (List<Player> matchup : predefinedMatchups.get(e)) {
+				for (Player p : matchup)
+					System.out.print(p + " ");
+				System.out.println();
+			}
+			System.out.println();
+		}*/
+		
+		for (Event event : predefinedMatchups.keySet()) {
+			int e = getEventIndex(event);
+			int nPlayersInMatch = event.getPlayersPerMatch();
+			
+			List<List<Player>> matchups = predefinedMatchups.get(event);
+			
+			for (List<Player> matchup : matchups) {
+				int[] pIndex = new int[nPlayersInMatch];
+				
+				for (int p = 0; p < nPlayersInMatch; p++)
+					pIndex[p] = event.getPlayerIndex(matchup.get(p));
+				
+				for (int c = 0; c < nCourts[e]; c++) {
+					for (int t = 0; t < nTimeslots[e]; t++) {
+						for (int p = 0; p < nPlayersInMatch - 1; p++)
+							solver.post(IntConstraintFactory.arithm(x[e][pIndex[p]][c][t], "=", x[e][pIndex[p + 1]][c][t]));
+					}
+				}
+			}
+		}
 	}
 	
 	private void setConstraintsMatchesSum() {
@@ -432,7 +503,7 @@ public class TournamentSolver {
 				for (int e = 0; e < nCategories; e++)
 					// Si el jugador_p juega en la categoría_e a la hora_t
 					if (playersIndices[p][e] != -1 && timeslotsIndices[t][e] != -1)
-						for (int c = 0; c < nCourts[e]; c++)
+						for (int c = 0; c < nCourts[e]; c++) 
 							courtSum.add(x[e][playersIndices[p][e]][c][timeslotsIndices[t][e]]);
 				
 				// Que la suma de las ocupaciones de todas las pistas por parte del

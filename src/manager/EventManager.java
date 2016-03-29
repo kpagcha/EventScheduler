@@ -107,6 +107,62 @@ public class EventManager {
 		
 		return new Tournament("Tennis Tournament", new Event[]{ mensDraw, womensDraw, doublesDraw });
 	}
+
+	public Tournament getSampleMediumTennisTournament() {
+		Player[] kids = buildGenericPlayers(8, "Kid");
+		Player[] men = buildGenericPlayers(16, "Man");
+		Player[] women = buildGenericPlayers(12, "Woman");
+		Localization[] localizations = buildGenericLocalizations(7, "Pista");
+		Timeslot[] timeslots = buildTimeslots(12, new int[]{ 5 });
+		
+		Event eventKids = new Event(
+			"Kids' Category",
+			kids, new Localization[]{ localizations[0], localizations[1], localizations[2], localizations[3] }, 
+			timeslots
+		);
+		
+		Event eventMen = new Event("Men's Category", men, localizations, timeslots);
+		
+		Event eventWomen = new Event("Women's Category", women, localizations, timeslots);
+		
+		Player[] doubles = new Player[men.length + women.length];
+		for (int i = 0; i < men.length; i++) doubles[i] = men[i];
+		for (int i = 0; i < women.length; i++) doubles[i + men.length] = women[i];
+		
+		Timeslot[] doublesTimeslots = new Timeslot[timeslots.length + 7];
+		for (int i = 0; i < timeslots.length; i++) doublesTimeslots[i] = timeslots[i];
+		for (int i = timeslots.length; i < doublesTimeslots.length; i++) doublesTimeslots[i] = new Timeslot(3600000 * i, 3600000 * (i + 1));
+		doublesTimeslots[timeslots.length].setIsBreak(true);
+		
+		Event eventDoubles = new Event(
+			"Double's Event", doubles, localizations, doublesTimeslots
+		);
+		
+		eventDoubles.setPlayersPerMatch(4);
+		
+		Map<Player, Timeslot[]> kidsUnavailability = buildUnavailability(
+			eventKids,
+			new int[][]{
+				{ 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 },
+				{ 2, 3 },
+				{ 0, 1 },
+				{ 9, 10, 11 },
+				{},
+				{},
+				{ 5, 6 },
+				{ 0 } 
+			}
+		);
+		
+		eventKids.setUnavailableTimeslots(kidsUnavailability);
+		
+		eventKids.setRandomDrawings(true);
+		eventMen.setRandomDrawings(true);
+		eventWomen.setRandomDrawings(true);
+		eventDoubles.setRandomDrawings(true);
+		
+		return new Tournament("Medium Tennis Tournament", new Event[]{ eventKids, eventMen, eventWomen, eventDoubles });
+	}
 	
 	public Tournament getSampleBigTennisTournament() {
 		Player[] benjamin = buildGenericPlayers(8, "Benj");

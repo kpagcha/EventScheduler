@@ -27,6 +27,9 @@ public class Event {
 	// Número de jugadores que componen un partido (lo normal es 2)
 	private int nPlayersPerMatch = 2;
 	
+	// Indica si el evento se organiza por sorteo (sorteo de emparejamientos por partido) 
+	private boolean randomDrawings = false;
+	
 	public Event(String name, Player[] players, Localization[] localizations, Timeslot[] timeslots) {
 		this.name = name;
 		this.players = players;
@@ -36,16 +39,6 @@ public class Event {
 		
 		for (Player player : players)
 			unavailableTimeslots.put(player, new Timeslot[]{});
-	}
-	
-	public Event(String name, Player[] players, Localization[] localizations, Timeslot[] timeslots, Map<Player, Timeslot[]> unavailability, int nMatches, int matchDuration) {
-		this.name = name;
-		this.players = players;
-		this.localizations = localizations;
-		this.timeslots = timeslots;
-		unavailableTimeslots = unavailability;
-		nMatchesPerPlayer = nMatches;
-		nTimeslotsPerMatch = matchDuration;
 	}
 	
 	public void setName(String name) {
@@ -110,6 +103,14 @@ public class Event {
 	
 	public int getPlayersPerMatch() {
 		return nPlayersPerMatch;
+	}
+	
+	public void setRandomDrawings(boolean randomDrawings) {
+		this.randomDrawings = randomDrawings;
+	}
+	
+	public boolean getRandomDrawings() {
+		return randomDrawings;
 	}
 	
 	public int[][] getUnavailableTimeslotsAs2DIntArray() {

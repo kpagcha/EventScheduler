@@ -8,6 +8,8 @@ import java.util.Map;
 import java.util.Scanner;
 
 import manager.EventManager;
+import models.schedules.CombinedSchedule;
+import models.schedules.EventSchedule;
 import solver.TournamentSolver;
 
 public class Tournament {
@@ -161,7 +163,8 @@ public class Tournament {
 		//Tournament tournament = EventManager.getInstance().getSampleSmallTournament();
 		//Tournament tournament = EventManager.getInstance().getSampleTournamentWithOneCategory();
 		//Tournament tournament = EventManager.getInstance().getSampleTennisTournament();
-		Tournament tournament = EventManager.getInstance().getSampleBigTennisTournament();
+		//Tournament tournament = EventManager.getInstance().getSampleBigTennisTournament();
+		Tournament tournament = EventManager.getInstance().getSampleMediumTennisTournament();
 		
 		tournament.nextSchedules();
 		

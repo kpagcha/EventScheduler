@@ -1,9 +1,15 @@
-package models;
+package models.schedules;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+
+import models.Event;
+import models.Match;
+import models.Player;
+import models.Timeslot;
+import models.Tournament;
 
 public class CombinedSchedule extends Schedule {
 	/**
