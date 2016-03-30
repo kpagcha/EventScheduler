@@ -22,6 +22,6 @@ public class Player {
 	}
 	
 	public boolean equals(Player player) {
-		return id == player.getId();
+		return player != null && id == player.getId();
 	}
 }

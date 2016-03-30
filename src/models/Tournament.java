@@ -25,9 +25,12 @@ public class Tournament {
 		events = categories;
 		
 		solver = new TournamentSolver(this);
-		solver.execute();
 		
 		currentSchedules = new EventSchedule[categories.length];
+	}
+	
+	public void solve() {
+		solver.execute();
 	}
 	
 	public void setName(String name) {
@@ -155,20 +158,57 @@ public class Tournament {
 		return numberOfMatches;
 	}
 	
+	public TournamentSolver getSolver() {
+		return solver;
+	}
+	
 	public String toString() {
 		return name;
 	}
 	
+	public boolean hasFinished = false;
+	
 	public static void main(String[] args) {
-		//Tournament tournament = EventManager.getInstance().getSampleSmallTournament();
-		//Tournament tournament = EventManager.getInstance().getSampleTournamentWithOneCategory();
-		//Tournament tournament = EventManager.getInstance().getSampleTennisTournament();
-		//Tournament tournament = EventManager.getInstance().getSampleBigTennisTournament();
-		Tournament tournament = EventManager.getInstance().getSampleMediumTennisTournament();
+		Scanner sc = new Scanner(System.in);
+		
+		System.out.println("1 Sample One Category Tournament");
+		System.out.println("2 Sample Tennis Tournament");
+		System.out.println("3 Sample Medium Tennis Tournament");
+		System.out.println("4 Sample Large Tennis Tournament");
+		System.out.println("5 Sample Large Tennis Tournament With Collisions");
+		System.out.print("Choose tournament: ");
+		int tournamentOption = sc.nextInt();
+		
+		Tournament tournament = null;
+		switch (tournamentOption) {
+			case 1:
+				tournament = EventManager.getInstance().getSampleOneCategoryTournament();
+				break;
+			case 2:
+				tournament = EventManager.getInstance().getSampleTennisTournament();
+				break;
+			case 3:
+				tournament = EventManager.getInstance().getSampleMediumTennisTournament();
+				break;
+			case 4:
+				tournament = EventManager.getInstance().getSampleLargeTennisTournament();
+				break;
+			case 5:
+				tournament = EventManager.getInstance().getSampleLargeTennisTournamentWithCollisions();
+				break;
+		}
+		
+		System.out.println("\n1 domOverWDeg");
+		System.out.println("2 minDom_UB");
+		System.out.println("3 minDom_LB");
+		System.out.print("Choose Search Strategy: ");
+		int searchStrategyOption = sc.nextInt();
+
+		tournament.getSolver().setSearchStrategy(searchStrategyOption);
+		tournament.solve();
 		
 		tournament.nextSchedules();
 		
-		Scanner sc = new Scanner(System.in);
 		
 		boolean printSolutions = true;
 		boolean askForInput = false;
@@ -183,20 +223,28 @@ public class Tournament {
 				
 				CombinedSchedule combinedSchedule = tournament.getCombinedSchedule();
 				
-				System.out.println("All schedules combined in one");
-				System.out.println(combinedSchedule);
+				//System.out.println("All schedules combined in one");
+				//System.out.println(combinedSchedule);
 				
-				combinedSchedule.calculateMatches();
+				/*combinedSchedule.calculateMatches();
 				Match[] matches = combinedSchedule.getMatches();
 				System.out.println("All matches (" + matches.length + ")");
 				for (Match match : matches)
 					System.out.println(match);
-				System.out.println();
+				System.out.println();*/
 				
-				combinedSchedule.groupByLocalizations();
+				int occupation = combinedSchedule.groupByLocalizations();
 				
 				System.out.println("Combined schedule grouped by courts");
 				System.out.println(combinedSchedule.groupedScheduleToString());
+				
+				System.out.println(
+					String.format("Timeslot occupation: %s/%s (%s %%)\n",
+						occupation,
+						tournament.getAllLocalizations().size() * tournament.getAllTimeslots().size(),
+						occupation / (double)(tournament.getAllLocalizations().size() * tournament.getAllTimeslots().size()) * 100
+					)
+				);
 			}
 			
 			foundSolutions++;
@@ -215,6 +263,6 @@ public class Tournament {
 		
 		sc.close();
 		
-		System.out.println(foundSolutions + " solutions found.");
+		System.out.println("\n" + foundSolutions + " solutions found.");
 	}
 }

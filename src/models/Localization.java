@@ -8,7 +8,7 @@ public class Localization {
 	
 	public Localization(String name) {
 		this.name = name;
-		id = lastId++;
+		this.id = lastId++;
 	}
 	
 	public int getId() {
@@ -17,5 +17,9 @@ public class Localization {
 	
 	public String toString() {
 		return name;
+	}
+	
+	public boolean equals(Localization localization) {
+		return localization != null && id == localization.getId();
 	}
 }

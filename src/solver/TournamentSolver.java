@@ -76,6 +76,9 @@ public class TournamentSolver {
 	
 	private boolean lastSolutionFound = false;
 	
+	// Opción de estrategia de búsqueda
+	private int searchStrategyOption = 1;
+	
 	public TournamentSolver(Tournament tournament) {
 		this.tournament = tournament;
 		events = tournament.getEvents();
@@ -160,10 +163,14 @@ public class TournamentSolver {
 		}
 	}
 	
+	public void setSearchStrategy(int option) {
+		searchStrategyOption = option;
+	}
+	
 	public void execute() {
 		createSolver();
 		buildModel();
-		configureSearch();
+		configureSearch(searchStrategyOption);
 		solve();
 	}
 	
@@ -225,6 +232,7 @@ public class TournamentSolver {
 				
 				Random random = new Random();
 				int nPlayersPerMatch = event.getPlayersPerMatch();
+				
 				while (!players.isEmpty()) {
 					List<Player> matchup = new ArrayList<Player>(nPlayersPerMatch);
 					
@@ -238,12 +246,13 @@ public class TournamentSolver {
 					
 					matchups.add(matchup);
 				}
-				
+					
 				predefinedMatchups.put(event, matchups);
 			}
 		}
 		
-		/*for (Event e : predefinedMatchups.keySet()) {
+		/*System.out.println("PREDEFINED MATCHUPS:");
+		for (Event e : predefinedMatchups.keySet()) {
 			System.out.println(e);
 			for (List<Player> matchup : predefinedMatchups.get(e)) {
 				for (Player p : matchup)
@@ -549,29 +558,60 @@ public class TournamentSolver {
 		return -1;
 	}
 	
-	private void configureSearch() {	
-		IntVar[][][] concatX = new IntVar[nCategories][][];
+	private void configureSearch(int option) {	
+		IntVar[][][] vars = new IntVar[nCategories][][];
 		for (int i = 0; i < nCategories; i++)
-			concatX[i] = ArrayUtils.flatten(x[i]);
+			vars[i] = ArrayUtils.flatten(x[i]);
 		
-		//solver.set(IntStrategyFactory.minDom_UB(ArrayUtils.flatten(concatX)));
-		//solver.set(IntStrategyFactory.minDom_LB(ArrayUtils.flatten(concatX)));
-		solver.set(IntStrategyFactory.domOverWDeg(ArrayUtils.flatten(concatX), 0));
+		IntVar[] v = ArrayUtils.flatten(vars);
+		
+		switch (option) {
+			case 1:
+				solver.set(IntStrategyFactory.domOverWDeg(v, System.currentTimeMillis()));
+				break;
+			case 2:
+				solver.set(IntStrategyFactory.minDom_UB(v));
+				break;
+			case 3:
+				solver.set(IntStrategyFactory.minDom_LB(v));
+				break;
+			default:
+				solver.set(IntStrategyFactory.domOverWDeg(v, System.currentTimeMillis()));
+				break;
+		}
 	}
 	
 	private void solve() {
 		//SearchMonitorFactory.limitTime(solver, 10000);
-		solver.findSolution();
-		Chatterbox.printStatistics(solver);
+		if (solver.findSolution())
+			Chatterbox.printStatistics(solver);
 	}
 	
 	public EventSchedule[] getSchedules() {
-		if (lastSolutionFound)
+		if (lastSolutionFound && schedules != null)
 			schedules = null;
 		
 		else if (solver.isFeasible() != ESat.TRUE) {
 			System.out.println("Problem infeasible.");
 			schedules = null;
+			
+			boolean hasRandomDrawings = false;
+			for (Event event : events)
+				if (event.getRandomDrawings()) {
+					System.out.println("Trying new resolution with different random drawings.\n");
+					hasRandomDrawings = true;
+					break;
+				}
+			
+			if (hasRandomDrawings) {
+				try {
+					execute();
+				} catch (StackOverflowError e) {
+					return null;
+				}
+			
+				return getSchedules();
+			}
 			
 		} else if (schedules == null) {
 			schedules = new EventSchedule[nCategories];

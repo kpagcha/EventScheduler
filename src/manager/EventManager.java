@@ -20,70 +20,32 @@ public class EventManager {
 		return instance;
 	}
 	
-	public Tournament getSampleSmallTournament() {
-		// EVENT 1 --------------------------------------------
+	public Tournament getSampleOneCategoryTournament() {
+		Player[] players = buildGenericPlayers(8, "Player");
+		Localization[] localizations = buildGenericLocalizations(2, "Pista");
+		Timeslot[] timeslots = buildTimeslots(8, new int[]{});
 		
-		Player[] players = buildPlayers(new String[]{ "Djokovic", "Federer", "Nadal", "Murray", "Wawrinka", "Ferrer", "Nishikori", "Berdych" });
-		Localization[] localizations = buildLocalizations(new int[]{ 1, 2 });
-		Timeslot[] timeslots = buildTimeslots(
-			new int[]{ 0, 1, 2, 3, 4, 5, 6, 7, 8 },
-			new int[]{ 4 }
-		);
-		
-		Event event1 = new Event("Category 1", new Player[]{ players[0], players[1] }, localizations, timeslots);
-		event1.setMatchesPerPlayer(1);
-		event1.setMatchDuration(2);
-		
-		// EVENT 2 --------------------------------------------
-		
-		Event event2 = new Event("Category 2", new Player[]{ players[2], players[3] }, localizations, timeslots);
-		event2.setMatchesPerPlayer(1);
-		event2.setMatchDuration(2);
-		
-		// EVENT 3 --------------------------------------------
-		
-		Event event3 = new Event(
-			"Category 3",
-			new Player[]{ players[3], players[0],  players[1], players[2] },
-			localizations,
-			new Timeslot[]{ timeslots[2], timeslots[3], timeslots[4], timeslots[5] }
-		);
-		event3.setMatchesPerPlayer(1);
-		event3.setMatchDuration(1);
-		
-		return new Tournament("Small Tournament", new Event[]{ event1, event2, event3 });
-	}
-	
-	public Tournament getSampleTournamentWithOneCategory() {
-		Player[] players = buildPlayers(new String[]{ "Djokovic", "Murray", "Federer", "Wawrinka", "Nadal", "Nishikori", "Berdych", "Ferrer" });
-		Localization[] localizations = buildLocalizations(new int[]{ 1, 2 });
-		Timeslot[] timeslots = buildTimeslots(
-			new int[]{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
-			new int[]{ 3 }
-		);
-		
-		Event event = new Event("Main Category", players, localizations, timeslots);
+		Event event = new Event("Categoría Principal", players, localizations, timeslots);
 		
 		Map<Player, Timeslot[]> unavailability = buildUnavailability(
 			event,
-			new int[][]
-			{
-				{ 4, 5 }, // Djokovic
-				{ 4 },    // Murray
-				{ 7, 8 }, // Federer
-				{ 0, 6 }, // Wawrinka
-				{ 1, 2 }, // Nadal
-				{ 3 },    // Nishikori
-				{ },      // Berdych
-				{ 8, 9 }  // Ferrer
+			new int[][]{
+				{ 5, 6, 7 },
+				{ 6, 7  },
+				{ 0, 1, 2, 3 },
+				{ 3, 4 },
+				{ 4, 5, 7 },
+				{ 1, 2},
+				{ 5, 6 },
+				{ 0 } 
 			}
 		);
 		
 		event.setUnavailableTimeslots(unavailability);
-		event.setMatchesPerPlayer(1);
-		event.setMatchDuration(3);
+		event.setMatchesPerPlayer(2);
+		//event.setRandomDrawings(true);
 		
-		return new Tournament("Exhibition Tournament", new Event[]{ event });
+		return new Tournament("Torneo", new Event[]{ event });
 	}
 	
 	public Tournament getSampleTennisTournament() {
@@ -105,6 +67,10 @@ public class EventManager {
 		
 		doublesDraw.setPlayersPerMatch(4);
 		
+		mensDraw.setRandomDrawings(true);
+		womensDraw.setRandomDrawings(true);
+		doublesDraw.setRandomDrawings(true);
+		
 		return new Tournament("Tennis Tournament", new Event[]{ mensDraw, womensDraw, doublesDraw });
 	}
 
@@ -112,7 +78,8 @@ public class EventManager {
 		Player[] kids = buildGenericPlayers(8, "Kid");
 		Player[] men = buildGenericPlayers(16, "Man");
 		Player[] women = buildGenericPlayers(12, "Woman");
-		Localization[] localizations = buildGenericLocalizations(7, "Pista");
+		
+		Localization[] localizations = buildGenericLocalizations(4, "Pista");
 		Timeslot[] timeslots = buildTimeslots(12, new int[]{ 5 });
 		
 		Event eventKids = new Event(
@@ -147,8 +114,8 @@ public class EventManager {
 				{ 2, 3 },
 				{ 0, 1 },
 				{ 9, 10, 11 },
-				{},
-				{},
+				{ },
+				{ },
 				{ 5, 6 },
 				{ 0 } 
 			}
@@ -164,7 +131,7 @@ public class EventManager {
 		return new Tournament("Medium Tennis Tournament", new Event[]{ eventKids, eventMen, eventWomen, eventDoubles });
 	}
 	
-	public Tournament getSampleBigTennisTournament() {
+	public Tournament getSampleLargeTennisTournament() {
 		Player[] benjamin = buildGenericPlayers(8, "Benj");
 		Player[] alevin = buildGenericPlayers(8, "Alev");
 		Player[] infantil = buildGenericPlayers(32, "Inf");
@@ -182,12 +149,58 @@ public class EventManager {
 		Event categoriaJunior = new Event("Categoría Junior", junior, localizations, timeslots);
 		Event categoriaAbsoluto = new Event("Categoría Absoluto", absoluto, localizations, timeslots);
 		
-		categoriaBenjamin.setMatchDuration(1);
-		categoriaAlevin.setMatchDuration(1);
+		categoriaBenjamin.setRandomDrawings(true);
+		categoriaAlevin.setRandomDrawings(true);
+		categoriaInfantil.setRandomDrawings(true);
+		categoriaCadete.setRandomDrawings(true);
+		categoriaJunior.setRandomDrawings(true);
+		categoriaAbsoluto.setRandomDrawings(true);
 		
 		return new Tournament(
 			"Torneo de tenis", 
 			new Event[]{ categoriaBenjamin, categoriaAlevin, categoriaInfantil, categoriaCadete, categoriaJunior, categoriaAbsoluto }
+		);
+	}
+	
+	public Tournament getSampleLargeTennisTournamentWithCollisions() {
+		Player[] benjamin = buildGenericPlayers(8, "Benj");
+		Player[] alevin = buildGenericPlayers(8, "Alev");
+		Player[] infantil = buildGenericPlayers(32, "Inf");
+		Player[] cadete = buildGenericPlayers(32, "Cad");
+		Player[] junior = buildGenericPlayers(8, "Jun");
+		Player[] absoluto = buildGenericPlayers(16, "Abs");
+		for (int i = 0; i < 8; i++) absoluto[i] = junior[i];
+		
+		Player[] dobles = new Player[32];
+		for (int i = 0; i < 16; i++) {
+			dobles[i] = cadete[i];
+			dobles[i + 16] = absoluto[i];
+		}
+		
+		Localization[] localizations = buildGenericLocalizations(8, "Pista");
+		Timeslot[] timeslots = buildTimeslots(27, new int[]{ 5, 13, 19 }); // 2 días de 9:00 a 21:00 con descanso a las 14:00 (y la noche entre d1 y d2)
+		
+		Event categoriaBenjamin = new Event("Categoría Benjamín", benjamin, localizations, timeslots);
+		Event categoriaAlevin = new Event("Categoría Alevín", alevin, localizations, timeslots);
+		Event categoriaInfantil = new Event("Categoría Infantil", infantil, localizations, timeslots);
+		Event categoriaCadete = new Event("Categoría Cadete", cadete, localizations, timeslots);
+		Event categoriaJunior = new Event("Categoría Junior", junior, localizations, timeslots);
+		Event categoriaAbsoluto = new Event("Categoría Absoluto", absoluto, localizations, timeslots);
+		Event categoriaDobles = new Event("Categoría Dobles", dobles, localizations, timeslots);
+		
+		categoriaDobles.setPlayersPerMatch(4);
+		
+		categoriaBenjamin.setRandomDrawings(true);
+		categoriaAlevin.setRandomDrawings(true);
+		categoriaInfantil.setRandomDrawings(true);
+		categoriaCadete.setRandomDrawings(true);
+		categoriaJunior.setRandomDrawings(true);
+		categoriaAbsoluto.setRandomDrawings(true);
+		categoriaDobles.setRandomDrawings(true);
+		
+		return new Tournament(
+			"Torneo de tenis", 
+			new Event[]{ categoriaBenjamin, categoriaAlevin, categoriaInfantil, categoriaCadete, categoriaJunior, categoriaAbsoluto, categoriaDobles }
 		);
 	}
 	

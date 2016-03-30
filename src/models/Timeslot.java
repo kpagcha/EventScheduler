@@ -90,7 +90,7 @@ public class Timeslot {
 	}
 	
 	public boolean equals(Timeslot timeslot) {
-		return id == timeslot.getId();
+		return timeslot != null && id == timeslot.getId();
 	}
 	
 	private String formatStringWithTimeUnit(int value) {

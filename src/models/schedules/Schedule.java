@@ -54,13 +54,16 @@ public abstract class Schedule {
 	 * Agrupa el horario por localizaciones de juego. Por cada pista habrá una lista de
 	 * timeslots en los que se juega en esa pista, y a cada timeslot se asociará un conjunto
 	 * de jugadores que se juegan en esa pista en ese momento
+	 *
+	 * @return número de timeslots ocupados
 	 */
-	public void groupByLocalizations() {
-		groupedSchedule = new HashMap<Localization, Map<Timeslot,List<Player>>>();
+	public int groupByLocalizations() {
+		groupedSchedule = new HashMap<Localization, Map<Timeslot, List<Player>>>();
 		
 		for (Localization localization : localizations)
 			groupedSchedule.put(localization, new HashMap<Timeslot, List<Player>>());
 			
+		int timeslotOccupation = 0;
 		for (int t = 0; t < nTimeslots; t++) {
 			for (int p = 0; p < nPlayers; p++) {
 				// Si el jugador_p juega en la hora_t
@@ -73,11 +76,15 @@ public abstract class Schedule {
 					Map<Timeslot, List<Player>> timeslotMap = groupedSchedule.get(localization);
 					if (timeslotMap.containsKey(timeslot))
 						timeslotMap.get(timeslot).add(player);
-					else
+					else {
 						timeslotMap.put(timeslot, new ArrayList<Player>(Arrays.asList(new Player[]{ player })));
+						timeslotOccupation++;
+					}
 				}
 			}
 		}
+		
+		return timeslotOccupation;
 	}
 	
 	/**
@@ -86,7 +93,7 @@ public abstract class Schedule {
 	public Map<Localization, Map<Timeslot, List<Player>>> getScheduleGroupedByLocalizations() {
 		return groupedSchedule;
 	}
-
+	
 	/**
 	 * @return cadena con la representación del horario agrupado por pistas
 	 */
