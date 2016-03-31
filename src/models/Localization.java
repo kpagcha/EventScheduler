@@ -8,7 +8,7 @@ public class Localization {
 	
 	public Localization(String name) {
 		this.name = name;
-		this.id = lastId++;
+		id = lastId++;
 	}
 	
 	public int getId() {

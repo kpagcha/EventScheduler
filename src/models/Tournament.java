@@ -168,7 +168,7 @@ public class Tournament {
 	
 	public boolean hasFinished = false;
 	
-	public static void main(String[] args) {
+	public static void main(String[] args) {		
 		Scanner sc = new Scanner(System.in);
 		
 		System.out.println("1 Sample One Category Tournament");
@@ -209,7 +209,6 @@ public class Tournament {
 		
 		tournament.nextSchedules();
 		
-		
 		boolean printSolutions = true;
 		boolean askForInput = false;
 		int maxSolutions = 1; // 0 -> todas las soluciones
@@ -221,30 +220,32 @@ public class Tournament {
 				System.out.println(tournament + "\n");
 				tournament.printCurrentSchedules();
 				
-				CombinedSchedule combinedSchedule = tournament.getCombinedSchedule();
+				if (tournament.currentSchedules != null) {
+					CombinedSchedule combinedSchedule = tournament.getCombinedSchedule();
 				
-				//System.out.println("All schedules combined in one");
-				//System.out.println(combinedSchedule);
-				
-				/*combinedSchedule.calculateMatches();
-				Match[] matches = combinedSchedule.getMatches();
-				System.out.println("All matches (" + matches.length + ")");
-				for (Match match : matches)
-					System.out.println(match);
-				System.out.println();*/
-				
-				int occupation = combinedSchedule.groupByLocalizations();
-				
-				System.out.println("Combined schedule grouped by courts");
-				System.out.println(combinedSchedule.groupedScheduleToString());
-				
-				System.out.println(
-					String.format("Timeslot occupation: %s/%s (%s %%)\n",
-						occupation,
-						tournament.getAllLocalizations().size() * tournament.getAllTimeslots().size(),
-						occupation / (double)(tournament.getAllLocalizations().size() * tournament.getAllTimeslots().size()) * 100
-					)
-				);
+					System.out.println("All schedules combined in one");
+					System.out.println(combinedSchedule);
+					
+					combinedSchedule.calculateMatches();
+					Match[] matches = combinedSchedule.getMatches();
+					System.out.println("All matches (" + matches.length + ")");
+					for (Match match : matches)
+						System.out.println(match);
+					System.out.println();
+					
+					int occupation = combinedSchedule.groupByLocalizations();
+					
+					System.out.println("Combined schedule grouped by courts");
+					System.out.println(combinedSchedule.groupedScheduleToString());
+					
+					System.out.println(
+						String.format("Timeslot occupation: %s/%s (%s %%)\n",
+							occupation,
+							tournament.getAllLocalizations().size() * tournament.getAllTimeslots().size(),
+							occupation / (double)(tournament.getAllLocalizations().size() * tournament.getAllTimeslots().size()) * 100
+						)
+					);
+				}
 			}
 			
 			foundSolutions++;

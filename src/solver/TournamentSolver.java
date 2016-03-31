@@ -592,13 +592,13 @@ public class TournamentSolver {
 			schedules = null;
 		
 		else if (solver.isFeasible() != ESat.TRUE) {
-			System.out.println("Problem infeasible.");
+			//System.out.println("Problem infeasible.");
 			schedules = null;
 			
 			boolean hasRandomDrawings = false;
 			for (Event event : events)
 				if (event.getRandomDrawings()) {
-					System.out.println("Trying new resolution with different random drawings.\n");
+					//System.out.println("Trying new resolution with different random drawings.\n");
 					hasRandomDrawings = true;
 					break;
 				}
