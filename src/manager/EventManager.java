@@ -1,7 +1,13 @@
 package manager;
 
+import java.lang.reflect.Array;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Random;
+import java.util.stream.Stream;
 
 import models.Event;
 import models.Localization;
@@ -20,7 +26,7 @@ public class EventManager {
 		return instance;
 	}
 	
-	public Tournament getSampleOneCategoryTournament() {
+	public Tournament getSampleOneCategoryTournament(boolean randomDrawings) {
 		Player[] players = buildGenericPlayers(8, "Player");
 		Localization[] localizations = buildGenericLocalizations(2, "Pista");
 		Timeslot[] timeslots = buildTimeslots(8, new int[]{});
@@ -43,12 +49,14 @@ public class EventManager {
 		
 		event.setUnavailableTimeslots(unavailability);
 		event.setMatchesPerPlayer(2);
-		//event.setRandomDrawings(true);
+		
+		if (randomDrawings)
+			event.setRandomDrawings(true);
 		
 		return new Tournament("Torneo", new Event[]{ event });
 	}
 	
-	public Tournament getSampleTennisTournament() {
+	public Tournament getSampleTennisTournament(boolean randomDrawings) {
 		Player[] atpPlayers = buildPlayers(new String[]{ "Djokovic", "Murray", "Federer", "Wawrinka", "Nadal", "Nishikori", "Berdych", "Ferrer" });
 		Player[] wtaPlayers = buildPlayers(new String[]{ "Williams", "Radwanska", "Kerber", "Muguruza", "Halep", "Suárez Navarro", "Kvitova", "Azarenka" });
 		Localization[] localizations = buildLocalizations(new int[]{ 1, 2, 3 });
@@ -67,14 +75,16 @@ public class EventManager {
 		
 		doublesDraw.setPlayersPerMatch(4);
 		
-		mensDraw.setRandomDrawings(true);
-		womensDraw.setRandomDrawings(true);
-		doublesDraw.setRandomDrawings(true);
+		if (randomDrawings) {
+			mensDraw.setRandomDrawings(true);
+			womensDraw.setRandomDrawings(true);
+			doublesDraw.setRandomDrawings(true);
+		}
 		
 		return new Tournament("Tennis Tournament", new Event[]{ mensDraw, womensDraw, doublesDraw });
 	}
 
-	public Tournament getSampleMediumTennisTournament() {
+	public Tournament getSampleMediumTennisTournament(boolean randomDrawings) {
 		Player[] kids = buildGenericPlayers(8, "Kid");
 		Player[] men = buildGenericPlayers(16, "Man");
 		Player[] women = buildGenericPlayers(12, "Woman");
@@ -123,15 +133,17 @@ public class EventManager {
 		
 		eventKids.setUnavailableTimeslots(kidsUnavailability);
 		
-		eventKids.setRandomDrawings(true);
-		eventMen.setRandomDrawings(true);
-		eventWomen.setRandomDrawings(true);
-		eventDoubles.setRandomDrawings(true);
+		if (randomDrawings) {
+			eventKids.setRandomDrawings(true);
+			eventMen.setRandomDrawings(true);
+			eventWomen.setRandomDrawings(true);
+			eventDoubles.setRandomDrawings(true);
+		}
 		
 		return new Tournament("Medium Tennis Tournament", new Event[]{ eventKids, eventMen, eventWomen, eventDoubles });
 	}
 	
-	public Tournament getSampleLargeTennisTournament() {
+	public Tournament getSampleLargeTennisTournament(boolean randomDrawings) {
 		Player[] benjamin = buildGenericPlayers(8, "Benj");
 		Player[] alevin = buildGenericPlayers(8, "Alev");
 		Player[] infantil = buildGenericPlayers(32, "Inf");
@@ -149,12 +161,14 @@ public class EventManager {
 		Event categoriaJunior = new Event("Categoría Junior", junior, localizations, timeslots);
 		Event categoriaAbsoluto = new Event("Categoría Absoluto", absoluto, localizations, timeslots);
 		
-		categoriaBenjamin.setRandomDrawings(true);
-		categoriaAlevin.setRandomDrawings(true);
-		categoriaInfantil.setRandomDrawings(true);
-		categoriaCadete.setRandomDrawings(true);
-		categoriaJunior.setRandomDrawings(true);
-		categoriaAbsoluto.setRandomDrawings(true);
+		if (randomDrawings) {
+			categoriaBenjamin.setRandomDrawings(true);
+			categoriaAlevin.setRandomDrawings(true);
+			categoriaInfantil.setRandomDrawings(true);
+			categoriaCadete.setRandomDrawings(true);
+			categoriaJunior.setRandomDrawings(true);
+			categoriaAbsoluto.setRandomDrawings(true);
+		}
 		
 		return new Tournament(
 			"Torneo de tenis", 
@@ -162,7 +176,7 @@ public class EventManager {
 		);
 	}
 	
-	public Tournament getSampleLargeTennisTournamentWithCollisions() {
+	public Tournament getSampleLargeTennisTournamentWithCollisions(boolean randomDrawings) {
 		Player[] benjamin = buildGenericPlayers(8, "Benj");
 		Player[] alevin = buildGenericPlayers(8, "Alev");
 		Player[] infantil = buildGenericPlayers(32, "Inf");
@@ -190,18 +204,42 @@ public class EventManager {
 		
 		categoriaDobles.setPlayersPerMatch(4);
 		
-		categoriaBenjamin.setRandomDrawings(true);
-		categoriaAlevin.setRandomDrawings(true);
-		categoriaInfantil.setRandomDrawings(true);
-		categoriaCadete.setRandomDrawings(true);
-		categoriaJunior.setRandomDrawings(true);
-		categoriaAbsoluto.setRandomDrawings(true);
-		categoriaDobles.setRandomDrawings(true);
+		if (randomDrawings) {
+			categoriaBenjamin.setRandomDrawings(true);
+			categoriaAlevin.setRandomDrawings(true);
+			categoriaInfantil.setRandomDrawings(true);
+			categoriaCadete.setRandomDrawings(true);
+			categoriaJunior.setRandomDrawings(true);
+			categoriaAbsoluto.setRandomDrawings(true);
+			categoriaDobles.setRandomDrawings(true);
+		}
 		
 		return new Tournament(
 			"Torneo de tenis", 
 			new Event[]{ categoriaBenjamin, categoriaAlevin, categoriaInfantil, categoriaCadete, categoriaJunior, categoriaAbsoluto, categoriaDobles }
 		);
+	}
+	
+	public Tournament getSampleVariableDomainsTournamentWithCollisions(boolean randomDrawings) {
+		Player[] players = buildGenericPlayers(50, "Player");
+		Localization[] courts = buildGenericLocalizations(5, "Pista");
+		Timeslot[] timeslots = buildTimeslots(16, new int[]{ 6 });
+		
+		Player[] groupAPlayers = Arrays.copyOfRange(players, 0, 8);
+		Player[] groupBPlayers = Arrays.copyOfRange(players, 8, 24);
+		Player[] groupCPlayers = Arrays.copyOfRange(players, 24, 36);
+		Player[] groupDPlayers = Arrays.copyOfRange(players, 36, 50);
+		Player[] leaguePlayers = buildRandomSubset(20, players, Player.class);
+		Player[] doublePlayers = Stream.concat(Arrays.stream(groupAPlayers), Arrays.stream(groupDPlayers)).toArray(Player[]::new);
+		
+		Event groupA = new Event("Group A", groupAPlayers, courts, timeslots);
+		Event groupB = new Event("Group B", groupBPlayers, courts, timeslots);
+		Event groupC = new Event("Group C", groupCPlayers, courts, timeslots);
+		Event groupD = new Event("Group D", groupDPlayers, courts, timeslots);
+		Event groupLeague = new Event("League", leaguePlayers, courts, timeslots);
+		Event groupDoubles = new Event("Doubles", doublePlayers, courts, timeslots);
+		
+		return new Tournament("Tournament", new Event[]{ groupA, groupB, groupC, groupD });
 	}
 	
 	private Player[] buildPlayers(String[] playersArray) {
@@ -273,5 +311,22 @@ public class EventManager {
 			unavailability.put(player, playerUnavailability);
 		}
 		return unavailability;
+	}
+	
+	@SuppressWarnings("unchecked")
+	private <T> T[] buildRandomSubset(int subsetSize, T[] pool, Class<T> c) {
+		List<T> poolList = new ArrayList<T>(Arrays.asList(pool));
+		
+		T[] subset = (T[]) Array.newInstance(c, subsetSize);
+		Random rand = new Random();
+		
+		for (int i = 0; i < subsetSize; i++) {
+			int randIndex = rand.nextInt(subsetSize);
+			subset[i] = poolList.get(randIndex);
+			
+			poolList.remove(randIndex);
+		}
+		
+		return subset;
 	}
 }

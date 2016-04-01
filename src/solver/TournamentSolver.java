@@ -9,7 +9,9 @@ import java.util.Random;
 
 import org.chocosolver.solver.Solver;
 import org.chocosolver.solver.constraints.IntConstraintFactory;
+import org.chocosolver.solver.search.loop.monitors.SearchMonitorFactory;
 import org.chocosolver.solver.search.strategy.IntStrategyFactory;
+import org.chocosolver.solver.search.strategy.strategy.AbstractStrategy;
 import org.chocosolver.solver.trace.Chatterbox;
 import org.chocosolver.solver.variables.BoolVar;
 import org.chocosolver.solver.variables.IntVar;
@@ -78,6 +80,15 @@ public class TournamentSolver {
 	
 	// Opción de estrategia de búsqueda
 	private int searchStrategyOption = 1;
+	
+	// Tiempo máximo de resolución (0: infinito)
+	private int resolutionTimeLimit = 0;
+	
+	private ResolutionData resolutionData;
+	
+	private String searchStrategyName;
+	
+	private int randomDrawingsCount = 0;
 	
 	public TournamentSolver(Tournament tournament) {
 		this.tournament = tournament;
@@ -167,6 +178,14 @@ public class TournamentSolver {
 		searchStrategyOption = option;
 	}
 	
+	public void setResolutionTimeLimit(int limit) {
+		resolutionTimeLimit = limit;
+	}
+	
+	public ResolutionData getResolutionData() {
+		return resolutionData;
+	}
+	
 	public void execute() {
 		createSolver();
 		buildModel();
@@ -179,28 +198,59 @@ public class TournamentSolver {
 	}
 	
 	private void buildModel() {
-		for (int i = 0; i < events.length; i++) {
-			x[i] = new IntVar[nPlayers[i]][nCourts[i]][nTimeslots[i]];
-			g[i] = new IntVar[nPlayers[i]][nCourts[i]][nTimeslots[i]];
+		for (int e = 0; e < events.length; e++) {
+			x[e] = new IntVar[nPlayers[e]][nCourts[e]][nTimeslots[e]];
+			g[e] = new IntVar[nPlayers[e]][nCourts[e]][nTimeslots[e]];
 		}
 		
 		for (int e = 0; e < nCategories; e++) {
 			for (int p = 0; p < nPlayers[e]; p++) {
-				// Dominio [0, 1]: 0 -> no juega, 1 -> juega
-				x[e][p] = VariableFactory.boundedMatrix("Player" + p + "Schedule", nCourts[e], nTimeslots[e], 0, 1, solver);
-				
-				// Dominio [0, 1]: 0 -> el partido no empieza a esa hora, 1 -> el partido empieza a esa hora
-				g[e][p] = VariableFactory.boundedMatrix("Player" + p + "GameStart", nCourts[e], nTimeslots[e], 0, 1, solver);
+				for (int c = 0; c < nCourts[e]; c++) {
+					for (int t = 0; t < nTimeslots[e]; t++) {
+						// Si el jugador_p no está disponible a la hora_t se marca con 0
+						if (isUnavailable(e, p, t)) {
+							int nRange = nTimeslotsPerMatch[e];		
+							if (t + 1 < nTimeslotsPerMatch[e])
+								nRange -= nTimeslotsPerMatch[e] - t - 1;
+							
+							// Si un jugador no está disponible en t, n no podrá empezar un partido en el rango t-n..t
+							// (siendo n la duración o número de timeslots de un partido)
+							for (int i = 0; i < nRange; i++)
+								g[e][p][c][t - i] = VariableFactory.fixed(0, solver);
+							
+							// Además, se marca con 0 las horas de la matriz de horario/partidos si el jugador no puede jugar
+							x[e][p][c][t] = VariableFactory.fixed(0, solver);
+							
+						} else {
+							// Dominio [0, 1]: 0 -> no juega, 1 -> juega
+							x[e][p][c][t] = VariableFactory.bounded("x" + e + "," + p + "," + c + "," + t, 0, 1, solver);
+							
+							// Dominio [0, 1]: 0 -> el partido no empieza a esa hora, 1 -> el partido empieza a esa hora
+							g[e][p][c][t] = VariableFactory.bounded("g" + e + "," + p + "," + c + "," + t, 0, 1, solver);
+						}
+					}
+				}
+			}
+		}
+	
+		// Marcar los breaks con 0
+		for (int e = 0; e < nCategories; e++) {
+			for (int t = 0; t < nTimeslots[e]; t++) {
+				// Si el timeslot_t es un break, entonces en él no se puede jugar y se marca como 0
+				if (events[e].getTimeslotAt(t).getIsBreak()) {
+					for (int p = 0; p < nPlayers[e]; p++) {
+						for (int c = 0; c < nCourts[e]; c++) {
+							x[e][p][c][t] = VariableFactory.fixed(0, solver);
+							g[e][p][c][t] = VariableFactory.fixed(0, solver);
+						}
+					}
+				}
 			}
 		}
 		
 		setConstraintsPredefineMatchups();
 		
 		setConstraintsMatchesSum();
-		
-		setConstraintsPlayersUnavailable();
-		
-		setConstraintsBreaks();
 		
 		setConstraintsMapMatchesBeginning();
 		
@@ -225,8 +275,8 @@ public class TournamentSolver {
 	private void setConstraintsPredefineMatchups() {
 		Map<Event, List<List<Player>>> predefinedMatchups = new HashMap<Event, List<List<Player>>>();
 		for (Event event : events) {
-			// Si el evento se organiza por sorteo
-			if (event.getRandomDrawings()) {
+			// Si el evento se organiza por sorteo (y hay más de un jugador por partido, luego hay enfrentamientos)
+			if (event.getPlayersPerMatch() > 1 && event.getRandomDrawings()) {
 				List<Player> players = new ArrayList<Player>(Arrays.asList(event.getPlayers()));
 				List<List<Player>> matchups = new ArrayList<List<Player>>(event.getNumberOfMatches());
 				
@@ -248,6 +298,8 @@ public class TournamentSolver {
 				}
 					
 				predefinedMatchups.put(event, matchups);
+				
+				randomDrawingsCount++;
 			}
 		}
 		
@@ -284,6 +336,9 @@ public class TournamentSolver {
 		}
 	}
 	
+	/**
+	 * Impone que la suma de timeslots utilizados por cada evento se corresponda con el número de encuentros esperados
+	 */
 	private void setConstraintsMatchesSum() {
 		for (int e = 0; e < nCategories; e++) {
 			int eventNumberOfMatches = nPlayers[e] * nMatchesPerPlayer[e];
@@ -293,50 +348,9 @@ public class TournamentSolver {
 		}
 	}
 	
-	private void setConstraintsPlayersUnavailable() {
-		for (int e = 0; e < nCategories; e++) {
-			for (int p = 0; p < nPlayers[e]; p++) {
-				// Para cada jugador marcar para cada pista en cada hora como 0 cuando no puede jugar
-				for (int c = 0; c < nCourts[e]; c++) {
-					for (int t = 0; t < nTimeslots[e]; t++) {
-						if (isUnavailable(e, p, t)) {
-							int nRange = nTimeslotsPerMatch[e];		
-							if (t + 1 < nTimeslotsPerMatch[e])
-								nRange -= nTimeslotsPerMatch[e] - t - 1;
-							
-							// Si un jugador no está disponible en t, n podrá empezar un partido en el rango t..t-n
-							// (siendo n la duración o número de timeslots de un partido)
-							for (int i = 0; i < nRange; i++)
-								solver.post(IntConstraintFactory.arithm(g[e][p][c][t - i], "=", VariableFactory.fixed(0, solver)));
-							
-							// Además, se marca con 0 las horas de la matriz de horario/partidos si el jugador no puede jugar
-							solver.post(IntConstraintFactory.arithm(x[e][p][c][t], "=", VariableFactory.fixed(0, solver)));
-						}
-					}
-				}
-			}
-		}
-	}
-	
 	/**
-	 * Define las restricciones para los timeslots que pertenecen a un break (período en el que no se juega)
+	 * Mapea los comienzos de los partidos a partir de la asignación de horas en la matriz del horario
 	 */
-	private void setConstraintsBreaks() {
-		for (int e = 0; e < nCategories; e++) {
-			for (int t = 0; t < nTimeslots[e]; t++) {
-				// Si el timeslot_t es un break, entonces en él no se puede jugar y se marca como 0
-				if (events[e].getTimeslotAt(t).getIsBreak()) {
-					for (int p = 0; p < nPlayers[e]; p++) {
-						for (int c = 0; c < nCourts[e]; c++) {
-							solver.post(IntConstraintFactory.arithm(x[e][p][c][t], "=", VariableFactory.fixed(0, solver)));
-							solver.post(IntConstraintFactory.arithm(g[e][p][c][t], "=", VariableFactory.fixed(0, solver)));
-						}
-					}
-				}
-			}
-		}
-	}
-	
 	private void setConstraintsMapMatchesBeginning() {
 		// Mapear entre los comienzos de cada partido (g) y las horas en las que se juega
 		for (int e = 0; e < nCategories; e++) {
@@ -380,6 +394,9 @@ public class TournamentSolver {
 		}
 	}
 	
+	/**
+	 * Mapea la matriz del horario a partir de la matriz de los comienzos de partido
+	 */
 	private void setConstraintsMapMatches() {
 		// Mapear x_e,p,c,t a partir de los posibles comienzos de partido (g) cuyo rango "cubre" x_t
 		for (int e = 0; e < nCategories; e++) {
@@ -408,24 +425,35 @@ public class TournamentSolver {
 		}
 	}
 	
+	/**
+	 * Para categoría, define la restricción para que solamemente haya dos números posibles de jugadores en una
+	 * pista determinada a una hora en concreto: o 0 (nadie) o el número de jugadores por partido de la categoría
+	 */
 	private void setConstraintsPlayersInCourtsForEachCategory() {
 		for (int e = 0; e < nCategories; e++) {
 			for (int c = 0; c < nCourts[e]; c++) {
 				for (int t = 0; t < nTimeslots[e]; t++) {
-					// Las "participaciones" de todos los jugadores en la pista_c a la hora_t
-					IntVar[] playerSum = new IntVar[nPlayers[e]];
-					for (int p = 0; p < nPlayers[e]; p++)
-						playerSum[p] = x[e][p][c][t];
-					
-					// Que la suma de las participaciones de todos los jugadores sea
-					// igual a 0 o el número de jugadores por partido, es decir, que nadie juegue o que jueguen
-					// el número de jugadores requeridos por partido
-					solver.post(IntConstraintFactory.sum(playerSum, VariableFactory.enumerated("Sum", new int[]{0, nPlayersPerMatch[e]}, solver)));
+					// Si la hora_t es un break, no hace falta tenerla en cuenta
+					if (!events[e].getTimeslotAt(t).getIsBreak()) {
+						// Las "participaciones" de todos los jugadores en la pista_c a la hora_t
+						IntVar[] playerSum = new IntVar[nPlayers[e]];
+						for (int p = 0; p < nPlayers[e]; p++)
+								playerSum[p] = x[e][p][c][t];
+						
+						// Que la suma de las participaciones de todos los jugadores sea
+						// igual a 0 o el número de jugadores por partido, es decir, que nadie juegue o que jueguen
+						// el número de jugadores requeridos por partido
+						solver.post(IntConstraintFactory.sum(playerSum, VariableFactory.enumerated("Sum", new int[]{0, nPlayersPerMatch[e]}, solver)));
+					}
 				}
 			}
 		}
 	}
 	
+	/**
+	 * Para todas las categorías del torneo, controla que no se juegue en la misma pista a la misma hora
+	 * en partidos de categorías distintas
+	 */
 	private void setConstraintsCourtsCollisions() {
 		Map<Integer, List<Event>> eventsByNumberOfPlayersPerMatch = tournament.groupEventsByNumberOfPlayersPerMatch();
 		
@@ -443,10 +471,10 @@ public class TournamentSolver {
 				List<IntVar> playerSum = new ArrayList<IntVar>();
 				
 				for (int e = 0; e < nCategories; e++)
-					// Si en el evento_e se puede jugar en la pista_c y a la hora_t
-					if (courtsIndices[c][e] != -1 && timeslotsIndices[t][e] != -1)
+					// Si en el evento_e se puede jugar en la pista_c y a la hora_t y la hora_t no es un break
+					if (courtsIndices[c][e] != -1 && timeslotsIndices[t][e] != -1 && !events[e].getTimeslotAt(timeslotsIndices[t][e]).getIsBreak())
 						for (int p = 0; p < nPlayers[e]; p++)
-							playerSum.add(x[e][p][courtsIndices[c][e]][timeslotsIndices[t][e]]);
+								playerSum.add(x[e][p][courtsIndices[c][e]][timeslotsIndices[t][e]]);
 				
 				// Que la suma de las participaciones sea o 0 (no se juega en la pista_c a la hora_t)
 				// o cualquier valor del conjunto de número de jugadores por partido (cada evento tiene el suyo)
@@ -498,6 +526,9 @@ public class TournamentSolver {
 		}
 	}
 	
+	/**
+	 * 
+	 */
 	private void setConstraintsPlayersNotSimultaneous() {
 		int nAllPlayers = allPlayers.size();
 		int nAllTimeslots = allTimeslots.size();
@@ -563,28 +594,51 @@ public class TournamentSolver {
 		for (int i = 0; i < nCategories; i++)
 			vars[i] = ArrayUtils.flatten(x[i]);
 		
-		IntVar[] v = ArrayUtils.flatten(vars);
-		
-		switch (option) {
-			case 1:
-				solver.set(IntStrategyFactory.domOverWDeg(v, System.currentTimeMillis()));
-				break;
-			case 2:
-				solver.set(IntStrategyFactory.minDom_UB(v));
-				break;
-			case 3:
-				solver.set(IntStrategyFactory.minDom_LB(v));
-				break;
-			default:
-				solver.set(IntStrategyFactory.domOverWDeg(v, System.currentTimeMillis()));
-				break;
-		}
+		solver.set(getStrategy(option, ArrayUtils.flatten(vars)));	
 	}
 	
 	private void solve() {
-		//SearchMonitorFactory.limitTime(solver, 10000);
-		if (solver.findSolution())
+		resolutionTimeLimit = 10000;
+		if (resolutionTimeLimit > 0)
+			SearchMonitorFactory.limitTime(solver, resolutionTimeLimit);
+		
+		if (solver.findSolution()) {
 			Chatterbox.printStatistics(solver);
+			
+			resolutionData = new ResolutionData(solver, tournament, searchStrategyName, randomDrawingsCount, true);
+		}
+	}
+	
+	@SuppressWarnings("rawtypes")
+	private AbstractStrategy[] getStrategy(int option, IntVar[] v) {
+		AbstractStrategy[] strategies;
+		switch (option) {
+			case 1:
+				strategies = new AbstractStrategy[] { IntStrategyFactory.domOverWDeg(v, System.currentTimeMillis()) };
+				searchStrategyName = "domOverWDeg";
+				break;
+			case 2:
+				strategies = new AbstractStrategy[] { IntStrategyFactory.minDom_UB(v) };
+				searchStrategyName = "minDom_LB";
+				break;
+			case 3:
+				strategies = new AbstractStrategy[] { IntStrategyFactory.minDom_LB(v) };
+				searchStrategyName = "minDom_LB";
+				break;
+			case 4:
+				strategies = new AbstractStrategy[] {
+					IntStrategyFactory.minDom_UB(v),
+					IntStrategyFactory.domOverWDeg(v, System.currentTimeMillis())
+				};
+				searchStrategyName = "minDom_UB,domOverWDeg";
+				break;
+			default:
+				strategies = new AbstractStrategy[] { IntStrategyFactory.domOverWDeg(v, System.currentTimeMillis()) };
+				searchStrategyName = "domOverWDeg";
+				break;
+		}
+		
+		return strategies;
 	}
 	
 	public EventSchedule[] getSchedules() {
@@ -592,13 +646,13 @@ public class TournamentSolver {
 			schedules = null;
 		
 		else if (solver.isFeasible() != ESat.TRUE) {
-			//System.out.println("Problem infeasible.");
+			System.out.println("Problem infeasible.");
 			schedules = null;
 			
 			boolean hasRandomDrawings = false;
 			for (Event event : events)
 				if (event.getRandomDrawings()) {
-					//System.out.println("Trying new resolution with different random drawings.\n");
+					System.out.println("Trying new resolution with different random drawings.\n");
 					hasRandomDrawings = true;
 					break;
 				}

@@ -45,6 +45,10 @@ public class Tournament {
 		return events;
 	}
 	
+	public int getNumberOfEvents() {
+		return events.length;
+	}
+	
 	/**
 	 * Devuelve todos los jugadores que componen las distintas categorías del torneo, teniendo en cuenta
 	 * a los jugadores que juegan en distintas categorías a la vez
@@ -176,25 +180,32 @@ public class Tournament {
 		System.out.println("3 Sample Medium Tennis Tournament");
 		System.out.println("4 Sample Large Tennis Tournament");
 		System.out.println("5 Sample Large Tennis Tournament With Collisions");
+		System.out.println("6 Sample Tournament With Variable Domains and Collisions");
 		System.out.print("Choose tournament: ");
 		int tournamentOption = sc.nextInt();
+		
+		System.out.print("\nRandom drawings (0 no, 1 yes): ");
+		boolean randomDrawings = sc.nextInt() == 1;
 		
 		Tournament tournament = null;
 		switch (tournamentOption) {
 			case 1:
-				tournament = EventManager.getInstance().getSampleOneCategoryTournament();
+				tournament = EventManager.getInstance().getSampleOneCategoryTournament(randomDrawings);
 				break;
 			case 2:
-				tournament = EventManager.getInstance().getSampleTennisTournament();
+				tournament = EventManager.getInstance().getSampleTennisTournament(randomDrawings);
 				break;
 			case 3:
-				tournament = EventManager.getInstance().getSampleMediumTennisTournament();
+				tournament = EventManager.getInstance().getSampleMediumTennisTournament(randomDrawings);
 				break;
 			case 4:
-				tournament = EventManager.getInstance().getSampleLargeTennisTournament();
+				tournament = EventManager.getInstance().getSampleLargeTennisTournament(randomDrawings);
 				break;
 			case 5:
-				tournament = EventManager.getInstance().getSampleLargeTennisTournamentWithCollisions();
+				tournament = EventManager.getInstance().getSampleLargeTennisTournamentWithCollisions(randomDrawings);
+				break;
+			case 6:
+				tournament = EventManager.getInstance().getSampleVariableDomainsTournamentWithCollisions(randomDrawings);
 				break;
 		}
 		
@@ -206,6 +217,8 @@ public class Tournament {
 
 		tournament.getSolver().setSearchStrategy(searchStrategyOption);
 		tournament.solve();
+		
+		//System.out.println(tournament.getSolver().getResolutionData().toJsonPretty());
 		
 		tournament.nextSchedules();
 		

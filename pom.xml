@@ -22,5 +22,15 @@
   		<artifactId>choco-solver</artifactId>
   		<version>3.3.3-j7</version>
   	</dependency>
+  	<dependency>
+		<groupId>org.apache.commons</groupId>
+		<artifactId>commons-lang3</artifactId>
+		<version>3.0</version>
+	</dependency>
+	<dependency>
+		<groupId>com.fasterxml.jackson.core</groupId>
+		<artifactId>jackson-databind</artifactId>
+		<version>2.7.3</version>
+	</dependency>
   </dependencies>
 </project>
