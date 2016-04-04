@@ -65,7 +65,7 @@ public class CombinedSchedule extends Schedule {
 					
 					// Si no hay ya una pista marcada sobre la hora_t para el jugador_p (esto evita sobreescribir valores
 					// de pistas ya escritos sobre el horario)
-					if (schedule[playerIndex][timeslotIndex] < 0)
+					if (schedule[playerIndex][timeslotIndex] < 0 && schedule[playerIndex][timeslotIndex] != -5)
 						schedule[playerIndex][timeslotIndex] = eventSchedule[p][t];
 				}
 			}

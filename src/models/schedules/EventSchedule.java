@@ -9,6 +9,7 @@ import org.chocosolver.solver.variables.IntVar;
 import models.Event;
 import models.Match;
 import models.Player;
+import models.Timeslot;
 
 public class EventSchedule extends Schedule {
 	/**
@@ -39,18 +40,32 @@ public class EventSchedule extends Schedule {
 		schedule = new int[nPlayers][nTimeslots];
 		for (int p = 0; p < nPlayers; p++) {
 			for (int t = 0; t < nTimeslots; t++) {
-				if (event.getTimeslotAt(t).getIsBreak())
+				Timeslot timeslot = event.getTimeslotAt(t);
+				
+				if (timeslot.getIsBreak())
 					schedule[p][t] = -3;
-				else if (event.isUnavailable(event.getPlayerAt(p), event.getTimeslotAt(t))) {
+				else if (event.isUnavailable(event.getPlayerAt(p), timeslot)) {
 					schedule[p][t] = -2;
 				} else {
 					schedule[p][t] = -1;
 					
-					for (int c = 0; c < nCourts; c++)
+					boolean matchInCourt = false;
+					for (int c = 0; c < nCourts; c++) {
 						if (x[p][c][t].getValue() == 1) {
 							schedule[p][t] = c;
+							matchInCourt = true;
 							break;
 						}
+					}
+					
+					if (!matchInCourt) {
+						for (int c = 0; c < nCourts; c++) {
+							if (event.isDiscarded(event.getLocalizationAt(c), timeslot)) {
+								schedule[p][t] = -5;
+								break;
+							}
+						}
+					}
 				}
 			}
 		}

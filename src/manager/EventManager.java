@@ -91,13 +91,26 @@ public class EventManager {
 		// Lo mismo que arriba
 		doublesDraw.addFixedTeamsMatchup(new HashSet<Team>(Arrays.asList(new Team[]{ teams.get(1), teams.get(7) })));
 		
+		// Invalidar pista 1 y 2 a las horas t0, t1 y t2 para el cuadro de hombres
+		mensDraw.addDiscardedCourt(localizations[0], timeslots[0]);
+		mensDraw.addDiscardedCourt(localizations[0], timeslots[1]);
+		mensDraw.addDiscardedCourt(localizations[0], timeslots[2]);
+		mensDraw.addDiscardedCourt(localizations[1], timeslots[0]);
+		mensDraw.addDiscardedCourt(localizations[1], timeslots[1]);
+		mensDraw.addDiscardedCourt(localizations[1], timeslots[2]);
+		
+		Tournament tournament = new Tournament("Tennis Tournament", new Event[]{ mensDraw, womensDraw, doublesDraw });
+		
+		// Invalidar la pista 3 para el timeslot t8 en todas las categorías
+		tournament.addDiscardedCourt(localizations[2], timeslots[8]);
+		
 		if (randomDrawings) {
 			mensDraw.setRandomDrawings(true);
 			womensDraw.setRandomDrawings(true);
 			doublesDraw.setRandomDrawings(true);
 		}
 		
-		return new Tournament("Tennis Tournament", new Event[]{ mensDraw, womensDraw, doublesDraw });
+		return tournament;
 	}
 
 	public Tournament getSampleMediumTennisTournament(boolean randomDrawings) {

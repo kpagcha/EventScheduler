@@ -170,7 +170,7 @@ public abstract class Schedule {
 				
 			sb.append(String.format("%8s", playerStr));
 			for (int t = 0; t < nTimeslots; t++)
-				sb.append(String.format("%4s", getMatchStringValue(scheduleArray[p][t])));
+				sb.append(String.format("%4s", getStringValue(scheduleArray[p][t])));
 			sb.append("\n");
 		}
 		
@@ -182,20 +182,22 @@ public abstract class Schedule {
 	 * 
 	 * @param  matchVal		valor del elemento del horario
 	 * @return string		cadena con la representación del valor del partido donde
-	 *     x:    el timeslot no pertenece al rango de timeslots del evento
-	 *     *:    el timeslot corresponde a un período en el que no se juega (break)
-	 *     ~:    el jugador no está disponible en esa hora
 	 *     -:    el jugador no juega a esa hora
+	 *     ~:    el jugador no está disponible en esa hora
+	 *     *:    el timeslot corresponde a un período en el que no se juega (break)
+	 *     x:    el timeslot no pertenece al rango de timeslots del evento
+	 *     ¬:    alguna pista ha sido descartada en este timeslot
 	 *     n:    el jugador juega en la pista con índice n
 	 */
-	private String getMatchStringValue(int scheduleVal) {
+	private String getStringValue(int scheduleVal) {
 		String match = String.valueOf(scheduleVal);
 		
 		switch (scheduleVal) {
-			case -4: match = "x"; break;
-			case -3: match = "*"; break;
-			case -2: match = "~"; break;
 			case -1: match = "-"; break;
+			case -2: match = "~"; break;
+			case -3: match = "*"; break;
+			case -4: match = "x"; break;
+			case -5: match = "¬"; break;
 		}
 
 		return match;

@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
+import java.util.Set;
 
 import manager.EventManager;
 import models.schedules.CombinedSchedule;
@@ -181,6 +182,38 @@ public class Tournament {
 	public CombinedSchedule getCombinedSchedule() {
 		return new CombinedSchedule(this);
 	}
+	
+	/**
+	 * Invalida las pistas del diccionario a las horas indicadas para todas las categorías (si la categoría tiene
+	 * esa pista y esos timeslots)
+	 * 
+	 * @param discardedLocalizations diccionario de localizaciones de juego descartadas en la lista de timeslots
+	 */
+	public void setDiscardedLocalizations(HashMap<Localization, List<Timeslot>> discardedLocalizations) {
+		Set<Localization> localizations = discardedLocalizations.keySet();	
+		for (Event event : events)
+			for (Localization localization : localizations)
+				if (event.containsLocalization(localization)) {
+					List<Timeslot> timeslots = discardedLocalizations.get(localization);
+					for (Timeslot timeslot : timeslots)
+						if (event.containsTimeslot(timeslot))
+							event.addDiscardedCourt(localization, timeslot);
+				}
+	}
+	
+	/**
+	 * Invalida una pista a una hora o timeslot para todas las categorías (si la categoría tiene dicha pista
+	 * y dicha hora)
+	 * 
+	 * @param localization localización de juego a invalidar
+	 * @param timeslot     hora a la que invalidar
+	 */
+	public void addDiscardedCourt(Localization localization, Timeslot timeslot) {
+		for (Event event : events)
+			if (event.containsLocalization(localization) && event.containsTimeslot(timeslot))
+				event.addDiscardedCourt(localization, timeslot);
+	}
+	
 	
 	/**
 	 * Muestra por la salida estándar una representación de los horarios de cada categoría

@@ -248,6 +248,31 @@ public class TournamentSolver {
 				}
 			}
 		}
+		
+		// Marcar las localizaciones descartadas con 0
+		for (int e = 0; e < nCategories; e++) {
+			Map<Localization, List<Timeslot>> discardedLocalizations = events[e].getDiscardedLocalizations();
+			Set<Localization> localizations = discardedLocalizations.keySet();
+			
+			for (Localization localization : localizations) {
+				List<Timeslot> timeslots = discardedLocalizations.get(localization);
+				int nDiscardedTimeslots = timeslots.size();
+				
+				int[] tIndex = new int[nDiscardedTimeslots];
+				
+				int i = 0;
+				for (Timeslot timeslot : timeslots)
+					tIndex[i++] = events[e].indexOf(timeslot);
+				
+				int c = events[e].indexOf(localization);
+				
+				for (int p = 0; p < nPlayers[e]; p++)
+					for (int t = 0; t < nDiscardedTimeslots; t++) {
+						x[e][p][c][tIndex[t]] = VariableFactory.fixed(0, solver);
+						g[e][p][c][tIndex[t]] = VariableFactory.fixed(0, solver);
+					}
+			}
+		}
 	
 		// Marcar los breaks con 0
 		for (int e = 0; e < nCategories; e++) {
@@ -346,7 +371,7 @@ public class TournamentSolver {
 	private void setConstraintsPredefinedRandomMatchups() {
 		Map<Event, List<List<Player>>> predefinedMatchups = buildPredefinedRandomMatchups();
 		
-		/*System.out.println("PREDEFINED MATCHUPS:");
+		/*System.out.println("PREDEFINED RANDOM MATCHUPS:");
 		for (Event e : predefinedMatchups.keySet()) {
 			System.out.println(e + " (" + predefinedMatchups.get(e).size() + ")");
 			for (List<Player> matchup : predefinedMatchups.get(e)) {

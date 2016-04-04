@@ -1,6 +1,7 @@
 package models;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -41,6 +42,9 @@ public class Event {
 	// forman cada lista compongan enfrentamiento
 	private List<Set<Player>> fixedMatchups;
 	
+	// Diccionario de localizaciones de juego descartadas en determinadas horas
+	private Map<Localization, List<Timeslot>> discardedLocalizations;
+	
 	public Event(String name, Player[] players, Localization[] localizations, Timeslot[] timeslots) {
 		this.name = name;
 		this.players = players;
@@ -52,6 +56,8 @@ public class Event {
 			unavailableTimeslots.put(player, new Timeslot[]{});
 		
 		fixedMatchups = new ArrayList<Set<Player>>();
+		
+		discardedLocalizations = new HashMap<Localization, List<Timeslot>>();
 	}
 	
 	public void setName(String name) {
@@ -134,6 +140,10 @@ public class Event {
 		return teams;
 	}
 	
+	public boolean hasTeams() {
+		return teams != null && !teams.isEmpty();
+	}
+	
 	public void setFixedMatchups(List<Set<Player>> fixedMatchups) {
 		this.fixedMatchups = fixedMatchups;
 	}
@@ -158,8 +168,23 @@ public class Event {
 		return !fixedMatchups.isEmpty();
 	}
 	
-	public boolean hasTeams() {
-		return teams != null && !teams.isEmpty();
+	public void setDiscardedLocalizations(HashMap<Localization, List<Timeslot>> discardedLocalizations) {
+		this.discardedLocalizations = discardedLocalizations;
+	}
+	
+	public Map<Localization, List<Timeslot>> getDiscardedLocalizations() {
+		return discardedLocalizations;
+	}
+	
+	public void addDiscardedCourt(Localization localization, Timeslot timeslot) {
+		if (discardedLocalizations.containsKey(localization))
+			discardedLocalizations.get(localization).add(timeslot);
+		else
+			discardedLocalizations.put(localization, new ArrayList<Timeslot>(Arrays.asList(new Timeslot[]{ timeslot })));
+	}
+	
+	public boolean hasDiscardedCourts() {
+		return !discardedLocalizations.isEmpty();
 	}
 	
 	/**
@@ -212,6 +237,13 @@ public class Event {
 		return -1;
 	}
 	
+	public int indexOf(Localization localization) {
+		for (int c = 0; c < localizations.length; c++)
+			if (localizations[c].equals(localization))
+				return c;
+		return -1;
+	}
+	
 	public int indexOf(Timeslot timeslot) {
 		for (int t = 0; t < timeslots.length; t++)
 			if (timeslots[t].equals(timeslot)) 
@@ -238,11 +270,36 @@ public class Event {
 		return false;
 	}
 	
+	public boolean containsLocalization(Localization localization) {
+		for (Localization l : localizations)
+			if (l.equals(localization))
+				return true;
+		return false;
+	}
+	
+	public boolean containsTimeslot(Timeslot timeslot) {
+		for (Timeslot t : timeslots)
+			if (t.equals(timeslot))
+				return true;
+		return false;
+	}
+	
 	public boolean isUnavailable(Player player, Timeslot timeslot) {
 		Timeslot[] unavailablePlayerTimeslots = unavailableTimeslots.get(player);
 		for (Timeslot t : unavailablePlayerTimeslots)
 			if (t.equals(timeslot))
 				return true;
+		return false;
+	}
+	
+	public boolean isDiscarded(Localization localization, Timeslot timeslot) {
+		Set<Localization> localizations = discardedLocalizations.keySet();
+		if (localizations.contains(localization)) {
+			for (Localization l : localizations) {
+				if (discardedLocalizations.get(l).contains(timeslot))
+					return true;
+			}
+		}
 		return false;
 	}
 	
