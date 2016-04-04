@@ -1,7 +1,9 @@
 package models;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class Event {
 	private String name;
@@ -29,6 +31,9 @@ public class Event {
 	
 	// Indica si el evento se organiza por sorteo (sorteo de emparejamientos por partido) 
 	private boolean randomDrawings = false;
+	
+	// Lista con la composicón de los equipos
+	private List<Team> teams;
 	
 	public Event(String name, Player[] players, Localization[] localizations, Timeslot[] timeslots) {
 		this.name = name;
@@ -111,6 +116,32 @@ public class Event {
 	
 	public boolean getRandomDrawings() {
 		return randomDrawings;
+	}
+	
+	public void setTeams(List<Team> teams) {
+		this.teams = teams;
+	}
+	
+	public List<Team> getTeams() {
+		return teams;
+	}
+	
+	public boolean hasTeams() {
+		return teams != null && !teams.isEmpty();
+	}
+	
+	/**
+	 * @param player
+	 * @return equipo al que pertenece el jugador player
+	 */
+	public Team getTeamByPlayer(Player player) {
+		for (Team team : teams) {
+			Set<Player> playersInTeam = team.getPlayers();
+			for (Player p : playersInTeam)
+				if (p.equals(player))
+					return team;
+		}
+		return null;
 	}
 	
 	public int[][] getUnavailableTimeslotsAs2DIntArray() {

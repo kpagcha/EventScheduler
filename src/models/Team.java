@@ -29,6 +29,10 @@ public class Team extends Entity {
 		players = new HashSet<Player>(Arrays.asList(playersArray));
 	}
 	
+	public Team(Player... playersArray) {
+		this("Team (" + playersArray.length + ")", playersArray);
+	}
+	
 	public Set<Player> getPlayers() {
 		return players;
 	}

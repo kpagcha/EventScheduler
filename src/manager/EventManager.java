@@ -12,6 +12,7 @@ import java.util.stream.Stream;
 import models.Event;
 import models.Localization;
 import models.Player;
+import models.Team;
 import models.Timeslot;
 import models.Tournament;
 
@@ -59,11 +60,8 @@ public class EventManager {
 	public Tournament getSampleTennisTournament(boolean randomDrawings) {
 		Player[] atpPlayers = buildPlayers(new String[]{ "Djokovic", "Murray", "Federer", "Wawrinka", "Nadal", "Nishikori", "Berdych", "Ferrer" });
 		Player[] wtaPlayers = buildPlayers(new String[]{ "Williams", "Radwanska", "Kerber", "Muguruza", "Halep", "Suárez Navarro", "Kvitova", "Azarenka" });
-		Localization[] localizations = buildLocalizations(new int[]{ 1, 2, 3 });
-		Timeslot[] timeslots = buildTimeslots(
-			new int[]{ 0, 1, 2, 3, 4, 5, 6, 7 },
-			new int[]{ }
-		);
+		Localization[] localizations = buildGenericLocalizations(3, "Pista");
+		Timeslot[] timeslots = buildTimeslots(10, new int[]{ });
 		
 		Player[] allPlayers = new Player[atpPlayers.length + wtaPlayers.length];
 		for (int i = 0; i < atpPlayers.length; i++) allPlayers[i] = atpPlayers[i];
@@ -74,6 +72,11 @@ public class EventManager {
 		Event doublesDraw = new Event("Mixed Doubles Draw", allPlayers, localizations, timeslots);
 		
 		doublesDraw.setPlayersPerMatch(4);
+		doublesDraw.setTeams(new ArrayList<Team>(Arrays.asList(new Team[]{
+			new Team(atpPlayers[0], atpPlayers[1]), new Team(atpPlayers[2], atpPlayers[3]), new Team(atpPlayers[4], atpPlayers[5]),
+			new Team(atpPlayers[6], atpPlayers[7]), new Team(wtaPlayers[0], wtaPlayers[1]), new Team(wtaPlayers[2], wtaPlayers[3]),
+			new Team(wtaPlayers[4], wtaPlayers[5]), new Team(wtaPlayers[6], wtaPlayers[7])
+		})));
 		
 		if (randomDrawings) {
 			mensDraw.setRandomDrawings(true);
@@ -273,6 +276,7 @@ public class EventManager {
 		return players;
 	}
 	
+	@SuppressWarnings("unused")
 	private Localization[] buildLocalizations(int[] courtsArray) {
 		Localization[] localizations = new Localization[courtsArray.length];
 		for (int i = 0; i < courtsArray.length; i++)

@@ -13,13 +13,30 @@ import models.schedules.EventSchedule;
 import solver.TournamentSolver;
 
 public class Tournament {
+	/**
+	 * Nombre del torneo
+	 */
 	private String name;
+	
+	/**
+	 * Categorías que componen el torneo 
+	 */
 	private Event[] events;
 
+	/**
+	 * Horarios para cada categoría
+	 */
 	private EventSchedule[] currentSchedules = null;
 	
+	/**
+	 * El solver que obtendrá los horarios de cada categoría el torneo
+	 */
 	private TournamentSolver solver;
 	
+	/**
+	 * @param name       nombre del torneo
+	 * @param categories categorías que componen el torneo
+	 */
 	public Tournament(String name, Event[] categories) {
 		this.name = name;
 		events = categories;
@@ -27,6 +44,11 @@ public class Tournament {
 		solver = new TournamentSolver(this);
 	}
 	
+	/**
+	 * Comienza el proceso de resolución para calcular el horario
+	 * 
+	 * @return true si se ha encontrado una solución, false si ocurre lo contrario
+	 */
 	public boolean solve() {
 		return solver.execute();
 	}
@@ -43,6 +65,9 @@ public class Tournament {
 		return events;
 	}
 	
+	/**
+	 * @return número de categorías
+	 */
 	public int getNumberOfEvents() {
 		return events.length;
 	}
@@ -69,6 +94,7 @@ public class Tournament {
 	/**
 	 * Devuelve todos los timeslots que componen las distintas categorías del torneo, teniendo en cuenta
 	 * los timeslots compartidos por distintas categorías
+	 * 
 	 * @return lista de timeslots del torneo
 	 */
 	public List<Timeslot> getAllTimeslots() {
@@ -84,6 +110,12 @@ public class Tournament {
 		return timeslots;
 	}
 	
+	/**
+	 * Devuelve todas las localizaciones de juegos que componen las distintas categorías del torneo,
+	 * teniendo en cuenta aquéllas compartidas distintas categorías
+	 * 
+	 * @return lista de localizaciones de juego del torneo
+	 */
 	public List<Localization> getAllLocalizations() {
 		List<Localization> localizations = new ArrayList<Localization>();
 		
@@ -97,6 +129,12 @@ public class Tournament {
 		return localizations;
 	}
 	
+	/**
+	 * Agrupa en un diccionario las categorías del torneo por el número de jugadores por partido
+	 * 
+	 * @return un diccionario donde la clave es el número de jugadores por partido y el valor, la lista
+	 * de categorías que definen dicho número de jugadores por partido
+	 */
 	public Map<Integer, List<Event>> groupEventsByNumberOfPlayersPerMatch() {
 		Map<Integer, List<Event>> eventsByNumberOfPlayersPerMatch = new HashMap<Integer, List<Event>>();
 		
@@ -123,14 +161,32 @@ public class Tournament {
 		return currentSchedules != null;
 	}
 	
+	/**
+	 * Devuelve los horarios de cada categoría con el valor actual. Si no se ha actualizado el valor llamando
+	 * al método nextSchedules o si el solver ha alcanzado la última solución y se ha llamado seguidamente a
+	 * nextSchedules, devuelve null
+	 * 
+	 * @return los horarios de cada categoría
+	 */
 	public EventSchedule[] getSchedules() {
 		return currentSchedules;
 	}
 	
+	/**
+	 * Devuelve un único horario combinado del torneo que include todos los jugadores, todas las localizaciones de
+	 * juego y todas las horas o timeslots de los que compone
+	 * 
+	 * @return horario combinado del torneo
+	 */
 	public CombinedSchedule getCombinedSchedule() {
 		return new CombinedSchedule(this);
 	}
 	
+	/**
+	 * Muestra por la salida estándar una representación de los horarios de cada categoría
+	 * 
+	 * @param printMatches si es true se mostrará un resumen de los partidos por cada categoría, y si es false, no
+	 */
 	public void printCurrentSchedules(boolean printMatches) {
 		StringBuilder sb = new StringBuilder();
 		
@@ -160,10 +216,16 @@ public class Tournament {
 		System.out.println(sb.toString());
 	}
 	
+	/**
+	 * Llama a printCurrentSchedules(true), mostrándose por la salida estándar los horarios y los partidos
+	 */
 	public void printCurrentSchedules() {
 		printCurrentSchedules(true);
 	}
 	
+	/**
+	 * @return número de partidos que se juegan en el torneo
+	 */
 	public int getNumberOfMatches() {
 		int numberOfMatches = 0;
 		for (Event event : events)
