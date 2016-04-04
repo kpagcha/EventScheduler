@@ -16,7 +16,7 @@ public class Tournament {
 	private String name;
 	private Event[] events;
 
-	private EventSchedule[] currentSchedules;
+	private EventSchedule[] currentSchedules = null;
 	
 	private TournamentSolver solver;
 	
@@ -25,12 +25,10 @@ public class Tournament {
 		events = categories;
 		
 		solver = new TournamentSolver(this);
-		
-		currentSchedules = new EventSchedule[categories.length];
 	}
 	
-	public void solve() {
-		solver.execute();
+	public boolean solve() {
+		return solver.execute();
 	}
 	
 	public void setName(String name) {
@@ -113,6 +111,13 @@ public class Tournament {
 		return eventsByNumberOfPlayersPerMatch;
 	}
 	
+	/**
+	 * Actualiza el valor de los horarios con la nueva solución combinada. Si se ha llegado
+	 * a la última solución se establece el valor de los horarios a null
+	 * 
+	 * @return true si se han actualizado los horarios con una nueva solución, y false si
+	 * se ha alcanzado la última solución
+	 */
 	public boolean nextSchedules() {
 		currentSchedules = solver.getSchedules();
 		return currentSchedules != null;
@@ -126,11 +131,11 @@ public class Tournament {
 		return new CombinedSchedule(this);
 	}
 	
-	public void printCurrentSchedules() {
+	public void printCurrentSchedules(boolean printMatches) {
 		StringBuilder sb = new StringBuilder();
 		
 		if (currentSchedules == null)
-			sb.append("No more solutions found.\n");
+			sb.append("Empty schedule.\n");
 		else {
 			for (int i = 0; i < currentSchedules.length; i++) {
 				EventSchedule schedule = currentSchedules[i];
@@ -139,7 +144,7 @@ public class Tournament {
 				
 				sb.append("\n");
 				
-				if (schedule != null) {
+				if (schedule != null && printMatches) {
 					sb.append(String.format("Match duration: %d timelots\n", events[i].getMatchDuration()));
 					
 					schedule.calculateMatches();
@@ -153,6 +158,10 @@ public class Tournament {
 		}
 		
 		System.out.println(sb.toString());
+	}
+	
+	public void printCurrentSchedules() {
+		printCurrentSchedules(true);
 	}
 	
 	public int getNumberOfMatches() {
@@ -172,9 +181,9 @@ public class Tournament {
 	
 	public boolean hasFinished = false;
 	
-	public static void main(String[] args) {		
+	public static void main(String[] args) {
 		Scanner sc = new Scanner(System.in);
-		
+	
 		System.out.println("1 Sample One Category Tournament");
 		System.out.println("2 Sample Tennis Tournament");
 		System.out.println("3 Sample Medium Tennis Tournament");
@@ -212,68 +221,90 @@ public class Tournament {
 		System.out.println("\n1 domOverWDeg");
 		System.out.println("2 minDom_UB");
 		System.out.println("3 minDom_LB");
+		System.out.println("4 minDom_UB, domOverWDeg");
 		System.out.print("Choose Search Strategy: ");
 		int searchStrategyOption = sc.nextInt();
 
 		tournament.getSolver().setSearchStrategy(searchStrategyOption);
-		tournament.solve();
-		
-		//System.out.println(tournament.getSolver().getResolutionData().toJsonPretty());
-		
-		tournament.nextSchedules();
 		
 		boolean printSolutions = true;
+		boolean printMatches = true;
 		boolean askForInput = false;
+		boolean tryDifferentRandomDrawings = true;
 		int maxSolutions = 1; // 0 -> todas las soluciones
 		int foundSolutions = 0;
+		int tries = 500; // número de intentos para encontrar solución por sorteo (0: infinito)
 		
-		do {
-			if (printSolutions) {
-				System.out.println("-------------------------------------------------------");
-				System.out.println(tournament + "\n");
-				tournament.printCurrentSchedules();
+		boolean solutionFound = tournament.solve();
+		
+		if (solutionFound || (randomDrawings && tryDifferentRandomDrawings)) {
+		
+			if (solutionFound)
+				solutionFound = tournament.nextSchedules();
+			else if (randomDrawings && tryDifferentRandomDrawings) {
+				int tryCount = 0;
+				// probar nuevas combinaciones de sorteo hasta que se encuentre solución o se supere el número de intentos
+				while (!solutionFound && (tries == 0 || tryCount++ < tries))
+					solutionFound = tournament.solve();
 				
-				if (tournament.currentSchedules != null) {
-					CombinedSchedule combinedSchedule = tournament.getCombinedSchedule();
-				
-					System.out.println("All schedules combined in one");
-					System.out.println(combinedSchedule);
-					
-					combinedSchedule.calculateMatches();
-					Match[] matches = combinedSchedule.getMatches();
-					System.out.println("All matches (" + matches.length + ")");
-					for (Match match : matches)
-						System.out.println(match);
-					System.out.println();
-					
-					int occupation = combinedSchedule.groupByLocalizations();
-					
-					System.out.println("Combined schedule grouped by courts");
-					System.out.println(combinedSchedule.groupedScheduleToString());
-					
-					System.out.println(
-						String.format("Timeslot occupation: %s/%s (%s %%)\n",
-							occupation,
-							tournament.getAllLocalizations().size() * tournament.getAllTimeslots().size(),
-							occupation / (double)(tournament.getAllLocalizations().size() * tournament.getAllTimeslots().size()) * 100
-						)
-					);
+				if (solutionFound) {
+					System.out.println("\nSolution found after " + (tryCount + 1) + " tries.\n");
+					tournament.nextSchedules();
 				}
 			}
 			
-			foundSolutions++;
-			
-			if (askForInput) {
-				System.out.print("Show next solution (y/n)?: ");
-				String input = sc.next();
-				if (!input.equalsIgnoreCase("y"))
+			do {
+				if (printSolutions) {
+					System.out.println("-------------------------------------------------------");
+					System.out.println(tournament + "\n");
+					tournament.printCurrentSchedules(printMatches);
+					
+					if (tournament.currentSchedules != null) {
+						CombinedSchedule combinedSchedule = tournament.getCombinedSchedule();
+					
+						System.out.println("All schedules combined in one");
+						System.out.println(combinedSchedule);
+						
+						combinedSchedule.calculateMatches();
+						
+						if (printMatches) {
+							Match[] matches = combinedSchedule.getMatches();
+							System.out.println("All matches (" + matches.length + ")");
+							for (Match match : matches)
+								System.out.println(match);
+							System.out.println();
+						}
+						
+						int occupation = combinedSchedule.groupByLocalizations();
+						
+						System.out.println("Combined schedule grouped by courts");
+						System.out.println(combinedSchedule.groupedScheduleToString());
+						
+						System.out.println(
+							String.format("Timeslot occupation: %s/%s (%s %%)\n",
+								occupation,
+								tournament.getAllLocalizations().size() * tournament.getAllTimeslots().size(),
+								occupation / (double)(tournament.getAllLocalizations().size() * tournament.getAllTimeslots().size()) * 100
+							)
+						);
+					}
+				}
+				
+				if (solutionFound)
+					foundSolutions++;
+				
+				if (askForInput) {
+					System.out.print("Show next solution (y/n)?: ");
+					String input = sc.next();
+					if (!input.equalsIgnoreCase("y"))
+						break;
+				}
+				
+				if (maxSolutions > 0 && foundSolutions >= maxSolutions)
 					break;
-			}
 			
-			if (maxSolutions > 0 && foundSolutions >= maxSolutions)
-				break;
-		
-		} while (tournament.nextSchedules());
+			} while (tournament.nextSchedules());
+		}
 		
 		sc.close();
 		

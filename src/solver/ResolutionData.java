@@ -1,5 +1,6 @@
 package solver;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
@@ -8,8 +9,12 @@ import org.chocosolver.solver.Solver;
 import org.chocosolver.solver.search.measure.IMeasures;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 
 import models.Tournament;
 
@@ -106,6 +111,15 @@ public class ResolutionData {
 	 */
 	private long restarts;
 	
+	/**
+	 * Construye un objeto con información del solver y del proceso de resolución
+	 * 
+	 * @param solver                      el solver al que pertenece la información que una instancia de esta clase almacenará
+	 * @param tournament                  el torneo al que pertenece la resolución
+	 * @param searchStrategyName          nombres de las estrategias de búsqueda empleadas
+	 * @param randomDrawingsCount         número de categorías por sorteo
+	 * @param resolutionProcessCompleted  true si se ha completado el proceso de resolución, false si no
+	 */
 	public ResolutionData(Solver solver, Tournament tournament, String searchStrategyName, int randomDrawingsCount, boolean resolutionProcessCompleted) {
 		this.solver = solver;
 		this.tournament = tournament;
@@ -117,6 +131,10 @@ public class ResolutionData {
 		update();
 	}
 	
+	/**
+	 * Actualiza los valores, incluidos los que concierten a información sobre la resolución completa, si en efecto
+	 * el proceso de resolución ha terminado
+	 */
 	public void update() {
 		solverName = solver.getName();
 		variables = solver.getNbVars();
@@ -234,11 +252,27 @@ public class ResolutionData {
 	}
 	
 	public String toJson() {
-		String jsonStr = "";
+		return toJson(false);
+	}
+	
+	public String toJsonPretty() {
+
+		return toJson(true);
+	}
+	
+	private String toJson(boolean pretty) {
+		String jsonStr = null;
 		
 		ObjectMapper mapper = new ObjectMapper();
+		SimpleModule module = new SimpleModule();
+		module.addSerializer(ResolutionData.class, new ResolutionDataSerializer());
+		mapper.registerModule(module);
+		
 		try {
-			jsonStr = mapper.writeValueAsString(this);
+			if (pretty)
+				jsonStr = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(this);
+			else
+				jsonStr = mapper.writeValueAsString(this);
 			
 			return jsonStr;
 		} catch (JsonProcessingException e) {
@@ -248,18 +282,38 @@ public class ResolutionData {
 		return jsonStr;
 	}
 	
-	public String toJsonPretty() {
-		String jsonStr = "";
-		
-		ObjectMapper mapper = new ObjectMapper();
-		try {
-			jsonStr = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(this);
+	public class ResolutionDataSerializer extends JsonSerializer<ResolutionData> {
+		public void serialize(ResolutionData resolutionData, JsonGenerator jgen, SerializerProvider provider)
+				throws IOException, JsonProcessingException {
+			jgen.writeStartObject();
 			
-			return jsonStr;
-		} catch (JsonProcessingException e) {
-			e.printStackTrace();
+			jgen.writeStringField("tournament", tournament.getName());
+			jgen.writeStringField("solver", solverName);
+			jgen.writeNumberField("variables", variables);
+			jgen.writeNumberField("constraints", constraints);
+			jgen.writeBooleanField("deafultSearchUsed", isDeafultSearchUsed);
+			jgen.writeBooleanField("searchCompleted", isSearchCompleted);
+			jgen.writeArrayFieldStart("searchStrategies");
+			for (String searchStrategy : searchStrategies)
+				jgen.writeString(searchStrategy);
+			jgen.writeEndArray();
+			jgen.writeNumberField("randomDrawingsCount", randomDrawingsCount);
+			jgen.writeNumberField("randomDrawingsRate", randomDrawingsCount / (float)tournament.getNumberOfEvents());
+			jgen.writeNumberField("solutions", solutions);
+			
+			jgen.writeBooleanField("resolutionProcessCompleted", resolutionProcessCompleted);
+			
+			if (resolutionProcessCompleted) {
+				jgen.writeNumberField("buildingTime", buildingTime);
+				jgen.writeNumberField("resolutionTime", resolutionTime);
+				jgen.writeNumberField("nodes", nodes);
+				jgen.writeNumberField("nodeProcessingRate", nodeProcessingRate);
+				jgen.writeNumberField("backtracks", backtracks);
+				jgen.writeNumberField("fails", fails);
+				jgen.writeNumberField("restarts", restarts);
+			}
+			
+			jgen.writeEndObject();
 		}
-		
-		return jsonStr;
 	}
 }

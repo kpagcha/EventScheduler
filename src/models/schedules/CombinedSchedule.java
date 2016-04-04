@@ -42,7 +42,7 @@ public class CombinedSchedule extends Schedule {
 		
 		schedule = new int[nPlayers][nTimeslots];
 		
-		// Marcar horario como no inicializado (-4 significa valor aún por asignar)
+		// Marcar horario como no inicializado (-4 significa valor aún por asignar o que no pertenece al dominio del evento)
 		for (int p = 0; p < nPlayers; p++)
 			for (int t = 0; t < nTimeslots; t++)
 				schedule[p][t] = -4;
@@ -72,6 +72,9 @@ public class CombinedSchedule extends Schedule {
 		}
 	}
 	
+	/**
+	 * Construye los partidos a partir del horario combinado
+	 */
 	public void calculateMatches() {
 		EventSchedule[] eventSchedules = tournament.getSchedules();
 		

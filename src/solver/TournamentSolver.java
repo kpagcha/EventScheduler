@@ -6,6 +6,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.chocosolver.solver.Solver;
 import org.chocosolver.solver.constraints.IntConstraintFactory;
@@ -90,7 +92,11 @@ public class TournamentSolver {
 	
 	private int randomDrawingsCount = 0;
 	
+	private static final Logger LOGGER = Logger.getLogger(TournamentSolver.class.getName());
+	
 	public TournamentSolver(Tournament tournament) {
+		LOGGER.setLevel(Level.WARNING);
+		
 		this.tournament = tournament;
 		events = tournament.getEvents();
 		
@@ -186,11 +192,11 @@ public class TournamentSolver {
 		return resolutionData;
 	}
 	
-	public void execute() {
+	public boolean execute() {
 		createSolver();
 		buildModel();
 		configureSearch(searchStrategyOption);
-		solve();
+		return solve();
 	}
 	
 	private void createSolver() {
@@ -252,6 +258,8 @@ public class TournamentSolver {
 		
 		setConstraintsMatchesSum();
 		
+		setConstraintsPlayersMatchesNumber();
+		
 		setConstraintsMapMatchesBeginning();
 		
 		setConstraintsMapMatches();
@@ -262,8 +270,6 @@ public class TournamentSolver {
 			setConstraintsCourtsCollisions();
 		
 		setConstraintsPlayersNotSimultaneous();
-		
-		setConstraintsPlayersMatchesNumber();
 	}
 	
 	/**
@@ -279,7 +285,6 @@ public class TournamentSolver {
 			if (event.getPlayersPerMatch() > 1 && event.getRandomDrawings()) {
 				List<Player> players = new ArrayList<Player>(Arrays.asList(event.getPlayers()));
 				List<List<Player>> matchups = new ArrayList<List<Player>>(event.getNumberOfMatches());
-				
 				Random random = new Random();
 				int nPlayersPerMatch = event.getPlayersPerMatch();
 				
@@ -345,6 +350,20 @@ public class TournamentSolver {
 			
 			solver.post(IntConstraintFactory.sum(ArrayUtils.flatten(g[e]), VariableFactory.fixed(eventNumberOfMatches, solver)));
 			solver.post(IntConstraintFactory.sum(ArrayUtils.flatten(x[e]), VariableFactory.fixed(eventNumberOfMatches * nTimeslotsPerMatch[e], solver)));
+		}
+	}
+	
+	/**
+	 * Asegurar que el número de partidos que juega cada jugador es el correspondiente al requerido por cada categoría
+	 */
+	private void setConstraintsPlayersMatchesNumber() {
+		// Que cada jugador juegue nMatchesPerPlayer partidos
+		for (int e = 0; e < nCategories; e++) {
+			int playerNumberOfTimeslots = nMatchesPerPlayer[e] * nTimeslotsPerMatch[e];
+			for (int p = 0; p < nPlayers[e]; p++) {
+				solver.post(IntConstraintFactory.sum(ArrayUtils.flatten(g[e][p]), VariableFactory.fixed(nMatchesPerPlayer[e], solver)));	
+				solver.post(IntConstraintFactory.sum(ArrayUtils.flatten(x[e][p]), VariableFactory.fixed(playerNumberOfTimeslots, solver)));
+			}
 		}
 	}
 	
@@ -527,7 +546,7 @@ public class TournamentSolver {
 	}
 	
 	/**
-	 * 
+	 * Si un jugador_p juega en más de una categoría, evitar que le coincidan partidos a la misma hora
 	 */
 	private void setConstraintsPlayersNotSimultaneous() {
 		int nAllPlayers = allPlayers.size();
@@ -555,13 +574,6 @@ public class TournamentSolver {
 				);
 			}
 		}
-	}
-	
-	private void setConstraintsPlayersMatchesNumber() {
-		// Que cada jugador juegue nMatchesPerPlayer partidos
-		for (int e = 0; e < nCategories; e++)
-			for (int p = 0; p < nPlayers[e]; p++)
-				solver.post(IntConstraintFactory.sum(ArrayUtils.flatten(g[e][p]), VariableFactory.fixed(nMatchesPerPlayer[e], solver)));
 	}
 	
 	private boolean isUnavailable(int category, int player, int timeslot) {
@@ -594,19 +606,7 @@ public class TournamentSolver {
 		for (int i = 0; i < nCategories; i++)
 			vars[i] = ArrayUtils.flatten(x[i]);
 		
-		solver.set(getStrategy(option, ArrayUtils.flatten(vars)));	
-	}
-	
-	private void solve() {
-		resolutionTimeLimit = 10000;
-		if (resolutionTimeLimit > 0)
-			SearchMonitorFactory.limitTime(solver, resolutionTimeLimit);
-		
-		if (solver.findSolution()) {
-			Chatterbox.printStatistics(solver);
-			
-			resolutionData = new ResolutionData(solver, tournament, searchStrategyName, randomDrawingsCount, true);
-		}
+		solver.set(getStrategy(option, ArrayUtils.flatten(vars)));
 	}
 	
 	@SuppressWarnings("rawtypes")
@@ -641,36 +641,42 @@ public class TournamentSolver {
 		return strategies;
 	}
 	
+	private boolean solve() {
+		if (resolutionTimeLimit > 0)
+			SearchMonitorFactory.limitTime(solver, resolutionTimeLimit);
+		
+		boolean solutionFound = solver.findSolution();	
+		if (solutionFound)
+			resolutionData = new ResolutionData(solver, tournament, searchStrategyName, randomDrawingsCount, true);
+		else
+			resolutionData = new ResolutionData(solver, tournament, searchStrategyName, randomDrawingsCount, false);
+		
+		Chatterbox.printStatistics(solver);
+		
+		if (!solutionFound) {
+			if (solver.isFeasible() == ESat.FALSE)
+				LOGGER.log(Level.INFO, "Problem infeasible.");
+			else if (solver.isFeasible() == ESat.UNDEFINED)
+				LOGGER.log(Level.INFO, "A solution has not been found within given limits.");
+		}
+		
+		return solutionFound;
+	}
+	
 	public EventSchedule[] getSchedules() {
+		// Cuando se llega a la última solución, si se vuelve a llamar a este método se "limpian" los horarios
 		if (lastSolutionFound && schedules != null)
 			schedules = null;
 		
 		else if (solver.isFeasible() != ESat.TRUE) {
-			System.out.println("Problem infeasible.");
+			LOGGER.log(Level.INFO, "Solution not found.");
 			schedules = null;
 			
-			boolean hasRandomDrawings = false;
-			for (Event event : events)
-				if (event.getRandomDrawings()) {
-					System.out.println("Trying new resolution with different random drawings.\n");
-					hasRandomDrawings = true;
-					break;
-				}
-			
-			if (hasRandomDrawings) {
-				try {
-					execute();
-				} catch (StackOverflowError e) {
-					return null;
-				}
-			
-				return getSchedules();
-			}
-			
-		} else if (schedules == null) {
+		} else if (schedules == null) {   // Se ha encontrado la primera solución
 			schedules = new EventSchedule[nCategories];
 			buildSchedules();
-		} else {
+			
+		} else {                          // Se ha encontrado una siguiente solución
 			if (solver.nextSolution())
 				buildSchedules();
 			else {
@@ -678,6 +684,7 @@ public class TournamentSolver {
 				schedules = null;
 			}
 		}
+
 		return schedules;
 	}
 	

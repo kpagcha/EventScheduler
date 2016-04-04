@@ -61,7 +61,7 @@ public class EventManager {
 		Player[] wtaPlayers = buildPlayers(new String[]{ "Williams", "Radwanska", "Kerber", "Muguruza", "Halep", "Suárez Navarro", "Kvitova", "Azarenka" });
 		Localization[] localizations = buildLocalizations(new int[]{ 1, 2, 3 });
 		Timeslot[] timeslots = buildTimeslots(
-			new int[]{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
+			new int[]{ 0, 1, 2, 3, 4, 5, 6, 7 },
 			new int[]{ }
 		);
 		
@@ -221,25 +221,39 @@ public class EventManager {
 	}
 	
 	public Tournament getSampleVariableDomainsTournamentWithCollisions(boolean randomDrawings) {
-		Player[] players = buildGenericPlayers(50, "Player");
+		Player[] players = buildGenericPlayers(50, "Jug");
 		Localization[] courts = buildGenericLocalizations(5, "Pista");
-		Timeslot[] timeslots = buildTimeslots(16, new int[]{ 6 });
+		Timeslot[] timeslots = buildTimeslots(24, new int[]{ 8 });
 		
 		Player[] groupAPlayers = Arrays.copyOfRange(players, 0, 8);
 		Player[] groupBPlayers = Arrays.copyOfRange(players, 8, 24);
 		Player[] groupCPlayers = Arrays.copyOfRange(players, 24, 36);
 		Player[] groupDPlayers = Arrays.copyOfRange(players, 36, 50);
 		Player[] leaguePlayers = buildRandomSubset(20, players, Player.class);
-		Player[] doublePlayers = Stream.concat(Arrays.stream(groupAPlayers), Arrays.stream(groupDPlayers)).toArray(Player[]::new);
+		Player[] doublePlayers = Stream.concat(
+			Stream.concat(Arrays.stream(groupAPlayers), Arrays.stream(groupBPlayers)),
+			Arrays.stream(buildRandomSubset(8, groupCPlayers, Player.class))
+		).toArray(Player[]::new);
 		
-		Event groupA = new Event("Group A", groupAPlayers, courts, timeslots);
+		Event groupA = new Event("Group A", groupAPlayers, new Localization[]{ courts[0] }, timeslots);
 		Event groupB = new Event("Group B", groupBPlayers, courts, timeslots);
 		Event groupC = new Event("Group C", groupCPlayers, courts, timeslots);
 		Event groupD = new Event("Group D", groupDPlayers, courts, timeslots);
 		Event groupLeague = new Event("League", leaguePlayers, courts, timeslots);
 		Event groupDoubles = new Event("Doubles", doublePlayers, courts, timeslots);
 		
-		return new Tournament("Tournament", new Event[]{ groupA, groupB, groupC, groupD });
+		groupDoubles.setPlayersPerMatch(4);
+		
+		if (randomDrawings) {
+			groupA.setRandomDrawings(true);
+			groupB.setRandomDrawings(true);
+			groupC.setRandomDrawings(true);
+			groupD.setRandomDrawings(true);
+			groupLeague.setRandomDrawings(true);
+			groupDoubles.setRandomDrawings(true);
+		}
+		
+		return new Tournament("Tournament", new Event[]{ groupA, groupB, groupC, groupD, groupLeague, groupDoubles });
 	}
 	
 	private Player[] buildPlayers(String[] playersArray) {
@@ -321,7 +335,7 @@ public class EventManager {
 		Random rand = new Random();
 		
 		for (int i = 0; i < subsetSize; i++) {
-			int randIndex = rand.nextInt(subsetSize);
+			int randIndex = rand.nextInt(poolList.size());
 			subset[i] = poolList.get(randIndex);
 			
 			poolList.remove(randIndex);

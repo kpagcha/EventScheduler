@@ -2,16 +2,6 @@ package models;
 
 public class Timeslot {
 	/**
-	 * Último id
-	 */
-	private static int lastId = 0;
-	
-	/**
-	 * Identificador
-	 */
-	private int id;
-	
-	/**
 	 * Límite inferior en milisegundos 
 	 */
 	private int lowerBound;
@@ -33,8 +23,6 @@ public class Timeslot {
 	public Timeslot(int lb, int ub) {
 		lowerBound = lb;
 		upperBound = ub;
-		
-		id = lastId++;
 	}
 	
 	public Timeslot(int lb, int ub, boolean isBreak) {
@@ -51,10 +39,6 @@ public class Timeslot {
 		this(lb, ub);
 		this.timeUnit = timeUnit;
 		this.isBreak = isBreak;
-	}
-	
-	public int getId() {
-		return id;
 	}
 	
 	public int getLowerBound() {
@@ -87,10 +71,6 @@ public class Timeslot {
 	
 	public String toString() {
 		return getLowerBoundStr() + " - " + getUpperBoundStr();
-	}
-	
-	public boolean equals(Timeslot timeslot) {
-		return timeslot != null && id == timeslot.getId();
 	}
 	
 	private String formatStringWithTimeUnit(int value) {
