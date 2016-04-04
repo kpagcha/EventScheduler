@@ -58,6 +58,9 @@ public class TournamentSolver {
 	// Número de jugadores por partido (lo normal será 2) (para cada categoría)
 	private int[] nPlayersPerMatch;
 	
+	// Emparejamientos predefinidos (para cada categoría)
+	private Map<Event, List<Set<Player>>> fixedMatchups;
+	
 	
 	// Horario. x_e,p,c,t -> horario_categoria,jugador,pista,hora. Dominio [0, 1]
 	private IntVar[][][][] x;
@@ -65,9 +68,9 @@ public class TournamentSolver {
 	// Comienzos de partidos. Dominio [0, 1]
 	private IntVar[][][][] g;
 	
-	
 	// Horarios calculados de la solución actual
 	private EventSchedule[] schedules;
+	
 	
 	// Índices de cada jugador en el array de jugadores correspondiente a cada categoría
 	// p.e. playersIndices[2][1] = 3 significa que el índice del jugador número 3 en
@@ -118,6 +121,8 @@ public class TournamentSolver {
 		nTimeslotsPerMatch = new int[nCategories];
 		nPlayersPerMatch = new int[nCategories];
 		
+		fixedMatchups = new HashMap<Event, List<Set<Player>>>();
+		
 		for (int i = 0; i < nCategories; i++) {
 			nPlayers[i] = events[i].getNumberOfPlayers();
 			nCourts[i] = events[i].getNumberOfLocalizations();
@@ -128,6 +133,9 @@ public class TournamentSolver {
 			nMatchesPerPlayer[i] = events[i].getMatchesPerPlayer();
 			nTimeslotsPerMatch[i] = events[i].getMatchDuration();
 			nPlayersPerMatch[i] = events[i].getPlayersPerMatch();
+			
+			if (events[i].hasFixedMatchups())
+				fixedMatchups.put(events[i], events[i].getFixedMatchups());
 		}
 
 		x = new IntVar[nCategories][][][];
@@ -258,7 +266,10 @@ public class TournamentSolver {
 		
 		setConstraintsTeams();
 		
-		setConstraintsPredefineMatchups();
+		if (fixedMatchups.size() > 0)
+			setConstraintsFixedMatchups();
+		
+		setConstraintsPredefinedRandomMatchups();
 		
 		setConstraintsMatchesSum();
 		
@@ -291,11 +302,35 @@ public class TournamentSolver {
 					int[] pIndex = new int[nPlayersInTeam];
 					int i = 0;
 					for (Player player : playersInTeam)
-						pIndex[i++] = events[e].getPlayerIndex(player);
+						pIndex[i++] = events[e].indexOf(player);
 					
 					for (int c = 0; c < nCourts[e]; c++)
 						for (int t = 0; t < nTimeslots[e]; t++)
 							for (int p = 0; p < nPlayersInTeam - 1; p++)
+								solver.post(IntConstraintFactory.arithm(x[e][pIndex[p]][c][t], "=", x[e][pIndex[p + 1]][c][t]));
+				}
+			}
+		}
+	}
+	
+	/**
+	 * Asegura que los emparejamientos predefinidos se producen
+	 */
+	private void setConstraintsFixedMatchups() {
+		for (int e = 0; e < nCategories; e++) {
+			if (events[e].hasFixedMatchups()) {
+				List<Set<Player>> fixedMatchups = events[e].getFixedMatchups();
+				int nPlayersInMatch = nPlayersPerMatch[e];
+				
+				for (Set<Player> matchup : fixedMatchups) {
+					int[] pIndex = new int[nPlayersInMatch];
+					int i = 0;
+					for (Player player : matchup)
+						pIndex[i++] = events[e].indexOf(player);
+					
+					for (int c = 0; c < nCourts[e]; c++)
+						for (int t = 0; t < nTimeslots[e]; t++)
+							for (int p = 0; p < nPlayersInMatch - 1; p++)
 								solver.post(IntConstraintFactory.arithm(x[e][pIndex[p]][c][t], "=", x[e][pIndex[p + 1]][c][t]));
 				}
 			}
@@ -308,8 +343,8 @@ public class TournamentSolver {
 	 * 2. Se reducen las posibles combinaciones de horarios porque ya no puede ser emparejado cualquier jugador con cualquier otro
 	 * 2a. Puede provocar que no se encuentren soluciones
 	 */
-	private void setConstraintsPredefineMatchups() {
-		Map<Event, List<List<Player>>> predefinedMatchups = buildPredefinedMatchups();
+	private void setConstraintsPredefinedRandomMatchups() {
+		Map<Event, List<List<Player>>> predefinedMatchups = buildPredefinedRandomMatchups();
 		
 		/*System.out.println("PREDEFINED MATCHUPS:");
 		for (Event e : predefinedMatchups.keySet()) {
@@ -333,7 +368,7 @@ public class TournamentSolver {
 				int[] pIndex = new int[nPlayersInMatch];
 				
 				for (int p = 0; p < nPlayersInMatch; p++)
-					pIndex[p] = event.getPlayerIndex(matchup.get(p));
+					pIndex[p] = event.indexOf(matchup.get(p));
 				
 				for (int c = 0; c < nCourts[e]; c++)
 					for (int t = 0; t < nTimeslots[e]; t++)
@@ -344,15 +379,24 @@ public class TournamentSolver {
 	}
 	
 	/**
-	 * @return mapa de emparejamientos aleatorios predefinidos para cada categoría
+	 * @return diccionario de emparejamientos aleatorios predefinidos para cada categoría
 	 */
-	private Map<Event, List<List<Player>>> buildPredefinedMatchups() {
+	private Map<Event, List<List<Player>>> buildPredefinedRandomMatchups() {
 		Map<Event, List<List<Player>>> predefinedMatchups = new HashMap<Event, List<List<Player>>>();
 		for (Event event : events) {
 			// Si el evento se organiza por sorteo (y hay más de un jugador por partido, luego hay enfrentamientos)
 			if (event.getPlayersPerMatch() > 1 && event.getRandomDrawings()) {
 				List<Player> players = new ArrayList<Player>(Arrays.asList(event.getPlayers()));
 				List<List<Player>> matchups = new ArrayList<List<Player>>(event.getNumberOfMatches());
+				
+				// Excluimos a los jugadores que pertenecen a partidos fijos del sorteo porque ya están emparejados
+				if (event.hasFixedMatchups()) {
+					List<Set<Player>> eventFixedMatchups = fixedMatchups.get(event);
+					
+					for (Set<Player> matchup : eventFixedMatchups)
+						for (Player player : matchup)
+							players.remove(player);
+				}
 				
 				Random random = new Random();
 				int nPlayersPerMatch = event.getPlayersPerMatch();

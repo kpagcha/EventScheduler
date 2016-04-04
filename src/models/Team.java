@@ -10,15 +10,6 @@ import org.apache.commons.lang3.StringUtils;
 public class Team extends Entity {
 	private Set<Player> players;
 	
-	public Team() {
-		this("Team");
-	}
-	
-	public Team(String name) {
-		super(name);
-		players = new HashSet<Player>();
-	}
-	
 	public Team(String name, Set<Player> players) {
 		super(name);
 		this.players = players;

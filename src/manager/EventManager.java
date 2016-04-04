@@ -4,6 +4,7 @@ import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -71,12 +72,24 @@ public class EventManager {
 		Event womensDraw = new Event("Women's Draw", wtaPlayers, localizations, timeslots);
 		Event doublesDraw = new Event("Mixed Doubles Draw", allPlayers, localizations, timeslots);
 		
-		doublesDraw.setPlayersPerMatch(4);
-		doublesDraw.setTeams(new ArrayList<Team>(Arrays.asList(new Team[]{
+		List<Team> teams = new ArrayList<Team>(Arrays.asList(new Team[]{
 			new Team(atpPlayers[0], atpPlayers[1]), new Team(atpPlayers[2], atpPlayers[3]), new Team(atpPlayers[4], atpPlayers[5]),
 			new Team(atpPlayers[6], atpPlayers[7]), new Team(wtaPlayers[0], wtaPlayers[1]), new Team(wtaPlayers[2], wtaPlayers[3]),
 			new Team(wtaPlayers[4], wtaPlayers[5]), new Team(wtaPlayers[6], wtaPlayers[7])
-		})));
+		}));
+		
+		doublesDraw.setPlayersPerMatch(4);
+		doublesDraw.setTeams(teams);
+		
+		mensDraw.addFixedMatchup(new HashSet<Player>(Arrays.asList(new Player[]{ atpPlayers[2], atpPlayers[0] }))); // Djokovic vs Federer
+		mensDraw.addFixedMatchup(new HashSet<Player>(Arrays.asList(new Player[]{ atpPlayers[4], atpPlayers[7] }))); // Nadal vs Ferrer
+		
+		/*doublesDraw.addFixedMatchup(new HashSet<Player>(Arrays.asList(new Player[]{ 
+			atpPlayers[2], atpPlayers[3], wtaPlayers[6], wtaPlayers[7] // Federer-Wawrinka vs Kvitova-Azarenka
+		})));*/
+		
+		// Lo mismo que arriba
+		doublesDraw.addFixedTeamsMatchup(new HashSet<Team>(Arrays.asList(new Team[]{ teams.get(1), teams.get(7) })));
 		
 		if (randomDrawings) {
 			mensDraw.setRandomDrawings(true);

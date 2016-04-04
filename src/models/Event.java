@@ -1,6 +1,8 @@
 package models;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -35,6 +37,10 @@ public class Event {
 	// Lista con la composicón de los equipos
 	private List<Team> teams;
 	
+	// Lista con emparejamientos fijos predefinidos. Es obligatorio que entre los jugadores que
+	// forman cada lista compongan enfrentamiento
+	private List<Set<Player>> fixedMatchups;
+	
 	public Event(String name, Player[] players, Localization[] localizations, Timeslot[] timeslots) {
 		this.name = name;
 		this.players = players;
@@ -44,6 +50,8 @@ public class Event {
 		
 		for (Player player : players)
 			unavailableTimeslots.put(player, new Timeslot[]{});
+		
+		fixedMatchups = new ArrayList<Set<Player>>();
 	}
 	
 	public void setName(String name) {
@@ -126,6 +134,30 @@ public class Event {
 		return teams;
 	}
 	
+	public void setFixedMatchups(List<Set<Player>> fixedMatchups) {
+		this.fixedMatchups = fixedMatchups;
+	}
+	
+	public List<Set<Player>> getFixedMatchups() {
+		return fixedMatchups;
+	}
+	
+	public void addFixedMatchup(Set<Player> matchup) {
+		fixedMatchups.add(matchup);
+	}
+	
+	public void addFixedTeamsMatchup(Set<Team> matchup) {
+		Set<Player> playersInMatchup = new HashSet<Player>();
+		for (Team team : matchup)
+			playersInMatchup.addAll(team.getPlayers());
+		
+		fixedMatchups.add(playersInMatchup);
+	}
+	
+	public boolean hasFixedMatchups() {
+		return !fixedMatchups.isEmpty();
+	}
+	
 	public boolean hasTeams() {
 		return teams != null && !teams.isEmpty();
 	}
@@ -149,13 +181,13 @@ public class Event {
 		int[][] unavailableTimeslotsInt = new int[n][];
 		
 		for (Map.Entry<Player, Timeslot[]> entry : unavailableTimeslots.entrySet()) {
-			int playerIndex = getPlayerIndex(entry.getKey());
+			int playerIndex = indexOf(entry.getKey());
 			Timeslot[] unavailability = entry.getValue();
 			
 			unavailableTimeslotsInt[playerIndex] = new int[unavailability.length];
 			int i = 0;
 			for (Timeslot timeslot : unavailability)
-				unavailableTimeslotsInt[playerIndex][i++] = getTimeslotIndex(timeslot);
+				unavailableTimeslotsInt[playerIndex][i++] = indexOf(timeslot);
 		}
 		
 		return unavailableTimeslotsInt;
@@ -173,14 +205,14 @@ public class Event {
 		return timeslots[index];
 	}
 	
-	public int getPlayerIndex(Player player) {
+	public int indexOf(Player player) {
 		for (int p = 0; p < players.length; p++)
 			if (players[p].equals(player))
 				return p;
 		return -1;
 	}
 	
-	public int getTimeslotIndex(Timeslot timeslot) {
+	public int indexOf(Timeslot timeslot) {
 		for (int t = 0; t < timeslots.length; t++)
 			if (timeslots[t].equals(timeslot)) 
 				return t;
