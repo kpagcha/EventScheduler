@@ -10,12 +10,12 @@ import java.util.Map;
 import java.util.Random;
 import java.util.stream.Stream;
 
-import models.Event;
-import models.Localization;
-import models.Player;
-import models.Team;
-import models.Timeslot;
-import models.Tournament;
+import models.tournaments.Tournament;
+import models.tournaments.events.Event;
+import models.tournaments.events.entities.Localization;
+import models.tournaments.events.entities.Player;
+import models.tournaments.events.entities.Team;
+import models.tournaments.events.entities.Timeslot;
 
 public class EventManager {
 	private static EventManager instance = null;
@@ -93,7 +93,7 @@ public class EventManager {
 			atpPlayers[2], atpPlayers[3], wtaPlayers[6], wtaPlayers[7] // Federer-Wawrinka vs Kvitova-Azarenka
 		})));*/
 		
-		// Lo mismo que arriba
+		// Lo mismo que lo comentado arriba
 		// Federer-Wawrinka vs Kvitova-Azarenka
 		doublesDraw.addFixedTeamsMatchup(new HashSet<Team>(Arrays.asList(new Team[]{ teams.get(1), teams.get(7) })));
 		
@@ -128,6 +128,14 @@ public class EventManager {
 			wtaPlayers[3],
 			new ArrayList<Localization>(Arrays.asList(new Localization[]{
 				localizations[1]
+			}))
+		);
+		
+		// Que Berdych juegue en los timeslots 0, 1, 8, 9
+		mensDraw.addPlayerAtTimeslots(
+			atpPlayers[6],
+			new ArrayList<Timeslot>(Arrays.asList(new Timeslot[]{
+				timeslots[0], timeslots[1], timeslots[8], timeslots[9]
 			}))
 		);
 		

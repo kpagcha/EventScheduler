@@ -22,13 +22,13 @@ import org.chocosolver.solver.variables.VariableFactory;
 import org.chocosolver.util.ESat;
 import org.chocosolver.util.tools.ArrayUtils;
 
-import models.Event;
-import models.Localization;
-import models.Player;
-import models.Team;
-import models.Timeslot;
-import models.Tournament;
-import models.schedules.EventSchedule;
+import models.tournaments.Tournament;
+import models.tournaments.events.Event;
+import models.tournaments.events.entities.Localization;
+import models.tournaments.events.entities.Player;
+import models.tournaments.events.entities.Team;
+import models.tournaments.events.entities.Timeslot;
+import models.tournaments.schedules.EventSchedule;
 
 public class TournamentSolver {
 	private Solver solver;
@@ -105,8 +105,14 @@ public class TournamentSolver {
 	
 	private ResolutionData resolutionData;
 	
+	/**
+	 * Estrategias de búsqueda empleadas en la resolución del problema
+	 */
 	private String searchStrategyName;
 	
+	/**
+	 * Número de categorías del torneo de este solver que emplean emparejamientos predefinidos por sorteo
+	 */
 	private int randomDrawingsCount = 0;
 	
 	private static final Logger LOGGER = Logger.getLogger(TournamentSolver.class.getName());
@@ -353,7 +359,29 @@ public class TournamentSolver {
 	 * Fuerza a que los jugadores indicados jueguen sus partidos en los timeslots indicados
 	 */
 	private void markPlayersNotAtTimeslots() {
-		
+		// Si para el jugador_p en la categoría_e se indica que debe jugar en un conjunto de timeslots,
+		// se marcan con 0 todos los timeslots del evento que no esan ésos, de este modo invalidándolos
+		for (int e = 0; e < nCategories; e++) {
+			if (events[e].hasPlayersAtTimeslots()) {
+				Map<Player, List<Timeslot>> eventPlayersAtTimeslots = events[e].getPlayersAtTimeslots();
+				Set<Player> players = eventPlayersAtTimeslots.keySet();
+				
+				for (Player player : players) {
+					List<Timeslot> assignedTimeslots = eventPlayersAtTimeslots.get(player);
+					
+					int p = events[e].indexOf(player);
+					
+					for (int t = 0; t < nTimeslots[e]; t++) {
+						if (!assignedTimeslots.contains(events[e].getTimeslotAt(t))) {
+							for (int c = 0; c < nLocalizations[e]; c++) {
+								x[e][p][c][t] = VariableFactory.fixed(0, solver);
+								g[e][p][c][t] = VariableFactory.fixed(0, solver);
+							}
+						}
+					}
+				}
+			}
+		}
 	}
 	
 	/**
