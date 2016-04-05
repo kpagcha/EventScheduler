@@ -72,6 +72,8 @@ public class EventManager {
 		Event womensDraw = new Event("Women's Draw", wtaPlayers, localizations, timeslots);
 		Event doublesDraw = new Event("Mixed Doubles Draw", allPlayers, localizations, timeslots);
 		
+		// 0 Djokovic-Murray, 1 Federer-Wawrinka, 2 Nadal-Nishikori, 3 Berdych-Ferrer,
+		// 4 Williams-Randwanska, 5 Kerber-Muguruza, 6 Halep-Suárez Navarro, 7 Kvitova-Azarenka
 		List<Team> teams = new ArrayList<Team>(Arrays.asList(new Team[]{
 			new Team(atpPlayers[0], atpPlayers[1]), new Team(atpPlayers[2], atpPlayers[3]), new Team(atpPlayers[4], atpPlayers[5]),
 			new Team(atpPlayers[6], atpPlayers[7]), new Team(wtaPlayers[0], wtaPlayers[1]), new Team(wtaPlayers[2], wtaPlayers[3]),
@@ -81,28 +83,58 @@ public class EventManager {
 		doublesDraw.setPlayersPerMatch(4);
 		doublesDraw.setTeams(teams);
 		
-		mensDraw.addFixedMatchup(new HashSet<Player>(Arrays.asList(new Player[]{ atpPlayers[2], atpPlayers[0] }))); // Djokovic vs Federer
-		mensDraw.addFixedMatchup(new HashSet<Player>(Arrays.asList(new Player[]{ atpPlayers[4], atpPlayers[7] }))); // Nadal vs Ferrer
+		// Djokovic vs Federer
+		mensDraw.addFixedMatchup(new HashSet<Player>(Arrays.asList(new Player[]{ atpPlayers[2], atpPlayers[0] })));
+		
+		// Nadal vs Ferrer
+		mensDraw.addFixedMatchup(new HashSet<Player>(Arrays.asList(new Player[]{ atpPlayers[4], atpPlayers[7] }))); 
 		
 		/*doublesDraw.addFixedMatchup(new HashSet<Player>(Arrays.asList(new Player[]{ 
 			atpPlayers[2], atpPlayers[3], wtaPlayers[6], wtaPlayers[7] // Federer-Wawrinka vs Kvitova-Azarenka
 		})));*/
 		
 		// Lo mismo que arriba
+		// Federer-Wawrinka vs Kvitova-Azarenka
 		doublesDraw.addFixedTeamsMatchup(new HashSet<Team>(Arrays.asList(new Team[]{ teams.get(1), teams.get(7) })));
 		
 		// Invalidar pista 1 y 2 a las horas t0, t1 y t2 para el cuadro de hombres
-		mensDraw.addDiscardedCourt(localizations[0], timeslots[0]);
-		mensDraw.addDiscardedCourt(localizations[0], timeslots[1]);
-		mensDraw.addDiscardedCourt(localizations[0], timeslots[2]);
-		mensDraw.addDiscardedCourt(localizations[1], timeslots[0]);
-		mensDraw.addDiscardedCourt(localizations[1], timeslots[1]);
-		mensDraw.addDiscardedCourt(localizations[1], timeslots[2]);
+		mensDraw.addDiscardedLocalization(localizations[0], timeslots[0]);
+		mensDraw.addDiscardedLocalization(localizations[0], timeslots[1]);
+		mensDraw.addDiscardedLocalization(localizations[0], timeslots[2]);
+		mensDraw.addDiscardedLocalization(localizations[1], timeslots[0]);
+		mensDraw.addDiscardedLocalization(localizations[1], timeslots[1]);
+		mensDraw.addDiscardedLocalization(localizations[1], timeslots[2]);
+		
+		// Que Muguruza juegue en la pista 2 en el cuadro de mujeres
+		womensDraw.addPlayerInLocalizations(
+			wtaPlayers[3],
+			new ArrayList<Localization>(Arrays.asList(new Localization[]{
+				localizations[1]
+			}))
+		);
+		
+		// Que Murray y Nishikori jueguen en la pista 1 (esto NO quiere decir que Murray y Nishikori se vayan a enfrentar)
+		mensDraw.addPlayersInLocalizations(
+			new ArrayList<Player>(Arrays.asList(new Player[] {
+				atpPlayers[1], atpPlayers[5]
+			})),
+			new ArrayList<Localization>(Arrays.asList(new Localization[]{
+				localizations[0]
+			}))
+		);
+		
+		// Que Muguruza juegue en la pista 2 en el cuadro de dobles (por tanto su pareja de dobles también)
+		doublesDraw.addPlayerInLocalizations(
+			wtaPlayers[3],
+			new ArrayList<Localization>(Arrays.asList(new Localization[]{
+				localizations[1]
+			}))
+		);
 		
 		Tournament tournament = new Tournament("Tennis Tournament", new Event[]{ mensDraw, womensDraw, doublesDraw });
 		
 		// Invalidar la pista 3 para el timeslot t8 en todas las categorías
-		tournament.addDiscardedCourt(localizations[2], timeslots[8]);
+		tournament.addDiscardedLocalization(localizations[2], timeslots[8]);
 		
 		if (randomDrawings) {
 			mensDraw.setRandomDrawings(true);

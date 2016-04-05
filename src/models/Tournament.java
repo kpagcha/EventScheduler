@@ -197,7 +197,7 @@ public class Tournament {
 					List<Timeslot> timeslots = discardedLocalizations.get(localization);
 					for (Timeslot timeslot : timeslots)
 						if (event.containsTimeslot(timeslot))
-							event.addDiscardedCourt(localization, timeslot);
+							event.addDiscardedLocalization(localization, timeslot);
 				}
 	}
 	
@@ -208,10 +208,10 @@ public class Tournament {
 	 * @param localization localización de juego a invalidar
 	 * @param timeslot     hora a la que invalidar
 	 */
-	public void addDiscardedCourt(Localization localization, Timeslot timeslot) {
+	public void addDiscardedLocalization(Localization localization, Timeslot timeslot) {
 		for (Event event : events)
 			if (event.containsLocalization(localization) && event.containsTimeslot(timeslot))
-				event.addDiscardedCourt(localization, timeslot);
+				event.addDiscardedLocalization(localization, timeslot);
 	}
 	
 	
