@@ -97,18 +97,21 @@ public class TournamentSolver {
 	
 	private boolean lastSolutionFound = false;
 	
-	// Opción de estrategia de búsqueda
+	/**
+	 * Opción de estrategia de búsqueda empleada en la resolución del problema
+	 */
 	private int searchStrategyOption = 1;
+	
+	/**
+	 * Para las estrategias de búsqueda minDom_UB y minDom_LB indicar si priorizar timeslots (true) o
+	 * pistas (false) a la hora de hacer las asignaciones
+	 */
+	boolean fillTimeslotsFirst = true;
 	
 	// Tiempo máximo de resolución (0: infinito)
 	private int resolutionTimeLimit = 0;
 	
 	private ResolutionData resolutionData;
-	
-	/**
-	 * Estrategias de búsqueda empleadas en la resolución del problema
-	 */
-	private String searchStrategyName;
 	
 	/**
 	 * Número de categorías del torneo de este solver que emplean emparejamientos predefinidos por sorteo
@@ -216,6 +219,10 @@ public class TournamentSolver {
 	
 	public void setSearchStrategy(int option) {
 		searchStrategyOption = option;
+	}
+	
+	public void setFillTimeslotsFirst(boolean fillFirst) {
+		fillTimeslotsFirst = fillFirst;
 	}
 	
 	public void setResolutionTimeLimit(int limit) {
@@ -862,8 +869,29 @@ public class TournamentSolver {
 	
 	private void configureSearch(int option) {	
 		IntVar[][][] vars = new IntVar[nCategories][][];
-		for (int i = 0; i < nCategories; i++)
-			vars[i] = ArrayUtils.flatten(x[i]);
+		
+		if ((searchStrategyOption == 2 || searchStrategyOption == 3) && !fillTimeslotsFirst) {
+			IntVar[][][][] v = new IntVar[nCategories][][][];
+			for (int e = 0; e < nCategories; e++) {
+				v[e] = new IntVar[nPlayers[e]][][];
+				for (int p = 0; p < nPlayers[e]; p++) {
+					v[e][p] = new IntVar[nTimeslots[e]][];
+					for (int t = 0; t < nTimeslots[e]; t++) {
+						v[e][p][t] = new IntVar[nLocalizations[e]];
+						for (int c = 0; c < nLocalizations[e]; c++) {
+							v[e][p][t][c] = x[e][p][c][t];
+						}
+					}
+				}
+			}
+			
+			for (int i = 0; i < nCategories; i++)
+				vars[i] = ArrayUtils.flatten(v[i]);
+		} else {
+			for (int i = 0; i < nCategories; i++)
+				vars[i] = ArrayUtils.flatten(x[i]);
+		}
+		
 		
 		solver.set(getStrategy(option, ArrayUtils.flatten(vars)));
 	}
@@ -874,30 +902,47 @@ public class TournamentSolver {
 		switch (option) {
 			case 1:
 				strategies = new AbstractStrategy[] { IntStrategyFactory.domOverWDeg(v, System.currentTimeMillis()) };
-				searchStrategyName = "domOverWDeg";
 				break;
 			case 2:
 				strategies = new AbstractStrategy[] { IntStrategyFactory.minDom_UB(v) };
-				searchStrategyName = "minDom_LB";
 				break;
 			case 3:
 				strategies = new AbstractStrategy[] { IntStrategyFactory.minDom_LB(v) };
-				searchStrategyName = "minDom_LB";
 				break;
 			case 4:
 				strategies = new AbstractStrategy[] {
 					IntStrategyFactory.minDom_UB(v),
 					IntStrategyFactory.domOverWDeg(v, System.currentTimeMillis())
 				};
-				searchStrategyName = "minDom_UB,domOverWDeg";
 				break;
 			default:
 				strategies = new AbstractStrategy[] { IntStrategyFactory.domOverWDeg(v, System.currentTimeMillis()) };
-				searchStrategyName = "domOverWDeg";
 				break;
 		}
 		
 		return strategies;
+	}
+	
+	private String getSearchStrategyName() {
+		String searchStrategyStr = "";
+		switch (searchStrategyOption) {
+			case 1:
+				searchStrategyStr = "domOverWDeg";
+				break;
+			case 2:
+				searchStrategyStr = "minDom_LB";
+				break;
+			case 3:
+				searchStrategyStr = "minDom_LB";
+				break;
+			case 4:
+				searchStrategyStr = "minDom_UB,domOverWDeg";
+				break;
+			default:
+				searchStrategyStr = "domOverWDeg";
+				break;
+		}
+		return searchStrategyStr;
 	}
 	
 	private boolean solve() {
@@ -906,9 +951,9 @@ public class TournamentSolver {
 		
 		boolean solutionFound = solver.findSolution();	
 		if (solutionFound)
-			resolutionData = new ResolutionData(solver, tournament, searchStrategyName, randomDrawingsCount, true);
+			resolutionData = new ResolutionData(solver, tournament, getSearchStrategyName(), randomDrawingsCount, true);
 		else
-			resolutionData = new ResolutionData(solver, tournament, searchStrategyName, randomDrawingsCount, false);
+			resolutionData = new ResolutionData(solver, tournament, getSearchStrategyName(), randomDrawingsCount, false);
 		
 		Chatterbox.printStatistics(solver);
 		

@@ -325,6 +325,30 @@ public class EventManager {
 		return new Tournament("Tournament", new Event[]{ groupA, groupB, groupC, groupD, groupLeague, groupDoubles });
 	}
 	
+	public Tournament getSampleLeague(boolean randomDrawings) {
+		Player[] players = buildPlayers(new String[]{
+			"Djokovic", "Murray", "Federer", "Wawrinka", "Nadal", "Nishikori", "Berdych", "Ferrer",
+			"Tsonga", "Gasquet", "Cilic", "Raonic", "Goffin", "Thiem", "Isner", "Monfils"
+		});
+		Localization[] courts = buildGenericLocalizations(12, "Pista");
+		Timeslot[] timeslots = buildTimeslots(players.length + 8, new int[]{}); // una semana por partido + flexibilidad
+		
+		Event league = new Event("Liga de 16 jugadores", players, courts, timeslots);
+		
+		league.setMatchesPerPlayer(players.length - 1);
+		league.setMatchDuration(1); // partido en 1 día
+		
+		/*league.setUnavailableTimeslots(buildUnavailability(league, new int[][]{
+			{ 3 }, { }, { }, { 0 }, { }, { }, { 8 }, { },
+			{ }, { 2 }, { }, { }, { }, { 5, 6 }, { }, { }
+		}));*/
+		
+		if (randomDrawings)
+			league.setRandomDrawings(randomDrawings);
+		
+		return new Tournament("Liga", new Event[]{ league });
+	}
+	
 	private Player[] buildPlayers(String[] playersArray) {
 		Player[] players = new Player[playersArray.length];
 		for (int i = 0; i < playersArray.length; i++)

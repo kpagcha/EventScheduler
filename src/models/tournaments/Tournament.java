@@ -290,6 +290,7 @@ public class Tournament {
 		System.out.println("4 Sample Large Tennis Tournament");
 		System.out.println("5 Sample Large Tennis Tournament With Collisions");
 		System.out.println("6 Sample Tournament With Variable Domains and Collisions");
+		System.out.println("7 Sample League");
 		System.out.print("Choose tournament: ");
 		int tournamentOption = sc.nextInt();
 		
@@ -316,6 +317,9 @@ public class Tournament {
 			case 6:
 				tournament = EventManager.getInstance().getSampleVariableDomainsTournamentWithCollisions(randomDrawings);
 				break;
+			case 7:
+				tournament = EventManager.getInstance().getSampleLeague(randomDrawings);
+				break;
 		}
 		
 		System.out.println("\n1 domOverWDeg");
@@ -324,8 +328,11 @@ public class Tournament {
 		System.out.println("4 minDom_UB, domOverWDeg");
 		System.out.print("Choose Search Strategy: ");
 		int searchStrategyOption = sc.nextInt();
+		
+		boolean fillTimeslotsFirst = true;
 
 		tournament.getSolver().setSearchStrategy(searchStrategyOption);
+		tournament.getSolver().setFillTimeslotsFirst(fillTimeslotsFirst);
 		
 		boolean printSolutions = true;
 		boolean printMatches = true;
