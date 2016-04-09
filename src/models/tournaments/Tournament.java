@@ -189,16 +189,52 @@ public class Tournament {
 	}
 	
 	/**
+	 * Añade timeslots no disponibles para el jugador en todas las categorías donde participe
+	 * 
+	 * @param player
+	 * @param timeslots
+	 */
+	public void addPlayerUnavailableTimeslots(Player player, List<Timeslot> timeslots) {	
+		for (Event event : events)
+			if (event.containsPlayer(player))
+				event.addPlayerUnavailableTimeslots(player, timeslots);
+	}
+	
+	/**
+	 * Añade un timeslot no disponible para el jugador en todas las categorías donde participe
+	 * 
+	 * @param player
+	 * @param timeslot
+	 */
+	public void addPlayerUnavailableTimeslot(Player player, Timeslot timeslot) {
+		for (Event event : events)
+			if (event.containsPlayer(player))
+				event.addPlayerUnavailableTimeslot(player, timeslot);
+	}
+	
+	/**
+	 * Si el jugador no está disponible a la hora timeslot, se elimina de la lista y vuelve a estar disponible a esa hora,
+	 * para todas las categorías
+	 * 
+	 * @param player
+	 * @param timeslot
+	 */
+	public void removePlayerUnavailableTimeslot(Player player, Timeslot timeslot) {
+		for (Event event : events)
+			if (event.containsPlayer(player))
+				event.removePlayerUnavailableTimeslot(player, timeslot);
+	}
+	
+	/**
 	 * Marca los timeslots de la lista como breaks para todas las categorías
 	 * 
 	 * @param breakTimeslots
 	 */
-	public void setBreaks(List<Timeslot> timeslotBreaks) {
-		for (Timeslot timeslotBreak : timeslotBreaks) {
+	public void addBreaks(List<Timeslot> timeslotBreaks) {
+		for (Timeslot timeslot : timeslotBreaks)
 			for (Event event : events)
-				if (event.containsTimeslot(timeslotBreak))
-					event.addBreak(timeslotBreak);
-		}
+				if (event.containsTimeslot(timeslot) && !event.isBreak(timeslot))
+					event.addBreak(timeslot);
 	}
 	
 	/**
@@ -210,6 +246,17 @@ public class Tournament {
 		for (Event event : events)
 			if (event.containsTimeslot(timeslotBreak))
 				event.addBreak(timeslotBreak);
+	}
+	
+	/**
+	 * Elimina el break para todas las categorías
+	 * 
+	 * @param timeslotBreak
+	 */
+	public void removeBreak(Timeslot timeslot) {
+		for (Event event : events)
+			if (event.isBreak(timeslot))
+				event.removeBreak(timeslot);
 	}
 	
 	/**
@@ -243,6 +290,27 @@ public class Tournament {
 				event.addDiscardedLocalization(localization, timeslot);
 	}
 	
+	/**
+	 * Para cada categoría que contenga la pista, elimina la invalidez de dicha localización
+	 * 
+	 * @param localization
+	 */
+	public void removeDiscardedLocalization(Localization localization) {
+		for (Event event : events)
+			if (event.containsLocalization(localization))
+				event.removeDiscardedLocalization(localization);
+	}
+	
+	/**
+	 * Para cada categoría que contenga la pista y el timeslot, elimina la invalidez de dicha localización
+	 * 
+	 * @param localization
+	 */
+	public void removeDiscardedLocalizationTimeslot(Localization localization, Timeslot timeslot) {
+		for (Event event : events)
+			if (event.containsLocalization(localization) && event.containsTimeslot(timeslot))
+				event.removeDiscardedLocalizationTimeslot(localization, timeslot);
+	}
 	
 	/**
 	 * Muestra por la salida estándar una representación de los horarios de cada categoría
@@ -383,8 +451,10 @@ public class Tournament {
 			else if (randomDrawings && tryDifferentRandomDrawings) {
 				int tryCount = 0;
 				// probar nuevas combinaciones de sorteo hasta que se encuentre solución o se supere el número de intentos
-				while (!solutionFound && (tries == 0 || tryCount++ < tries))
+				while (!solutionFound && (tries == 0 || tryCount++ < tries)) {
+					tournament.getSolver().initPredefinedMatchups();
 					solutionFound = tournament.solve();
+				}
 				
 				if (solutionFound) {
 					System.out.println("\nSolution found after " + (tryCount + 1) + " tries.\n");

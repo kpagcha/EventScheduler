@@ -14,6 +14,10 @@ import models.tournaments.events.entities.Team;
 import models.tournaments.events.entities.Timeslot;
 import solver.TournamentSolver.MatchupMode;
 
+/**
+ * @author Pablo
+ *
+ */
 public class Event {
 	/**
 	 * Nombre del evento o la categoría
@@ -166,11 +170,16 @@ public class Event {
 	 * @param player
 	 * @param timeslots
 	 */
-	public void addPlayerUnavailableTimeslots(Player player, List<Timeslot> timeslots) {
-		if (unavailableTimeslots.containsKey(player))
-			unavailableTimeslots.get(player).addAll(timeslots);
-		else
+	public void addPlayerUnavailableTimeslots(Player player, List<Timeslot> timeslots) {	
+		if (!unavailableTimeslots.containsKey(player)) {
 			unavailableTimeslots.put(player, timeslots);
+		} else {
+			List<Timeslot> playerUnavailableTimeslots = unavailableTimeslots.get(player);
+			for (Timeslot timeslot : timeslots) {
+				if (!playerUnavailableTimeslots.contains(timeslot))
+					playerUnavailableTimeslots.add(timeslot);
+			}
+		}
 	}
 	
 	/**
@@ -180,10 +189,26 @@ public class Event {
 	 * @param timeslot
 	 */
 	public void addPlayerUnavailableTimeslot(Player player, Timeslot timeslot) {
-		if (unavailableTimeslots.containsKey(player))
-			unavailableTimeslots.get(player).add(timeslot);
-		else
+		if (!unavailableTimeslots.containsKey(player))
 			unavailableTimeslots.put(player, new ArrayList<Timeslot>(Arrays.asList(timeslot)));
+		else if (!unavailableTimeslots.get(player).contains(timeslot))
+			unavailableTimeslots.get(player).add(timeslot);
+	}
+	
+	/**
+	 * Si el jugador no está disponible a la hora timeslot, se elimina de la lista y vuelve a estar disponible a esa hora
+	 * 
+	 * @param player
+	 * @param timeslot
+	 */
+	public void removePlayerUnavailableTimeslot(Player player, Timeslot timeslot) {
+		List<Timeslot> playerUnavailableTimeslots = unavailableTimeslots.get(player);
+		if (playerUnavailableTimeslots != null && playerUnavailableTimeslots.contains(timeslot)) {
+			playerUnavailableTimeslots.remove(timeslot);
+			
+			if (playerUnavailableTimeslots.isEmpty())
+				unavailableTimeslots.remove(player);
+		}
 	}
 	
 	public void setMatchesPerPlayer(int nMatches) {
@@ -219,6 +244,13 @@ public class Event {
 	}
 	
 	/**
+	 * @return true si sobre la categoría se definen equipos explícitos, y false si no
+	 */
+	public boolean hasTeams() {
+		return teams != null && !teams.isEmpty();
+	}
+	
+	/**
 	 * Asigna el modo de emparejamiento de este evento, sólo si el número de partidos por jugador es superior a uno
 	 * 
 	 * @param matchupMode
@@ -240,13 +272,6 @@ public class Event {
 		return randomDrawings;
 	}
 	
-	/**
-	 * @return true si sobre la categoría se definen equipos explícitos, y false si no
-	 */
-	public boolean hasTeams() {
-		return teams != null && !teams.isEmpty();
-	}
-	
 	public void setFixedMatchups(List<Set<Player>> fixedMatchups) {
 		this.fixedMatchups = fixedMatchups;
 	}
@@ -261,7 +286,8 @@ public class Event {
 	 * @param matchup conjunto de jugadores entre los cuales habrá de darse un enfrentamiento
 	 */
 	public void addFixedMatchup(Set<Player> matchup) {
-		fixedMatchups.add(matchup);
+		if (!fixedMatchups.contains(matchup))
+			fixedMatchups.add(matchup);
 	}
 	
 	/**
@@ -273,8 +299,31 @@ public class Event {
 		Set<Player> playersInMatchup = new HashSet<Player>();
 		for (Team team : matchup)
 			playersInMatchup.addAll(team.getPlayers());
+	
+		if (!fixedMatchups.contains(playersInMatchup))
+			fixedMatchups.add(playersInMatchup);
+	}
+	
+	/**
+	 * Elimina un enfrentamiento fijo entre jugadores, si existe
+	 * 
+	 * @param matchup
+	 */
+	public void removeFixedMatchup(Set<Player> matchup) {
+		fixedMatchups.remove(matchup);
+	}
+	
+	/**
+	 * Elimina un enfrentamiento fijo entre equipos, si existe
+	 * 
+	 * @param matchup
+	 */
+	public void removeFixedTeamsMatchup(Set<Team> matchup) {
+		Set<Player> playersInMatchup = new HashSet<Player>();
+		for (Team team : matchup)
+			playersInMatchup.addAll(team.getPlayers());
 		
-		fixedMatchups.add(playersInMatchup);
+		fixedMatchups.remove(playersInMatchup);
 	}
 	
 	/**
@@ -303,6 +352,15 @@ public class Event {
 	}
 	
 	/**
+	 * Elimina un break, si existe
+	 * 
+	 * @param timeslotBreak
+	 */
+	public void removeBreak(Timeslot timeslotBreak) {
+		breaks.remove(timeslotBreak);
+	}
+	
+	/**
 	 * Comprueba si un timeslot es un break
 	 * 
 	 * @param timeslot
@@ -327,10 +385,35 @@ public class Event {
 	 * @param timeslot
 	 */
 	public void addDiscardedLocalization(Localization localization, Timeslot timeslot) {
-		if (discardedLocalizations.containsKey(localization))
+		if (!discardedLocalizations.containsKey(localization))
+			discardedLocalizations.put(localization, new ArrayList<Timeslot>(Arrays.asList(timeslot)));
+		else if (!discardedLocalizations.get(localization).contains(timeslot))
 			discardedLocalizations.get(localization).add(timeslot);
-		else
-			discardedLocalizations.put(localization, new ArrayList<Timeslot>(Arrays.asList(new Timeslot[]{ timeslot })));
+	}
+	
+	/**
+	 * Elimina la invalidez de una localización, si la hubiese
+	 * 
+	 * @param localization
+	 */
+	public void removeDiscardedLocalization(Localization localization) {
+		discardedLocalizations.remove(localization);
+	}
+	
+	/**
+	 * Elimina la invalidez de una localización a una hora, si la hubiese
+	 * 
+	 * @param localization
+	 * @param timeslot
+	 */
+	public void removeDiscardedLocalizationTimeslot(Localization localization, Timeslot timeslot) {
+		List<Timeslot> discardedTimeslots = discardedLocalizations.get(localization);
+		if (discardedTimeslots != null && discardedTimeslots.contains(timeslot)) {
+			discardedTimeslots.remove(timeslot);
+		
+			if (discardedTimeslots.isEmpty())
+				discardedLocalizations.remove(localization);
+		}
 	}
 	
 	/**
@@ -349,16 +432,27 @@ public class Event {
 	}
 	
 	/**
+	 * Asigna al jugador una localización explícita donde ha de jugar
+	 * 
+	 * @param player
+	 * @param localization
+	 */
+	public void addPlayerInLocalization(Player player, Localization localization) {
+		if (!playersInLocalizations.containsKey(player))
+			playersInLocalizations.put(player, new ArrayList<Localization>(Arrays.asList(localization)));
+		else if (!playersInLocalizations.get(player).contains(localization))
+			playersInLocalizations.get(player).add(localization);
+	}
+	
+	/**
 	 * Asigna al jugador las localizaciones de juego explícitas donde ha de jugar
 	 * 
 	 * @param player
 	 * @param localizations
 	 */
 	public void addPlayerInLocalizations(Player player, List<Localization> localizations) {
-		if (playersInLocalizations.containsKey(player))
-			playersInLocalizations.get(player).addAll(localizations);
-		else
-			playersInLocalizations.put(player, localizations);
+		for (Localization localization : localizations)
+			addPlayerInLocalization(player, localization);
 	}
 	
 	/**
@@ -370,6 +464,24 @@ public class Event {
 	public void addPlayersInLocalizations(List<Player> players, List<Localization> localizations) {
 		for (Player player : players)
 			addPlayerInLocalizations(player, localizations);
+	}
+	
+	/**
+	 * Elimina de la configuración que el jugador deba jugar en la localización
+	 * 
+	 * @param player
+	 * @param localization
+	 */
+	public void removePlayerInLocalization(Player player, Localization localization) {
+		if (playersInLocalizations.containsKey(player)) {
+			List<Localization> playerLocalizations = playersInLocalizations.get(player);
+			if (playerLocalizations.contains(localization)) {
+				playerLocalizations.remove(localization);
+				
+				if (playerLocalizations.isEmpty())
+					playersInLocalizations.remove(player);
+			}
+		}
 	}
 	
 	/**
@@ -388,16 +500,31 @@ public class Event {
 	}
 	
 	/**
+	 * Asigna al jugador al timeslot explícito donde ha de jugar
+	 * 
+	 * @param player
+	 * @param timeslot
+	 */
+	public void addPlayerAtTimeslot(Player player, Timeslot timeslot) {
+		if (!playersAtTimeslots.containsKey(player))
+			playersAtTimeslots.put(player, new ArrayList<Timeslot>(Arrays.asList(timeslot)));
+		else if (!playersAtTimeslots.get(player).contains(timeslot))
+			playersAtTimeslots.get(player).add(timeslot);
+	}
+	
+	/**
 	 * Asigna al jugador los timeslots explícitos donde ha de jugar
 	 * 
 	 * @param player  el jugador
 	 * @param players los timeslots
 	 */
 	public void addPlayerAtTimeslots(Player player, List<Timeslot> timeslots) {
-		if (playersAtTimeslots.containsKey(player))
-			playersAtTimeslots.get(players).addAll(timeslots);
-		else
+		if (!playersAtTimeslots.containsKey(player)) {
 			playersAtTimeslots.put(player, timeslots);
+		} else {
+			for (Timeslot timeslot : timeslots)
+				addPlayerAtTimeslot(player, timeslot);
+		}
 	}
 	
 	/**
@@ -409,6 +536,35 @@ public class Event {
 	public void addPlayersAtTimeslots(List<Player> players, List<Timeslot> timeslots) {
 		for (Player player : players)
 			addPlayerAtTimeslots(player, timeslots);
+	}
+	
+	/**
+	 * Elimina de la configuración que el jugador deba jugar a la hora indicada
+	 * 
+	 * @param player
+	 * @param timeslot
+	 */
+	public void removePlayerAtTimeslot(Player player, Timeslot timeslot) {
+		if (playersAtTimeslots.containsKey(player)) {
+			List<Timeslot> playerTimeslots = playersAtTimeslots.get(player);
+			if (playerTimeslots.contains(timeslot)) {
+				playerTimeslots.remove(timeslot);
+				
+				if (playerTimeslots.isEmpty())
+					playersAtTimeslots.remove(player);
+			}
+		}
+	}
+	
+	/**
+	 * Elimina de la configuración que el jugador deba jugar a las horas indicadas
+	 * 
+	 * @param player
+	 * @param timeslots
+	 */
+	public void removePlayerAtTimeslots(Player player, List<Timeslot> timeslots) {
+		for (Timeslot timeslot : timeslots)
+			removePlayerAtTimeslot(player, timeslot);
 	}
 	
 	/**

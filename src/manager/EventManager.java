@@ -102,12 +102,8 @@ public class EventManager {
 		mensDraw.addDiscardedLocalization(localizations[1], timeslots[2]);
 		
 		// Que Muguruza juegue en la pista 2 en el cuadro de mujeres
-		womensDraw.addPlayerInLocalizations(
-			wtaPlayers[3],
-			new ArrayList<Localization>(Arrays.asList(new Localization[]{
-				localizations[1]
-			}))
-		);
+		womensDraw.addPlayerInLocalization(wtaPlayers[3], localizations[1]);
+		
 		
 		// Que Murray y Nishikori jueguen en la pista 1 (esto NO quiere decir que Murray y Nishikori se vayan a enfrentar)
 		mensDraw.addPlayersInLocalizations(
@@ -143,9 +139,15 @@ public class EventManager {
 		
 		Tournament tournament = new Tournament("Tennis Tournament", new Event[]{ mensDraw, womensDraw, doublesDraw });
 		
+		// Djokovic no disponible en el cuadro de hombres en los timeslots 6 y 7
+		mensDraw.addPlayerUnavailableTimeslots(atpPlayers[0], new ArrayList<Timeslot>(Arrays.asList(timeslots[6], timeslots[7])));
+				
+		// Djokovic no disponible a la hora 8 en todas las categorías donde juegue
+		tournament.addPlayerUnavailableTimeslot(atpPlayers[0], timeslots[8]);
+		
 		// Invalidar la pista 3 para el timeslot t8 en todas las categorías
 		tournament.addDiscardedLocalization(localizations[2], timeslots[8]);
-		
+
 		return tournament;
 	}
 
@@ -180,7 +182,7 @@ public class EventManager {
 		);
 		
 		eventDoubles.setPlayersPerMatch(4);
-		eventDoubles.addBreak(timeslots[timeslots.length]);
+		eventDoubles.addBreak(doublesTimeslots[timeslots.length]);
 		
 		Map<Player, List<Timeslot>> kidsUnavailability = buildUnavailability(
 			eventKids,
@@ -207,7 +209,7 @@ public class EventManager {
 		
 		Tournament tournament = new Tournament("Medium Tennis Tournament", new Event[]{ eventKids, eventMen, eventWomen, eventDoubles });
 		
-		tournament.setBreaks(new ArrayList<Timeslot>(Arrays.asList(timeslots[5])));
+		tournament.addBreaks(new ArrayList<Timeslot>(Arrays.asList(timeslots[5])));
 		
 		return tournament;
 	}
@@ -244,7 +246,7 @@ public class EventManager {
 			new Event[]{ categoriaBenjamin, categoriaAlevin, categoriaInfantil, categoriaCadete, categoriaJunior, categoriaAbsoluto }
 		);
 		
-		tournament.setBreaks(new ArrayList<Timeslot>(Arrays.asList(timeslots[5], timeslots[13], timeslots[19])));
+		tournament.addBreaks(new ArrayList<Timeslot>(Arrays.asList(timeslots[5], timeslots[13], timeslots[19])));
 		
 		return tournament;
 	}
@@ -292,7 +294,7 @@ public class EventManager {
 			new Event[]{ categoriaBenjamin, categoriaAlevin, categoriaInfantil, categoriaCadete, categoriaJunior, categoriaAbsoluto, categoriaDobles }
 		);
 		
-		tournament.setBreaks(new ArrayList<Timeslot>(Arrays.asList(timeslots[5], timeslots[13], timeslots[19])));
+		tournament.addBreaks(new ArrayList<Timeslot>(Arrays.asList(timeslots[5], timeslots[13], timeslots[19])));
 	
 		return tournament;
 	}
@@ -332,7 +334,7 @@ public class EventManager {
 		
 		Tournament tournament = new Tournament("Tournament", new Event[]{ groupA, groupB, groupC, groupD, groupLeague, groupDoubles });
 		
-		tournament.setBreaks(new ArrayList<Timeslot>(Arrays.asList(timeslots[8])));
+		tournament.addBreaks(new ArrayList<Timeslot>(Arrays.asList(timeslots[8])));
 		
 		return tournament;
 	}

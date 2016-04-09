@@ -301,9 +301,10 @@ public class TournamentSolver {
 	}
 	
 	/**
-	 * Combina los enfrentamientos fijos predefinidos y los predefinidos por sorteo en un único diccionario
+	 * Combina los enfrentamientos fijos predefinidos y los predefinidos por sorteo en un único diccionario. También
+	 * sirve para recalcular los enfrentamientos por sorteo, por ejemplo, al darse una combinación fallida
 	 */
-	private void initPredefinedMatchups() {
+	public void initPredefinedMatchups() {
 		predefinedMatchups = new HashMap<Event, List<Set<Player>>>();
 		
 		// Añadir a la lista de emparejamientos predefinidos los emparejamientos fijos
@@ -476,30 +477,28 @@ public class TournamentSolver {
 			Map<Player, List<Timeslot>> eventUnavailabilities = events[e].getUnavailableTimeslots();
 			for (int p = 0; p < nPlayers[e]; p++) {
 				List<Timeslot> playerUnavailabilities = eventUnavailabilities.get(events[e].getPlayerAt(p));
-				if (playerUnavailabilities != null) {
-					for (int c = 0; c < nLocalizations[e]; c++) {
-						for (int t = 0; t < nTimeslots[e]; t++) {
-							// Si el jugador_p no está disponible a la hora_t se marca con 0
-							if (playerUnavailabilities.contains(events[e].getTimeslotAt(t))) {
-								int nRange = nTimeslotsPerMatch[e];
-								if (t + 1 < nTimeslotsPerMatch[e])
-									nRange -= nTimeslotsPerMatch[e] - t - 1;
-								
-								// Si un jugador no está disponible en t, n no podrá empezar un partido en el rango t-n..t
-								// (siendo n la duración o número de timeslots de un partido)
-								for (int i = 0; i < nRange; i++)
-									g[e][p][c][t - i] = VariableFactory.fixed(0, solver);
-								
-								// Además, se marca con 0 las horas de la matriz de horario/partidos si el jugador no puede jugar
-								x[e][p][c][t] = VariableFactory.fixed(0, solver);
-								
-							} else {
-								// Dominio [0, 1]: 0 -> no juega, 1 -> juega
-								x[e][p][c][t] = VariableFactory.bounded("x" + e + "," + p + "," + c + "," + t, 0, 1, solver);
-								
-								// Dominio [0, 1]: 0 -> el partido no empieza a esa hora, 1 -> el partido empieza a esa hora
-								g[e][p][c][t] = VariableFactory.bounded("g" + e + "," + p + "," + c + "," + t, 0, 1, solver);
-							}
+				for (int c = 0; c < nLocalizations[e]; c++) {
+					for (int t = 0; t < nTimeslots[e]; t++) {
+						// Si el jugador_p no está disponible a la hora_t se marca con 0
+						if (playerUnavailabilities != null && playerUnavailabilities.contains(events[e].getTimeslotAt(t))) {
+							int nRange = nTimeslotsPerMatch[e];
+							if (t + 1 < nTimeslotsPerMatch[e])
+								nRange -= nTimeslotsPerMatch[e] - t - 1;
+							
+							// Si un jugador no está disponible en t, n no podrá empezar un partido en el rango t-n..t
+							// (siendo n la duración o número de timeslots de un partido)
+							for (int i = 0; i < nRange; i++)
+								g[e][p][c][t - i] = VariableFactory.fixed(0, solver);
+							
+							// Además, se marca con 0 las horas de la matriz de horario/partidos si el jugador no puede jugar
+							x[e][p][c][t] = VariableFactory.fixed(0, solver);
+							
+						} else {
+							// Dominio [0, 1]: 0 -> no juega, 1 -> juega
+							x[e][p][c][t] = VariableFactory.bounded("x" + e + "," + p + "," + c + "," + t, 0, 1, solver);
+							
+							// Dominio [0, 1]: 0 -> el partido no empieza a esa hora, 1 -> el partido empieza a esa hora
+							g[e][p][c][t] = VariableFactory.bounded("g" + e + "," + p + "," + c + "," + t, 0, 1, solver);
 						}
 					}
 				}
