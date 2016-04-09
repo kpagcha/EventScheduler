@@ -22,7 +22,7 @@ public abstract class Schedule {
 	 */
 	protected int[][] schedule;
 	
-	protected Match[] matches;
+	protected List<Match> matches;
 
 	protected int nPlayers;
 	protected int nCourts;
@@ -46,7 +46,7 @@ public abstract class Schedule {
 	/**
 	 * @return los partidos que componen este horario
 	 */
-	public Match[] getMatches() {
+	public List<Match> getMatches() {
 		return matches;
 	}
 	

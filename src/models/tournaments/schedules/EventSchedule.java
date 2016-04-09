@@ -8,6 +8,7 @@ import org.chocosolver.solver.variables.IntVar;
 
 import models.tournaments.events.Event;
 import models.tournaments.events.entities.Player;
+import models.tournaments.events.entities.Team;
 import models.tournaments.events.entities.Timeslot;
 import models.tournaments.schedules.data.Match;
 
@@ -92,11 +93,10 @@ public class EventSchedule extends Schedule {
 				}
 			}
 		}
+		matches = new ArrayList<Match>((event.getNumberOfPlayers() / event.getPlayersPerMatch()) * event.getMatchesPerPlayer());
 		
-		matches = new Match[(event.getNumberOfPlayers() / event.getPlayersPerMatch()) * event.getMatchesPerPlayer()];
-		
+		int nTimeslotsPerMatch = event.getMatchDuration();
 		int nPlayersPerMatch = event.getPlayersPerMatch();
-		int matchesIndex = 0;
 		for (int t = 0; t < nTimeslots; t++) {
 			List<Integer> playersAlreadyMatched = new ArrayList<>();
 			
@@ -123,17 +123,29 @@ public class EventSchedule extends Schedule {
 					}
 					
 					if (matchCompleted || nPlayersPerMatch == 1) {
-						Player[] playersArray = new Player[nPlayersPerMatch];
-						int i = 0;
+						List<Player> playersList = new ArrayList<Player>(nPlayersPerMatch);
 						for (int playerIndex : playersBelongingToMatch)
-							playersArray[i++] = event.getPlayerAt(playerIndex);
+							playersList.add(event.getPlayerAt(playerIndex));
 						
-						matches[matchesIndex++] = new Match(
-								playersArray,
-								event.getLocalizationAt(scheduleBeginnings[thisPlayer][t]),
-								event.getTimeslotAt(t),
-								event.getMatchDuration()
+						Match match = new Match(
+							playersList,
+							event.getLocalizationAt(scheduleBeginnings[thisPlayer][t]),
+							event.getTimeslotAt(t),
+							event.getTimeslotAt(t + nTimeslotsPerMatch - 1)
 						);
+						
+						matches.add(match);
+
+						if (event.hasTeams()) {
+							List<Team> teamsInMatch = new ArrayList<Team>();
+							for (Player player : playersList) {
+								Team team = event.getTeamByPlayer(player);
+								if (!teamsInMatch.contains(team))
+									teamsInMatch.add(team);
+							}
+							
+							match.setTeams(teamsInMatch);
+						}
 					}
 				}
 			}

@@ -21,7 +21,7 @@ public class Team extends Entity {
 	}
 	
 	public Team(Player... playersArray) {
-		this("Team (" + playersArray.length + ")", playersArray);
+		this(StringUtils.join(playersArray, "-"), playersArray);
 	}
 	
 	public Set<Player> getPlayers() {
@@ -44,6 +44,6 @@ public class Team extends Entity {
 	}
 	
 	public String toString() {
-		return new StringBuilder(name + ": ").append(StringUtils.join(players, ", ")).toString();
+		return name;
 	}
 }

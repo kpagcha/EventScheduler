@@ -78,22 +78,20 @@ public class CombinedSchedule extends Schedule {
 	public void calculateMatches() {
 		EventSchedule[] eventSchedules = tournament.getSchedules();
 		
-		List<Match> allMatches = new ArrayList<Match>(tournament.getNumberOfMatches());
+		matches = new ArrayList<Match>(tournament.getNumberOfMatches());
 		for (int i = 0; i < eventSchedules.length; i++) {
 			eventSchedules[i].calculateMatches();
-			Match[] eventMatches = eventSchedules[i].getMatches();
+			List<Match> eventMatches = eventSchedules[i].getMatches();
 			
-			for (int match = 0; match < eventMatches.length; match++)
-				allMatches.add(eventMatches[match]);
+			for (Match match : eventMatches)
+				matches.add(match);
 		}
 		
-		Collections.sort(allMatches, new Comparator<Match>() {
+		Collections.sort(matches, new Comparator<Match>() {
 			public int compare(Match o1, Match o2) {
-				return Integer.compare(o1.getTimeslot().getLowerBound(), o2.getTimeslot().getLowerBound());
+				return Integer.compare(o1.getStartTimeslot().getLowerBound(), o2.getStartTimeslot().getLowerBound());
 			}
 		});
-		
-		matches = allMatches.toArray(new Match[allMatches.size()]);
 	}
 	
 }

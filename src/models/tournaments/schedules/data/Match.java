@@ -1,23 +1,28 @@
 package models.tournaments.schedules.data;
 
+import java.util.List;
+
+import org.apache.commons.lang3.StringUtils;
+
 import models.tournaments.events.entities.Localization;
 import models.tournaments.events.entities.Player;
+import models.tournaments.events.entities.Team;
 import models.tournaments.events.entities.Timeslot;
 
 public class Match {
-	Player[] players;
+	List<Player> players;
 	Localization localization;
-	Timeslot timeslot;
-	int matchDuration;
+	Timeslot startTimeslot, endTimeslot;
+	List<Team> teams;
 	
-	public Match(Player[] players, Localization localization, Timeslot timeslot, int matchDuration) {
+	public Match(List<Player> players, Localization localization, Timeslot start, Timeslot end) {
 		this.players = players;
 		this.localization = localization;
-		this.timeslot = timeslot;
-		this.matchDuration = matchDuration;
+		startTimeslot = start;
+		endTimeslot = end;
 	}
 	
-	public Player[] getPlayers() {
+	public List<Player> getPlayers() {
 		return players;
 	}
 
@@ -25,19 +30,32 @@ public class Match {
 		return localization;
 	}
 
-	public Timeslot getTimeslot() {
-		return timeslot;
+	public Timeslot getStartTimeslot() {
+		return startTimeslot;
 	}
-
-	public int getMatchDuration() {
-		return matchDuration;
+	
+	public Timeslot getEndTimeslot() {
+		return endTimeslot;
+	}
+	
+	public void setTeams(List<Team> teams) {
+		this.teams = teams;
+	}
+	
+	public List<Team> getTeams() {
+		return teams;
 	}
 
 	public String toString() {
-		String matchStr = String.format("At %s (%d) in %s: ", timeslot.getLowerBoundStr(), matchDuration, localization);
-		for (Player player : players)
-			matchStr += String.format("%s, ", player);
+		StringBuilder sb = new StringBuilder(
+			String.format("From %s to %s in %s: ", startTimeslot.getLowerBoundStr(), endTimeslot.getUpperBoundStr(), localization)
+		);
 		
-		return matchStr.substring(0, matchStr.length() - 2);
+		if (teams == null)
+			sb.append(StringUtils.join(players, " vs "));
+		else
+			sb.append(StringUtils.join(teams, " vs "));
+		
+		return sb.toString();
 	}
 }

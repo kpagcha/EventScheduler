@@ -334,9 +334,9 @@ public class Tournament {
 					sb.append(String.format("Match duration: %d timelots\n", events[i].getMatchDuration()));
 					
 					schedule.calculateMatches();
-					Match[] matches = schedule.getMatches();
-					for (int j = 0; j < matches.length; j++)
-						sb.append(matches[j]).append("\n");
+					List<Match> matches = schedule.getMatches();
+					for (Match match : matches)
+						sb.append(match).append("\n");
 				}
 					
 				sb.append("\n");
@@ -477,8 +477,8 @@ public class Tournament {
 						combinedSchedule.calculateMatches();
 						
 						if (printMatches) {
-							Match[] matches = combinedSchedule.getMatches();
-							System.out.println("All matches (" + matches.length + ")");
+							List<Match> matches = combinedSchedule.getMatches();
+							System.out.println("All matches (" + matches.size() + ")");
 							for (Match match : matches)
 								System.out.println(match);
 							System.out.println();
