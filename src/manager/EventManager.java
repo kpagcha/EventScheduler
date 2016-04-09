@@ -36,7 +36,7 @@ public class EventManager {
 		
 		Event event = new Event("Categoría Principal", players, localizations, timeslots);
 		
-		Map<Player, Timeslot[]> unavailability = buildUnavailability(
+		Map<Player, List<Timeslot>> unavailability = buildUnavailability(
 			event,
 			new int[][]{
 				{ 5, 6, 7 },
@@ -182,7 +182,7 @@ public class EventManager {
 		eventDoubles.setPlayersPerMatch(4);
 		eventDoubles.addBreak(timeslots[timeslots.length]);
 		
-		Map<Player, Timeslot[]> kidsUnavailability = buildUnavailability(
+		Map<Player, List<Timeslot>> kidsUnavailability = buildUnavailability(
 			eventKids,
 			new int[][]{
 				{ 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 },
@@ -447,18 +447,17 @@ public class EventManager {
 		return buildTimeslots(timeslots);
 	}
 	
-	private Map<Player, Timeslot[]> buildUnavailability(Event event, int[][] unavailabilityArray) {
+	private Map<Player, List<Timeslot>> buildUnavailability(Event event, int[][] unavailabilityArray) {
 		Player[] players = event.getPlayers();
-		Map<Player, Timeslot[]> unavailability = new HashMap<Player, Timeslot[]>(players.length);
+		Map<Player, List<Timeslot>> unavailability = new HashMap<Player, List<Timeslot>>(players.length);
 		for (int p = 0; p < unavailabilityArray.length; p++) {
-			Player player = players[p];
-			Timeslot[] playerUnavailability = new Timeslot[unavailabilityArray[p].length];
-			
-			int t = 0;
-			for (int timeslot : unavailabilityArray[p])
-				playerUnavailability[t++] = event.getTimeslotAt(timeslot);
-			
-			unavailability.put(player, playerUnavailability);
+			if (unavailabilityArray[p].length > 0) {
+				List<Timeslot> playerUnavailability = new ArrayList<Timeslot>(unavailabilityArray[p].length);
+				for (int timeslot : unavailabilityArray[p])
+					playerUnavailability.add(event.getTimeslotAt(timeslot));
+				
+				unavailability.put(players[p], playerUnavailability);
+			}
 		}
 		return unavailability;
 	}

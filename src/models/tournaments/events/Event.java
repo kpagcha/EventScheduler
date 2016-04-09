@@ -38,7 +38,7 @@ public class Event {
 	/**
 	 * Timeslots u horas en las que cada jugador no está disponible
 	 */
-	private Map<Player, Timeslot[]> unavailableTimeslots;
+	private Map<Player, List<Timeslot>> unavailableTimeslots;
 	
 	/**
 	 * Número de partidos que cada jugador ha de jugar en esta categoría
@@ -110,10 +110,7 @@ public class Event {
 		this.players = players;
 		this.localizations = localizations;
 		this.timeslots = timeslots;
-		unavailableTimeslots = new HashMap<Player, Timeslot[]>(players.length);
-		
-		for (Player player : players)
-			unavailableTimeslots.put(player, new Timeslot[]{});
+		unavailableTimeslots = new HashMap<Player, List<Timeslot>>(players.length);
 		
 		fixedMatchups = new ArrayList<Set<Player>>();
 		
@@ -155,12 +152,38 @@ public class Event {
 		return timeslots;
 	}
 	
-	public void setUnavailableTimeslots(Map<Player, Timeslot[]> unavailability) {
+	public void setUnavailableTimeslots(Map<Player, List<Timeslot>> unavailability) {
 		unavailableTimeslots = unavailability;
 	}
 	
-	public Map<Player, Timeslot[]> getUnavailableTimeslots() {
+	public Map<Player, List<Timeslot>> getUnavailableTimeslots() {
 		return unavailableTimeslots;
+	}
+	
+	/**
+	 * Añade una lista de timeslots a los timeslots en los que el jugador no está disponible
+	 * 
+	 * @param player
+	 * @param timeslots
+	 */
+	public void addPlayerUnavailableTimeslots(Player player, List<Timeslot> timeslots) {
+		if (unavailableTimeslots.containsKey(player))
+			unavailableTimeslots.get(player).addAll(timeslots);
+		else
+			unavailableTimeslots.put(player, timeslots);
+	}
+	
+	/**
+	 * Añade un timeslot a la lista de timeslots en los que el jugador no está disponible
+	 * 
+	 * @param player
+	 * @param timeslot
+	 */
+	public void addPlayerUnavailableTimeslot(Player player, Timeslot timeslot) {
+		if (unavailableTimeslots.containsKey(player))
+			unavailableTimeslots.get(player).add(timeslot);
+		else
+			unavailableTimeslots.put(player, new ArrayList<Timeslot>(Arrays.asList(timeslot)));
 	}
 	
 	public void setMatchesPerPlayer(int nMatches) {
@@ -409,28 +432,6 @@ public class Event {
 	}
 	
 	/**
-	 * @return array de enteros de dos dimensiones que representa las horas no disponibles de cada jugador.
-	 * La primera dimensión (filas) corresponde a los jugadores y la segunda (columnas) a los timeslots. Un valor
-	 * de 1 indica que hay indisponibilidad de ese jugador a esa hora, y 0 que está disponible.
-	 */
-	public int[][] getUnavailableTimeslotsAs2DIntArray() {
-		int n = unavailableTimeslots.size();
-		int[][] unavailableTimeslotsInt = new int[n][];
-		
-		for (Map.Entry<Player, Timeslot[]> entry : unavailableTimeslots.entrySet()) {
-			int playerIndex = indexOf(entry.getKey());
-			Timeslot[] unavailability = entry.getValue();
-			
-			unavailableTimeslotsInt[playerIndex] = new int[unavailability.length];
-			int i = 0;
-			for (Timeslot timeslot : unavailability)
-				unavailableTimeslotsInt[playerIndex][i++] = indexOf(timeslot);
-		}
-		
-		return unavailableTimeslotsInt;
-	}
-	
-	/**
 	 * Devuelve el jugador en la posición indicada
 	 * 
 	 * @param index una posición
@@ -567,11 +568,7 @@ public class Event {
 	 * @return         true si el jugador está disponible a esa hora, false si no
 	 */
 	public boolean isUnavailable(Player player, Timeslot timeslot) {
-		Timeslot[] unavailablePlayerTimeslots = unavailableTimeslots.get(player);
-		for (Timeslot t : unavailablePlayerTimeslots)
-			if (t.equals(timeslot))
-				return true;
-		return false;
+		return unavailableTimeslots.containsKey(player) && unavailableTimeslots.get(player).contains(timeslot);
 	}
 	
 	/**

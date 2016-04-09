@@ -202,6 +202,17 @@ public class Tournament {
 	}
 	
 	/**
+	 * Añade el timeslot como un break para todas las categorías
+	 * 
+	 * @param timeslotBreak
+	 */
+	public void addBreak(Timeslot timeslotBreak) {
+		for (Event event : events)
+			if (event.containsTimeslot(timeslotBreak))
+				event.addBreak(timeslotBreak);
+	}
+	
+	/**
 	 * Invalida las pistas del diccionario a las horas indicadas para todas las categorías (si la categoría tiene
 	 * esa pista y esos timeslots)
 	 * 
