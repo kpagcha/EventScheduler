@@ -10,6 +10,7 @@ import models.tournaments.events.Event;
 import models.tournaments.events.entities.Player;
 import models.tournaments.events.entities.Timeslot;
 import models.tournaments.schedules.data.Match;
+import models.tournaments.schedules.data.ScheduleValue;
 
 public class CombinedSchedule extends Schedule {
 	/**
@@ -40,17 +41,16 @@ public class CombinedSchedule extends Schedule {
 		nCourts = localizations.size();
 		nTimeslots = timeslots.size();
 		
-		schedule = new int[nPlayers][nTimeslots];
+		schedule = new ScheduleValue[nPlayers][nTimeslots];
 		
-		// Marcar horario como no inicializado (-4 significa valor aún por asignar o que no pertenece al dominio del evento)
 		for (int p = 0; p < nPlayers; p++)
 			for (int t = 0; t < nTimeslots; t++)
-				schedule[p][t] = -4;
+				schedule[p][t] = new ScheduleValue(ScheduleValue.NOT_IN_DOMAIN);
 		
 		Event[] events = tournament.getEvents();
 		
 		for (int s = 0; s < schedules.length; s++) {
-			int[][] eventSchedule = schedules[s].getSchedule();
+			ScheduleValue[][] eventSchedule = schedules[s].getSchedule();
 			
 			int nPlayers = events[s].getNumberOfPlayers();
 			int nTimeslots = events[s].getNumberOfTimeslots();
@@ -65,7 +65,7 @@ public class CombinedSchedule extends Schedule {
 					
 					// Si no hay ya una pista marcada sobre la hora_t para el jugador_p (esto evita sobreescribir valores
 					// de pistas ya escritos sobre el horario)
-					if (schedule[playerIndex][timeslotIndex] < 0 && schedule[playerIndex][timeslotIndex] != -5)
+					if (!schedule[playerIndex][timeslotIndex].isOccupied() && !schedule[playerIndex][timeslotIndex].isLimited())
 						schedule[playerIndex][timeslotIndex] = eventSchedule[p][t];
 				}
 			}

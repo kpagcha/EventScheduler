@@ -10,17 +10,14 @@ import models.tournaments.events.entities.Localization;
 import models.tournaments.events.entities.Player;
 import models.tournaments.events.entities.Timeslot;
 import models.tournaments.schedules.data.Match;
+import models.tournaments.schedules.data.ScheduleValue;
 
 public abstract class Schedule {
 	
 	/**
-	 * Arry de enteros de dos dimensiones que representa el horario con valores -3..n-1 donde
-	 *  	-3:    el timeslot corresponde a un período en el que no se juega
-	 * 	    -2:	   el jugador no está disponible en esa hora
-	 * 	    -1:    el jugador no juega a esa hora
-	 * 	0..n-1:    el jugador juega en esa la pista con ese id
+	 * Representación del horario con la ayuda de la clase ScheduleValue
 	 */
-	protected int[][] schedule;
+	protected ScheduleValue[][] schedule;
 	
 	protected List<Match> matches;
 
@@ -39,7 +36,7 @@ public abstract class Schedule {
 	/**
 	 * @return el horario como array bidimensional de enteros
 	 */
-	public int[][] getSchedule() {
+	public ScheduleValue[][] getSchedule() {
 		return schedule;
 	}
 	
@@ -67,11 +64,11 @@ public abstract class Schedule {
 		for (int t = 0; t < nTimeslots; t++) {
 			for (int p = 0; p < nPlayers; p++) {
 				// Si el jugador_p juega en la hora_t
-				if (schedule[p][t] >= 0) {
+				if (schedule[p][t].isOccupied()) {
 					Timeslot timeslot = timeslots.get(t);
 					Player player = players.get(p);
 					
-					Localization localization = localizations.get(schedule[p][t]);
+					Localization localization = localizations.get(schedule[p][t].getLocalization());
 					
 					Map<Timeslot, List<Player>> timeslotMap = groupedSchedule.get(localization);
 					if (timeslotMap.containsKey(timeslot))
@@ -95,6 +92,11 @@ public abstract class Schedule {
 	}
 	
 	/**
+	 * Representa un horario agrupado por localizaciones con una cadena. Cada elemento muestra bien
+	 * todos los jugadores que se encuentran en la pista_c a la hora_t (representados por su índice)
+	 * o bien que en esa pista_c a esa hora_t no hay ningún enfrentamiento (porque simplemente
+	 * ha quedado libre o porque hay un break o porque la pista ha sido descartada)
+	 * 
 	 * @return cadena con la representación del horario agrupado por pistas
 	 */
 	public String groupedScheduleToString() {
@@ -134,7 +136,7 @@ public abstract class Schedule {
 					
 					strValue = strValue.substring(0, strValue.length() - 1);
 				} else {
-					strValue = "-";
+					strValue = "=";
 				}
 				sb.append(String.format("%" + padding + "s", strValue));
 			}
@@ -149,10 +151,10 @@ public abstract class Schedule {
 	}
 	
 	/**
-	 * @param scheduleArray		array que representa un horario
-	 * @return representación en forma de cadena del horario
+	 * @param scheduleArray array que representa un horario
+	 * @return cadena que representa el horario
 	 */
-	private String scheduleToString(int[][] scheduleArray) {
+	private String scheduleToString(ScheduleValue[][] scheduleArray) {
 		StringBuilder sb = new StringBuilder(name);
 		
 		sb.append(String.format("\n\n%8s", " "));
@@ -168,36 +170,10 @@ public abstract class Schedule {
 				
 			sb.append(String.format("%8s", playerStr));
 			for (int t = 0; t < nTimeslots; t++)
-				sb.append(String.format("%4s", getStringValue(scheduleArray[p][t])));
+				sb.append(String.format("%4s", scheduleArray[p][t]));
 			sb.append("\n");
 		}
 		
 		return sb.toString();
-	}
-	
-	/**
-	 * Método para ayudar al formateo del horario
-	 * 
-	 * @param  matchVal		valor del elemento del horario
-	 * @return string		cadena con la representación del valor del partido donde
-	 *     -:    el jugador no juega a esa hora
-	 *     ~:    el jugador no está disponible en esa hora
-	 *     *:    el timeslot corresponde a un período en el que no se juega (break)
-	 *     x:    el timeslot no pertenece al rango de timeslots del evento
-	 *     ¬:    alguna pista ha sido descartada en este timeslot
-	 *     n:    el jugador juega en la pista con índice n
-	 */
-	private String getStringValue(int scheduleVal) {
-		String match = String.valueOf(scheduleVal);
-		
-		switch (scheduleVal) {
-			case -1: match = "-"; break;
-			case -2: match = "~"; break;
-			case -3: match = "*"; break;
-			case -4: match = "x"; break;
-			case -5: match = "¬"; break;
-		}
-
-		return match;
 	}
 }

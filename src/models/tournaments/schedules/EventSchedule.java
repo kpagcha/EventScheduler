@@ -11,6 +11,7 @@ import models.tournaments.events.entities.Player;
 import models.tournaments.events.entities.Team;
 import models.tournaments.events.entities.Timeslot;
 import models.tournaments.schedules.data.Match;
+import models.tournaments.schedules.data.ScheduleValue;
 
 public class EventSchedule extends Schedule {
 	/**
@@ -38,22 +39,22 @@ public class EventSchedule extends Schedule {
 		nPlayers = event.getNumberOfPlayers();
 		nTimeslots = event.getNumberOfTimeslots();
 		
-		schedule = new int[nPlayers][nTimeslots];
+		schedule = new ScheduleValue[nPlayers][nTimeslots];
 		for (int p = 0; p < nPlayers; p++) {
 			for (int t = 0; t < nTimeslots; t++) {
 				Timeslot timeslot = event.getTimeslotAt(t);
 				
 				if (event.isBreak(timeslot))
-					schedule[p][t] = -3;
+					schedule[p][t] = new ScheduleValue(ScheduleValue.BREAK);
 				else if (event.isUnavailable(event.getPlayerAt(p), timeslot)) {
-					schedule[p][t] = -2;
+					schedule[p][t] = new ScheduleValue(ScheduleValue.UNAVAILABLE);
 				} else {
-					schedule[p][t] = -1;
+					schedule[p][t] = new ScheduleValue(ScheduleValue.FREE);
 					
 					boolean matchInCourt = false;
 					for (int c = 0; c < nCourts; c++) {
 						if (x[p][c][t].getValue() == 1) {
-							schedule[p][t] = c;
+							schedule[p][t] = new ScheduleValue(ScheduleValue.OCCUPIED, c);
 							matchInCourt = true;
 							break;
 						}
@@ -62,7 +63,7 @@ public class EventSchedule extends Schedule {
 					if (!matchInCourt) {
 						for (int c = 0; c < nCourts; c++) {
 							if (event.isDiscarded(event.getLocalizationAt(c), timeslot)) {
-								schedule[p][t] = -5;
+								schedule[p][t] = new ScheduleValue(ScheduleValue.LIMITED);
 								break;
 							}
 						}
@@ -79,14 +80,14 @@ public class EventSchedule extends Schedule {
 		int matchDuration = event.getMatchDuration();
 		
 		// Horario donde solo se marcan los comienzos de partidos
-		int[][] scheduleBeginnings = new int[nPlayers][nTimeslots];
+		ScheduleValue[][] scheduleBeginnings = new ScheduleValue[nPlayers][nTimeslots];
 		for (int p = 0; p < nPlayers; p++) {
 			for (int t = 0; t < nTimeslots; t++) {
-				// si se juega un partido se marcan los siguientes de su rango con -1
-				if (schedule[p][t] >= 0) {
+				// si se juega un partido se marcan los siguientes de su rango como libres
+				if (schedule[p][t].isOccupied()) {
 					scheduleBeginnings[p][t] = schedule[p][t];
 					for (int i = 1; i < matchDuration; i++)
-						scheduleBeginnings[p][t + i] = -1;
+						scheduleBeginnings[p][t + i] = new ScheduleValue(ScheduleValue.FREE);
 					t += matchDuration - 1;
 				} else {
 					scheduleBeginnings[p][t] = schedule[p][t];
@@ -101,15 +102,15 @@ public class EventSchedule extends Schedule {
 			List<Integer> playersAlreadyMatched = new ArrayList<>();
 			
 			for (int thisPlayer = 0; thisPlayer < nPlayers - nPlayersPerMatch + 1; thisPlayer++) {
-				if (scheduleBeginnings[thisPlayer][t] >= 0) {
+				if (scheduleBeginnings[thisPlayer][t].isOccupied()) {
 					List<Integer> playersBelongingToMatch = new ArrayList<>();
 					playersBelongingToMatch.add(thisPlayer);
 					
 					boolean matchCompleted = false;
 					
 					for (int otherPlayer = thisPlayer + 1; otherPlayer < nPlayers; otherPlayer++) {
-						if (scheduleBeginnings[otherPlayer][t] >= 0 && !playersAlreadyMatched.contains(otherPlayer)
-								&& scheduleBeginnings[thisPlayer][t] == scheduleBeginnings[otherPlayer][t]) {
+						if (scheduleBeginnings[otherPlayer][t].isOccupied() && !playersAlreadyMatched.contains(otherPlayer)
+								&& scheduleBeginnings[thisPlayer][t].equals(scheduleBeginnings[otherPlayer][t])) {
 							
 							playersAlreadyMatched.add(otherPlayer);
 							
@@ -129,7 +130,7 @@ public class EventSchedule extends Schedule {
 						
 						Match match = new Match(
 							playersList,
-							event.getLocalizationAt(scheduleBeginnings[thisPlayer][t]),
+							event.getLocalizationAt(scheduleBeginnings[thisPlayer][t].getLocalization()),
 							event.getTimeslotAt(t),
 							event.getTimeslotAt(t + nTimeslotsPerMatch - 1)
 						);
