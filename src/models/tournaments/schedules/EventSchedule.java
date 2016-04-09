@@ -42,7 +42,7 @@ public class EventSchedule extends Schedule {
 			for (int t = 0; t < nTimeslots; t++) {
 				Timeslot timeslot = event.getTimeslotAt(t);
 				
-				if (timeslot.getIsBreak())
+				if (event.isBreak(timeslot))
 					schedule[p][t] = -3;
 				else if (event.isUnavailable(event.getPlayerAt(p), timeslot)) {
 					schedule[p][t] = -2;

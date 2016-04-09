@@ -18,8 +18,6 @@ public class Timeslot extends Entity {
 	 */
 	private TimeUnit timeUnit = TimeUnit.HOURS;
 	
-	private boolean isBreak = false;
-	
 	public Timeslot(String name, int lb, int ub) {
 		super(name);
 		lowerBound = lb;
@@ -30,20 +28,9 @@ public class Timeslot extends Entity {
 		this("Timeslot", lb, ub);
 	}
 	
-	public Timeslot(int lb, int ub, boolean isBreak) {
-		this(lb, ub);
-		this.isBreak = isBreak;
-	}
-	
 	public Timeslot(int lb, int ub, TimeUnit timeUnit) {
 		this(lb, ub);
 		this.timeUnit = timeUnit;
-	}
-	
-	public Timeslot(int lb, int ub, boolean isBreak, TimeUnit timeUnit) {
-		this(lb, ub);
-		this.timeUnit = timeUnit;
-		this.isBreak = isBreak;
 	}
 	
 	public int getLowerBound() {
@@ -56,14 +43,6 @@ public class Timeslot extends Entity {
 	
 	public TimeUnit getTimeUnit() {
 		return timeUnit;
-	}
-	
-	public void setIsBreak(boolean isBreak) {
-		this.isBreak = isBreak;
-	}
-	
-	public boolean getIsBreak() {
-		return isBreak;
 	}
 	
 	public String getLowerBoundStr() {

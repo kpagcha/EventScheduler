@@ -12,6 +12,7 @@ import models.tournaments.events.entities.Localization;
 import models.tournaments.events.entities.Player;
 import models.tournaments.events.entities.Team;
 import models.tournaments.events.entities.Timeslot;
+import solver.TournamentSolver.MatchupMode;
 
 public class Event {
 	/**
@@ -55,19 +56,29 @@ public class Event {
 	private int nPlayersPerMatch = 2;
 	
 	/**
-	 * Indica si el evento se organiza por sorteo, es decir, los emparejamientos para cada partido se sortean previamente
-	 */
-	private boolean randomDrawings = false;
-	
-	/**
 	 * Composición de los equipos
 	 */
 	private List<Team> teams;
 	
 	/**
+	 * Si esta categoría define más de un partido por jugador, indica el modo de emparejamiento
+	 */
+	private MatchupMode matchupMode = MatchupMode.ANY;
+	
+	/**
+	 * Indica si el evento se organiza por sorteo, es decir, los emparejamientos para cada partido se sortean previamente
+	 */
+	private boolean randomDrawings = false;
+	
+	/**
 	 * Emparejamientos fijos predefinidos. Es obligatorio que los jugadores que forman cada lista compongan enfrentamiento/s
 	 */
 	private List<Set<Player>> fixedMatchups;
+	
+	/**
+	 * Lista de timeslots del evento donde no pueden tener lugar partidos
+	 */
+	private List<Timeslot> breaks;
 	
 	/**
 	 * Diccionario de localizaciones de juego descartadas en determinadas horas
@@ -106,6 +117,7 @@ public class Event {
 		
 		fixedMatchups = new ArrayList<Set<Player>>();
 		
+		breaks = new ArrayList<Timeslot>();
 		discardedLocalizations = new HashMap<Localization, List<Timeslot>>();
 		playersInLocalizations = new HashMap<Player, List<Localization>>();
 		playersAtTimeslots = new HashMap<Player, List<Timeslot>>();
@@ -175,20 +187,34 @@ public class Event {
 		return nPlayersPerMatch;
 	}
 	
-	public void setRandomDrawings(boolean randomDrawings) {
-		this.randomDrawings = randomDrawings;
-	}
-	
-	public boolean getRandomDrawings() {
-		return randomDrawings;
-	}
-	
 	public void setTeams(List<Team> teams) {
 		this.teams = teams;
 	}
 	
 	public List<Team> getTeams() {
 		return teams;
+	}
+	
+	/**
+	 * Asigna el modo de emparejamiento de este evento, sólo si el número de partidos por jugador es superior a uno
+	 * 
+	 * @param matchupMode
+	 */
+	public void setMatchupMode(MatchupMode matchupMode) {
+		if (nMatchesPerPlayer > 1)
+			this.matchupMode = matchupMode;
+	}
+	
+	public MatchupMode getMatchupMode() {
+		return matchupMode;
+	}
+	
+	public void setRandomDrawings(boolean randomDrawings) {
+		this.randomDrawings = randomDrawings;
+	}
+	
+	public boolean getRandomDrawings() {
+		return randomDrawings;
 	}
 	
 	/**
@@ -233,6 +259,34 @@ public class Event {
 	 */
 	public boolean hasFixedMatchups() {
 		return !fixedMatchups.isEmpty();
+	}
+	
+	public void setBreaks(List<Timeslot> breaks) {
+		this.breaks = breaks;
+	}
+	
+	public List<Timeslot> getBreaks() {
+		return breaks;
+	}
+	
+	/**
+	 * Añade un break si no existe
+	 * 
+	 * @param timeslotBreak la hora a la que no podrán tener lugar enfrentamientos en esta categoría
+	 */
+	public void addBreak(Timeslot timeslotBreak) {
+		if (!breaks.contains(timeslotBreak))
+			breaks.add(timeslotBreak);
+	}
+	
+	/**
+	 * Comprueba si un timeslot es un break
+	 * 
+	 * @param timeslot
+	 * @return true si es break, false si no
+	 */
+	public boolean isBreak(Timeslot timeslot) {
+		return breaks.contains(timeslot);
 	}
 	
 	public void setDiscardedLocalizations(HashMap<Localization, List<Timeslot>> discardedLocalizations) {

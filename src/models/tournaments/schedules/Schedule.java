@@ -133,8 +133,6 @@ public abstract class Schedule {
 						strValue += players.indexOf(player) + ",";
 					
 					strValue = strValue.substring(0, strValue.length() - 1);
-				} else if (timeslot.getIsBreak()) {
-					strValue = "*";
 				} else {
 					strValue = "-";
 				}

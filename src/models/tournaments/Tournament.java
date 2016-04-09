@@ -189,6 +189,19 @@ public class Tournament {
 	}
 	
 	/**
+	 * Marca los timeslots de la lista como breaks para todas las categorías
+	 * 
+	 * @param breakTimeslots
+	 */
+	public void setBreaks(List<Timeslot> timeslotBreaks) {
+		for (Timeslot timeslotBreak : timeslotBreaks) {
+			for (Event event : events)
+				if (event.containsTimeslot(timeslotBreak))
+					event.addBreak(timeslotBreak);
+		}
+	}
+	
+	/**
 	 * Invalida las pistas del diccionario a las horas indicadas para todas las categorías (si la categoría tiene
 	 * esa pista y esos timeslots)
 	 * 
@@ -291,6 +304,8 @@ public class Tournament {
 		System.out.println("5 Sample Large Tennis Tournament With Collisions");
 		System.out.println("6 Sample Tournament With Variable Domains and Collisions");
 		System.out.println("7 Sample League");
+		System.out.println("8 Sample Small League");
+		System.out.println("9 Sample Big Tournament");
 		System.out.print("Choose tournament: ");
 		int tournamentOption = sc.nextInt();
 		
@@ -319,6 +334,12 @@ public class Tournament {
 				break;
 			case 7:
 				tournament = EventManager.getInstance().getSampleLeague(randomDrawings);
+				break;
+			case 8:
+				tournament = EventManager.getInstance().getSampleSmallLeague(randomDrawings);
+				break;
+			case 9:
+				tournament = EventManager.getInstance().getSampleBigTournament(randomDrawings);
 				break;
 		}
 		
