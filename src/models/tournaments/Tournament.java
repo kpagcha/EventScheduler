@@ -391,34 +391,34 @@ public class Tournament {
 		System.out.print("\nRandom drawings (0 no, 1 yes): ");
 		boolean randomDrawings = sc.nextInt() == 1;
 		
-		Tournament tournament = null;
+		Tournament t = null;
 		switch (tournamentOption) {
 			case 1:
-				tournament = EventManager.getInstance().getSampleOneCategoryTournament(randomDrawings);
+				t = EventManager.getInstance().getSampleOneCategoryTournament(randomDrawings);
 				break;
 			case 2:
-				tournament = EventManager.getInstance().getSampleTennisTournament(randomDrawings);
+				t = EventManager.getInstance().getSampleTennisTournament(randomDrawings);
 				break;
 			case 3:
-				tournament = EventManager.getInstance().getSampleMediumTennisTournament(randomDrawings);
+				t = EventManager.getInstance().getSampleMediumTennisTournament(randomDrawings);
 				break;
 			case 4:
-				tournament = EventManager.getInstance().getSampleLargeTennisTournament(randomDrawings);
+				t = EventManager.getInstance().getSampleLargeTennisTournament(randomDrawings);
 				break;
 			case 5:
-				tournament = EventManager.getInstance().getSampleLargeTennisTournamentWithCollisions(randomDrawings);
+				t = EventManager.getInstance().getSampleLargeTennisTournamentWithCollisions(randomDrawings);
 				break;
 			case 6:
-				tournament = EventManager.getInstance().getSampleVariableDomainsTournamentWithCollisions(randomDrawings);
+				t = EventManager.getInstance().getSampleVariableDomainsTournamentWithCollisions(randomDrawings);
 				break;
 			case 7:
-				tournament = EventManager.getInstance().getSampleLeague(randomDrawings);
+				t = EventManager.getInstance().getSampleLeague(randomDrawings);
 				break;
 			case 8:
-				tournament = EventManager.getInstance().getSampleSmallLeague(randomDrawings);
+				t = EventManager.getInstance().getSampleSmallLeague(randomDrawings);
 				break;
 			case 9:
-				tournament = EventManager.getInstance().getSampleBigTournament(randomDrawings);
+				t = EventManager.getInstance().getSampleBigTournament(randomDrawings);
 				break;
 		}
 		
@@ -431,8 +431,11 @@ public class Tournament {
 		
 		boolean fillTimeslotsFirst = true;
 
-		tournament.getSolver().setSearchStrategy(searchStrategyOption);
-		tournament.getSolver().setFillTimeslotsFirst(fillTimeslotsFirst);
+		t.getSolver().setSearchStrategy(searchStrategyOption);
+		t.getSolver().setFillTimeslotsFirst(fillTimeslotsFirst);
+		
+		
+		final Tournament tournament = t;
 		
 		boolean printSolutions = true;
 		boolean printMatches = true;
@@ -441,6 +444,23 @@ public class Tournament {
 		int maxSolutions = 1; // 0 -> todas las soluciones
 		int foundSolutions = 0;
 		int tries = 500; // número de intentos para encontrar solución por sorteo (0: infinito)
+		
+		/*Thread thread = new Thread(new Runnable() {
+			@Override
+			public void run() {
+				System.out.print("Stop resolution process? (Y/N): ");
+				String answer = sc.next();
+				if (answer.equalsIgnoreCase("y")) {
+					tournament.getSolver().stopResolutionProcess();
+				}
+			}
+		});
+		try {
+			thread.start();
+			thread.join();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}*/
 		
 		boolean solutionFound = tournament.solve();
 		

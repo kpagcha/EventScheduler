@@ -195,6 +195,11 @@ public class TournamentSolver {
 	private int resolutionTimeLimit = 0;
 	
 	/**
+	 * Bandera que indica la parada del proceso de resolución
+	 */
+	private boolean stop = false;
+	
+	/**
 	 * Información sobre el problema y la resolución del mismo
 	 */
 	private ResolutionData resolutionData;
@@ -1078,6 +1083,8 @@ public class TournamentSolver {
 		if (resolutionTimeLimit > 0)
 			SearchMonitorFactory.limitTime(solver, resolutionTimeLimit);
 		
+		solver.addStopCriterion(() -> stop); 
+		
 		boolean solutionFound = solver.findSolution();	
 		if (solutionFound)
 			resolutionData = new ResolutionData(solver, tournament, getSearchStrategyName(), getRandomDrawingsCount(), true);
@@ -1094,6 +1101,13 @@ public class TournamentSolver {
 		}
 		
 		return solutionFound;
+	}
+	
+	/**
+	 * Levanta la bandera para parar el proceso de resolución
+	 */
+	public void stopResolutionProcess() {
+		stop = true;
 	}
 	
 	/**
@@ -1126,7 +1140,6 @@ public class TournamentSolver {
 				schedules = null;
 			}
 		}
-
 		return schedules;
 	}
 	
