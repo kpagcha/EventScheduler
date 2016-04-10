@@ -48,6 +48,155 @@ public abstract class Schedule {
 	}
 	
 	/**
+	 * Devuelve el conjunto de partidos en los que participa el jugador
+	 * 
+	 * @param player
+	 * @return lista de partidos
+	 */
+	public List<Match> getMatchesByPlayer(Player player) {
+		List<Match> playerMatches = null;
+		if (matches != null) {
+			playerMatches = new ArrayList<Match>();
+			
+			for (Match match : matches)
+				if (match.getPlayers().contains(player))
+					playerMatches.add(match);
+		}
+		return playerMatches;
+	}
+	
+	/**
+	 * Devuelve el conjunto de partidos en los que participan los jugadores
+	 * 
+	 * @param players
+	 * @return lista de partidos
+	 */
+	public List<Match> getMatchesByPlayers(List<Player> players) {
+		List<Match> playersMatches = null;
+		if (matches != null) {
+			playersMatches = new ArrayList<Match>();
+			
+			for (Match match : matches) {
+				if (match.getPlayers().containsAll(players))
+					playersMatches.add(match);
+			}
+		}
+		return playersMatches;
+	}
+	
+	/**
+	 * Devuelve el conjunto de partidos que tienen lugar en la localización de juego
+	 * 
+	 * @param localization
+	 * @return lista de partidos
+	 */
+	public List<Match> getMatchesByLocalization(Localization localization) {
+		List<Match> localizationMatches = null;
+		if (matches != null) {
+			localizationMatches = new ArrayList<Match>();
+			
+			for (Match match : matches)
+				if (match.getLocalization().equals(localization))
+					localizationMatches.add(match);
+		}
+		return localizationMatches;
+	}
+	
+	/**
+	 * Devuelve el conjunto de partidos que tienen lugar en cualquiera de las localizaciones de juego
+	 * 
+	 * @param localization
+	 * @return lista de partidos
+	 */
+	public List<Match> getMatchesByLocalizations(List<Localization> localizations) {
+		List<Match> localizationMatches = null;
+		if (matches != null) {
+			localizationMatches = new ArrayList<Match>();
+			
+			for (Match match : matches) {
+				Localization matchLocalization = match.getLocalization();
+				for (Localization localization : localizations)
+					if (localization.equals(matchLocalization))
+						localizationMatches.add(match);
+			}
+		}
+		return localizationMatches;
+	}
+	
+	/**
+	 * Devuelve el conjunto de partidos que empiezan en el timeslot indicado
+	 * 
+	 * @param timeslot
+	 * @return lista de partidos
+	 */
+	public List<Match> getMatchesByStartTimeslot(Timeslot timeslot) {
+		List<Match> timeslotMatches = null;
+		if (matches != null) {
+			timeslotMatches = new ArrayList<Match>();
+			
+			for (Match match : matches)
+				if (match.getStartTimeslot().equals(timeslot))
+					timeslotMatches.add(match);
+		}
+		return timeslotMatches;
+	}
+	
+	/**
+	 * Devuelve el conjunto de partidos que terminan en el timeslot indicado
+	 * 
+	 * @param timeslot
+	 * @return lista de partidos
+	 */
+	public List<Match> getMatchesByEndTimeslot(Timeslot timeslot) {
+		List<Match> timeslotMatches = null;
+		if (matches != null) {
+			timeslotMatches = new ArrayList<Match>();
+			
+			for (Match match : matches)
+				if (match.getEndTimeslot().equals(timeslot))
+					timeslotMatches.add(match);
+		}
+		return timeslotMatches;
+	}
+	
+	/**
+	 * Devuelve el conjunto de partidos que empiezan en el timeslot inicial y terminan en el final
+	 * 
+	 * @param start timeslot de comienzo
+	 * @param end   timeslot final
+	 * @return lista de partidos
+	 */
+	public List<Match> getMatchesByTimeslotRange(Timeslot start, Timeslot end) {
+		List<Match> timeslotMatches = null;
+		if (matches != null) {
+			timeslotMatches = new ArrayList<Match>();
+			
+			for (Match match : matches)
+				if (match.getStartTimeslot().equals(start) && match.getEndTimeslot().equals(end))
+					timeslotMatches.add(match);
+		}
+		return timeslotMatches;
+	}
+	
+	/**
+	 * Devuelve el conjunto de partidos cuyo transcurso discurre sobre el timeslot indicado
+	 * 
+	 * @param timeslot
+	 * @return lista de partidos
+	 */
+	public List<Match> getMatchesByTimeslot(Timeslot timeslot) {
+		List<Match> timeslotMatches = null;
+		if (matches != null) {
+			timeslotMatches = new ArrayList<Match>();
+			
+			for (Match match : matches)
+				if (timeslot.compareTo(match.getStartTimeslot()) >= 0 && timeslot.compareTo(match.getEndTimeslot()) <= 0)
+					timeslotMatches.add(match);
+		}
+		return timeslotMatches;
+	}
+	
+	/**
 	 * Agrupa el horario por localizaciones de juego. Por cada pista habrá una lista de
 	 * timeslots en los que se juega en esa pista, y a cada timeslot se asociará un conjunto
 	 * de jugadores que se juegan en esa pista en ese momento

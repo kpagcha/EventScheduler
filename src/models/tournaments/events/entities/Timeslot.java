@@ -1,6 +1,6 @@
 package models.tournaments.events.entities;
 
-public class Timeslot extends Entity {
+public class Timeslot extends Entity implements Comparable<Timeslot> {
 	/**
 	 * Límite inferior en milisegundos 
 	 */
@@ -80,5 +80,17 @@ public class Timeslot extends Entity {
 				break;
 		}
 		return Integer.toString(value);
+	}
+
+	public int compareTo(Timeslot timeslot) {
+		if (getLowerBound() < timeslot.getLowerBound())
+			return -1;
+		else if (timeslot.getLowerBound() < getLowerBound())
+			return 1;
+		else if (getUpperBound() < timeslot.getUpperBound())
+			return -1;
+		else if (timeslot.getUpperBound() < getUpperBound())
+			return 1;
+		return 0;
 	}
 }
