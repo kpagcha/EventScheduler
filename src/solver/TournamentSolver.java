@@ -23,13 +23,13 @@ import org.chocosolver.solver.variables.VariableFactory;
 import org.chocosolver.util.ESat;
 import org.chocosolver.util.tools.ArrayUtils;
 
-import models.tournaments.Tournament;
-import models.tournaments.events.Event;
-import models.tournaments.events.entities.Localization;
-import models.tournaments.events.entities.Player;
-import models.tournaments.events.entities.Team;
-import models.tournaments.events.entities.Timeslot;
-import models.tournaments.schedules.EventSchedule;
+import data.model.schedule.EventSchedule;
+import data.model.tournament.Tournament;
+import data.model.tournament.event.Event;
+import data.model.tournament.event.entity.Localization;
+import data.model.tournament.event.entity.Player;
+import data.model.tournament.event.entity.Team;
+import data.model.tournament.event.entity.timeslot.Timeslot;
 
 /**
  * @author Pablo

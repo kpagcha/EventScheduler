@@ -1,6 +1,8 @@
 package manager;
 
 import java.lang.reflect.Array;
+import java.time.DayOfWeek;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -10,12 +12,15 @@ import java.util.Map;
 import java.util.Random;
 import java.util.stream.Stream;
 
-import models.tournaments.Tournament;
-import models.tournaments.events.Event;
-import models.tournaments.events.entities.Localization;
-import models.tournaments.events.entities.Player;
-import models.tournaments.events.entities.Team;
-import models.tournaments.events.entities.Timeslot;
+import data.model.tournament.Tournament;
+import data.model.tournament.event.Event;
+import data.model.tournament.event.entity.Localization;
+import data.model.tournament.event.entity.Player;
+import data.model.tournament.event.entity.Team;
+import data.model.tournament.event.entity.timeslot.UndefiniteTimeslot;
+import data.model.tournament.event.entity.timeslot.AbstractTimeslot;
+import data.model.tournament.event.entity.timeslot.DefiniteTimeslot;
+import data.model.tournament.event.entity.timeslot.Timeslot;
 import solver.TournamentSolver.MatchupMode;
 
 public class EventManager {
@@ -32,7 +37,7 @@ public class EventManager {
 	public Tournament getSampleOneCategoryTournament(boolean randomDrawings) {
 		Player[] players = buildGenericPlayers(8, "Player");
 		Localization[] localizations = buildGenericLocalizations(2, "Pista");
-		Timeslot[] timeslots = buildTimeslots(8);
+		Timeslot[] timeslots = buildAbstractTimeslots(8);
 		
 		Event event = new Event("Categoría Principal", players, localizations, timeslots);
 		
@@ -63,7 +68,7 @@ public class EventManager {
 		Player[] atpPlayers = buildPlayers(new String[]{ "Djokovic", "Murray", "Federer", "Wawrinka", "Nadal", "Nishikori", "Berdych", "Ferrer" });
 		Player[] wtaPlayers = buildPlayers(new String[]{ "Williams", "Radwanska", "Kerber", "Muguruza", "Halep", "Suárez Navarro", "Kvitova", "Azarenka" });
 		Localization[] localizations = buildGenericLocalizations(3, "Pista");
-		Timeslot[] timeslots = buildTimeslots(10);
+		Timeslot[] timeslots = buildDefiniteTimeslots(10);
 		
 		Player[] allPlayers = new Player[atpPlayers.length + wtaPlayers.length];
 		for (int i = 0; i < atpPlayers.length; i++) allPlayers[i] = atpPlayers[i];
@@ -157,7 +162,7 @@ public class EventManager {
 		Player[] women = buildGenericPlayers(12, "Woman");
 		
 		Localization[] localizations = buildGenericLocalizations(4, "Pista");
-		Timeslot[] timeslots = buildTimeslots(12);
+		Timeslot[] timeslots = buildUndefiniteTimeslots(12);
 		
 		Event eventKids = new Event(
 			"Kids' Category",
@@ -175,7 +180,8 @@ public class EventManager {
 		
 		Timeslot[] doublesTimeslots = new Timeslot[timeslots.length + 7];
 		for (int i = 0; i < timeslots.length; i++) doublesTimeslots[i] = timeslots[i];
-		for (int i = timeslots.length; i < doublesTimeslots.length; i++) doublesTimeslots[i] = new Timeslot(3600000 * i, 3600000 * (i + 1));
+		for (int i = timeslots.length; i < doublesTimeslots.length; i++)
+			doublesTimeslots[i] = new UndefiniteTimeslot(Duration.ofMinutes(30), i);
 
 		Event eventDoubles = new Event(
 			"Double's Event", doubles, localizations, doublesTimeslots
@@ -223,7 +229,7 @@ public class EventManager {
 		Player[] absoluto = buildGenericPlayers(16, "Abs");
 		
 		Localization[] localizations = buildGenericLocalizations(8, "Pista");
-		Timeslot[] timeslots = buildTimeslots(27); // 2 días de 9:00 a 21:00 con descanso a las 14:00 (y la noche entre d1 y d2)
+		Timeslot[] timeslots = buildUndefiniteTimeslots(27); // 2 días de 9:00 a 21:00 con descanso a las 14:00 (y la noche entre d1 y d2)
 		
 		Event categoriaBenjamin = new Event("Categoría Benjamín", benjamin, localizations, timeslots);
 		Event categoriaAlevin = new Event("Categoría Alevín", alevin, localizations, timeslots);
@@ -267,7 +273,7 @@ public class EventManager {
 		}
 		
 		Localization[] localizations = buildGenericLocalizations(8, "Pista");
-		Timeslot[] timeslots = buildTimeslots(27); // 2 días de 9:00 a 21:00 con descanso a las 14:00 (y la noche entre d1 y d2)
+		Timeslot[] timeslots = buildUndefiniteTimeslots(27); // 2 días de 9:00 a 21:00 con descanso a las 14:00 (y la noche entre d1 y d2)
 		
 		Event categoriaBenjamin = new Event("Categoría Benjamín", benjamin, localizations, timeslots);
 		Event categoriaAlevin = new Event("Categoría Alevín", alevin, localizations, timeslots);
@@ -302,7 +308,7 @@ public class EventManager {
 	public Tournament getSampleVariableDomainsTournamentWithCollisions(boolean randomDrawings) {
 		Player[] players = buildGenericPlayers(50, "Jug");
 		Localization[] courts = buildGenericLocalizations(5, "Pista");
-		Timeslot[] timeslots = buildTimeslots(24);
+		Timeslot[] timeslots = buildUndefiniteTimeslots(24);
 		
 		Player[] groupAPlayers = Arrays.copyOfRange(players, 0, 8);
 		Player[] groupBPlayers = Arrays.copyOfRange(players, 8, 24);
@@ -345,7 +351,7 @@ public class EventManager {
 			"Tsonga", "Gasquet", "Cilic", "Raonic", "Goffin", "Thiem", "Isner", "Monfils"
 		});
 		Localization[] courts = buildGenericLocalizations(16, "Pista");
-		Timeslot[] timeslots = buildTimeslots(players.length + 8); // una semana por partido + flexibilidad
+		Timeslot[] timeslots = buildUndefiniteTimeslots(players.length + 8); // una semana por partido + flexibilidad
 		
 		Event league = new Event("Liga de 16 jugadores", players, courts, timeslots);
 		
@@ -373,7 +379,7 @@ public class EventManager {
 			"Djokovic", "Murray", "Federer", "Wawrinka"
 		});
 		Localization[] courts = buildGenericLocalizations(1, "Pista");
-		Timeslot[] timeslots = buildTimeslots(6);
+		Timeslot[] timeslots = buildUndefiniteTimeslots(6);
 		
 		Event league = new Event("Liga", players, courts, timeslots);
 		
@@ -391,7 +397,7 @@ public class EventManager {
 	public Tournament getSampleBigTournament(boolean randomDrawings) {
 		Player[] players = buildGenericPlayers(64, "J");
 		Localization[] localizations = buildGenericLocalizations(10, "Pista");
-		Timeslot[] timeslots = buildTimeslots(13);
+		Timeslot[] timeslots = buildUndefiniteTimeslots(13);
 		
 		Event event = new Event("Evento", players, localizations, timeslots);
 		
@@ -433,20 +439,28 @@ public class EventManager {
 		return localizations;
 	}
 	
-	private Timeslot[] buildTimeslots(int[] timeslotsArray) {
-		Timeslot[] timeslots = new Timeslot[timeslotsArray.length];
-		int oneHour = 60 * 60 * 1000;
-		for (int i = 0; i < timeslotsArray.length; i++) {
-			timeslots[i] = new Timeslot(oneHour * i, oneHour * (i + 1));
-		}				
+	private Timeslot[] buildAbstractTimeslots(int nTimeslots) {
+		Timeslot[] timeslots = new Timeslot[nTimeslots];
+		for (int i = 0; i < nTimeslots; i++)
+			timeslots[i] = new AbstractTimeslot(i);
 		return timeslots;
 	}
 	
-	private Timeslot[] buildTimeslots(int nTimeslots) {
-		int[] timeslots = new int[nTimeslots];
+	private Timeslot[] buildDefiniteTimeslots(int nTimeslots) {
+		Timeslot[] timeslots = new Timeslot[nTimeslots];
+		int order = 0;
+		for (int i = 0; i < nTimeslots; i++) {
+			if (i % 7 == 0) order++;
+			timeslots[i] = new DefiniteTimeslot(DayOfWeek.of(i % 7 + 1), Duration.ofHours(1), order);
+		}
+		return timeslots;
+	}
+	
+	private Timeslot[] buildUndefiniteTimeslots(int nTimeslots) {
+		Timeslot[] timeslots = new Timeslot[nTimeslots];
 		for (int i = 0; i < nTimeslots; i++)
-			timeslots[i] = i;
-		return buildTimeslots(timeslots);
+			timeslots[i] = new UndefiniteTimeslot(Duration.ofHours(1), i);
+		return timeslots;
 	}
 	
 	private Map<Player, List<Timeslot>> buildUnavailability(Event event, int[][] unavailabilityArray) {

@@ -16,7 +16,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 
-import models.tournaments.Tournament;
+import data.model.tournament.Tournament;
 
 public class ResolutionData {
 	/**
