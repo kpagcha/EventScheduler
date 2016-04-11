@@ -13,6 +13,8 @@ import data.model.tournament.event.entity.Entity;
  * horarios y planificaciones. Por ejemplo, en un horario con un total de diez timeslots anónimos de una
  * duración de media hora, se podrá identificar el orden del transcurso de cada uno de estos perídos
  * por medio del orden cronológico asociado a cada timeslot anónimo.
+ * <p>
+ * El orden cronológico debería ser único para cada timeslot en un supuesto conjunto de ellos
  *
  */
 public class AbstractTimeslot extends Entity implements Timeslot {

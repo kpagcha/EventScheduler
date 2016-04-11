@@ -5,6 +5,10 @@ import java.time.temporal.TemporalAmount;
 
 /**
  * Representa un timeslot que define un comienzo en el tiempo
+ * <p>
+ * El orden cronológico de un conjunto de timeslots definidos puede ser único o no único para cada uno
+ * de ellos, sin embargo, lo normal sería que no sean únicos. 
+ * Por ejemplo, [orden 1, 10:00-11:00], [orden 1, 11:00-12:00], [orden 1, 12:00-13:00], [orden 2, 10:00-11:00]...
  *
  */
 public class DefiniteTimeslot extends RangedTimeslot {
@@ -28,11 +32,23 @@ public class DefiniteTimeslot extends RangedTimeslot {
 	}
 	
 	@SuppressWarnings("unchecked")
-	public int compareTo(DefiniteTimeslot timeslot) {
-		if (start instanceof Comparable<?> && super.compareTo(timeslot) == 0)
-			return ((Comparable<Comparable<?>>) start).compareTo((Comparable<Comparable<?>>)timeslot.start);
-		else
+	public int compareTo(Timeslot timeslot) {
+		if (!(timeslot instanceof DefiniteTimeslot))
+			return -1;
+		
+		final DefiniteTimeslot definiteTimeslot = (DefiniteTimeslot)timeslot;
+		
+		// Si ambos comienzos son clases comparables y tienen el mismo orden cronológico, se rompe el empate
+		// comparando los comienzos
+		if (start instanceof Comparable<?> && definiteTimeslot instanceof Comparable<?> && super.compareTo(timeslot) == 0) {
+			final Comparable<Comparable<?>> thisStart = (Comparable<Comparable<?>>) start;
+			final Comparable<Comparable<?>> otherStart = (Comparable<Comparable<?>>)definiteTimeslot.start;
+			
+			// Se invierte el resultado porque los resultados "menores" son los de más alta prioridad
+			return -thisStart.compareTo(otherStart);
+		} else {
 			return super.compareTo(timeslot);
+		}
 	}
 	
 	public String toString() {

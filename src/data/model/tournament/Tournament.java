@@ -417,9 +417,6 @@ public class Tournament {
 			case 8:
 				t = EventManager.getInstance().getSampleSmallLeague(randomDrawings);
 				break;
-			case 9:
-				t = EventManager.getInstance().getSampleBigTournament(randomDrawings);
-				break;
 		}
 		
 		System.out.println("\n1 domOverWDeg");

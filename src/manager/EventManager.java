@@ -3,6 +3,7 @@ package manager;
 import java.lang.reflect.Array;
 import java.time.DayOfWeek;
 import java.time.Duration;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -34,6 +35,9 @@ public class EventManager {
 		return instance;
 	}
 	
+	/*
+	 * TORNEO 1
+	 */
 	public Tournament getSampleOneCategoryTournament(boolean randomDrawings) {
 		Player[] players = buildGenericPlayers(8, "Player");
 		Localization[] localizations = buildGenericLocalizations(2, "Pista");
@@ -64,11 +68,14 @@ public class EventManager {
 		return new Tournament("Torneo", new Event[]{ event });
 	}
 	
+	/*
+	 * TORNEO 2
+	 */
 	public Tournament getSampleTennisTournament(boolean randomDrawings) {
 		Player[] atpPlayers = buildPlayers(new String[]{ "Djokovic", "Murray", "Federer", "Wawrinka", "Nadal", "Nishikori", "Berdych", "Ferrer" });
 		Player[] wtaPlayers = buildPlayers(new String[]{ "Williams", "Radwanska", "Kerber", "Muguruza", "Halep", "Suárez Navarro", "Kvitova", "Azarenka" });
 		Localization[] localizations = buildGenericLocalizations(3, "Pista");
-		Timeslot[] timeslots = buildDefiniteTimeslots(10);
+		Timeslot[] timeslots = buildDefiniteDayOfWeekTimeslots(10);
 		
 		Player[] allPlayers = new Player[atpPlayers.length + wtaPlayers.length];
 		for (int i = 0; i < atpPlayers.length; i++) allPlayers[i] = atpPlayers[i];
@@ -156,39 +163,34 @@ public class EventManager {
 		return tournament;
 	}
 
+	/*
+	 * TORNEO 3
+	 */
 	public Tournament getSampleMediumTennisTournament(boolean randomDrawings) {
 		Player[] kids = buildGenericPlayers(8, "Kid");
 		Player[] men = buildGenericPlayers(16, "Man");
 		Player[] women = buildGenericPlayers(12, "Woman");
 		
 		Localization[] localizations = buildGenericLocalizations(4, "Pista");
-		Timeslot[] timeslots = buildUndefiniteTimeslots(12);
+		Timeslot[] timeslots = buildDefiniteLocalTimeTimeslots(19);
 		
 		Event eventKids = new Event(
 			"Kids' Category",
 			kids, new Localization[]{ localizations[0], localizations[1], localizations[2], localizations[3] }, 
-			timeslots
+			Arrays.copyOfRange(timeslots, 0, 12)
 		);
 		
-		Event eventMen = new Event("Men's Category", men, localizations, timeslots);
-		
-		Event eventWomen = new Event("Women's Category", women, localizations, timeslots);
+		Event eventMen = new Event("Men's Category", men, localizations, Arrays.copyOfRange(timeslots, 0, 12));
+		Event eventWomen = new Event("Women's Category", women, localizations, Arrays.copyOfRange(timeslots, 0, 12));
 		
 		Player[] doubles = new Player[men.length + women.length];
 		for (int i = 0; i < men.length; i++) doubles[i] = men[i];
 		for (int i = 0; i < women.length; i++) doubles[i + men.length] = women[i];
 		
-		Timeslot[] doublesTimeslots = new Timeslot[timeslots.length + 7];
-		for (int i = 0; i < timeslots.length; i++) doublesTimeslots[i] = timeslots[i];
-		for (int i = timeslots.length; i < doublesTimeslots.length; i++)
-			doublesTimeslots[i] = new UndefiniteTimeslot(Duration.ofMinutes(30), i);
-
-		Event eventDoubles = new Event(
-			"Double's Event", doubles, localizations, doublesTimeslots
-		);
+		Event eventDoubles = new Event("Double's Event", doubles, localizations, timeslots);
 		
 		eventDoubles.setPlayersPerMatch(4);
-		eventDoubles.addBreak(doublesTimeslots[timeslots.length]);
+		eventDoubles.addBreak(timeslots[12]);
 		
 		Map<Player, List<Timeslot>> kidsUnavailability = buildUnavailability(
 			eventKids,
@@ -220,6 +222,9 @@ public class EventManager {
 		return tournament;
 	}
 	
+	/*
+	 * TORNEO 4
+	 */
 	public Tournament getSampleLargeTennisTournament(boolean randomDrawings) {
 		Player[] benjamin = buildGenericPlayers(8, "Benj");
 		Player[] alevin = buildGenericPlayers(8, "Alev");
@@ -257,6 +262,9 @@ public class EventManager {
 		return tournament;
 	}
 	
+	/*
+	 * TORNEO 5
+	 */
 	public Tournament getSampleLargeTennisTournamentWithCollisions(boolean randomDrawings) {
 		Player[] benjamin = buildGenericPlayers(8, "Benj");
 		Player[] alevin = buildGenericPlayers(8, "Alev");
@@ -305,6 +313,9 @@ public class EventManager {
 		return tournament;
 	}
 	
+	/*
+	 * TORNEO 6
+	 */
 	public Tournament getSampleVariableDomainsTournamentWithCollisions(boolean randomDrawings) {
 		Player[] players = buildGenericPlayers(50, "Jug");
 		Localization[] courts = buildGenericLocalizations(5, "Pista");
@@ -345,6 +356,9 @@ public class EventManager {
 		return tournament;
 	}
 	
+	/*
+	 * TORNEO 7
+	 */
 	public Tournament getSampleLeague(boolean randomDrawings) {
 		Player[] players = buildPlayers(new String[]{
 			"Djokovic", "Murray", "Federer", "Wawrinka", "Nadal", "Nishikori", "Berdych", "Ferrer",
@@ -374,6 +388,9 @@ public class EventManager {
 		return new Tournament("Liga", new Event[]{ league });
 	}
 	
+	/*
+	 * TORNEO 8
+	 */
 	public Tournament getSampleSmallLeague(boolean randomDrawings) {
 		Player[] players = buildPlayers(new String[]{
 			"Djokovic", "Murray", "Federer", "Wawrinka"
@@ -394,15 +411,12 @@ public class EventManager {
 		return new Tournament("Liga", new Event[]{ league });
 	}
 	
-	public Tournament getSampleBigTournament(boolean randomDrawings) {
-		Player[] players = buildGenericPlayers(64, "J");
-		Localization[] localizations = buildGenericLocalizations(10, "Pista");
-		Timeslot[] timeslots = buildUndefiniteTimeslots(13);
-		
-		Event event = new Event("Evento", players, localizations, timeslots);
-		
-		return new Tournament("Torneo", new Event[]{ event });
-	}
+	/* * * * * * * * * * * *
+	 * * * * * * * * * * * *
+	 * MÉTODOS AUXILIARES  *
+	 * * * * * * * * * * * *
+	 * * * * * * * * * * * *
+	 */
 	
 	private Player[] buildPlayers(String[] playersArray) {
 		Player[] players = new Player[playersArray.length];
@@ -446,12 +460,22 @@ public class EventManager {
 		return timeslots;
 	}
 	
-	private Timeslot[] buildDefiniteTimeslots(int nTimeslots) {
+	private Timeslot[] buildDefiniteDayOfWeekTimeslots(int nTimeslots) {
 		Timeslot[] timeslots = new Timeslot[nTimeslots];
 		int order = 0;
 		for (int i = 0; i < nTimeslots; i++) {
-			if (i % 7 == 0) order++;
 			timeslots[i] = new DefiniteTimeslot(DayOfWeek.of(i % 7 + 1), Duration.ofHours(1), order);
+			if (i % 7 == 0) order++;
+		}
+		return timeslots;
+	}
+	
+	private Timeslot[] buildDefiniteLocalTimeTimeslots(int nTimeslots) {
+		Timeslot[] timeslots = new Timeslot[nTimeslots];
+		int order = 0;
+		for (int i = 0; i < nTimeslots; i++) {
+			timeslots[i] = new DefiniteTimeslot(LocalTime.of(i % 23, 0), Duration.ofHours(1), order);
+			if (i % 23 == 0) order++;
 		}
 		return timeslots;
 	}
