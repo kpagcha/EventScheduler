@@ -465,7 +465,7 @@ public class EventManager {
 		int order = 0;
 		for (int i = 0; i < nTimeslots; i++) {
 			timeslots[i] = new DefiniteTimeslot(DayOfWeek.of(i % 7 + 1), Duration.ofHours(1), order);
-			if (i % 7 == 0) order++;
+			if (i % 7 + 1 == 0) order++;
 		}
 		return timeslots;
 	}

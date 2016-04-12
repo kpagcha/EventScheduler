@@ -190,7 +190,7 @@ public abstract class Schedule {
 			timeslotMatches = new ArrayList<Match>();
 			
 			for (Match match : matches)
-				if (timeslot.compareTo(match.getStartTimeslot()) >= 0 && timeslot.compareTo(match.getEndTimeslot()) <= 0)
+				if (timeslot.compareTo(match.getStartTimeslot()) <= 0 && timeslot.compareTo(match.getEndTimeslot()) >= 0)
 					timeslotMatches.add(match);
 		}
 		return timeslotMatches;
