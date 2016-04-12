@@ -376,15 +376,14 @@ public class Tournament {
 	public static void main(String[] args) {
 		Scanner sc = new Scanner(System.in);
 	
-		System.out.println("1 Sample One Category Tournament");
-		System.out.println("2 Sample Tennis Tournament");
-		System.out.println("3 Sample Medium Tennis Tournament");
-		System.out.println("4 Sample Large Tennis Tournament");
-		System.out.println("5 Sample Large Tennis Tournament With Collisions");
-		System.out.println("6 Sample Tournament With Variable Domains and Collisions");
-		System.out.println("7 Sample League");
-		System.out.println("8 Sample Small League");
-		System.out.println("9 Sample Big Tournament");
+		System.out.println("1 One Category Tournament");
+		System.out.println("2 Tennis Tournament");
+		System.out.println("3 Medium Tennis Tournament");
+		System.out.println("4 Large Tennis Tournament");
+		System.out.println("5 Large Tennis Tournament With Collisions");
+		System.out.println("6 Tournament With Variable Domains and Collisions");
+		System.out.println("7 League");
+		System.out.println("8 Small League");
 		System.out.print("Choose tournament: ");
 		int tournamentOption = sc.nextInt();
 		
@@ -426,7 +425,7 @@ public class Tournament {
 		System.out.print("Choose Search Strategy: ");
 		int searchStrategyOption = sc.nextInt();
 		
-		boolean fillTimeslotsFirst = true;
+		boolean fillTimeslotsFirst = false;
 
 		t.getSolver().setSearchStrategy(searchStrategyOption);
 		t.getSolver().setFillTimeslotsFirst(fillTimeslotsFirst);

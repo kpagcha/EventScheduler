@@ -10,6 +10,8 @@ import java.util.Random;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import org.chocosolver.solver.Solver;
 import org.chocosolver.solver.constraints.IntConstraintFactory;
@@ -423,8 +425,16 @@ public class TournamentSolver {
 		fillTimeslotsFirst = fillFirst;
 	}
 	
+	public boolean getFillTimeslotsFirst() {
+		return fillTimeslotsFirst;
+	}
+	
 	public void setResolutionTimeLimit(int limit) {
 		resolutionTimeLimit = limit;
+	}
+	
+	public int getResolutionTimeLimit() {
+		return resolutionTimeLimit;
 	}
 	
 	public ResolutionData getResolutionData() {
@@ -684,6 +694,63 @@ public class TournamentSolver {
 	 * Para categorías con más de un partido por jugador, forzar que los enfrentamientos no se repitan
 	 */
 	private void setConstraintsMatchupsAllDifferent(Event event) {
+		int e = getEventIndex(event);
+		List<List<Integer>> combinations = getCombinations(
+			IntStream.range(0, event.getNumberOfPlayers()).toArray(),
+			nPlayersPerMatch[e]
+		);
+		
+		for (List<Integer> combination : combinations) {
+			for (int c = 0; c < nLocalizations[e]; c++) {
+				IntVar[] possibleMatchups = VariableFactory.boundedArray("PossibleMatchups", nTimeslots[e], 0, 1, solver);
+				
+				for (int t = 0; t < nTimeslots[e]; t++) {
+					IntVar[] possibleMatchup = new IntVar[nPlayersPerMatch[e]];
+					for (int i = 0; i < nPlayersPerMatch[e]; i++)
+						possibleMatchup[i] = x[e][combination.get(i)][c][t];
+							
+					solver.post(IntConstraintFactory.minimum(possibleMatchups[t], possibleMatchup));
+				}
+				solver.post(IntConstraintFactory.sum(possibleMatchups, "<=", VariableFactory.fixed(1, solver)));
+			}	
+		}
+	}
+	
+	/**
+	 * Devuelve una lista con todas las combinaciones únicas de k elementos de un conjunto de
+	 * jugadores, representados por enteros
+	 * 
+	 * @param players jugadores de los que se van a generar combinaciones
+	 * @param combine número de jugadores por combinación
+	 * @return una lista de lista de enteros con las combinaciones únicas de enfrentamientos
+	 */
+	List<List<Integer>> getCombinations(int[] players, int combine){
+		List<List<Integer>> combinations = new ArrayList<List<Integer>>();
+		
+		combinations(players, combine, 0, new int[combine], combinations);
+		
+		return combinations;
+	}
+	
+	/**
+	 * Lleva a cabo el cálculo recursivo de todas las combinaciones de k elementos de un conjunto,
+	 * almacenando en una lista cada combinación completa
+	 * 
+	 * @param arr           conjunto de enteros sobre los que calcular cada combinación
+	 * @param len           longitud de la combinación
+	 * @param startPosition posición de comienzo
+	 * @param result        array con la combinación parcial o completa
+	 * @param list          lista que almacena todas las combinaciones
+	 */
+	private static void combinations(int[] arr, int len, int startPosition, int[] result, List<List<Integer>> list) {
+		if (len == 0) {
+			list.add(IntStream.of(result.clone()).boxed().collect(Collectors.toList()));
+			return;
+		}
+		for (int i = startPosition; i <= arr.length - len; i++) {
+			result[result.length - len] = arr[i];
+			combinations(arr, len - 1, i + 1, result, list);
+		}
 	}
 	
 	/**
@@ -965,6 +1032,11 @@ public class TournamentSolver {
 		return array;
 	}
 	
+	/**
+	 * Devuelve el índice del evento
+	 * @param event un evento o categoría
+	 * @return valor del índice, o -1 si no existe
+	 */
 	private int getEventIndex(Event event) {
 		for (int i = 0; i < events.length; i++)
 			if (events[i].equals(event))

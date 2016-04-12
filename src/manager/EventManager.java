@@ -365,20 +365,12 @@ public class EventManager {
 			"Tsonga", "Gasquet", "Cilic", "Raonic", "Goffin", "Thiem", "Isner", "Monfils"
 		});
 		Localization[] courts = buildGenericLocalizations(16, "Pista");
-		Timeslot[] timeslots = buildUndefiniteTimeslots(players.length + 8); // una semana por partido + flexibilidad
+		Timeslot[] timeslots = buildUndefiniteTimeslots(players.length + 8);
 		
 		Event league = new Event("Liga de 16 jugadores", players, courts, timeslots);
 		
 		league.setMatchesPerPlayer(players.length - 1);
-		league.setMatchDuration(1); // partido en 1 día
-		
-		/*league.setUnavailableTimeslots(buildUnavailability(league, new int[][]{
-			{ 3 }, { }, { }, { 0 }, { }, { }, { 8 }, { },
-			{ }, { 2 }, { }, { }, { }, { 5, 6 }, { }, { }
-		}));*/
-		
-		// Federer vs Nadal
-		//league.addFixedMatchup(new HashSet<Player>(Arrays.asList(new Player[]{ players[2], players[4] })));
+		league.setMatchDuration(1);
 		
 		league.setMatchupMode(MatchupMode.ALL_DIFFERENT);
 		
@@ -393,9 +385,10 @@ public class EventManager {
 	 */
 	public Tournament getSampleSmallLeague(boolean randomDrawings) {
 		Player[] players = buildPlayers(new String[]{
-			"Djokovic", "Murray", "Federer", "Wawrinka"
+			"Djokovic", "Murray", "Federer", "Wawrinka", "Nadal", "Nishikori", "Berdych", "Ferrer",
+			"Tsonga", "Gasquet", "Cilic", "Raonic", "Goffin", "Thiem", "Isner", "Monfils"
 		});
-		Localization[] courts = buildGenericLocalizations(1, "Pista");
+		Localization[] courts = buildGenericLocalizations(6, "Pista");
 		Timeslot[] timeslots = buildUndefiniteTimeslots(6);
 		
 		Event league = new Event("Liga", players, courts, timeslots);
@@ -417,7 +410,6 @@ public class EventManager {
 	 * * * * * * * * * * * *
 	 * * * * * * * * * * * *
 	 */
-	
 	private Player[] buildPlayers(String[] playersArray) {
 		Player[] players = new Player[playersArray.length];
 		for (int i = 0; i < playersArray.length; i++)
