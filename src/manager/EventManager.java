@@ -389,7 +389,7 @@ public class EventManager {
 			"Tsonga", "Gasquet", "Cilic", "Raonic", "Goffin", "Thiem", "Isner", "Monfils"
 		});
 		Localization[] courts = buildGenericLocalizations(6, "Pista");
-		Timeslot[] timeslots = buildUndefiniteTimeslots(6);
+		Timeslot[] timeslots = buildUndefiniteTimeslots(10);
 		
 		Event league = new Event("Liga", players, courts, timeslots);
 		

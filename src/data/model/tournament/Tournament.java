@@ -425,7 +425,7 @@ public class Tournament {
 		System.out.print("Choose Search Strategy: ");
 		int searchStrategyOption = sc.nextInt();
 		
-		boolean fillTimeslotsFirst = false;
+		boolean fillTimeslotsFirst = true;
 
 		t.getSolver().setSearchStrategy(searchStrategyOption);
 		t.getSolver().setFillTimeslotsFirst(fillTimeslotsFirst);
