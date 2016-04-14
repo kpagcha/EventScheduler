@@ -13,33 +13,39 @@ public class Match {
 	/**
 	 * Lista de jugadores que componen el enfrentamiento
 	 */
-	private List<Player> players;
+	private final List<Player> players;
 	
 	/**
 	 * Localización de juego donde tiene lugar el enfrentamiento 
 	 */
-	private Localization localization;
+	private final Localization localization;
 	
 	/**
 	 * Período en el que el enfrentamiento comienza
 	 */
-	private Timeslot startTimeslot;
+	private final Timeslot startTimeslot;
 	
 	/**
 	 * Último período en el que el enfrentamiento tiene lugar
 	 */
-	private Timeslot endTimeslot;
+	private final Timeslot endTimeslot;
+	
+	/**
+	 * Número de timeslots que ocupa
+	 */
+	private final int duration;
 	
 	/**
 	 * Lista de equipos, si hubiera
 	 */
 	List<Team> teams;
 	
-	public Match(List<Player> players, Localization localization, Timeslot start, Timeslot end) {
+	public Match(List<Player> players, Localization localization, Timeslot start, Timeslot end, int duration) {
 		this.players = players;
 		this.localization = localization;
 		startTimeslot = start;
 		endTimeslot = end;
+		this.duration = duration;
 	}
 	
 	public List<Player> getPlayers() {
@@ -56,6 +62,10 @@ public class Match {
 	
 	public Timeslot getEndTimeslot() {
 		return endTimeslot;
+	}
+	
+	public int getDuration() {
+		return duration;
 	}
 	
 	public void setTeams(List<Team> teams) {

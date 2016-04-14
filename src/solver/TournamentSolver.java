@@ -218,6 +218,13 @@ public class TournamentSolver {
 	 */
 	public TournamentSolver(Tournament tournament) {
 		this.tournament = tournament;
+		update();
+	}
+	
+	/**
+	 * Inicializa el solver
+	 */
+	private void update() {
 		events = tournament.getEvents();
 		
 		nCategories = events.length;
@@ -464,6 +471,8 @@ public class TournamentSolver {
 	 * Inicializa las variables del modelo del problema
 	 */
 	private void buildModel() {
+		update();
+		
 		initMatrices();
 		
 		markDiscardedLocalizations();
@@ -489,7 +498,7 @@ public class TournamentSolver {
 		}
 		
 		for (int e = 0; e < nCategories; e++) {
-			Map<Player, List<Timeslot>> eventUnavailabilities = events[e].getUnavailableTimeslots();
+			Map<Player, List<Timeslot>> eventUnavailabilities = events[e].getUnavailablePlayers();
 			for (int p = 0; p < nPlayers[e]; p++) {
 				List<Timeslot> playerUnavailabilities = eventUnavailabilities.get(events[e].getPlayerAt(p));
 				for (int c = 0; c < nLocalizations[e]; c++) {

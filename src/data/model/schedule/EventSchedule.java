@@ -131,7 +131,8 @@ public class EventSchedule extends Schedule {
 							playersList,
 							event.getLocalizationAt(scheduleBeginnings[thisPlayer][t].getLocalization()),
 							event.getTimeslotAt(t),
-							event.getTimeslotAt(t + matchDuration - 1)
+							event.getTimeslotAt(t + matchDuration - 1),
+							matchDuration
 						);
 						
 						matches.add(match);

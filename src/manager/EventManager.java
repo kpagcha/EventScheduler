@@ -13,6 +13,8 @@ import java.util.Map;
 import java.util.Random;
 import java.util.stream.Stream;
 
+import org.apache.commons.lang3.StringUtils;
+
 import data.model.tournament.Tournament;
 import data.model.tournament.event.Event;
 import data.model.tournament.event.entity.Localization;
@@ -59,7 +61,7 @@ public class EventManager {
 			}
 		);
 		
-		event.setUnavailableTimeslots(unavailability);
+		event.setUnavailablePlayers(unavailability);
 		event.setMatchesPerPlayer(2);
 		
 		if (randomDrawings)
@@ -206,7 +208,7 @@ public class EventManager {
 			}
 		);
 		
-		eventKids.setUnavailableTimeslots(kidsUnavailability);
+		eventKids.setUnavailablePlayers(kidsUnavailability);
 		
 		if (randomDrawings) {
 			eventKids.setRandomDrawings(true);
@@ -407,7 +409,8 @@ public class EventManager {
 	/* 
 	 * TORNEO ZARLON 15 ABRIL
 	 */
-	public Tournament getZarlonTournament() {
+	@SuppressWarnings("unused")
+	public Tournament getZarlonTournament(boolean randomDrawings) {
 		int nTimeslots = 12;
 		int startHour = 17;
 		int startMinute = 0;
@@ -455,14 +458,14 @@ public class EventManager {
 		);
 		
 		Player[] pAlevinM = buildPlayers(new String[]{ "VAZQUEZ, I.", "PORTALES, J.A.", "RAMIREZ, S.", 
-			"GALERA, A.", "CASTILLA, J.", "OLIVA, M.", "HERRERA, P.", "RIZO, H.", "PARRADO, A.",
-			"BOCANEGRA, J.", "DAVILA, A.", "REAL, P.", "BOLOIX, J.", "MIGUEL, A.", "BARBERA, L.", "MORENO, H" });
+			"GALERA, A.", "CASTILLA, J.", "OLIVA, M.", /*"HERRERA, P.",*/ "RIZO, H.", "PARRADO, A.",
+			"BOCANEGRA, J.", "DAVILA, A.", /*"REAL, P.",*/ "BOLOIX, J.", "MIGUEL, A.", "BARBERA, L.", "MORENO, H" });
 		
 		Player[] pAbsoluto = buildPlayers(new String[]{ "CAÑO, M.", "FUNKE, C.", "CASTAING, C.M.", "DIAZ, A.",
 			"DIAZ, L.A.", "GARCIA, C.", "ZAPATA", "QUEVEDO" }
 		);
 		
-		Player[] pInfantilF = buildPlayers(new String[]{ "FERNANDEZ, M.", "CANEDA, M.", "VALENCIA, M.", "MOYA, N." });
+		Player[] pInfantilF = buildPlayers(new String[]{ "GARCIA, F.", "VILLANUEVA, L." });
 		
 		Player[] pCadeteF = buildPlayers(new String[]{ "REICHERT, A.", "DIANEZ." });
 		
@@ -477,16 +480,6 @@ public class EventManager {
 		Event alevinF = new Event("Alevin Femenino", pAlevinF, pistas, timeslots);
 		Event absoluto = new Event("Absoluto", pAbsoluto, pistas, timeslots);
 		
-		int matchDuration = 2;
-		veterano.setMatchDuration(matchDuration);
-		infantilM.setMatchDuration(matchDuration);
-		infantilF.setMatchDuration(matchDuration);
-		cadeteM.setMatchDuration(matchDuration);
-		cadeteF.setMatchDuration(matchDuration);
-		alevinM.setMatchDuration(matchDuration);
-		alevinF.setMatchDuration(matchDuration);
-		absoluto.setMatchDuration(matchDuration);
-		
 		Tournament zarlon = new Tournament(
 			"Torneo Zarlon",
 			new Event[]{ alevinM, /*alevinF, infantilM,*/ infantilF, /*cadeteM, cadeteF, absoluto,*/ veterano }
@@ -494,10 +487,36 @@ public class EventManager {
 		
 		zarlon.getSolver().setFillTimeslotsFirst(false);
 		
-		// hacer un solver.update()
+		// Duración de un partido: 3 timeslots
+		for (Event event : zarlon.getEvents()) {
+			event.setMatchDuration(3);
+			event.setRandomDrawings(randomDrawings);
+		}
 		
-		//for (Event event : zarlon.getEvents()) 
-			//event.setMatchDuration(3);
+		
+		// Enfrentamientos alevín masculino
+		alevinM.addFixedMatchup(findPlayerByName("vazquez", pAlevinM), findPlayerByName("parrado", pAlevinM));
+		alevinM.addFixedMatchup(findPlayerByName("oliva", pAlevinM), findPlayerByName("castilla", pAlevinM));
+		alevinM.addFixedMatchup(findPlayerByName("ramirez", pAlevinM), findPlayerByName("barbera", pAlevinM));
+		//alevinM.addFixedMatchup(findPlayerByName("herrera", pAlevinM), findPlayerByName("real", pAlevinM));
+		alevinM.addFixedMatchup(findPlayerByName("bocanegra", pAlevinM), findPlayerByName("davila", pAlevinM));
+		alevinM.addFixedMatchup(findPlayerByName("boloix", pAlevinM), findPlayerByName("galera", pAlevinM));
+		alevinM.addFixedMatchup(findPlayerByName("miguel", pAlevinM), findPlayerByName("moreno", pAlevinM));
+		alevinM.addFixedMatchup(findPlayerByName("rizo", pAlevinM), findPlayerByName("portales", pAlevinM));
+		
+		// Enfrentamientos infantil femenino
+		infantilF.addFixedMatchup(findPlayerByName("garcia", pInfantilF), findPlayerByName("villanueva", pInfantilF));
+		
+		// Enfrentamientos Veterano
+		veterano.addFixedMatchup(findPlayerByName("fernandez", pVeterano), findPlayerByName("piedrola", pVeterano));
+		veterano.addFixedMatchup(findPlayerByName("devos", pVeterano), findPlayerByName("caneda", pVeterano));
+		veterano.addFixedMatchup(findPlayerByName("funke", pVeterano), findPlayerByName("rivas", pVeterano));
+		veterano.addFixedMatchup(findPlayerByName("moreno", pVeterano), findPlayerByName("arrieta", pVeterano));
+		veterano.addFixedMatchup(findPlayerByName("iglesias", pVeterano), findPlayerByName("maestre", pVeterano));
+		veterano.addFixedMatchup(findPlayerByName("pardal", pVeterano), findPlayerByName("romero", pVeterano));
+		veterano.addFixedMatchup(findPlayerByName("real", pVeterano), findPlayerByName("perez", pVeterano));
+		veterano.addFixedMatchup(findPlayerByName("romera", pVeterano), findPlayerByName("de miguel", pVeterano));
+		
 		
 		// Pista 1
 		zarlon.addUnavailableLocalization(pistas[0], new ArrayList<Timeslot>(Arrays.asList(
@@ -528,6 +547,15 @@ public class EventManager {
 	 * * * * * * * * * * * *
 	 * * * * * * * * * * * *
 	 */
+	
+	private Player findPlayerByName(String name, Player[] players) {
+		Player player = null;
+		for (Player p : players)
+			if (StringUtils.containsIgnoreCase(p.getName(), name))
+				return p;
+		return player;
+	}
+	
 	private Player[] buildPlayers(String[] playersArray) {
 		Player[] players = new Player[playersArray.length];
 		for (int i = 0; i < playersArray.length; i++)

@@ -10,6 +10,7 @@ import java.util.Set;
 
 import data.model.schedule.CombinedSchedule;
 import data.model.schedule.EventSchedule;
+import data.model.schedule.GroupedSchedule;
 import data.model.schedule.data.Match;
 import data.model.tournament.event.Event;
 import data.model.tournament.event.entity.Localization;
@@ -33,6 +34,11 @@ public class Tournament {
 	 * Horarios para cada categoría
 	 */
 	private EventSchedule[] currentSchedules = null;
+	
+	/**
+	 * Horario del torneo que combina los horarios de todas las categorías en uno solo
+	 */
+	private CombinedSchedule schedule;
 	
 	/**
 	 * El solver que obtendrá los horarios de cada categoría el torneo
@@ -157,13 +163,15 @@ public class Tournament {
 	
 	/**
 	 * Actualiza el valor de los horarios con la nueva solución combinada. Si se ha llegado
-	 * a la última solución se establece el valor de los horarios a null
+	 * a la última solución se establece el valor de los horarios a null. Además, se resetea el valor
+	 * del horario combinado
 	 * 
 	 * @return true si se han actualizado los horarios con una nueva solución, y false si
 	 * se ha alcanzado la última solución
 	 */
 	public boolean nextSchedules() {
 		currentSchedules = solver.getSchedules();
+		schedule = null;
 		return currentSchedules != null;
 	}
 	
@@ -184,8 +192,10 @@ public class Tournament {
 	 * 
 	 * @return horario combinado del torneo
 	 */
-	public CombinedSchedule getCombinedSchedule() {
-		return new CombinedSchedule(this);
+	public CombinedSchedule getSchedule() {
+		if (schedule == null)
+			schedule = new CombinedSchedule(this);
+		return schedule;
 	}
 	
 	/**
@@ -407,7 +417,7 @@ public class Tournament {
 		Tournament t = null;
 		switch (tournamentOption) {
 			case 0:
-				t = EventManager.getInstance().getZarlonTournament();
+				t = EventManager.getInstance().getZarlonTournament(randomDrawings);
 				break;
 			case 1:
 				t = EventManager.getInstance().getSampleOneCategoryTournament(randomDrawings);
@@ -498,8 +508,8 @@ public class Tournament {
 					System.out.println(tournament + "\n");
 					tournament.printCurrentSchedules(printMatches);
 					
-					if (tournament.currentSchedules != null) {
-						CombinedSchedule combinedSchedule = tournament.getCombinedSchedule();
+					if (tournament.getSchedules() != null) {
+						CombinedSchedule combinedSchedule = tournament.getSchedule();
 					
 						System.out.println("All schedules combined in one");
 						System.out.println(combinedSchedule);
@@ -514,16 +524,18 @@ public class Tournament {
 							System.out.println();
 						}
 						
-						int occupation = combinedSchedule.groupByLocalizations();
-						
+						GroupedSchedule groupedSchedule = new GroupedSchedule(tournament, tournament.getSchedule().getMatches());
 						System.out.println("Combined schedule grouped by courts");
-						System.out.println(combinedSchedule.groupedScheduleToString(tournament));
+						System.out.println(groupedSchedule);
 						
+						int occupation = groupedSchedule.getOccupation();
+						int availableTimeslots = groupedSchedule.getAvailableTimeslots();
 						System.out.println(
-							String.format("Timeslot occupation: %s/%s (%s %%)\n",
+							String.format("Timeslot (%s) occupation: %s/%s (%s %%)\n",
+								groupedSchedule.getTotalTimeslots(),
 								occupation,
-								tournament.getAllLocalizations().size() * tournament.getAllTimeslots().size(),
-								occupation / (double)(tournament.getAllLocalizations().size() * tournament.getAllTimeslots().size()) * 100
+								availableTimeslots,
+								(occupation / (double)availableTimeslots) * 100
 							)
 						);
 					}

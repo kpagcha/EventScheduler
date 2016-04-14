@@ -42,7 +42,7 @@ public class Event {
 	/**
 	 * Timeslots u horas en las que cada jugador no está disponible
 	 */
-	private Map<Player, List<Timeslot>> unavailableTimeslots;
+	private Map<Player, List<Timeslot>> unavailablePlayers;
 	
 	/**
 	 * Número de partidos que cada jugador ha de jugar en esta categoría
@@ -114,7 +114,7 @@ public class Event {
 		this.players = players;
 		this.localizations = localizations;
 		this.timeslots = timeslots;
-		unavailableTimeslots = new HashMap<Player, List<Timeslot>>(players.length);
+		unavailablePlayers = new HashMap<Player, List<Timeslot>>(players.length);
 		
 		fixedMatchups = new ArrayList<Set<Player>>();
 		
@@ -156,12 +156,12 @@ public class Event {
 		return timeslots;
 	}
 	
-	public void setUnavailableTimeslots(Map<Player, List<Timeslot>> unavailability) {
-		unavailableTimeslots = unavailability;
+	public void setUnavailablePlayers(Map<Player, List<Timeslot>> unavailability) {
+		unavailablePlayers = unavailability;
 	}
 	
-	public Map<Player, List<Timeslot>> getUnavailableTimeslots() {
-		return unavailableTimeslots;
+	public Map<Player, List<Timeslot>> getUnavailablePlayers() {
+		return unavailablePlayers;
 	}
 	
 	/**
@@ -171,10 +171,10 @@ public class Event {
 	 * @param timeslots
 	 */
 	public void addPlayerUnavailableTimeslots(Player player, List<Timeslot> timeslots) {	
-		if (!unavailableTimeslots.containsKey(player)) {
-			unavailableTimeslots.put(player, timeslots);
+		if (!unavailablePlayers.containsKey(player)) {
+			unavailablePlayers.put(player, timeslots);
 		} else {
-			List<Timeslot> playerUnavailableTimeslots = unavailableTimeslots.get(player);
+			List<Timeslot> playerUnavailableTimeslots = unavailablePlayers.get(player);
 			for (Timeslot timeslot : timeslots) {
 				if (!playerUnavailableTimeslots.contains(timeslot))
 					playerUnavailableTimeslots.add(timeslot);
@@ -189,10 +189,10 @@ public class Event {
 	 * @param timeslot
 	 */
 	public void addPlayerUnavailableTimeslot(Player player, Timeslot timeslot) {
-		if (!unavailableTimeslots.containsKey(player))
-			unavailableTimeslots.put(player, new ArrayList<Timeslot>(Arrays.asList(timeslot)));
-		else if (!unavailableTimeslots.get(player).contains(timeslot))
-			unavailableTimeslots.get(player).add(timeslot);
+		if (!unavailablePlayers.containsKey(player))
+			unavailablePlayers.put(player, new ArrayList<Timeslot>(Arrays.asList(timeslot)));
+		else if (!unavailablePlayers.get(player).contains(timeslot))
+			unavailablePlayers.get(player).add(timeslot);
 	}
 	
 	/**
@@ -202,12 +202,12 @@ public class Event {
 	 * @param timeslot
 	 */
 	public void removePlayerUnavailableTimeslot(Player player, Timeslot timeslot) {
-		List<Timeslot> playerUnavailableTimeslots = unavailableTimeslots.get(player);
+		List<Timeslot> playerUnavailableTimeslots = unavailablePlayers.get(player);
 		if (playerUnavailableTimeslots != null && playerUnavailableTimeslots.contains(timeslot)) {
 			playerUnavailableTimeslots.remove(timeslot);
 			
 			if (playerUnavailableTimeslots.isEmpty())
-				unavailableTimeslots.remove(player);
+				unavailablePlayers.remove(player);
 		}
 	}
 	
@@ -291,6 +291,16 @@ public class Event {
 	}
 	
 	/**
+	 * Añade un enfrentamiento fijo entre jugadoers
+	 * 
+	 * @param players array de jugadores entre los que habrá de darse un enfrentamiento
+	 */
+	public void addFixedMatchup(Player... players) {
+		Set<Player> matchup = new HashSet<Player>(Arrays.asList(players));
+		addFixedMatchup(matchup);
+	}
+	
+	/**
 	 * Añade un enfrentamiento fijo entre equipos
 	 * 
 	 * @param matchup conjunto de equipos entre los cuales habrá de darse un enfrentamiento
@@ -368,6 +378,15 @@ public class Event {
 	 */
 	public boolean isBreak(Timeslot timeslot) {
 		return breaks.contains(timeslot);
+	}
+	
+	/**
+	 * Comprueba si este evento tiene breaks
+	 * 
+	 * @return true si tiene breaks o false si no
+	 */
+	public boolean hasBreaks() {
+		return !breaks.isEmpty();
 	}
 	
 	public void setUnavailableLocalizations(HashMap<Localization, List<Timeslot>> unavailableLocalizations) {
@@ -741,7 +760,7 @@ public class Event {
 	 * @return         true si el jugador está disponible a esa hora, false si no
 	 */
 	public boolean isUnavailable(Player player, Timeslot timeslot) {
-		return unavailableTimeslots.containsKey(player) && unavailableTimeslots.get(player).contains(timeslot);
+		return unavailablePlayers.containsKey(player) && unavailablePlayers.get(player).contains(timeslot);
 	}
 	
 	/**
