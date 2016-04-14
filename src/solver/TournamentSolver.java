@@ -527,7 +527,7 @@ public class TournamentSolver {
 	private void markDiscardedLocalizations() {
 		// Marcar las localizaciones descartadas con 0
 		for (int e = 0; e < nCategories; e++) {
-			Map<Localization, List<Timeslot>> discardedLocalizations = events[e].getDiscardedLocalizations();
+			Map<Localization, List<Timeslot>> discardedLocalizations = events[e].getUnavailableLocalizations();
 			Set<Localization> localizations = discardedLocalizations.keySet();
 			
 			for (Localization localization : localizations) {
@@ -1182,7 +1182,7 @@ public class TournamentSolver {
 		if (resolutionTimeLimit > 0)
 			SearchMonitorFactory.limitTime(solver, resolutionTimeLimit);
 		
-		solver.addStopCriterion(() -> stop); 
+		solver.addStopCriterion(() -> stop);
 		
 		boolean solutionFound = solver.findSolution();	
 		if (solutionFound)

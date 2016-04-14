@@ -85,9 +85,9 @@ public class Event {
 	private List<Timeslot> breaks;
 	
 	/**
-	 * Diccionario de localizaciones de juego descartadas en determinadas horas
+	 * Diccionario de localizaciones de juego no disponibles en determinadas horas
 	 */
-	private Map<Localization, List<Timeslot>> discardedLocalizations;
+	private Map<Localization, List<Timeslot>> unavailableLocalizations;
 	
 	/**
 	 * Diccionario de jugadores para cada cual los enfrentamientos de los que forme parte han de tener lugar
@@ -119,7 +119,7 @@ public class Event {
 		fixedMatchups = new ArrayList<Set<Player>>();
 		
 		breaks = new ArrayList<Timeslot>();
-		discardedLocalizations = new HashMap<Localization, List<Timeslot>>();
+		unavailableLocalizations = new HashMap<Localization, List<Timeslot>>();
 		playersInLocalizations = new HashMap<Player, List<Localization>>();
 		playersAtTimeslots = new HashMap<Player, List<Timeslot>>();
 	}
@@ -370,12 +370,12 @@ public class Event {
 		return breaks.contains(timeslot);
 	}
 	
-	public void setDiscardedLocalizations(HashMap<Localization, List<Timeslot>> discardedLocalizations) {
-		this.discardedLocalizations = discardedLocalizations;
+	public void setUnavailableLocalizations(HashMap<Localization, List<Timeslot>> unavailableLocalizations) {
+		this.unavailableLocalizations = unavailableLocalizations;
 	}
 	
-	public Map<Localization, List<Timeslot>> getDiscardedLocalizations() {
-		return discardedLocalizations;
+	public Map<Localization, List<Timeslot>> getUnavailableLocalizations() {
+		return unavailableLocalizations;
 	}
 	
 	/**
@@ -384,11 +384,28 @@ public class Event {
 	 * @param localization
 	 * @param timeslot
 	 */
-	public void addDiscardedLocalization(Localization localization, Timeslot timeslot) {
-		if (!discardedLocalizations.containsKey(localization))
-			discardedLocalizations.put(localization, new ArrayList<Timeslot>(Arrays.asList(timeslot)));
-		else if (!discardedLocalizations.get(localization).contains(timeslot))
-			discardedLocalizations.get(localization).add(timeslot);
+	public void addUnavailableLocalization(Localization localization, Timeslot timeslot) {
+		if (!unavailableLocalizations.containsKey(localization))
+			unavailableLocalizations.put(localization, new ArrayList<Timeslot>(Arrays.asList(timeslot)));
+		else if (!unavailableLocalizations.get(localization).contains(timeslot))
+			unavailableLocalizations.get(localization).add(timeslot);
+	}
+	
+	/**
+	 * Añade una localización de juego no disponible a las horas indicadas
+	 * 
+	 * @param localization
+	 * @param timeslot
+	 */
+	public void addUnavailableLocalization(Localization localization, List<Timeslot> timeslots) {
+		if (!unavailableLocalizations.containsKey(localization))
+			unavailableLocalizations.put(localization, timeslots);
+		else {
+			List<Timeslot> unavailableLocalizationTimeslots = unavailableLocalizations.get(localization);
+			for (Timeslot timeslot : timeslots)
+				if (!unavailableLocalizationTimeslots.contains(timeslot))
+					unavailableLocalizationTimeslots.add(timeslot);
+		}
 	}
 	
 	/**
@@ -396,8 +413,8 @@ public class Event {
 	 * 
 	 * @param localization
 	 */
-	public void removeDiscardedLocalization(Localization localization) {
-		discardedLocalizations.remove(localization);
+	public void removeUnavailableLocalization(Localization localization) {
+		unavailableLocalizations.remove(localization);
 	}
 	
 	/**
@@ -406,21 +423,21 @@ public class Event {
 	 * @param localization
 	 * @param timeslot
 	 */
-	public void removeDiscardedLocalizationTimeslot(Localization localization, Timeslot timeslot) {
-		List<Timeslot> discardedTimeslots = discardedLocalizations.get(localization);
+	public void removeUnavailableLocalizationTimeslot(Localization localization, Timeslot timeslot) {
+		List<Timeslot> discardedTimeslots = unavailableLocalizations.get(localization);
 		if (discardedTimeslots != null && discardedTimeslots.contains(timeslot)) {
 			discardedTimeslots.remove(timeslot);
 		
 			if (discardedTimeslots.isEmpty())
-				discardedLocalizations.remove(localization);
+				unavailableLocalizations.remove(localization);
 		}
 	}
 	
 	/**
 	 * @return true si hay alguna localización inválida, y false si no
 	 */
-	public boolean hasDiscardedLocalizations() {
-		return !discardedLocalizations.isEmpty();
+	public boolean hasUnavailableLocalizations() {
+		return !unavailableLocalizations.isEmpty();
 	}
 	
 	public void setPlayersInLocalizations(Map<Player, List<Localization>> playersInLocalizations) {
@@ -735,10 +752,10 @@ public class Event {
 	 * @return             true si está descartada, false si no
 	 */
 	public boolean isDiscarded(Localization localization, Timeslot timeslot) {
-		Set<Localization> localizations = discardedLocalizations.keySet();
+		Set<Localization> localizations = unavailableLocalizations.keySet();
 		if (localizations.contains(localization)) {
 			for (Localization l : localizations) {
-				if (discardedLocalizations.get(l).contains(timeslot))
+				if (unavailableLocalizations.get(l).contains(timeslot))
 					return true;
 			}
 		}

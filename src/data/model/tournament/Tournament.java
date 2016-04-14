@@ -263,17 +263,17 @@ public class Tournament {
 	 * Invalida las pistas del diccionario a las horas indicadas para todas las categorías (si la categoría tiene
 	 * esa pista y esos timeslots)
 	 * 
-	 * @param discardedLocalizations diccionario de localizaciones de juego descartadas en la lista de timeslots
+	 * @param unavailableLocalizations diccionario de localizaciones de juego descartadas en la lista de timeslots
 	 */
-	public void setDiscardedLocalizations(HashMap<Localization, List<Timeslot>> discardedLocalizations) {
-		Set<Localization> localizations = discardedLocalizations.keySet();	
+	public void setUnavailableLocalizations(HashMap<Localization, List<Timeslot>> unavailableLocalizations) {
+		Set<Localization> localizations = unavailableLocalizations.keySet();	
 		for (Event event : events)
 			for (Localization localization : localizations)
 				if (event.containsLocalization(localization)) {
-					List<Timeslot> timeslots = discardedLocalizations.get(localization);
+					List<Timeslot> timeslots = unavailableLocalizations.get(localization);
 					for (Timeslot timeslot : timeslots)
 						if (event.containsTimeslot(timeslot))
-							event.addDiscardedLocalization(localization, timeslot);
+							event.addUnavailableLocalization(localization, timeslot);
 				}
 	}
 	
@@ -284,10 +284,23 @@ public class Tournament {
 	 * @param localization localización de juego a invalidar
 	 * @param timeslot     hora a la que invalidar
 	 */
-	public void addDiscardedLocalization(Localization localization, Timeslot timeslot) {
+	public void addUnavailableLocalization(Localization localization, Timeslot timeslot) {
 		for (Event event : events)
 			if (event.containsLocalization(localization) && event.containsTimeslot(timeslot))
-				event.addDiscardedLocalization(localization, timeslot);
+				event.addUnavailableLocalization(localization, timeslot);
+	}
+	
+	/**
+	 * Añade una pista no disponible a las horas indicadas para todas las categorías
+	 * 
+	 * @param localization
+	 * @param timeslots
+	 */
+	public void addUnavailableLocalization(Localization localization, List<Timeslot> timeslots) {
+		for (Event event : events)
+			for (Timeslot timeslot : timeslots)
+				if (event.containsLocalization(localization) && event.containsTimeslot(timeslot))
+					event.addUnavailableLocalization(localization, timeslot);
 	}
 	
 	/**
@@ -295,10 +308,10 @@ public class Tournament {
 	 * 
 	 * @param localization
 	 */
-	public void removeDiscardedLocalization(Localization localization) {
+	public void removeUnavailableLocalization(Localization localization) {
 		for (Event event : events)
 			if (event.containsLocalization(localization))
-				event.removeDiscardedLocalization(localization);
+				event.removeUnavailableLocalization(localization);
 	}
 	
 	/**
@@ -306,10 +319,10 @@ public class Tournament {
 	 * 
 	 * @param localization
 	 */
-	public void removeDiscardedLocalizationTimeslot(Localization localization, Timeslot timeslot) {
+	public void removeUnavailableLocalizationTimeslot(Localization localization, Timeslot timeslot) {
 		for (Event event : events)
 			if (event.containsLocalization(localization) && event.containsTimeslot(timeslot))
-				event.removeDiscardedLocalizationTimeslot(localization, timeslot);
+				event.removeUnavailableLocalizationTimeslot(localization, timeslot);
 	}
 	
 	/**
@@ -376,6 +389,7 @@ public class Tournament {
 	public static void main(String[] args) {
 		Scanner sc = new Scanner(System.in);
 	
+		System.out.println("0 Zarlon");
 		System.out.println("1 One Category Tournament");
 		System.out.println("2 Tennis Tournament");
 		System.out.println("3 Medium Tennis Tournament");
@@ -392,6 +406,9 @@ public class Tournament {
 		
 		Tournament t = null;
 		switch (tournamentOption) {
+			case 0:
+				t = EventManager.getInstance().getZarlonTournament();
+				break;
 			case 1:
 				t = EventManager.getInstance().getSampleOneCategoryTournament(randomDrawings);
 				break;
@@ -424,11 +441,8 @@ public class Tournament {
 		System.out.println("4 minDom_UB, domOverWDeg");
 		System.out.print("Choose Search Strategy: ");
 		int searchStrategyOption = sc.nextInt();
-		
-		boolean fillTimeslotsFirst = true;
 
 		t.getSolver().setSearchStrategy(searchStrategyOption);
-		t.getSolver().setFillTimeslotsFirst(fillTimeslotsFirst);
 		
 		
 		final Tournament tournament = t;

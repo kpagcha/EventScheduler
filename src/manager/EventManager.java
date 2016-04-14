@@ -106,12 +106,12 @@ public class EventManager {
 		doublesDraw.addFixedTeamsMatchup(new HashSet<Team>(Arrays.asList(new Team[]{ teams.get(1), teams.get(7) })));
 		
 		// Invalidar pista 1 y 2 a las horas t0, t1 y t2 para el cuadro de hombres
-		mensDraw.addDiscardedLocalization(localizations[0], timeslots[0]);
-		mensDraw.addDiscardedLocalization(localizations[0], timeslots[1]);
-		mensDraw.addDiscardedLocalization(localizations[0], timeslots[2]);
-		mensDraw.addDiscardedLocalization(localizations[1], timeslots[0]);
-		mensDraw.addDiscardedLocalization(localizations[1], timeslots[1]);
-		mensDraw.addDiscardedLocalization(localizations[1], timeslots[2]);
+		mensDraw.addUnavailableLocalization(localizations[0], timeslots[0]);
+		mensDraw.addUnavailableLocalization(localizations[0], timeslots[1]);
+		mensDraw.addUnavailableLocalization(localizations[0], timeslots[2]);
+		mensDraw.addUnavailableLocalization(localizations[1], timeslots[0]);
+		mensDraw.addUnavailableLocalization(localizations[1], timeslots[1]);
+		mensDraw.addUnavailableLocalization(localizations[1], timeslots[2]);
 		
 		// Que Muguruza juegue en la pista 2 en el cuadro de mujeres
 		womensDraw.addPlayerInLocalization(wtaPlayers[3], localizations[1]);
@@ -158,7 +158,7 @@ public class EventManager {
 		tournament.addPlayerUnavailableTimeslot(atpPlayers[0], timeslots[8]);
 		
 		// Invalidar la pista 3 para el timeslot t8 en todas las categorías
-		tournament.addDiscardedLocalization(localizations[2], timeslots[8]);
+		tournament.addUnavailableLocalization(localizations[2], timeslots[8]);
 
 		return tournament;
 	}
@@ -402,6 +402,124 @@ public class EventManager {
 			league.setRandomDrawings(randomDrawings);
 		
 		return new Tournament("Liga", new Event[]{ league });
+	}
+	
+	/* 
+	 * TORNEO ZARLON 15 ABRIL
+	 */
+	public Tournament getZarlonTournament() {
+		int nTimeslots = 12;
+		int startHour = 17;
+		int startMinute = 0;
+		Timeslot[] timeslots = new Timeslot[nTimeslots];
+		for (int t = 0; t < nTimeslots; t++) {
+			timeslots[t] = new DefiniteTimeslot(LocalTime.of(startHour, startMinute), Duration.ofMinutes(30), 1);
+			if (t % 2 != 0) {
+				startHour++;
+				startMinute = 0;
+			} else {
+				startMinute = 30;
+			}
+		}
+
+		/*
+		t0  [1] 17:00 (PT30M)
+		t1  [1] 17:30 (PT30M)
+		t2  [1] 18:00 (PT30M)
+		t3  [1] 18:30 (PT30M)
+		t4  [1] 19:00 (PT30M)
+		t5  [1] 19:30 (PT30M)
+		t6  [1] 20:00 (PT30M)
+		t7  [1] 20:30 (PT30M)
+		t8  [1] 21:00 (PT30M)
+		t9  [1] 21:30 (PT30M)
+		t10 [1] 22:00 (PT30M)
+		t11 [1] 22:30 (PT30M)
+		*/
+		
+		Localization[] pistas = buildGenericLocalizations(6, "Pista");
+		
+		Player[] pVeterano = buildPlayers(new String[]{ 
+			"FERNANDEZ, M.", "DE MIGUEL, FCO. J", "ROMERO, R.", "FUNKE, C.", "PEREZ, O.", 
+			"ARRIETA, J.", "PARDAL, R.", "PIEDROLA, D.", "CANEDA, M.", "REAL, A.", "DEVOS, L.", 
+			"MAESTRE, D.", "ROMERA, M.", "IGLESIAS, E.", "MORENO, J.A.", "RIVAS, D" }
+		);
+		
+		Player[] pInfantilM = buildPlayers(new String[]{ 
+			"DE LA RIVA, P.", "GALLERO, C.", "COLLANTES F.", "ZARZUELA, J.", "ARGUDO, D.",
+			"REAL, A.", "REY, A.", "PLATT, H." }
+		);
+		
+		Player[] pCadeteM = buildPlayers(new String[]{ "VAZQUEZ, A", "PARRADO, R.", "CANEDA, P.", "PERIGNAT, T.",
+			"HERRERA, A.", "PORFIRIO, N.", "TROYA, P.", "GARRIDA, A.M.", "NIEVES, F." }
+		);
+		
+		Player[] pAlevinM = buildPlayers(new String[]{ "VAZQUEZ, I.", "PORTALES, J.A.", "RAMIREZ, S.", 
+			"GALERA, A.", "CASTILLA, J.", "OLIVA, M.", "HERRERA, P.", "RIZO, H.", "PARRADO, A.",
+			"BOCANEGRA, J.", "DAVILA, A.", "REAL, P.", "BOLOIX, J.", "MIGUEL, A.", "BARBERA, L.", "MORENO, H" });
+		
+		Player[] pAbsoluto = buildPlayers(new String[]{ "CAÑO, M.", "FUNKE, C.", "CASTAING, C.M.", "DIAZ, A.",
+			"DIAZ, L.A.", "GARCIA, C.", "ZAPATA", "QUEVEDO" }
+		);
+		
+		Player[] pInfantilF = buildPlayers(new String[]{ "FERNANDEZ, M.", "CANEDA, M.", "VALENCIA, M.", "MOYA, N." });
+		
+		Player[] pCadeteF = buildPlayers(new String[]{ "REICHERT, A.", "DIANEZ." });
+		
+		Player[] pAlevinF = buildPlayers(new String[]{ "VILLANUEVA, L.", "TRIVIÑO, I." });
+		
+		Event veterano = new Event("Veterano", pVeterano, pistas, timeslots);
+		Event infantilM = new Event("Infantil Masculino", pInfantilM, pistas, timeslots);
+		Event infantilF = new Event("Infantil Femenino", pInfantilF, pistas, timeslots);
+		Event cadeteM = new Event("Cadete Masculino", pCadeteM, pistas, timeslots);
+		Event cadeteF = new Event("Cadete Femenino", pCadeteF, pistas, timeslots);
+		Event alevinM = new Event("Alevin Masculino", pAlevinM, pistas, timeslots);
+		Event alevinF = new Event("Alevin Femenino", pAlevinF, pistas, timeslots);
+		Event absoluto = new Event("Absoluto", pAbsoluto, pistas, timeslots);
+		
+		int matchDuration = 2;
+		veterano.setMatchDuration(matchDuration);
+		infantilM.setMatchDuration(matchDuration);
+		infantilF.setMatchDuration(matchDuration);
+		cadeteM.setMatchDuration(matchDuration);
+		cadeteF.setMatchDuration(matchDuration);
+		alevinM.setMatchDuration(matchDuration);
+		alevinF.setMatchDuration(matchDuration);
+		absoluto.setMatchDuration(matchDuration);
+		
+		Tournament zarlon = new Tournament(
+			"Torneo Zarlon",
+			new Event[]{ alevinM, /*alevinF, infantilM,*/ infantilF, /*cadeteM, cadeteF, absoluto,*/ veterano }
+		);
+		
+		zarlon.getSolver().setFillTimeslotsFirst(false);
+		
+		// hacer un solver.update()
+		
+		//for (Event event : zarlon.getEvents()) 
+			//event.setMatchDuration(3);
+		
+		// Pista 1
+		zarlon.addUnavailableLocalization(pistas[0], new ArrayList<Timeslot>(Arrays.asList(
+			timeslots[0], timeslots[1], timeslots[2]))
+		);
+		
+		// Pista 2
+		zarlon.addUnavailableLocalization(pistas[1], new ArrayList<Timeslot>(Arrays.asList(
+			timeslots[0], timeslots[1], timeslots[2], timeslots[3], timeslots[4], timeslots[5], timeslots[6]))
+		);
+		
+		// Pista 5
+		zarlon.addUnavailableLocalization(pistas[4], new ArrayList<Timeslot>(Arrays.asList(
+			timeslots[6], timeslots[7], timeslots[8], timeslots[9], timeslots[10], timeslots[11]))
+		);
+		
+		// Pista 6
+		zarlon.addUnavailableLocalization(pistas[5], new ArrayList<Timeslot>(Arrays.asList(
+			timeslots[0], timeslots[1]))
+		);
+		
+		return zarlon;
 	}
 	
 	/* * * * * * * * * * * *
