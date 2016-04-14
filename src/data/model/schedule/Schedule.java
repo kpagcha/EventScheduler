@@ -8,6 +8,8 @@ import java.util.Map;
 
 import data.model.schedule.data.Match;
 import data.model.schedule.data.ScheduleValue;
+import data.model.tournament.Tournament;
+import data.model.tournament.event.Event;
 import data.model.tournament.event.entity.Localization;
 import data.model.tournament.event.entity.Player;
 import data.model.tournament.event.entity.timeslot.Timeslot;
@@ -241,14 +243,25 @@ public abstract class Schedule {
 	}
 	
 	/**
-	 * Representa un horario agrupado por localizaciones con una cadena. Cada elemento muestra bien
-	 * todos los jugadores que se encuentran en la pista_c a la hora_t (representados por su índice)
-	 * o bien que en esa pista_c a esa hora_t no hay ningún enfrentamiento (porque simplemente
-	 * ha quedado libre o porque hay un break o porque la pista ha sido descartada)
+	 * Representa un horario agrupado por localizaciones con una cadena
 	 * 
 	 * @return cadena con la representación del horario agrupado por pistas
 	 */
 	public String groupedScheduleToString() {
+		return groupedScheduleToString(null);
+	}
+	
+	/**
+	 * Representa un horario agrupado por localizaciones con una cadena. Cada elemento muestra bien
+	 * todos los jugadores que se encuentran en la pista_c a la hora_t (representados por su índice)
+	 * o bien que en esa pista_c a esa hora_t no hay ningún enfrentamiento (porque simplemente
+	 * ha quedado libre o porque hay un break o porque la pista ha sido descartada). También se
+	 * marcan las horas a las que las distintas pistas no están disponibles
+	 * 
+	 * @param tournament
+	 * @return cadena con la representación del horario agrupado por pistas
+	 */
+	public String groupedScheduleToString(Tournament tournament) {
 		if (groupedSchedule == null)
 			throw new IllegalStateException("Grouped schedule has not been calculated yet.");
 			
@@ -279,12 +292,23 @@ public abstract class Schedule {
 				
 				String strValue = "";
 				if (timeslotMap.containsKey(timeslot)) {
-					strValue = "";
 					for (Player player : timeslotMap.get(timeslot))
 						strValue += players.indexOf(player) + ",";
 					
 					strValue = strValue.substring(0, strValue.length() - 1);
-				} else {
+				} else if (tournament != null) {
+					for (Event event : tournament.getEvents()) {
+						if (event.hasUnavailableLocalizations() && event.containsTimeslot(timeslot) &&
+								event.containsLocalization(localization) && 
+								event.getUnavailableLocalizations().containsKey(localization) &&
+								event.getUnavailableLocalizations().get(localization).contains(timeslot)) {
+							
+							strValue = "¬";
+						}
+					}
+				}
+				
+				if (strValue.isEmpty()) {
 					strValue = "=";
 				}
 				sb.append(String.format("%" + padding + "s", strValue));

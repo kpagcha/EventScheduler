@@ -517,7 +517,7 @@ public class Tournament {
 						int occupation = combinedSchedule.groupByLocalizations();
 						
 						System.out.println("Combined schedule grouped by courts");
-						System.out.println(combinedSchedule.groupedScheduleToString());
+						System.out.println(combinedSchedule.groupedScheduleToString(tournament));
 						
 						System.out.println(
 							String.format("Timeslot occupation: %s/%s (%s %%)\n",
