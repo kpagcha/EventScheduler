@@ -62,7 +62,12 @@ public class Tournament {
 	 * @return true si se ha encontrado una solución, false si ocurre lo contrario
 	 */
 	public boolean solve() {
-		return solver.execute();
+		boolean solved = solver.execute();
+		
+		currentSchedules = solver.getSchedules();
+		schedule = null;
+		
+		return solved;
 	}
 	
 	public void setName(String name) {
@@ -400,55 +405,26 @@ public class Tournament {
 		Scanner sc = new Scanner(System.in);
 	
 		System.out.println("0 Zarlon");
-		System.out.println("1 One Category Tournament");
-		System.out.println("2 Tennis Tournament");
-		System.out.println("3 Medium Tennis Tournament");
-		System.out.println("4 Large Tennis Tournament");
-		System.out.println("5 Large Tennis Tournament With Collisions");
-		System.out.println("6 Tournament With Variable Domains and Collisions");
-		System.out.println("7 League");
-		System.out.println("8 Small League");
+		System.out.println("1 Tournament");
 		System.out.print("Choose tournament: ");
 		int tournamentOption = sc.nextInt();
-		
-		System.out.print("\nRandom drawings (0 no, 1 yes): ");
-		boolean randomDrawings = sc.nextInt() == 1;
 		
 		Tournament t = null;
 		switch (tournamentOption) {
 			case 0:
-				t = EventManager.getInstance().getZarlonTournament(randomDrawings);
+				t = EventManager.getInstance().getZarlonTournament();
 				break;
 			case 1:
-				t = EventManager.getInstance().getSampleOneCategoryTournament(randomDrawings);
+				t = EventManager.getInstance().getSampleTournament();
 				break;
-			case 2:
-				t = EventManager.getInstance().getSampleTennisTournament(randomDrawings);
-				break;
-			case 3:
-				t = EventManager.getInstance().getSampleMediumTennisTournament(randomDrawings);
-				break;
-			case 4:
-				t = EventManager.getInstance().getSampleLargeTennisTournament(randomDrawings);
-				break;
-			case 5:
-				t = EventManager.getInstance().getSampleLargeTennisTournamentWithCollisions(randomDrawings);
-				break;
-			case 6:
-				t = EventManager.getInstance().getSampleVariableDomainsTournamentWithCollisions(randomDrawings);
-				break;
-			case 7:
-				t = EventManager.getInstance().getSampleLeague(randomDrawings);
-				break;
-			case 8:
-				t = EventManager.getInstance().getSampleSmallLeague(randomDrawings);
+			default:
+				t = EventManager.getInstance().getSampleTournament();
 				break;
 		}
 		
 		System.out.println("\n1 domOverWDeg");
 		System.out.println("2 minDom_UB");
 		System.out.println("3 minDom_LB");
-		System.out.println("4 minDom_UB, domOverWDeg");
 		System.out.print("Choose Search Strategy: ");
 		int searchStrategyOption = sc.nextInt();
 
@@ -460,10 +436,9 @@ public class Tournament {
 		boolean printSolutions = true;
 		boolean printMatches = true;
 		boolean askForInput = false;
-		boolean tryDifferentRandomDrawings = true;
+		boolean printMatchesByPlayer = false;
 		int maxSolutions = 1; // 0 -> todas las soluciones
 		int foundSolutions = 0;
-		int tries = 500; // número de intentos para encontrar solución por sorteo (0: infinito)
 		
 		/*Thread thread = new Thread(new Runnable() {
 			@Override
@@ -484,24 +459,7 @@ public class Tournament {
 		
 		boolean solutionFound = tournament.solve();
 		
-		if (solutionFound || (randomDrawings && tryDifferentRandomDrawings)) {
-		
-			if (solutionFound)
-				solutionFound = tournament.nextSchedules();
-			else if (randomDrawings && tryDifferentRandomDrawings) {
-				int tryCount = 0;
-				// probar nuevas combinaciones de sorteo hasta que se encuentre solución o se supere el número de intentos
-				while (!solutionFound && (tries == 0 || tryCount++ < tries)) {
-					tournament.getSolver().initPredefinedMatchups();
-					solutionFound = tournament.solve();
-				}
-				
-				if (solutionFound) {
-					System.out.println("\nSolution found after " + (tryCount + 1) + " tries.\n");
-					tournament.nextSchedules();
-				}
-			}
-			
+		if (solutionFound) {
 			do {
 				if (printSolutions) {
 					System.out.println("-------------------------------------------------------");
@@ -538,6 +496,15 @@ public class Tournament {
 								(occupation / (double)availableTimeslots) * 100
 							)
 						);
+						
+						if (printMatchesByPlayer) {
+							for (Player player : tournament.getAllPlayers()) {
+								System.out.println(player + " matches:");
+								for (Match match : combinedSchedule.getMatchesByPlayer(player))
+									System.out.println(match);
+								System.out.println();
+							}
+						}
 					}
 				}
 				

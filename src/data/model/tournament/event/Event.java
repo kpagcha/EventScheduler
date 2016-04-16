@@ -70,11 +70,6 @@ public class Event {
 	private MatchupMode matchupMode = MatchupMode.ANY;
 	
 	/**
-	 * Indica si el evento se organiza por sorteo, es decir, los emparejamientos para cada partido se sortean previamente
-	 */
-	private boolean randomDrawings = false;
-	
-	/**
 	 * Emparejamientos fijos predefinidos. Es obligatorio que los jugadores que forman cada lista compongan enfrentamiento/s
 	 */
 	private List<Set<Player>> fixedMatchups;
@@ -262,14 +257,6 @@ public class Event {
 	
 	public MatchupMode getMatchupMode() {
 		return matchupMode;
-	}
-	
-	public void setRandomDrawings(boolean randomDrawings) {
-		this.randomDrawings = randomDrawings;
-	}
-	
-	public boolean getRandomDrawings() {
-		return randomDrawings;
 	}
 	
 	public void setFixedMatchups(List<Set<Player>> fixedMatchups) {

@@ -77,9 +77,12 @@ public class Match {
 	}
 
 	public String toString() {
-		StringBuilder sb = new StringBuilder(
-			String.format("From %s to %s in %s: ", startTimeslot, endTimeslot, localization)
-		);
+		StringBuilder sb = new StringBuilder();
+		
+		if (!startTimeslot.equals(endTimeslot))
+			sb.append(String.format("From %s to %s in %s: ", startTimeslot, endTimeslot, localization));
+		else
+			sb.append(String.format("At %s in %s: ", startTimeslot, localization));
 		
 		if (teams == null)
 			sb.append(StringUtils.join(players, " vs "));

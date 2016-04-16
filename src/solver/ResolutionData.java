@@ -47,11 +47,6 @@ public class ResolutionData {
 	private List<String> searchStrategies;
 	
 	/**
-	 * Número de categorías del evento que usan emparejamientos por sorteo
-	 */
-	private int randomDrawingsCount;
-	
-	/**
 	 * Número de variables del modelo
 	 */
 	private int variables;
@@ -120,10 +115,9 @@ public class ResolutionData {
 	 * @param randomDrawingsCount         número de categorías por sorteo
 	 * @param resolutionProcessCompleted  true si se ha completado el proceso de resolución, false si no
 	 */
-	public ResolutionData(Solver solver, Tournament tournament, String searchStrategyName, int randomDrawingsCount, boolean resolutionProcessCompleted) {
+	public ResolutionData(Solver solver, Tournament tournament, String searchStrategyName, boolean resolutionProcessCompleted) {
 		this.solver = solver;
 		this.tournament = tournament;
-		this.randomDrawingsCount = randomDrawingsCount;
 		this.resolutionProcessCompleted = resolutionProcessCompleted;
 		
 		searchStrategies = Arrays.asList(searchStrategyName.split(","));
@@ -177,10 +171,6 @@ public class ResolutionData {
 	
 	public List<String> getSearchStrategies() {
 		return searchStrategies;
-	}
-	
-	public int getRandomDrawingsCount() {
-		return randomDrawingsCount;
 	}
 
 	public int getVariables() {
@@ -236,9 +226,9 @@ public class ResolutionData {
 		
 		sb.append(String.format(
 			"Solver [%s] features:\n\tVariables: %,d\n\tConstraints: %,d\n\tDefault search strategy: %s\n\tCompleted search strategy: %s\n" +
-			"\tSearch strategy: %s\n\tRandom drawings %d/%d\n",
+			"\tSearch strategy: %s\n",
 			solverName, variables, constraints, isDeafultSearchUsed ? "Yes" : "No", isSearchCompleted ? "Yes" : "No",
-					StringUtils.join(searchStrategies, ", "), randomDrawingsCount, tournament.getNumberOfEvents()
+					StringUtils.join(searchStrategies, ", "), tournament.getNumberOfEvents()
 		));
 		
 		if (resolutionProcessCompleted)
@@ -297,8 +287,6 @@ public class ResolutionData {
 			for (String searchStrategy : searchStrategies)
 				jgen.writeString(searchStrategy);
 			jgen.writeEndArray();
-			jgen.writeNumberField("randomDrawingsCount", randomDrawingsCount);
-			jgen.writeNumberField("randomDrawingsRate", randomDrawingsCount / (float)tournament.getNumberOfEvents());
 			jgen.writeNumberField("solutions", solutions);
 			
 			jgen.writeBooleanField("resolutionProcessCompleted", resolutionProcessCompleted);
