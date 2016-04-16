@@ -608,7 +608,38 @@ public class TournamentSolver {
 	 * por jugador defina el evento si el modo es "todos iguales" o al menos una vez si es "cualquiera"
 	 */
 	private void setConstraintsPredefinedMatchups(Event event) {
+		int e = getEventIndex(event);
 		
+		switch (event.getMatchupMode()) {
+			case ALL_DIFFERENT:
+				for (Set<Player> matchup : predefinedMatchups.get(event)) {
+					// Los posibles enfrentamientos en cada pista
+					IntVar[] possibleMatchups = VariableFactory.boundedArray("PossibleMatchups", nLocalizations[e] * nTimeslots[e], 0, 1, solver);
+					
+					int i = 0;
+					for (int c = 0; c < nLocalizations[e]; c++) {	
+						for (int t = 0; t < nTimeslots[e]; t++) {
+							// Posible enfrentamiento en timeslot_t
+							IntVar[] possibleMatchup = new IntVar[nPlayersPerMatch[e]];
+							int p = 0;
+							for (Player player : matchup)
+								possibleMatchup[p++] = g[e][event.indexOf(player)][c][t];
+							
+							solver.post(IntConstraintFactory.minimum(possibleMatchups[i++], possibleMatchup));
+						}
+					}
+					
+					// Asegura que el enfrentamiento se de una única vez
+					solver.post(IntConstraintFactory.sum(possibleMatchups, VariableFactory.fixed(1, solver)));
+				}
+				break;
+			case ALL_EQUAL:
+				// cada enfrentamiento predefinido debe ocurrir todas las veces
+				break;
+			case ANY:
+				// cada enfrentamiento predefinido debe ocurrir al menos una vez
+				break;
+		}
 	}
 	
 	/**
@@ -632,7 +663,7 @@ public class TournamentSolver {
 			
 			int i = 0;
 			for (int c = 0; c < nLocalizations[e]; c++) {
-				IntVar[] possibleCourtMatchups = VariableFactory.boundedArray("PossibleMatchups", nTimeslots[e], 0, 1, solver);
+				IntVar[] possibleCourtMatchups = VariableFactory.boundedArray("PossibleCourtMatchups", nTimeslots[e], 0, 1, solver);
 				
 				for (int t = 0; t < nTimeslots[e]; t++) {
 					IntVar[] possibleMatchup = new IntVar[nPlayersPerMatch[e]];

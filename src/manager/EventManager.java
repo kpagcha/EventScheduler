@@ -48,12 +48,12 @@ public class EventManager {
 		Event event = new Event("Event", players, courts, timeslots);
 		
 		event.setMatchDuration(2);
-		event.setMatchesPerPlayer(2);
+		event.setMatchesPerPlayer(3);
 		event.setPlayersPerMatch(2);
 		
 		event.setMatchupMode(MatchupMode.ALL_DIFFERENT);
 		
-		event.addFixedMatchup(players[0], players[1]);
+		event.addFixedMatchup(players[0], players[7]);
 		
 		Tournament tournament = new Tournament("Tournament", new Event[]{ event });
 		
