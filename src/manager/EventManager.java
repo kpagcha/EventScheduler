@@ -51,9 +51,15 @@ public class EventManager {
 		event.setMatchesPerPlayer(3);
 		event.setPlayersPerMatch(2);
 		
+		// Probar cada modo de enfrentamiento con equipos
+		// Probar partidos de un jugador
+		
 		event.setMatchupMode(MatchupMode.ALL_DIFFERENT);
 		
-		event.addFixedMatchup(players[0], players[7]);
+		event.addFixedMatchup(players[0], players[1]);
+		event.addFixedMatchup(players[2], players[3]);
+		event.addFixedMatchup(players[4], players[5]);
+		event.addFixedMatchup(players[6], players[7]);
 		
 		Tournament tournament = new Tournament("Tournament", new Event[]{ event });
 		

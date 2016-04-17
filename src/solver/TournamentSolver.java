@@ -541,19 +541,11 @@ public class TournamentSolver {
 			if (event.hasTeams())
 				setConstraintsTeams(event);
 			
-			if (event.getMatchesPerPlayer() > 1 && event.getPlayersPerMatch() > 1)
-				switch (event.getMatchupMode()) {
-					case ALL_DIFFERENT:
-						setConstraintsMatchupsAllDifferent(event);
-						break;
-					case ALL_EQUAL:
-						break;
-					case ANY:
-						break;
-					default:
-						break;
-				}
-				
+			if (event.getMatchesPerPlayer() > 1 && event.getPlayersPerMatch() > 1) {
+				MatchupMode mode = event.getMatchupMode();
+				if (mode == MatchupMode.ALL_DIFFERENT || mode == MatchupMode.ALL_EQUAL)
+					setConstraintsMatchupMode(event);
+			}	
 		}
 		
 		if (!predefinedMatchups.isEmpty())
@@ -609,74 +601,84 @@ public class TournamentSolver {
 	 */
 	private void setConstraintsPredefinedMatchups(Event event) {
 		int e = getEventIndex(event);
+		MatchupMode matchupMode = event.getMatchupMode();
 		
-		switch (event.getMatchupMode()) {
-			case ALL_DIFFERENT:
-				for (Set<Player> matchup : predefinedMatchups.get(event)) {
-					// Los posibles enfrentamientos en cada pista
-					IntVar[] possibleMatchups = VariableFactory.boundedArray("PossibleMatchups", nLocalizations[e] * nTimeslots[e], 0, 1, solver);
+		for (Set<Player> matchup : predefinedMatchups.get(event)) {
+			// Todos los posibles enfrentamientos
+			IntVar[] possibleMatchups = VariableFactory.boundedArray("PossibleMatchups", nLocalizations[e] * nTimeslots[e], 0, 1, solver);
+			
+			int i = 0;
+			for (int c = 0; c < nLocalizations[e]; c++) {	
+				for (int t = 0; t < nTimeslots[e]; t++) {
+					// Posible enfrentamiento en timeslot_t
+					IntVar[] possibleMatchup = new IntVar[nPlayersPerMatch[e]];
+					int p = 0;
+					for (Player player : matchup)
+						possibleMatchup[p++] = g[e][event.indexOf(player)][c][t];
 					
-					int i = 0;
-					for (int c = 0; c < nLocalizations[e]; c++) {	
-						for (int t = 0; t < nTimeslots[e]; t++) {
-							// Posible enfrentamiento en timeslot_t
-							IntVar[] possibleMatchup = new IntVar[nPlayersPerMatch[e]];
-							int p = 0;
-							for (Player player : matchup)
-								possibleMatchup[p++] = g[e][event.indexOf(player)][c][t];
-							
-							solver.post(IntConstraintFactory.minimum(possibleMatchups[i++], possibleMatchup));
-						}
-					}
-					
-					// Asegura que el enfrentamiento se de una única vez
-					solver.post(IntConstraintFactory.sum(possibleMatchups, VariableFactory.fixed(1, solver)));
+					solver.post(IntConstraintFactory.minimum(possibleMatchups[i++], possibleMatchup));
 				}
-				break;
-			case ALL_EQUAL:
-				// cada enfrentamiento predefinido debe ocurrir todas las veces
-				break;
-			case ANY:
-				// cada enfrentamiento predefinido debe ocurrir al menos una vez
-				break;
+			}
+
+			switch (matchupMode) {
+				case ALL_DIFFERENT:
+					solver.post(IntConstraintFactory.sum(possibleMatchups, VariableFactory.fixed(1, solver)));
+					break;
+					
+				case ALL_EQUAL:
+					solver.post(IntConstraintFactory.sum(possibleMatchups, VariableFactory.fixed(nMatchesPerPlayer[e], solver)));
+					break;
+					
+				case ANY:
+					solver.post(IntConstraintFactory.sum(possibleMatchups, VariableFactory.bounded("NMatches", 1, nMatchesPerPlayer[e], solver)));
+					break;
+			}
 		}
 	}
 	
 	/**
-	 * Para categorías con más de un partido por jugador, forzar que los enfrentamientos no se repitan
+	 * Para categorías con más de un partido por jugador, asegura que los enfrentamientos para cada jugador sean los esperados
+	 * según el modo de enfrentamiento que se haya definido sobre el evento. Si el modo es "todos diferentes", se asegurará
+	 * que un mismo partido no ocurre más de una vez. Si el modo es "todos iguales", se asegurará que el mismo enfrentamiento,
+	 * si ocurre, ocurra tantas veces como número de partidos por jugador defina el evento.
 	 */
-	private void setConstraintsMatchupsAllDifferent(Event event) {
+	private void setConstraintsMatchupMode(Event event) {
 		int e = getEventIndex(event);
 		List<List<Integer>> combinations = getCombinations(
-			IntStream.range(0, event.getNumberOfPlayers()).toArray(),
-			nPlayersPerMatch[e]
+				IntStream.range(0, nPlayers[e]).toArray(),
+				nPlayersPerMatch[e]
 		);
 		
-		// Para cada posible enfrentamiento, formar un array de mínimos por cada timeslot. El valor de un elemento
-		// de ese array será 1 si hay un enfrentamiento (un enfrentamiento significa que todos los t de todos los
-		// jugadores del enfrentamiento son 1, luego min[1, 1, ..., 1] = 1), o 0 si no hay un enfrentamiento (donde
-		// min[1, 0, ..., 1, 0] = 0). Para asegurar que no se repite un enfrentamiento y así conseguir que todos sean distintos,
-		// la suma de todos estos mínimos debe ser menor o igual que 1 (en la práctica, será 0 o 1), es decir, que o no se dé
-		// un enfrentamiento de esos jugadores a esa hora, o que se dé uno, pero no más de uno.
+		// Define cuántas veces un partido debe ocurrir dependiendo del modo de emparejamiento. En el modo "todos diferentes"
+		// los enfrentamientos no pueden repetirse, luego el máximo de ocurrencias de un enfrentamiento es 1. Mientras que
+		// en el modo "todos iguales", el número de ocurrencias de un mismo enfrentamiento es el número de partidos por jugador
+		int nMatches = 0;
+		MatchupMode matchupMode = event.getMatchupMode();
+		if (matchupMode == MatchupMode.ALL_DIFFERENT)
+			nMatches = 1;
+		else if (matchupMode == MatchupMode.ALL_EQUAL)
+			nMatches = nMatchesPerPlayer[e];
+		
 		for (List<Integer> combination : combinations) {
+			// Todos los posibles enfrentamientos en cada pista a cada hora
 			IntVar[] possibleMatchups = VariableFactory.boundedArray("PossibleMatchups", nTimeslots[e] * nLocalizations[e], 0, 1, solver);
 			
 			int i = 0;
 			for (int c = 0; c < nLocalizations[e]; c++) {
-				IntVar[] possibleCourtMatchups = VariableFactory.boundedArray("PossibleCourtMatchups", nTimeslots[e], 0, 1, solver);
-				
 				for (int t = 0; t < nTimeslots[e]; t++) {
+					// Posible partido en la pista_c a la hora_t entre los jugadores
 					IntVar[] possibleMatchup = new IntVar[nPlayersPerMatch[e]];
 					for (int p = 0; p < nPlayersPerMatch[e]; p++)
 						possibleMatchup[p] = g[e][combination.get(p)][c][t];
-							
-					solver.post(IntConstraintFactory.minimum(possibleCourtMatchups[t], possibleMatchup));
+					
+					// Cada enfrentamiento será el mínimo entre este enfrentamiento en pista_c a la hora_t. Si hay
+					// enfrentamiento, todos los elementos serán 1 luego el mínimo será 1, indicando enfrentamiento,
+					// mientras que si al menos uno es 0, el mínimo será 0 indicando que no hay enfrentamiento
 					solver.post(IntConstraintFactory.minimum(possibleMatchups[i++], possibleMatchup));
 				}
-				solver.post(IntConstraintFactory.sum(possibleCourtMatchups, "<=", VariableFactory.fixed(1, solver)));
 			}
-			
-			solver.post(IntConstraintFactory.sum(possibleMatchups, "<=", VariableFactory.fixed(1, solver)));
+			// Que el partido o una vez, o el número de veces que deba ocurrir según el modo de emparejamiento
+			solver.post(IntConstraintFactory.sum(possibleMatchups, VariableFactory.enumerated("AllDiff", new int[]{ 0, nMatches }, solver)));
 		}
 	}
 	
