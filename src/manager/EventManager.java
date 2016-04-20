@@ -7,6 +7,7 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -39,29 +40,22 @@ public class EventManager {
 	 * TORNEO 1
 	 */
 	public Tournament getSampleTournament() {
-		Player[] players = buildPlayers(new String[]{
-			"Federer", "Nadal", "Djokovic", "Murray", "Ferrer", "Wawrinka", "Nishikori", "Tsonga"
-		});
-		Localization[] courts = buildGenericLocalizations(2, "Court");
-		Timeslot[] timeslots = buildAbstractTimeslots(13);
+		List<Player> players = buildGenericPlayers(16, "Jug");
+		List<Localization> courts = buildGenericLocalizations(3, "Court");
+		List<Timeslot> timeslots = buildAbstractTimeslots(13);
 		
 		Event event = new Event("Event", players, courts, timeslots);
 		
 		event.setMatchDuration(2);
 		event.setMatchesPerPlayer(3);
-		event.setPlayersPerMatch(2);
-		
-		// Probar cada modo de enfrentamiento con equipos
-		// Probar partidos de un jugador
+		event.setPlayersPerMatch(4);
 		
 		event.setMatchupMode(MatchupMode.ALL_DIFFERENT);
 		
-		event.addFixedMatchup(players[0], players[1]);
-		event.addFixedMatchup(players[2], players[3]);
-		event.addFixedMatchup(players[4], players[5]);
-		event.addFixedMatchup(players[6], players[7]);
+		for (int i = 0; i < players.size(); i += 2)
+			event.addTeam(players.get(i), players.get(i + 1));
 		
-		Tournament tournament = new Tournament("Tournament", new Event[]{ event });
+		Tournament tournament = new Tournament("Tournament", event);
 		
 		return tournament;
 	}
@@ -73,9 +67,9 @@ public class EventManager {
 		int nTimeslots = 12;
 		int startHour = 17;
 		int startMinute = 0;
-		Timeslot[] timeslots = new Timeslot[nTimeslots];
+		List<Timeslot> timeslots = new ArrayList<Timeslot>(nTimeslots);
 		for (int t = 0; t < nTimeslots; t++) {
-			timeslots[t] = new DefiniteTimeslot(LocalTime.of(startHour, startMinute), Duration.ofMinutes(30), 1);
+			timeslots.add(new DefiniteTimeslot(LocalTime.of(startHour, startMinute), Duration.ofMinutes(30), 1));
 			if (t % 2 != 0) {
 				startHour++;
 				startMinute = 0;
@@ -99,36 +93,36 @@ public class EventManager {
 		t11 [1] 22:30 (PT30M)
 		*/
 		
-		Localization[] pistas = buildGenericLocalizations(6, "Pista");
+		List<Localization> pistas = buildGenericLocalizations(6, "Pista");
 		
-		Player[] pVeterano = buildPlayers(new String[]{ 
+		List<Player> pVeterano = buildPlayers(new String[]{ 
 			"FERNANDEZ, M.", "DE MIGUEL, FCO. J", "ROMERO, R.", "FUNKE, C.", "PEREZ, O.", 
 			"ARRIETA, J.", "PARDAL, R.", "PIEDROLA, D.", "CANEDA, M.", "REAL, A.", "DEVOS, L.", 
 			"MAESTRE, D.", "ROMERA, M.", "IGLESIAS, E.", "MORENO, J.A.", "RIVAS, D" }
 		);
 		
-		Player[] pInfantilM = buildPlayers(new String[]{ 
+		List<Player> pInfantilM = buildPlayers(new String[]{ 
 			"DE LA RIVA, P.", "GALLERO, C.", "COLLANTES F.", "ZARZUELA, J.", "ARGUDO, D.",
 			"REAL, A.", "REY, A.", "PLATT, H." }
 		);
 		
-		Player[] pCadeteM = buildPlayers(new String[]{ "VAZQUEZ, A", "PARRADO, R.", "CANEDA, P.", "PERIGNAT, T.",
+		List<Player> pCadeteM = buildPlayers(new String[]{ "VAZQUEZ, A", "PARRADO, R.", "CANEDA, P.", "PERIGNAT, T.",
 			"HERRERA, A.", "PORFIRIO, N.", "TROYA, P.", "GARRIDA, A.M.", "NIEVES, F." }
 		);
 		
-		Player[] pAlevinM = buildPlayers(new String[]{ "VAZQUEZ, I.", "PORTALES, J.A.", "RAMIREZ, S.", 
+		List<Player> pAlevinM = buildPlayers(new String[]{ "VAZQUEZ, I.", "PORTALES, J.A.", "RAMIREZ, S.", 
 			"GALERA, A.", "CASTILLA, J.", "OLIVA, M.", /*"HERRERA, P.",*/ "RIZO, H.", "PARRADO, A.",
 			"BOCANEGRA, J.", "DAVILA, A.", /*"REAL, P.",*/ "BOLOIX, J.", "MIGUEL, A.", "BARBERA, L.", "MORENO, H" });
 		
-		Player[] pAbsoluto = buildPlayers(new String[]{ "CAÑO, M.", "FUNKE, C.", "CASTAING, C.M.", "DIAZ, A.",
+		List<Player> pAbsoluto = buildPlayers(new String[]{ "CAÑO, M.", "FUNKE, C.", "CASTAING, C.M.", "DIAZ, A.",
 			"DIAZ, L.A.", "GARCIA, C.", "ZAPATA", "QUEVEDO" }
 		);
 		
-		Player[] pInfantilF = buildPlayers(new String[]{ "GARCIA, F.", "VILLANUEVA, L." });
+		List<Player> pInfantilF = buildPlayers(new String[]{ "GARCIA, F.", "VILLANUEVA, L." });
 		
-		Player[] pCadeteF = buildPlayers(new String[]{ "REICHERT, A.", "DIANEZ." });
+		List<Player> pCadeteF = buildPlayers(new String[]{ "REICHERT, A.", "DIANEZ." });
 		
-		Player[] pAlevinF = buildPlayers(new String[]{ "VILLANUEVA, L.", "TRIVIÑO, I." });
+		List<Player> pAlevinF = buildPlayers(new String[]{ "VILLANUEVA, L.", "TRIVIÑO, I." });
 		
 		Event veterano = new Event("Veterano", pVeterano, pistas, timeslots);
 		Event infantilM = new Event("Infantil Masculino", pInfantilM, pistas, timeslots);
@@ -176,23 +170,23 @@ public class EventManager {
 		
 		
 		// Pista 1
-		zarlon.addUnavailableLocalization(pistas[0], new ArrayList<Timeslot>(Arrays.asList(
-			timeslots[0], timeslots[1], timeslots[2]))
+		zarlon.addUnavailableLocalization(pistas.get(0), new ArrayList<Timeslot>(Arrays.asList(
+			timeslots.get(0), timeslots.get(1), timeslots.get(2)))
 		);
 		
 		// Pista 2
-		zarlon.addUnavailableLocalization(pistas[1], new ArrayList<Timeslot>(Arrays.asList(
-			timeslots[0], timeslots[1], timeslots[2], timeslots[3], timeslots[4], timeslots[5], timeslots[6]))
+		zarlon.addUnavailableLocalization(pistas.get(1), new ArrayList<Timeslot>(Arrays.asList(
+			timeslots.get(0), timeslots.get(1), timeslots.get(2), timeslots.get(3), timeslots.get(4), timeslots.get(5), timeslots.get(6)))
 		);
 		
 		// Pista 5
-		zarlon.addUnavailableLocalization(pistas[4], new ArrayList<Timeslot>(Arrays.asList(
-			timeslots[6], timeslots[7], timeslots[8], timeslots[9], timeslots[10], timeslots[11]))
+		zarlon.addUnavailableLocalization(pistas.get(4), new ArrayList<Timeslot>(Arrays.asList(
+			timeslots.get(6), timeslots.get(7), timeslots.get(8), timeslots.get(9), timeslots.get(10), timeslots.get(11)))
 		);
 		
 		// Pista 6
-		zarlon.addUnavailableLocalization(pistas[5], new ArrayList<Timeslot>(Arrays.asList(
-			timeslots[0], timeslots[1]))
+		zarlon.addUnavailableLocalization(pistas.get(5), new ArrayList<Timeslot>(Arrays.asList(
+			timeslots.get(0), timeslots.get(1)))
 		);
 		
 		return zarlon;
@@ -205,7 +199,7 @@ public class EventManager {
 	 * * * * * * * * * * * *
 	 */
 	
-	private Player findPlayerByName(String name, Player[] players) {
+	private Player findPlayerByName(String name, List<Player> players) {
 		Player player = null;
 		for (Player p : players)
 			if (StringUtils.containsIgnoreCase(p.getName(), name))
@@ -213,103 +207,70 @@ public class EventManager {
 		return player;
 	}
 	
-	private Player[] buildPlayers(String[] playersArray) {
+	private List<Player> buildPlayers(String[] playersArray) {
 		Player[] players = new Player[playersArray.length];
 		for (int i = 0; i < playersArray.length; i++)
 			players[i] = new Player(playersArray[i]);
-		return players;
+		return new ArrayList<Player>(Arrays.asList(players));
 	}
 	
-	private Player[] buildGenericPlayers(int n, String placeholder) {
+	private List<Player> buildGenericPlayers(int n, String placeholder) {
 		if (placeholder.isEmpty())
 			placeholder = "Player";
-		
 		Player[] players = new Player[n];
 		for (int i = 0; i < n; i++)
 			players[i] = new Player(placeholder + " " + (i + 1));
-		return players;
+		return new ArrayList<Player>(Arrays.asList(players));
 	}
 	
-	private Localization[] buildLocalizations(int[] courtsArray) {
+	private List<Localization> buildLocalizations(int[] courtsArray) {
 		Localization[] localizations = new Localization[courtsArray.length];
 		for (int i = 0; i < courtsArray.length; i++)
 			localizations[i] = new Localization("Court " + (i + 1));
-		return localizations;
+		return new ArrayList<Localization>(Arrays.asList(localizations));
 	}
 	
-	private Localization[] buildGenericLocalizations(int n, String placeholder) {
+	private List<Localization>  buildGenericLocalizations(int n, String placeholder) {
 		if (placeholder.isEmpty())
 			placeholder = "Court";
 		
 		Localization[] localizations = new Localization[n];
 		for (int i = 0; i < n ; i++)
 			localizations[i] = new Localization(placeholder + " " + (i + 1));
-		return localizations;
+		return new ArrayList<Localization>(Arrays.asList(localizations));
 	}
 	
-	private Timeslot[] buildAbstractTimeslots(int nTimeslots) {
+	private List<Timeslot> buildAbstractTimeslots(int nTimeslots) {
 		Timeslot[] timeslots = new Timeslot[nTimeslots];
 		for (int i = 0; i < nTimeslots; i++)
 			timeslots[i] = new AbstractTimeslot(i);
-		return timeslots;
+		return new ArrayList<Timeslot>(Arrays.asList(timeslots));
 	}
 	
-	private Timeslot[] buildDefiniteDayOfWeekTimeslots(int nTimeslots) {
+	private List<Timeslot>  buildDefiniteDayOfWeekTimeslots(int nTimeslots) {
 		Timeslot[] timeslots = new Timeslot[nTimeslots];
 		int order = 0;
 		for (int i = 0; i < nTimeslots; i++) {
 			timeslots[i] = new DefiniteTimeslot(DayOfWeek.of(i % 7 + 1), Duration.ofHours(1), order);
 			if (i % 7 + 1 == 0) order++;
 		}
-		return timeslots;
+		return new ArrayList<Timeslot>(Arrays.asList(timeslots));
 	}
 	
-	private Timeslot[] buildDefiniteLocalTimeTimeslots(int nTimeslots) {
+	private List<Timeslot>  buildDefiniteLocalTimeTimeslots(int nTimeslots) {
 		Timeslot[] timeslots = new Timeslot[nTimeslots];
 		int order = 0;
 		for (int i = 0; i < nTimeslots; i++) {
 			timeslots[i] = new DefiniteTimeslot(LocalTime.of(i % 23, 0), Duration.ofHours(1), order);
 			if (i % 23 == 0) order++;
 		}
-		return timeslots;
+		return new ArrayList<Timeslot>(Arrays.asList(timeslots));
 	}
 	
-	private Timeslot[] buildUndefiniteTimeslots(int nTimeslots) {
+	private List<Timeslot>  buildUndefiniteTimeslots(int nTimeslots) {
 		Timeslot[] timeslots = new Timeslot[nTimeslots];
 		for (int i = 0; i < nTimeslots; i++)
 			timeslots[i] = new UndefiniteTimeslot(Duration.ofHours(1), i);
-		return timeslots;
-	}
-	
-	private Map<Player, List<Timeslot>> buildUnavailability(Event event, int[][] unavailabilityArray) {
-		Player[] players = event.getPlayers();
-		Map<Player, List<Timeslot>> unavailability = new HashMap<Player, List<Timeslot>>(players.length);
-		for (int p = 0; p < unavailabilityArray.length; p++) {
-			if (unavailabilityArray[p].length > 0) {
-				List<Timeslot> playerUnavailability = new ArrayList<Timeslot>(unavailabilityArray[p].length);
-				for (int timeslot : unavailabilityArray[p])
-					playerUnavailability.add(event.getTimeslotAt(timeslot));
-				
-				unavailability.put(players[p], playerUnavailability);
-			}
-		}
-		return unavailability;
-	}
-	
-	@SuppressWarnings("unchecked")
-	private <T> T[] buildRandomSubset(int subsetSize, T[] pool, Class<T> c) {
-		List<T> poolList = new ArrayList<T>(Arrays.asList(pool));
-		
-		T[] subset = (T[]) Array.newInstance(c, subsetSize);
-		Random rand = new Random();
-		
-		for (int i = 0; i < subsetSize; i++) {
-			int randIndex = rand.nextInt(poolList.size());
-			subset[i] = poolList.get(randIndex);
-			
-			poolList.remove(randIndex);
-		}
-		
-		return subset;
+		return new ArrayList<Timeslot>(Arrays.asList(timeslots));
 	}
 }

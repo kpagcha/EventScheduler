@@ -228,7 +228,7 @@ public class ResolutionData {
 			"Solver [%s] features:\n\tVariables: %,d\n\tConstraints: %,d\n\tDefault search strategy: %s\n\tCompleted search strategy: %s\n" +
 			"\tSearch strategy: %s\n",
 			solverName, variables, constraints, isDeafultSearchUsed ? "Yes" : "No", isSearchCompleted ? "Yes" : "No",
-					StringUtils.join(searchStrategies, ", "), tournament.getNumberOfEvents()
+					StringUtils.join(searchStrategies, ", "), tournament.getEvents().size()
 		));
 		
 		if (resolutionProcessCompleted)

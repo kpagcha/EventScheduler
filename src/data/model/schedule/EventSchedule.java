@@ -1,7 +1,6 @@
 package data.model.schedule;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import org.chocosolver.solver.variables.IntVar;
@@ -31,22 +30,22 @@ public class EventSchedule extends Schedule {
 		
 		name = event.getName();
 		
-		players = Arrays.asList(event.getPlayers());
-		localizations = Arrays.asList(event.getLocalizations());
-		timeslots = Arrays.asList(event.getTimeslots());
-		
-		nCourts = event.getNumberOfLocalizations();
-		nPlayers = event.getNumberOfPlayers();
-		nTimeslots = event.getNumberOfTimeslots();
+		players = event.getPlayers();
+		localizations = event.getLocalizations();
+		timeslots = event.getTimeslots();
+
+		nPlayers = players.size();
+		nCourts = localizations.size();
+		nTimeslots = timeslots.size();
 		
 		schedule = new ScheduleValue[nPlayers][nTimeslots];
 		for (int p = 0; p < nPlayers; p++) {
 			for (int t = 0; t < nTimeslots; t++) {
-				Timeslot timeslot = event.getTimeslotAt(t);
+				Timeslot timeslot = event.getTimeslots().get(t);
 				
 				if (event.isBreak(timeslot))
 					schedule[p][t] = new ScheduleValue(ScheduleValue.BREAK);
-				else if (event.isUnavailable(event.getPlayerAt(p), timeslot)) {
+				else if (event.isPlayerUnavailable(event.getPlayers().get(p), timeslot)) {
 					schedule[p][t] = new ScheduleValue(ScheduleValue.UNAVAILABLE);
 				} else {
 					schedule[p][t] = new ScheduleValue(ScheduleValue.FREE);
@@ -62,7 +61,7 @@ public class EventSchedule extends Schedule {
 					
 					if (!matchInCourt) {
 						for (int c = 0; c < nCourts; c++) {
-							if (event.isDiscarded(event.getLocalizationAt(c), timeslot)) {
+							if (event.isLocalizationUnavailable(event.getLocalizations().get(c), timeslot)) {
 								schedule[p][t] = new ScheduleValue(ScheduleValue.LIMITED);
 								break;
 							}
@@ -71,6 +70,10 @@ public class EventSchedule extends Schedule {
 				}
 			}
 		}
+	}
+	
+	public Event getEvent() {
+		return event;
 	}
 	
 	/**
@@ -94,7 +97,7 @@ public class EventSchedule extends Schedule {
 				}
 			}
 		}
-		matches = new ArrayList<Match>((event.getNumberOfPlayers() / event.getPlayersPerMatch()) * event.getMatchesPerPlayer());
+		matches = new ArrayList<Match>((nPlayers / event.getPlayersPerMatch()) * event.getMatchesPerPlayer());
 		
 		int nPlayersPerMatch = event.getPlayersPerMatch();
 		for (int t = 0; t < nTimeslots; t++) {
@@ -125,13 +128,13 @@ public class EventSchedule extends Schedule {
 					if (matchCompleted || nPlayersPerMatch == 1) {
 						List<Player> playersList = new ArrayList<Player>(nPlayersPerMatch);
 						for (int playerIndex : playersBelongingToMatch)
-							playersList.add(event.getPlayerAt(playerIndex));
+							playersList.add(event.getPlayers().get(playerIndex));
 						
 						Match match = new Match(
 							playersList,
-							event.getLocalizationAt(scheduleBeginnings[thisPlayer][t].getLocalization()),
-							event.getTimeslotAt(t),
-							event.getTimeslotAt(t + matchDuration - 1),
+							event.getLocalizations().get(scheduleBeginnings[thisPlayer][t].getLocalization()),
+							event.getTimeslots().get(t),
+							event.getTimeslots().get(t + matchDuration - 1),
 							matchDuration
 						);
 						

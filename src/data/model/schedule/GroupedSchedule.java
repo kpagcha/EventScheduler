@@ -1,10 +1,10 @@
 package data.model.schedule;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import data.model.schedule.data.GroupedScheduleValue;
 import data.model.schedule.data.Match;
@@ -68,15 +68,15 @@ public class GroupedSchedule {
 	 */
 	public GroupedSchedule(Event event, List<Match> matches) {
 		name = event.getName();
-		players = new ArrayList<Player>(Arrays.asList(event.getPlayers()));
-		localizations = new ArrayList<Localization>(Arrays.asList(event.getLocalizations()));
-		timeslots = new ArrayList<Timeslot>(Arrays.asList(event.getTimeslots()));
+		players = event.getPlayers();
+		localizations = event.getLocalizations();
+		timeslots = event.getTimeslots();
 		this.matches = matches;
 		
 		groupedSchedule = new GroupedScheduleValue[localizations.size()][timeslots.size()];
 		
 		List<Timeslot> breaks = event.getBreaks();
-		Map<Localization, List<Timeslot>> unavailableLocalizations = event.getUnavailableLocalizations();
+		Map<Localization, Set<Timeslot>> unavailableLocalizations = event.getUnavailableLocalizations();
 		
 		for (int i = 0; i < localizations.size(); i++)
 			for (int j = 0; j < timeslots.size(); j++)
@@ -87,7 +87,7 @@ public class GroupedSchedule {
 				groupedSchedule[i][timeslots.indexOf(breakTimeslot)] = new GroupedScheduleValue(GroupedScheduleValue.UNAVAILABLE);
 		
 		for (Localization localization : unavailableLocalizations.keySet()) {
-			List<Timeslot> localizationTimeslots = unavailableLocalizations.get(localization);
+			Set<Timeslot> localizationTimeslots = unavailableLocalizations.get(localization);
 			int c = localizations.indexOf(localization);
 			for (Timeslot timeslot : localizationTimeslots)
 				groupedSchedule[c][timeslots.indexOf(timeslot)] = new GroupedScheduleValue(GroupedScheduleValue.UNAVAILABLE);
@@ -128,10 +128,10 @@ public class GroupedSchedule {
 			for (int j = 0; j < nTimeslots; j++)
 				groupedSchedule[i][j] = new GroupedScheduleValue(GroupedScheduleValue.FREE);
 		
-		Event[] events = tournament.getEvents();
+		List<Event> events = tournament.getEvents();
 		
 		Map<Event, List<Timeslot>> breaks = new HashMap<>();
-		Map<Event, Map<Localization, List<Timeslot>>> unavailableLocalizations = new HashMap<>();
+		Map<Event, Map<Localization, Set<Timeslot>>> unavailableLocalizations = new HashMap<>();
 		
 		for (Event event : events) {
 			if (event.hasBreaks()) {
@@ -147,12 +147,12 @@ public class GroupedSchedule {
 			}
 			
 			if (event.hasUnavailableLocalizations()) {
-				Map<Localization, List<Timeslot>> eventUnavailableLocalizations = event.getUnavailableLocalizations();
+				Map<Localization, Set<Timeslot>> eventUnavailableLocalizations = event.getUnavailableLocalizations();
 				
 				// Se marcan las pistas a las horas no disponibles como limitadas
 				for (Localization localization : eventUnavailableLocalizations.keySet()) {
 					int c = localizations.indexOf(localization);
-					List<Timeslot> unavailableLocalizationTimeslots = eventUnavailableLocalizations.get(localization);
+					Set<Timeslot> unavailableLocalizationTimeslots = eventUnavailableLocalizations.get(localization);
 					
 					for (Timeslot timeslot : unavailableLocalizationTimeslots)
 						groupedSchedule[c][timeslots.indexOf(timeslot)] = new GroupedScheduleValue(GroupedScheduleValue.LIMITED);
@@ -170,7 +170,7 @@ public class GroupedSchedule {
 				
 				// Si todas las categorías tienen un break a la hora_t, se marca como no disponible
 				for (Event event : events) {
-					if (!event.containsLocalization(localization) || !event.containsTimeslot(timeslot) || !breaks.containsKey(event) ||
+					if (!event.getLocalizations().contains(localization) || !event.getTimeslots().contains(timeslot) || !breaks.containsKey(event) ||
 						!breaks.get(event).contains(timeslot)) {
 						all = false;
 						break;
@@ -184,11 +184,11 @@ public class GroupedSchedule {
 		// Si todos los eventos tienen la pista no disponible a la misma hora se marca como no disponible
 		for (Event e1 : events) {
 			if (unavailableLocalizations.containsKey(e1)) {
-				Map<Localization, List<Timeslot>> e1UnavailableLocalizations = unavailableLocalizations.get(e1);
+				Map<Localization, Set<Timeslot>> e1UnavailableLocalizations = unavailableLocalizations.get(e1);
 				
 				for (Localization e1Localization : e1UnavailableLocalizations.keySet()) {
 					int c = localizations.indexOf(e1Localization);
-					List<Timeslot> e1UnavailableTimeslots = e1UnavailableLocalizations.get(e1Localization);
+					Set<Timeslot> e1UnavailableTimeslots = e1UnavailableLocalizations.get(e1Localization);
 					
 					for (Timeslot e1Timeslot : e1UnavailableTimeslots) {
 						boolean all = true;
@@ -196,7 +196,7 @@ public class GroupedSchedule {
 						
 						for (Event e2 : events) {
 							if (!e2.equals(e1) && unavailableLocalizations.containsKey(e2)) {
-								if (!e2.containsLocalization(e1Localization) || ! e2.containsTimeslot(e1Timeslot))
+								if (!e2.getLocalizations().contains(e1Localization) || ! e2.getPlayersAtTimeslots().containsKey(e1Timeslot))
 									continue;
 								
 								if (!(unavailableLocalizations.get(e2).containsKey(e1Localization) && 

@@ -26,7 +26,7 @@ public class CombinedSchedule extends Schedule {
 	public CombinedSchedule(Tournament tournament) {
 		this.tournament = tournament;
 		
-		EventSchedule[] schedules = tournament.getSchedules();
+		List<EventSchedule> schedules = tournament.getSchedules();
 		
 		if (schedules == null)
 			throw new IllegalStateException("Tournament schedule not calculated yet.");
@@ -47,18 +47,18 @@ public class CombinedSchedule extends Schedule {
 			for (int t = 0; t < nTimeslots; t++)
 				schedule[p][t] = new ScheduleValue(ScheduleValue.NOT_IN_DOMAIN);
 		
-		Event[] events = tournament.getEvents();
-		
-		for (int s = 0; s < schedules.length; s++) {
-			ScheduleValue[][] eventSchedule = schedules[s].getSchedule();
+		for (int s = 0; s < schedules.size(); s++) {
+			ScheduleValue[][] eventSchedule = schedules.get(s).getSchedule();
 			
-			int nPlayers = events[s].getNumberOfPlayers();
-			int nTimeslots = events[s].getNumberOfTimeslots();
+			Event event = schedules.get(s).getEvent();
+			
+			int nPlayers = event.getPlayers().size();
+			int nTimeslots = event.getTimeslots().size();
 			
 			for (int p = 0; p < nPlayers; p++) {
 				for (int t = 0; t < nTimeslots; t++) {
-					Player player = events[s].getPlayerAt(p);
-					Timeslot timeslot = events[s].getTimeslotAt(t);
+					Player player = event.getPlayers().get(p);
+					Timeslot timeslot = event.getTimeslots().get(t);
 					
 					int playerIndex = players.indexOf(player);
 					int timeslotIndex = timeslots.indexOf(timeslot);
@@ -79,13 +79,11 @@ public class CombinedSchedule extends Schedule {
 	/**
 	 * Construye los partidos a partir del horario combinado
 	 */
-	public void calculateMatches() {
-		EventSchedule[] eventSchedules = tournament.getSchedules();
-		
+	public void calculateMatches() {	
 		matches = new ArrayList<Match>(tournament.getNumberOfMatches());
-		for (int i = 0; i < eventSchedules.length; i++) {
-			eventSchedules[i].calculateMatches();
-			List<Match> eventMatches = eventSchedules[i].getMatches();
+		for (EventSchedule schedule : tournament.getSchedules()) {
+			schedule.calculateMatches();
+			List<Match> eventMatches = schedule.getMatches();
 			
 			for (Match match : eventMatches)
 				matches.add(match);

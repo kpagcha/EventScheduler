@@ -5,18 +5,15 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Scanner;
 import java.util.Set;
 
 import data.model.schedule.CombinedSchedule;
 import data.model.schedule.EventSchedule;
-import data.model.schedule.GroupedSchedule;
 import data.model.schedule.data.Match;
 import data.model.tournament.event.Event;
 import data.model.tournament.event.entity.Localization;
 import data.model.tournament.event.entity.Player;
 import data.model.tournament.event.entity.timeslot.Timeslot;
-import manager.EventManager;
 import solver.TournamentSolver;
 
 public class Tournament {
@@ -28,12 +25,27 @@ public class Tournament {
 	/**
 	 * Categorías que componen el torneo 
 	 */
-	private Event[] events;
+	private List<Event> events;
+	
+	/**
+	 * Todos los jugadores que participan en el torneo. No se repiten los presentes en múltiples categorías
+	 */
+	private List<Player> allPlayers;
+	
+	/**
+	 * Todos los terrenos de juego en los que se desarrolla en el torneo. No se repiten los presentes en múltiples categorías
+	 */
+	private List<Localization> allLocalizations;
+	
+	/**
+	 * Todos los timeslots en los que discurre el torneo. No se repiten los presentes en múltiples categorías
+	 */
+	private List<Timeslot> allTimeslots;
 
 	/**
 	 * Horarios para cada categoría
 	 */
-	private EventSchedule[] currentSchedules = null;
+	private List<EventSchedule> currentSchedules;
 	
 	/**
 	 * Horario del torneo que combina los horarios de todas las categorías en uno solo
@@ -46,18 +58,48 @@ public class Tournament {
 	private TournamentSolver solver;
 	
 	/**
+	 * Construye del torneo
+	 * 
 	 * @param name       nombre del torneo
 	 * @param categories categorías que componen el torneo
 	 */
-	public Tournament(String name, Event[] categories) {
+	public Tournament(String name, List<Event> categories) {
 		this.name = name;
 		events = categories;
+		
+		allPlayers = new ArrayList<Player>();
+		for (Event event : events)
+			for (Player player : event.getPlayers())
+				if (!allPlayers.contains(player))
+					allPlayers.add(player);
+		
+
+		allTimeslots = new ArrayList<Timeslot>();
+		for (Event event : events)
+			for (Timeslot timeslot : event.getTimeslots())
+				if (!allTimeslots.contains(timeslot))
+					allTimeslots.add(timeslot);
+		
+		allLocalizations = new ArrayList<Localization>();
+		for (Event event : events)
+			for (Localization localization : event.getLocalizations())
+				if (!allLocalizations.contains(localization))
+					allLocalizations.add(localization);
 		
 		solver = new TournamentSolver(this);
 	}
 	
 	/**
-	 * Comienza el proceso de resolución para calcular el horario
+	 * Construye un torneo
+	 * @param name       nombre
+	 * @param categories categorías que componen el torneo
+	 */
+	public Tournament(String name, Event... categories) {
+		this(name, new ArrayList<Event>(Arrays.asList(categories)));
+	}
+	
+	/**
+	 * Comienza el proceso de resolución para calcular un primer horario
 	 * 
 	 * @return true si se ha encontrado una solución, false si ocurre lo contrario
 	 */
@@ -78,72 +120,20 @@ public class Tournament {
 		return name;
 	}
 	
-	public Event[] getEvents() {
+	public List<Event> getEvents() {
 		return events;
 	}
 	
-	/**
-	 * @return número de categorías
-	 */
-	public int getNumberOfEvents() {
-		return events.length;
-	}
-	
-	/**
-	 * Devuelve todos los jugadores que componen las distintas categorías del torneo, teniendo en cuenta
-	 * a los jugadores que juegan en distintas categorías a la vez
-	 * 
-	 * @return lista de jugadores del torneo
-	 */
 	public List<Player> getAllPlayers() {
-		List<Player> players = new ArrayList<Player>();
-		
-		for (Event event : events) {
-			Player[] eventPlayers = event.getPlayers();
-			for (Player player : eventPlayers)
-				if (!players.contains(player))
-					players.add(player);
-		}
-		
-		return players;
+		return allPlayers;
 	}
-	
-	/**
-	 * Devuelve todos los timeslots que componen las distintas categorías del torneo, teniendo en cuenta
-	 * los timeslots compartidos por distintas categorías
-	 * 
-	 * @return lista de timeslots del torneo
-	 */
+
 	public List<Timeslot> getAllTimeslots() {
-		List<Timeslot> timeslots = new ArrayList<Timeslot>();
-		
-		for (Event event : events) {
-			Timeslot[] eventTimeslots = event.getTimeslots();
-			for (Timeslot timeslot : eventTimeslots)
-				if (!timeslots.contains(timeslot))
-					timeslots.add(timeslot);
-		}
-		
-		return timeslots;
+		return allTimeslots;
 	}
 	
-	/**
-	 * Devuelve todas las localizaciones de juegos que componen las distintas categorías del torneo,
-	 * teniendo en cuenta aquéllas compartidas distintas categorías
-	 * 
-	 * @return lista de localizaciones de juego del torneo
-	 */
 	public List<Localization> getAllLocalizations() {
-		List<Localization> localizations = new ArrayList<Localization>();
-		
-		for (Event event : events) {
-			Localization[] eventLocalizations = event.getLocalizations();
-			for (Localization localization : eventLocalizations)
-				if (!localizations.contains(localization))
-					localizations.add(localization);
-		}
-		
-		return localizations;
+		return allLocalizations;
 	}
 	
 	/**
@@ -187,7 +177,7 @@ public class Tournament {
 	 * 
 	 * @return los horarios de cada categoría
 	 */
-	public EventSchedule[] getSchedules() {
+	public List<EventSchedule> getSchedules() {
 		return currentSchedules;
 	}
 	
@@ -209,10 +199,10 @@ public class Tournament {
 	 * @param player
 	 * @param timeslots
 	 */
-	public void addPlayerUnavailableTimeslots(Player player, List<Timeslot> timeslots) {	
+	public void addPlayerUnavailableTimeslots(Player player, Set<Timeslot> timeslots) {	
 		for (Event event : events)
-			if (event.containsPlayer(player))
-				event.addPlayerUnavailableTimeslots(player, timeslots);
+			if (event.getPlayers().contains(player))
+				event.addUnavailablePlayer(player, timeslots);
 	}
 	
 	/**
@@ -223,8 +213,8 @@ public class Tournament {
 	 */
 	public void addPlayerUnavailableTimeslot(Player player, Timeslot timeslot) {
 		for (Event event : events)
-			if (event.containsPlayer(player))
-				event.addPlayerUnavailableTimeslot(player, timeslot);
+			if (event.getPlayers().contains(player))
+				event.addUnavailablePlayer(player, timeslot);
 	}
 	
 	/**
@@ -236,7 +226,7 @@ public class Tournament {
 	 */
 	public void removePlayerUnavailableTimeslot(Player player, Timeslot timeslot) {
 		for (Event event : events)
-			if (event.containsPlayer(player))
+			if (event.getPlayers().contains(player))
 				event.removePlayerUnavailableTimeslot(player, timeslot);
 	}
 	
@@ -248,7 +238,7 @@ public class Tournament {
 	public void addBreaks(List<Timeslot> timeslotBreaks) {
 		for (Timeslot timeslot : timeslotBreaks)
 			for (Event event : events)
-				if (event.containsTimeslot(timeslot) && !event.isBreak(timeslot))
+				if (event.getTimeslots().contains(timeslot) && !event.isBreak(timeslot))
 					event.addBreak(timeslot);
 	}
 	
@@ -259,7 +249,7 @@ public class Tournament {
 	 */
 	public void addBreak(Timeslot timeslotBreak) {
 		for (Event event : events)
-			if (event.containsTimeslot(timeslotBreak))
+			if (event.getTimeslots().contains(timeslotBreak))
 				event.addBreak(timeslotBreak);
 	}
 	
@@ -284,10 +274,10 @@ public class Tournament {
 		Set<Localization> localizations = unavailableLocalizations.keySet();	
 		for (Event event : events)
 			for (Localization localization : localizations)
-				if (event.containsLocalization(localization)) {
+				if (event.getLocalizations().contains(localization)) {
 					List<Timeslot> timeslots = unavailableLocalizations.get(localization);
 					for (Timeslot timeslot : timeslots)
-						if (event.containsTimeslot(timeslot))
+						if (event.getTimeslots().contains(timeslot))
 							event.addUnavailableLocalization(localization, timeslot);
 				}
 	}
@@ -301,7 +291,7 @@ public class Tournament {
 	 */
 	public void addUnavailableLocalization(Localization localization, Timeslot timeslot) {
 		for (Event event : events)
-			if (event.containsLocalization(localization) && event.containsTimeslot(timeslot))
+			if (event.getLocalizations().contains(localization) && event.getTimeslots().contains(timeslot))
 				event.addUnavailableLocalization(localization, timeslot);
 	}
 	
@@ -314,7 +304,7 @@ public class Tournament {
 	public void addUnavailableLocalization(Localization localization, List<Timeslot> timeslots) {
 		for (Event event : events)
 			for (Timeslot timeslot : timeslots)
-				if (event.containsLocalization(localization) && event.containsTimeslot(timeslot))
+				if (event.getLocalizations().contains(localization) && event.getTimeslots().contains(timeslot))
 					event.addUnavailableLocalization(localization, timeslot);
 	}
 	
@@ -325,7 +315,7 @@ public class Tournament {
 	 */
 	public void removeUnavailableLocalization(Localization localization) {
 		for (Event event : events)
-			if (event.containsLocalization(localization))
+			if (event.getLocalizations().contains(localization))
 				event.removeUnavailableLocalization(localization);
 	}
 	
@@ -336,7 +326,7 @@ public class Tournament {
 	 */
 	public void removeUnavailableLocalizationTimeslot(Localization localization, Timeslot timeslot) {
 		for (Event event : events)
-			if (event.containsLocalization(localization) && event.containsTimeslot(timeslot))
+			if (event.getLocalizations().contains(localization) && event.getTimeslots().contains(timeslot))
 				event.removeUnavailableLocalizationTimeslot(localization, timeslot);
 	}
 	
@@ -351,15 +341,13 @@ public class Tournament {
 		if (currentSchedules == null)
 			sb.append("Empty schedule.\n");
 		else {
-			for (int i = 0; i < currentSchedules.length; i++) {
-				EventSchedule schedule = currentSchedules[i];
-				
+			for (EventSchedule schedule : currentSchedules) {
 				sb.append(schedule.toString());
 				
 				sb.append("\n");
 				
 				if (schedule != null && printMatches) {
-					sb.append(String.format("Match duration: %d timelots\n", events[i].getMatchDuration()));
+					sb.append(String.format("Match duration: %d timelots\n", schedule.getEvent().getMatchDuration()));
 					
 					schedule.calculateMatches();
 					List<Match> matches = schedule.getMatches();
@@ -397,135 +385,5 @@ public class Tournament {
 	
 	public String toString() {
 		return name;
-	}
-	
-	public boolean hasFinished = false;
-	
-	public static void main(String[] args) {
-		Scanner sc = new Scanner(System.in);
-	
-		System.out.println("0 Zarlon");
-		System.out.println("1 Tournament");
-		System.out.print("Choose tournament: ");
-		int tournamentOption = sc.nextInt();
-		
-		Tournament t = null;
-		switch (tournamentOption) {
-			case 0:
-				t = EventManager.getInstance().getZarlonTournament();
-				break;
-			case 1:
-				t = EventManager.getInstance().getSampleTournament();
-				break;
-			default:
-				t = EventManager.getInstance().getSampleTournament();
-				break;
-		}
-		
-		System.out.println("\n1 domOverWDeg");
-		System.out.println("2 minDom_UB");
-		System.out.println("3 minDom_LB");
-		System.out.print("Choose Search Strategy: ");
-		int searchStrategyOption = sc.nextInt();
-
-		t.getSolver().setSearchStrategy(searchStrategyOption);
-		
-		
-		final Tournament tournament = t;
-		
-		boolean printSolutions = true;
-		boolean printMatches = true;
-		boolean askForInput = false;
-		boolean printMatchesByPlayer = false;
-		int maxSolutions = 1; // 0 -> todas las soluciones
-		int foundSolutions = 0;
-		
-		/*Thread thread = new Thread(new Runnable() {
-			@Override
-			public void run() {
-				System.out.print("Stop resolution process? (Y/N): ");
-				String answer = sc.next();
-				if (answer.equalsIgnoreCase("y")) {
-					tournament.getSolver().stopResolutionProcess();
-				}
-			}
-		});
-		try {
-			thread.start();
-			thread.join();
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}*/
-		
-		boolean solutionFound = tournament.solve();
-		
-		if (solutionFound) {
-			do {
-				if (printSolutions) {
-					System.out.println("-------------------------------------------------------");
-					System.out.println(tournament + "\n");
-					tournament.printCurrentSchedules(printMatches);
-					
-					if (tournament.getSchedules() != null) {
-						CombinedSchedule combinedSchedule = tournament.getSchedule();
-					
-						System.out.println("All schedules combined in one");
-						System.out.println(combinedSchedule);
-						
-						combinedSchedule.calculateMatches();
-						
-						if (printMatches) {
-							List<Match> matches = combinedSchedule.getMatches();
-							System.out.println("All matches (" + matches.size() + ")");
-							for (Match match : matches)
-								System.out.println(match);
-							System.out.println();
-						}
-						
-						GroupedSchedule groupedSchedule = new GroupedSchedule(tournament, tournament.getSchedule().getMatches());
-						System.out.println("Combined schedule grouped by courts");
-						System.out.println(groupedSchedule);
-						
-						int occupation = groupedSchedule.getOccupation();
-						int availableTimeslots = groupedSchedule.getAvailableTimeslots();
-						System.out.println(
-							String.format("Timeslot (%s) occupation: %s/%s (%s %%)\n",
-								groupedSchedule.getTotalTimeslots(),
-								occupation,
-								availableTimeslots,
-								(occupation / (double)availableTimeslots) * 100
-							)
-						);
-						
-						if (printMatchesByPlayer) {
-							for (Player player : tournament.getAllPlayers()) {
-								System.out.println(player + " matches:");
-								for (Match match : combinedSchedule.getMatchesByPlayer(player))
-									System.out.println(match);
-								System.out.println();
-							}
-						}
-					}
-				}
-				
-				if (solutionFound)
-					foundSolutions++;
-				
-				if (askForInput) {
-					System.out.print("Show next solution (y/n)?: ");
-					String input = sc.next();
-					if (!input.equalsIgnoreCase("y"))
-						break;
-				}
-				
-				if (maxSolutions > 0 && foundSolutions >= maxSolutions)
-					break;
-			
-			} while (tournament.nextSchedules());
-		}
-		
-		sc.close();
-		
-		System.out.println("\n" + foundSolutions + " solutions found.");
 	}
 }
