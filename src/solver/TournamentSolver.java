@@ -1,22 +1,20 @@
 package solver;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import org.chocosolver.solver.Solver;
-import org.chocosolver.solver.constraints.IntConstraintFactory;
+import org.chocosolver.solver.constraints.Constraint;
 import org.chocosolver.solver.search.loop.monitors.SearchMonitorFactory;
 import org.chocosolver.solver.search.strategy.IntStrategyFactory;
 import org.chocosolver.solver.search.strategy.strategy.AbstractStrategy;
 import org.chocosolver.solver.trace.Chatterbox;
-import org.chocosolver.solver.variables.BoolVar;
 import org.chocosolver.solver.variables.IntVar;
 import org.chocosolver.solver.variables.VariableFactory;
 import org.chocosolver.util.ESat;
@@ -27,8 +25,18 @@ import data.model.tournament.Tournament;
 import data.model.tournament.event.Event;
 import data.model.tournament.event.entity.Localization;
 import data.model.tournament.event.entity.Player;
-import data.model.tournament.event.entity.Team;
 import data.model.tournament.event.entity.timeslot.Timeslot;
+import solver.constraint.ConstraintBuilder;
+import solver.constraint.LocalizationCollisionConstraint;
+import solver.constraint.LocalizationOccupationConstraint;
+import solver.constraint.MatchMappingConstraint;
+import solver.constraint.MatchStartMappingConstraint;
+import solver.constraint.MatchesPerPlayerConstraint;
+import solver.constraint.MatchupModeConstraint;
+import solver.constraint.PlayerNotSimultaneousConstraint;
+import solver.constraint.PredefinedMatchupsConstraint;
+import solver.constraint.TeamsConstraint;
+import solver.constraint.TotalMatchesConstraint;
 
 /**
  * Solucionador del problema que lo modela y resuelve, calculando los horarios de un torneo
@@ -60,6 +68,11 @@ public class TournamentSolver {
 	 * Solver de Choco que modela y resuelve el problema
 	 */
 	private Solver solver;
+	
+	/**
+	 * Restricciones del problema
+	 */
+	private List<Constraint> constraints = new ArrayList<Constraint>();
 	
 	/**
 	 * Torneo para el que se calcula el horario
@@ -215,13 +228,13 @@ public class TournamentSolver {
 	 */
 	public TournamentSolver(Tournament tournament) {
 		this.tournament = tournament;
-		init();
+		initialize();
 	}
 	
 	/**
 	 * Inicializa el solver
 	 */
-	private void init() {
+	private void initialize() {
 		List<Event> eventList = tournament.getEvents();
 		events = eventList.toArray(new Event[eventList.size()]);
 		
@@ -317,6 +330,43 @@ public class TournamentSolver {
 		}
 	}
 	
+	public Solver getSolver() {
+		return solver;
+	}
+	
+	public Tournament getTournament() {
+		return tournament;
+	}
+	
+	public IntVar[][][][] getMatchesModel() {
+		return x;
+	}
+	
+	public IntVar[][][][] getMatchesBeginningsModel() {
+		return g;
+	}
+	
+	/**
+	 * Devuelve el diccionario de emparejamientos predefinidos envuelto en un wrapper no modificable
+	 * 
+	 * @return diccionario no modificable de emparejamientos predefinidos
+	 */
+	public Map<Event, List<Set<Player>>> getPredefinedMatchups() {
+		return Collections.unmodifiableMap(predefinedMatchups);
+	}
+	
+	public int[][] getPlayersIndices() {
+		return playersIndices;
+	}
+	
+	public int[][] getLocalizationsIndices() {
+		return courtsIndices;
+	}
+	
+	public int[][] getTimeslotsIndices() {
+		return timeslotsIndices;
+	}
+	
 	public void setSearchStrategy(int option) {
 		searchStrategyOption = option;
 	}
@@ -364,11 +414,11 @@ public class TournamentSolver {
 	 * Inicializa las variables del modelo del problema
 	 */
 	private void buildModel() {
-		init();
+		initialize();
 		
-		initMatrices();
+		initializeMatrices();
 		
-		markDiscardedLocalizations();
+		markUnavailableLocalizations();
 		
 		if (!playersInLocalizations.isEmpty())
 			markPlayersNotInLocalizations();
@@ -378,13 +428,14 @@ public class TournamentSolver {
 		
 		markBreaks();
 		
-		initConstraints();
+		setupConstraints();
+		postAllConstraints();
 	}
 	
 	/**
-	 * Inicializa las matrices IntVar del problema, teniendo en cuenta la indisponibilidad de los jugadores
+	 * Inicializa las matrices IntVar del problema, teniendo en cuenta la indisponibilidad de los jugadores a ciertas horas
 	 */
-	private void initMatrices() {
+	private void initializeMatrices() {
 		for (int e = 0; e < events.length; e++) {
 			x[e] = new IntVar[nPlayers[e]][nLocalizations[e]][nTimeslots[e]];
 			g[e] = new IntVar[nPlayers[e]][nLocalizations[e]][nTimeslots[e]];
@@ -426,7 +477,7 @@ public class TournamentSolver {
 	/**
 	 * Marca las localizaciones descartadas en las matrices del problema
 	 */
-	private void markDiscardedLocalizations() {
+	private void markUnavailableLocalizations() {
 		// Marcar las localizaciones descartadas con 0
 		for (int e = 0; e < nCategories; e++) {
 			Map<Localization, Set<Timeslot>> discardedLocalizations = events[e].getUnavailableLocalizations();
@@ -537,451 +588,66 @@ public class TournamentSolver {
 	/**
 	 * Construye todas las restricciones del problema 
 	 */
-	private void initConstraints() {
+	private void setupConstraints() {
+		ConstraintBuilder builder = null;
+		
 		for (Event event : events) {
-			if (event.hasTeams())
-				setConstraintsTeams(event);
+			// Restricciones de equipos
+			if (event.hasTeams()) {
+				builder = new ConstraintBuilder(new TeamsConstraint(event, tournament));
+				constraints.addAll(builder.getConstraints());
+			}
 			
+			// Restricciones de modo de enfrentamiento
 			if (event.getMatchesPerPlayer() > 1 && event.getPlayersPerMatch() > 1) {
 				MatchupMode mode = event.getMatchupMode();
-				if (mode == MatchupMode.ALL_DIFFERENT || mode == MatchupMode.ALL_EQUAL)
-					setConstraintsMatchupMode(event);
-			}	
-		}
-		
-		if (!predefinedMatchups.isEmpty())
-			for (Event event : events)
-				if (predefinedMatchups.containsKey(event))
-					setConstraintsPredefinedMatchups(event);
-		
-		setConstraintsMatchesSum();
-		
-		setConstraintsMatchesPerPlayer();
-		
-		setConstraintsMapMatchesBeginnings();
-		
-		setConstraintsMapMatches();
-		
-		for (Event event : events)
-			setConstraintsPlayersInCourts(event);
-		
-		if (events.length > 1)
-			setConstraintsCourtsCollisions();
-		
-		setConstraintsPlayersNotSimultaneous();
-	}
-	
-	/**
-	 * Asegura que los jugadores que componen un equipo jueguen en el mismo partido
-	 */
-	private void setConstraintsTeams(Event event) {
-		List<Team> teams = event.getTeams();
-		int e = getEventIndex(event);
-		
-		for (Team team : teams) {
-			Set<Player> playersInTeam = team.getPlayers();
-			int nPlayersInTeam = playersInTeam.size();
+				if (mode == MatchupMode.ALL_DIFFERENT || mode == MatchupMode.ALL_EQUAL) {
+					builder = new ConstraintBuilder(new MatchupModeConstraint(event, tournament));
+					constraints.addAll(builder.getConstraints());
+				}
+			}
 			
-			int[] pIndex = new int[nPlayersInTeam];
-			int i = 0;
-			for (Player player : playersInTeam)
-				pIndex[i++] = event.getPlayers().indexOf(player);
+			// Restricciones de suma de partidos
+			builder = new ConstraintBuilder(new TotalMatchesConstraint(event, tournament));
+			constraints.addAll(builder.getConstraints());
 			
-			for (int c = 0; c < nLocalizations[e]; c++)
-				for (int t = 0; t < nTimeslots[e]; t++)
-					for (int p = 0; p < nPlayersInTeam - 1; p++)
-						solver.post(IntConstraintFactory.arithm(x[e][pIndex[p]][c][t], "=", x[e][pIndex[p + 1]][c][t]));
-		}
-	
-	}
-	
-	/**
-	 * Aplica las restricciones que aseguran que los partidos predefinidos tendrán lugar. Según el modo de juego, cada
-	 * enfrentamiento tendrá lugar una sola vez si el modo es "todos diferentes", tantas veces como número de partidos
-	 * por jugador defina el evento si el modo es "todos iguales" o al menos una vez si es "cualquiera"
-	 */
-	private void setConstraintsPredefinedMatchups(Event event) {
-		int e = getEventIndex(event);
-		MatchupMode matchupMode = event.getMatchupMode();
-		
-		for (Set<Player> matchup : predefinedMatchups.get(event)) {
-			// Todos los posibles enfrentamientos
-			IntVar[] possibleMatchups = VariableFactory.boundedArray("PossibleMatchups", nLocalizations[e] * nTimeslots[e], 0, 1, solver);
+			// Restricciones de emparejamientos predefinidos
+			if (!predefinedMatchups.isEmpty() && predefinedMatchups.containsKey(event)) {
+				builder = new ConstraintBuilder(new PredefinedMatchupsConstraint(event, tournament));
+				constraints.addAll(builder.getConstraints());
+			}
 			
-			int i = 0;
-			for (int c = 0; c < nLocalizations[e]; c++) {	
-				for (int t = 0; t < nTimeslots[e]; t++) {
-					// Posible enfrentamiento en timeslot_t
-					IntVar[] possibleMatchup = new IntVar[nPlayersPerMatch[e]];
-					int p = 0;
-					for (Player player : matchup)
-						possibleMatchup[p++] = g[e][event.getPlayers().indexOf(player)][c][t];
-					
-					solver.post(IntConstraintFactory.minimum(possibleMatchups[i++], possibleMatchup));
-				}
-			}
-
-			switch (matchupMode) {
-				case ALL_DIFFERENT:
-					solver.post(IntConstraintFactory.sum(possibleMatchups, VariableFactory.fixed(1, solver)));
-					break;
-					
-				case ALL_EQUAL:
-					solver.post(IntConstraintFactory.sum(possibleMatchups, VariableFactory.fixed(nMatchesPerPlayer[e], solver)));
-					break;
-					
-				case ANY:
-					solver.post(IntConstraintFactory.sum(possibleMatchups, VariableFactory.bounded("NMatches", 1, nMatchesPerPlayer[e], solver)));
-					break;
-			}
-		}
-	}
-	
-	/**
-	 * Para categorías con más de un partido por jugador, asegura que los enfrentamientos para cada jugador sean los esperados
-	 * según el modo de enfrentamiento que se haya definido sobre el evento. Si el modo es "todos diferentes", se asegurará
-	 * que un mismo partido no ocurre más de una vez. Si el modo es "todos iguales", se asegurará que el mismo enfrentamiento,
-	 * si ocurre, ocurra tantas veces como número de partidos por jugador defina el evento.
-	 */
-	private void setConstraintsMatchupMode(Event event) {
-		int e = getEventIndex(event);
-		List<List<Integer>> combinations = getCombinations(
-				IntStream.range(0, nPlayers[e]).toArray(),
-				nPlayersPerMatch[e]
-		);
-		
-		// Define cuántas veces un partido debe ocurrir dependiendo del modo de emparejamiento. En el modo "todos diferentes"
-		// los enfrentamientos no pueden repetirse, luego el máximo de ocurrencias de un enfrentamiento es 1. Mientras que
-		// en el modo "todos iguales", el número de ocurrencias de un mismo enfrentamiento es el número de partidos por jugador
-		int nMatches = 0;
-		MatchupMode matchupMode = event.getMatchupMode();
-		if (matchupMode == MatchupMode.ALL_DIFFERENT)
-			nMatches = 1;
-		else if (matchupMode == MatchupMode.ALL_EQUAL)
-			nMatches = nMatchesPerPlayer[e];
-		
-		for (List<Integer> combination : combinations) {
-			// Todos los posibles enfrentamientos en cada pista a cada hora
-			IntVar[] possibleMatchups = VariableFactory.boundedArray("PossibleMatchups", nTimeslots[e] * nLocalizations[e], 0, 1, solver);
+			// Restricciones de número de partidos por jugador
+			builder = new ConstraintBuilder(new MatchesPerPlayerConstraint(event, tournament));
+			constraints.addAll(builder.getConstraints());
 			
-			int i = 0;
-			for (int c = 0; c < nLocalizations[e]; c++) {
-				for (int t = 0; t < nTimeslots[e]; t++) {
-					// Posible partido en la pista_c a la hora_t entre los jugadores
-					IntVar[] possibleMatchup = new IntVar[nPlayersPerMatch[e]];
-					for (int p = 0; p < nPlayersPerMatch[e]; p++)
-						possibleMatchup[p] = g[e][combination.get(p)][c][t];
-					
-					// Cada enfrentamiento será el mínimo entre este enfrentamiento en pista_c a la hora_t. Si hay
-					// enfrentamiento, todos los elementos serán 1 luego el mínimo será 1, indicando enfrentamiento,
-					// mientras que si al menos uno es 0, el mínimo será 0 indicando que no hay enfrentamiento
-					solver.post(IntConstraintFactory.minimum(possibleMatchups[i++], possibleMatchup));
-				}
-			}
-			// Que el partido o una vez, o el número de veces que deba ocurrir según el modo de emparejamiento
-			solver.post(IntConstraintFactory.sum(possibleMatchups, VariableFactory.enumerated("AllDiff", new int[]{ 0, nMatches }, solver)));
+			// Restricciones de número de jugadores en la misma pista
+			builder = new ConstraintBuilder(new LocalizationOccupationConstraint(event, tournament));
+			constraints.addAll(builder.getConstraints());
 		}
+		
+		// Restricciones que mapean los comienzos de los partidos
+		builder = new ConstraintBuilder(new MatchStartMappingConstraint(tournament));
+		constraints.addAll(builder.getConstraints());
+		
+		// Restricciones que mapean los partidos
+		builder = new ConstraintBuilder(new MatchMappingConstraint(tournament));
+		constraints.addAll(builder.getConstraints());
+		
+		// Restricciones de jugadores de distintas categorías en la misma pista
+		builder = new ConstraintBuilder(new LocalizationCollisionConstraint(tournament));
+		constraints.addAll(builder.getConstraints());
+		
+		// Restricciones de jugador en la misma pista a la misma hora en distintas categorías
+		builder = new ConstraintBuilder(new PlayerNotSimultaneousConstraint(tournament));
+		constraints.addAll(builder.getConstraints());
 	}
 	
 	/**
-	 * Impone que la suma de timeslots utilizados por cada evento se corresponda con el número de encuentros esperados
+	 * Publica todas las restricciones del el modelo
 	 */
-	private void setConstraintsMatchesSum() {
-		for (int e = 0; e < nCategories; e++) {
-			int eventNumberOfMatches = nPlayers[e] * nMatchesPerPlayer[e];
-			
-			solver.post(IntConstraintFactory.sum(ArrayUtils.flatten(g[e]), VariableFactory.fixed(eventNumberOfMatches, solver)));
-			solver.post(IntConstraintFactory.sum(ArrayUtils.flatten(x[e]), VariableFactory.fixed(eventNumberOfMatches * nTimeslotsPerMatch[e], solver)));
-		}
-	}
-	
-	/**
-	 * Asegurar que el número de partidos que juega cada jugador es el correspondiente al requerido por cada categoría
-	 */
-	private void setConstraintsMatchesPerPlayer() {
-		// Que cada jugador juegue nMatchesPerPlayer partidos
-		for (int e = 0; e < nCategories; e++) {
-			int playerNumberOfTimeslots = nMatchesPerPlayer[e] * nTimeslotsPerMatch[e];
-			for (int p = 0; p < nPlayers[e]; p++) {
-				solver.post(IntConstraintFactory.sum(ArrayUtils.flatten(g[e][p]), VariableFactory.fixed(nMatchesPerPlayer[e], solver)));	
-				solver.post(IntConstraintFactory.sum(ArrayUtils.flatten(x[e][p]), VariableFactory.fixed(playerNumberOfTimeslots, solver)));
-			}
-		}
-	}
-	
-	/**
-	 * Mapea los comienzos de los partidos a partir de la asignación de horas en la matriz del horario
-	 */
-	private void setConstraintsMapMatchesBeginnings() {
-		// Mapear entre los comienzos de cada partido (g) y las horas en las que se juega
-		for (int e = 0; e < nCategories; e++) {
-			for (int p = 0; p < nPlayers[e]; p++) {
-				for (int c = 0; c < nLocalizations[e]; c++) {
-					for (int t = 0; t < nTimeslots[e] - nTimeslotsPerMatch[e]; t++) {
-						if (nTimeslotsPerMatch[e] == 1) {
-							// Si un partido dura un timeslot la matriz g es idéntica a la matriz x
-							solver.post(IntConstraintFactory.arithm(g[e][p][c][t], "=", x[e][p][c][t]));
-						} else {
-							// Mapear g_e,p,c,t a partir del rango que g_e,p,c,t cubre en x, es decir,
-							// [x_e,p,c,t, x_e,p,c,t+n] (n es el número de timeslots por partido).
-							// En términos de operación booleana, a g_t se asignaría el valor [0, 1] a partir
-							// de la operación "and" aplicada sobre ese rango en x correspondiente a g_t,
-							// es decir, si todos los x en el rango son 1, entonces efectivamente el
-							// partido empieza en g_t, luego se marca con 1. Si hay al menos un elemento
-							// del rango en x que sea 0 quiere decir que ese rango no corresponde a un partido,
-							// luego en g_t no empieza un partido y se marca como 0
-							
-							IntVar[] matchRange = new IntVar[nTimeslotsPerMatch[e]];
-							for (int i = 0; i < nTimeslotsPerMatch[e]; i++)
-								matchRange[i] = x[e][p][c][t + i];
-							
-							BoolVar matchTakesPlace = VariableFactory.bool("MatchTakesPlace", solver);
-							solver.post(IntConstraintFactory.minimum(matchTakesPlace, matchRange));
-							solver.post(IntConstraintFactory.arithm(g[e][p][c][t], "=", matchTakesPlace));
-						}
-					}
-					if (nTimeslotsPerMatch[e] == 1) {
-						// Si un partido dura un timeslot la matriz g es idéntica a la matriz x
-						solver.post(IntConstraintFactory.arithm(g[e][p][c][nTimeslots[e] - 1], "=", x[e][p][c][nTimeslots[e] - 1]));
-					} else {
-						// Si un partido dura más de un timeslot se marcan los últimos elementos de la matriz de comienzos de partidos (g)
-						// con 0 para evitar que dé comienzo un partido que salga del rango del dominio de los timeslots por causa del
-						// rango de la duración del propio partido
-						for (int i = 0; i < nTimeslotsPerMatch[e] - 1; i++)
-							solver.post(IntConstraintFactory.arithm(g[e][p][c][nTimeslots[e] - i - 1], "=", 0));
-					}
-				}
-			}
-		}
-	}
-	
-	/**
-	 * Mapea la matriz del horario a partir de la matriz de los comienzos de partido
-	 */
-	private void setConstraintsMapMatches() {
-		// Mapear x_e,p,c,t a partir de los posibles comienzos de partido (g) cuyo rango "cubre" x_t
-		for (int e = 0; e < nCategories; e++) {
-			for (int p = 0; p < nPlayers[e]; p++) {
-				for (int c = 0; c < nLocalizations[e]; c++) {
-					for (int t = 0; t < nTimeslots[e]; t++) {
-						int nRange = nTimeslotsPerMatch[e];
-						
-						// para los nTimeslotsPerMatch primeros x que no se pueden mapear a nTimeslotsPerMatch elementos de g
-						if (t + 1 < nTimeslotsPerMatch[e])
-							nRange -= nTimeslotsPerMatch[e] - t - 1;
-						
-						IntVar[] matchBeginningRange = new IntVar[nRange];
-						for (int i = 0; i < nRange; i++)
-							matchBeginningRange[i] = g[e][p][c][t - i];
-						
-						// La suma de ese posible rango de g, g_t-n..g_t (siendo n nTimeslotsPerMatch) únicamente
-						// puede ser 0 o 1, es decir, que no empiece ningún partido o que empiece, pero nunca puede ser
-						// mayor puesto que supondría que dos partidos se superpondrían
-						IntVar matchStartSum = VariableFactory.bounded("MatchStartSum", 0, 1, solver);
-						solver.post(IntConstraintFactory.sum(matchBeginningRange, matchStartSum));
-						solver.post(IntConstraintFactory.arithm(x[e][p][c][t], "=", matchStartSum));
-					}
-				}
-			}
-		}
-	}
-	
-	/**
-	 * Para categoría, define la restricción para que solamemente haya dos números posibles de jugadores en una
-	 * pista determinada a una hora en concreto: o 0 (nadie) o el número de jugadores por partido de la categoría
-	 */
-	private void setConstraintsPlayersInCourts(Event event) {
-		int e = getEventIndex(event);
-		
-		for (int c = 0; c < nLocalizations[e]; c++) {
-			for (int t = 0; t < nTimeslots[e]; t++) {
-				// Si la hora_t es un break, no hace falta tenerla en cuenta
-				if (!events[e].isBreak(events[e].getTimeslots().get(t))) {
-					// Las "participaciones" de todos los jugadores en la pista_c a la hora_t
-					IntVar[] playerSum = new IntVar[nPlayers[e]];
-					for (int p = 0; p < nPlayers[e]; p++)
-							playerSum[p] = x[e][p][c][t];
-					
-					// Que la suma de las participaciones de todos los jugadores sea
-					// igual a 0 o el número de jugadores por partido, es decir, que nadie juegue o que jueguen
-					// el número de jugadores requeridos por partido
-					solver.post(IntConstraintFactory.sum(playerSum, VariableFactory.enumerated("Sum", new int[]{0, nPlayersPerMatch[e]}, solver)));
-				}
-			}
-		}
-	
-	}
-	
-	/**
-	 * Para todas las categorías del torneo, controla que no se juegue en la misma pista a la misma hora
-	 * en partidos de categorías distintas
-	 */
-	private void setConstraintsCourtsCollisions() {
-		Map<Integer, List<Event>> eventsByNumberOfPlayersPerMatch = tournament.groupEventsByNumberOfPlayersPerMatch();
-		
-		// Posibles números de jugadores que componen un partido del torneo (incluye 0)
-		int[] allPossibleNumberOfPlayers = getAllPosibleNumberOfPlayersPerMatchArray(eventsByNumberOfPlayersPerMatch);
-		
-		int nAllCourts = allLocalizations.size();
-		int nAllTimeslots = allTimeslots.size();
-		
-		// Para cada pista del torneo explorar las participaciones de jugadores en cada categoría
-		// y controlar que no se juegue más de un partido en una pista a la misma hora
-		for (int c = 0; c < nAllCourts; c++) {
-			for (int t = 0; t < nAllTimeslots; t++) {
-				// Las posibles ocupaciones de los jugadores de la pista_c a la hora_t
-				List<IntVar> playerSum = new ArrayList<IntVar>();
-				
-				for (int e = 0; e < nCategories; e++)
-					// Si en el evento_e se puede jugar en la pista_c y a la hora_t y la hora_t no es un break
-					if (courtsIndices[c][e] != -1 && timeslotsIndices[t][e] != -1 && !events[e].isBreak(events[e].getTimeslots().get(t)))
-						for (int p = 0; p < nPlayers[e]; p++)
-								playerSum.add(x[e][p][courtsIndices[c][e]][timeslotsIndices[t][e]]);
-				
-				// Que la suma de las participaciones sea o 0 (no se juega en la pista_c a la hora_t)
-				// o cualquier valor del conjunto de número de jugadores por partido (cada evento tiene el suyo)
-				solver.post(IntConstraintFactory.sum(
-					(IntVar[]) playerSum.toArray(new IntVar[playerSum.size()]),
-					VariableFactory.enumerated("PossibleNumberOfPlayersPerMatch", allPossibleNumberOfPlayers, solver))
-				);
-			}
-		}
-		
-		// Caso excepcional: puede ocurrir que se cumpla la condición de que la suma de las participaciones de
-		// jugadores en la pista_c a la hora_t sea una de las posibilidades, pero aún así sea una combinación inválida
-		// Por ejemplo: en un torneo con 2 categorías individuales (partidos de 2 jugadores) y 1 categoría de dobles
-		// (partidos de 4 jugadores), puede ocurrir que la suma de las participaciones sea 4, con lo cual según
-		// la restricción definida es correcto, pero no porque haya un partido de dobles, sino porque hay
-		// 2 partidos individuales, con lo cual sumarían participaciones de jugadores 2+2=4. Además, la restricción
-		// de jugadores para cada categoría (método setConstraintsPlayersInCourtsForEachCategory) se cumpliría
-		// porque el númeo de jugadores por partido para las 2 categorías individuales sería 2, y para la categoría
-		// de dobles sería 0.
-		// Solución: forzar que la suma de las participaciones en las categorías con el mismo número de jugadores
-		// por partido sea o 0 o el número de jugadores por partido de esa categoría
-		
-		// Por cada conjunto de categorías con el mismo número de jugadores por partido, la suma de participaciones
-		// de todos los jugadores en una pista_c a una hora_t es 0 o el número de jugadores por partido
-		for (Integer numberOfPlayersPerMatch : eventsByNumberOfPlayersPerMatch.keySet()) {
-			for (int c = 0; c < nAllCourts; c++) {
-				for (int t = 0; t < nAllTimeslots; t++) {
-					// Las posibles ocupaciones de los jugadores de la pista_c a la hora_t
-					List<IntVar> playerSum = new ArrayList<IntVar>();
-					
-					List<Event> eventList = eventsByNumberOfPlayersPerMatch.get(numberOfPlayersPerMatch);
-					for (Event event : eventList) {
-						int e = getEventIndex(event);
-						
-						// Si en el evento_e se puede jugar en la pista_c y a la hora_t
-						if (courtsIndices[c][e] != -1 && timeslotsIndices[t][e] != -1)
-							for (int p = 0; p < nPlayers[e]; p++)
-								playerSum.add(x[e][p][courtsIndices[c][e]][timeslotsIndices[t][e]]);
-					}
-					
-					// Que la suma de las participaciones sea o 0 (no se juega en la pista_c a la hora_t)
-					// o el número de jugadores por partido (de este conjunto de categorías con el mismo número)
-					solver.post(IntConstraintFactory.sum(
-						(IntVar[]) playerSum.toArray(new IntVar[playerSum.size()]),
-						VariableFactory.enumerated("PossibleNumberOfPlayersPerMatch", new int[]{ 0, numberOfPlayersPerMatch }, solver))
-					);
-				}
-			}
-		}
-	}
-	
-	/**
-	 * Si un jugador_p juega en más de una categoría, evitar que le coincidan partidos a la misma hora
-	 */
-	private void setConstraintsPlayersNotSimultaneous() {
-		int nAllPlayers = allPlayers.size();
-		int nAllTimeslots = allTimeslots.size();
-		
-		// Para cada jugador del torneo explorar las participaciones en cada categoría y
-		// controlar colisiones que puedan producirse (mismo jugador, mismo timeslot)
-		for (int p = 0; p < nAllPlayers; p++) {
-			for (int t = 0; t < nAllTimeslots; t++) {
-				// Las posibles ocupaciones de pistas del jugador_p a la hora_t
-				List<IntVar> courtSum = new ArrayList<IntVar>();
-				
-				for (int e = 0; e < nCategories; e++)
-					// Si el jugador_p juega en la categoría_e a la hora_t
-					if (playersIndices[p][e] != -1 && timeslotsIndices[t][e] != -1)
-						for (int c = 0; c < nLocalizations[e]; c++) 
-							courtSum.add(x[e][playersIndices[p][e]][c][timeslotsIndices[t][e]]);
-				
-				// Que la suma de las ocupaciones de todas las pistas por parte del
-				// jugador_p a la hora_t sea o 0 (no juega a la hora_t) o 1 (el jugador
-				// juega a la hora_t en una de las pistas en una de las categorías)
-				solver.post(IntConstraintFactory.sum(
-					(IntVar[]) courtSum.toArray(new IntVar[courtSum.size()]),
-					VariableFactory.enumerated("PossibleParticipations", new int[]{ 0, 1 }, solver))
-				);
-			}
-		}
-	}
-	
-	/**
-	 * Devuelve una lista con todas las combinaciones únicas de k elementos de un conjunto de
-	 * jugadores, representados por enteros
-	 * 
-	 * @param players jugadores de los que se van a generar combinaciones
-	 * @param combine número de jugadores por combinación
-	 * @return una lista de lista de enteros con las combinaciones únicas de enfrentamientos
-	 */
-	private List<List<Integer>> getCombinations(int[] players, int combine){
-		List<List<Integer>> combinations = new ArrayList<List<Integer>>();
-		
-		combinations(players, combine, 0, new int[combine], combinations);
-		
-		return combinations;
-	}
-	
-	/**
-	 * Lleva a cabo el cálculo recursivo de todas las combinaciones de k elementos de un conjunto,
-	 * almacenando en una lista cada combinación completa
-	 * 
-	 * @param arr           conjunto de enteros sobre los que calcular cada combinación
-	 * @param len           longitud de la combinación
-	 * @param startPosition posición de comienzo
-	 * @param result        array con la combinación parcial o completa
-	 * @param list          lista que almacena todas las combinaciones
-	 */
-	private static void combinations(int[] arr, int len, int startPosition, int[] result, List<List<Integer>> list) {
-		if (len == 0) {
-			list.add(IntStream.of(result.clone()).boxed().collect(Collectors.toList()));
-			return;
-		}
-		for (int i = startPosition; i <= arr.length - len; i++) {
-			result[result.length - len] = arr[i];
-			combinations(arr, len - 1, i + 1, result, list);
-		}
-	}
-	
-	/**
-	 * @param eventsByNumberOfPlayersPerMatch diccionario donde la clave es un número de jugadores por partido y el valor asociado
-	 * el valor asociado la lista de categorías que definen ese número de jugadores por partido
-	 * @return posibles distintos números de jugadores por partido, incluyendo ninguno (0)
-	 */
-	private int[] getAllPosibleNumberOfPlayersPerMatchArray(Map<Integer, List<Event>> eventsByNumberOfPlayersPerMatch) {		
-		Integer[] keysArray = eventsByNumberOfPlayersPerMatch.keySet().toArray(new Integer[eventsByNumberOfPlayersPerMatch.keySet().size()]);
-		
-		int[] array = new int[keysArray.length + 1];
-		array[0] = 0;
-		for (int i = 1; i < array.length; i++)
-			array[i] = keysArray[i - 1];
-		
-		return array;
-	}
-	
-	/**
-	 * Devuelve el índice del evento
-	 * @param event un evento o categoría
-	 * @return valor del índice, o -1 si no existe
-	 */
-	private int getEventIndex(Event event) {
-		for (int i = 0; i < events.length; i++)
-			if (events[i].equals(event))
-				return i;
-		return -1;
+	private void postAllConstraints() {
+		solver.post(constraints.toArray(new Constraint[constraints.size()]));
 	}
 	
 	/**
@@ -1019,8 +685,8 @@ public class TournamentSolver {
 	
 	/**
 	 * @param option opción de estrategia de búsqueda
-	 * @param v      variables del problema
-	 * @return       estrategia o estrategias de búsqueda a aplicar
+	 * @param v variables del problema
+	 * @return estrategia o estrategias de búsqueda a aplicar
 	 */
 	@SuppressWarnings("rawtypes")
 	private AbstractStrategy[] getStrategy(int option, IntVar[] v) {

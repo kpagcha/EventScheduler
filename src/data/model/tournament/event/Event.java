@@ -15,10 +15,6 @@ import data.model.tournament.event.entity.Team;
 import data.model.tournament.event.entity.timeslot.Timeslot;
 import solver.TournamentSolver.MatchupMode;
 
-/**
- * @author Pablo
- *
- */
 public class Event {
 	/**
 	 * Nombre del evento o la categoría
@@ -68,7 +64,7 @@ public class Event {
 	/**
 	 * Timeslots u horas en las que cada jugador no está disponible
 	 */
-	private Map<Player, Set<Timeslot>> unavailablePlayers = new HashMap<Player, Set<Timeslot>>(players.size());
+	private Map<Player, Set<Timeslot>> unavailablePlayers = new HashMap<Player, Set<Timeslot>>();
 	
 	/**
 	 * Diccionario de localizaciones de juego no disponibles en determinadas horas
@@ -109,7 +105,7 @@ public class Event {
 	 */
 	public Event(String name, List<Player> players, List<Localization> localizations, List<Timeslot> timeslots) {
 		if (name == null || players == null || localizations == null || timeslots == null)
-			throw new IllegalArgumentException();
+			throw new IllegalArgumentException("The parameters cannot be null");
 		
 		this.name = name;
 		this.players = players;
@@ -251,7 +247,8 @@ public class Event {
 	 * Asigna la lista de equipos que componen el evento.
 	 * 
 	 * Si el parámetro es null, se lanzará una IllegalArgumentException. Si algún jugador que compone algún 
-	 * equipo no pertenece al conjunto de jugadores del evento, se lanza la misma excepción.
+	 * equipo no pertenece al conjunto de jugadores del evento, se lanza la misma excepción. También si un mismo jugador
+	 * se encuentra en múltiples de los equipos pasados.
 	 * 
 	 * Si la lista de equipos pasada por parámetro incluye equipos repetidos, solamente se añadirán una vez a la lista de
 	 * equipos del evento.
@@ -266,6 +263,12 @@ public class Event {
 		for (Team team : teams)
 			if (!players.containsAll(team.getPlayers()))
 				throw new IllegalArgumentException("All players in each team must be contained in the list of players of the event.");
+		
+		for (Team t1 : teams)
+			for (Player player : t1.getPlayers())
+				for (Team t2 : teams)
+					if (t1 != t2 && t2.getPlayers().contains(player))
+						throw new IllegalArgumentException("The same player cannot be present in multiple teams.");
 			
 		this.teams = new ArrayList<Team>();
 		
@@ -348,42 +351,64 @@ public class Event {
 		unavailablePlayers = unavailability;
 	}
 	
+	/**
+	 * Devuelve el diccionario de jugadores y horas no disponibles en un wrapper que la hace no modificable
+	 * 
+	 * @return el diccionario de jugadores y sus horas no disponibles, no modificable
+	 */
 	public Map<Player, Set<Timeslot>> getUnavailablePlayers() {
-		return unavailablePlayers;
+		return Collections.unmodifiableMap(unavailablePlayers);
 	}
 	
 	/**
 	 * Marca al jugador como no disponible a una hora determinada
 	 * 
+	 * Se lanzará IllegalArgumentException si alguno de los parámetros son null o no pertenecen al dominio del evento.
+	 * 
+	 * Si para el jugador ya existe la hora que se intenta añadir como no disponible, no se modificará nada.
+	 * 
 	 * @param player   jugador que pertenece a este evento
 	 * @param timeslot hora perteneciente al dominio de este evento
 	 */
 	public void addUnavailablePlayer(Player player, Timeslot timeslot) {
-		if (player != null && timeslots != null && players.contains(player) && timeslots.contains(timeslot)) {
-			Set<Timeslot> unavailablePlayerTimeslots = unavailablePlayers.get(player);
-			
-			if (unavailablePlayerTimeslots == null) {
-				unavailablePlayers.put(player, new HashSet<Timeslot>(Arrays.asList(timeslot)));
-			} else {
-				unavailablePlayerTimeslots.add(timeslot);
-			}
+		if (player == null || timeslot == null)
+			throw new IllegalArgumentException("The parameters cannot be null.");
+		
+		if (!players.contains(player))
+			throw new IllegalArgumentException("The player must be contained in the list of players of the event.");
+		
+		if (!timeslots.contains(timeslot))
+			throw new IllegalArgumentException("The timeslot must be contained in the list of timeslots of the event.");
+		
+		Set<Timeslot> unavailablePlayerTimeslots = unavailablePlayers.get(player);
+		
+		if (unavailablePlayerTimeslots == null) {
+			unavailablePlayers.put(player, new HashSet<Timeslot>(Arrays.asList(timeslot)));
+		} else {
+			unavailablePlayerTimeslots.add(timeslot);
 		}
 	}
 	
 	/**
-	 * Marca al jugador como no disponible en una serie de horas
+	 * Marca al jugador como no disponible en una serie de horas.
+	 * 
+	 * Si alguno de los parámetros es null, se lanza IllegalArgumentException
 	 * 
 	 * @param player    jugador que pertenece a este evento
 	 * @param timeslots conjunto no vacío de horas, y todas ellas pertenecientes al dominio del evento
 	 */
 	public void addUnavailablePlayer(Player player, Set<Timeslot> timeslots) {	
-		if (player != null && timeslots != null)
-			for (Timeslot timeslot : timeslots)
-				addUnavailablePlayer(player, timeslot);
+		if (player == null || timeslots == null)
+			throw new IllegalArgumentException("The parameters cannot be null.");
+		
+		for (Timeslot timeslot : timeslots)
+			addUnavailablePlayer(player, timeslot);
 	}
 	
 	/**
-	 * Si el jugador no está disponible a la hora timeslot, se elimina de la lista y vuelve a estar disponible a esa hora
+	 * Si el jugador no está disponible a la hora timeslot, se elimina de la lista y vuelve a estar disponible a esa hora.
+	 * 
+	 * Si alguno de los parámetros es null, no se hará nada.
 	 * 
 	 * @param player   jugador que pertenece a este evento
 	 * @param timeslot hora perteneciente al dominio del evento
@@ -401,86 +426,128 @@ public class Event {
 		}
 	}
 	
+	/**
+	 * Asigna la lista de enfrentamientos fijos entre jugadores del evento.
+	 * 
+	 * Se lanza IllegalArgumentException si la list es null, o si contiene jugadores que no existen en este evento.
+	 * 
+	 * Si la lista pasada contiene enfrentamientos repetidos, solamente se añadirá uno de ellos
+	 * 
+	 * @param fixedMatchups una lista de múltiples enfrentamientos entre jugadores del evento
+	 */
 	public void setFixedMatchups(List<Set<Player>> fixedMatchups) {
-		this.fixedMatchups = fixedMatchups;
-	}
-	
-	public List<Set<Player>> getFixedMatchups() {
-		return fixedMatchups;
+		if (fixedMatchups == null)
+			throw new IllegalArgumentException("The parameters cannot be null.");
+		
+		for (Set<Player> matchup : fixedMatchups)
+			if (!players.containsAll(matchup))
+				throw new IllegalArgumentException("All players must be contained in the list of players of the event.");
+		
+		for (Set<Player> matchup : fixedMatchups)
+			if (!this.fixedMatchups.contains(matchup))
+				this.fixedMatchups.add(matchup);
 	}
 	
 	/**
-	 * Añade un enfrentamiento fijo entre jugadores
+	 * Devuelve la lista de emparejamientos fijos envuelta en un wrapper que la hace no modificable
+	 * 
+	 * @return la lista no modificable de emparejamientos fijos del evento
+	 */
+	public List<Set<Player>> getFixedMatchups() {
+		return Collections.unmodifiableList(fixedMatchups);
+	}
+	
+	/**
+	 * Añade un enfrentamiento fijo entre jugadores.
+	 * 
+	 * Si el enfrentamiento es null, o el número de jugadores del enfrentamiento es distinto al número de jugadores por partido que este evento
+	 * define, o alguno de los jugadores del enfrentamiento no pertenece al dominio del evento, se lanzará IllegalArgumentException.
+	 * 
+	 * Si el enfrentamiento ya existe, no habrá cambios.
 	 * 
 	 * @param matchup conjunto de jugadores entre los cuales habrá de darse un enfrentamiento. Los jugadores
 	 *                pertenecen al conjunto de jugadores de este evento. El tamaño es igual al número de 
 	 *                jugadores por partido definido
 	 */
 	public void addFixedMatchup(Set<Player> matchup) {
-		if (matchup != null && matchup.size() == nPlayersPerMatch && !fixedMatchups.contains(matchup)) {
-			boolean allInDomain = true;
-			for (Player player : matchup) {
-				if (!players.contains(player)) {
-					allInDomain = false;
-					break;
-				}
-			}
-			
-			if (allInDomain && !fixedMatchups.contains(matchup))
-				fixedMatchups.add(matchup);
-		}	
+		if (matchup == null)
+			throw new IllegalArgumentException("The matchup cannot be null.");
+		
+		if (matchup.size() != nPlayersPerMatch)
+			throw new IllegalArgumentException("The number of players in the matchup must be equal to the number of players per match specified by this event.");
+		
+		if (!players.containsAll(matchup))
+			throw new IllegalArgumentException("All players must be contained in the list of players of the event.");
+				
+		if (!fixedMatchups.contains(matchup))
+			fixedMatchups.add(matchup);
 	}
 	
 	/**
-	 * Añade un enfrentamiento fijo entre jugadoers
+	 * Añade un enfrentamiento fijo entre jugadores.
+	 * 
+	 * Lanza IllegalArgumentException si el parámetro es null
 	 * 
 	 * @param players conjunto de jugadores entre los cuales habrá de darse un enfrentamiento. Los jugadores
 	 *                pertenecen al conjunto de jugadores de este evento. El tamaño es igual al número de 
 	 *                jugadores por partido definido
 	 */
 	public void addFixedMatchup(Player... players) {
-		if (players != null)
-			addFixedMatchup(new HashSet<Player>(Arrays.asList(players)));
+		if (players == null)
+			throw new IllegalArgumentException("The players cannot be null.");
+		
+		addFixedMatchup(new HashSet<Player>(Arrays.asList(players)));
 	}
 	
 	/**
-	 * Añade un enfrentamiento fijo entre equipos
+	 * Añade un enfrentamiento fijo entre equipos.
+	 * 
+	 * Se lanza IllegalArgumentException si el enfrentamiento es null, o si el número de equipos del enfrentamiento es menor que 2,
+	 * o si alguno de los jugadores de los equipos no pertenecen al dominio del evento, o si el número de jugadores de cada equipo
+	 * es diferente, o si el número de jugadores que componen el enfrentamiento no es igual al número de jugadores por partido
+	 * especificado por este evento.
 	 * 
 	 * @param matchup conjunto de equipos entre los cuales habrá de darse un enfrentamiento. Los equipos, y por ende,
 	 *                los jugadores que los componen, pertenecen a este evento, y el tamaño del conjunto total de
 	 *                jugadores es igual al número definido de jugadores por partido
 	 */
 	public void addFixedTeamsMatchup(Set<Team> matchup) {
-		if (matchup != null && matchup.size() > 1) {
-			List<Team> matchupList = new ArrayList<Team>(matchup);
+		if (matchup == null)
+			throw new IllegalArgumentException("The matchup cannot be null.");
+		
+		if (matchup.size() < 2)
+			throw new IllegalArgumentException("The number of teams to be matched up cannot be less than 2.");
+		
+		for (Team team : matchup)
+			if (!players.containsAll(team.getPlayers()))
+				throw new IllegalArgumentException("All players must be contained in the list of players of the event.");
+		
+		List<Team> matchupList = new ArrayList<Team>(matchup);
+		
+		int totalPlayers = 0;
+		int playersPerTeam = matchupList.get(0).getPlayers().size();
+		
+		for (Team team : matchup) {
+			int nPlayers = team.getPlayers().size();
+			if (nPlayers != playersPerTeam)
+				throw new IllegalArgumentException("The number of players in every team must be the same.");
 			
-			int totalPlayers = 0;
-			int playersPerTeam = matchupList.get(0).getPlayers().size();
-			
-			boolean valid = true;
-			
-			for (Team team : matchup) {
-				int nPlayers = team.getPlayers().size();
-				if (nPlayers != playersPerTeam) {
-					valid = false;
-					break;
-				}
-				
-				totalPlayers += nPlayers;
-			}
-			
-			if (valid && totalPlayers == nPlayersPerMatch) {
-				Set<Player> playersInMatchup = new HashSet<Player>();
-				for (Team team : matchup)
-					playersInMatchup.addAll(team.getPlayers());
-				
-				addFixedMatchup(playersInMatchup);
-			}
+			totalPlayers += nPlayers;
 		}
+		
+		if (totalPlayers != nPlayersPerMatch)
+			throw new IllegalArgumentException("The number of players in the matchup must be equal to the number of players per match specified by this event.");
+		
+		
+		Set<Player> playersInMatchup = new HashSet<Player>();
+		for (Team team : matchup)
+			playersInMatchup.addAll(team.getPlayers());
+		
+		addFixedMatchup(playersInMatchup);
 	}
 	
 	/**
-	 * Elimina un enfrentamiento fijo entre jugadores, si existe
+	 * Elimina un enfrentamiento fijo entre jugadores. Si el enfrentamiento no existe, no se produce ninguna modificación.
 	 * 
 	 * @param matchup
 	 */
@@ -489,7 +556,7 @@ public class Event {
 	}
 	
 	/**
-	 * Elimina un enfrentamiento fijo entre equipos, si existe
+	 * Elimina un enfrentamiento fijo entre equipos. Si el enfrentamiento no existe, no se produce ninguna modificación.
 	 * 
 	 * @param matchup
 	 */
