@@ -17,6 +17,6 @@ public class TotalMatchesConstraint extends EventConstraint {
 		int eventNumberOfMatches = event.getPlayers().size() * event.getMatchesPerPlayer();
 		
 		solver.post(IntConstraintFactory.sum(ArrayUtils.flatten(g[eventIndex]), VariableFactory.fixed(eventNumberOfMatches, solver)));
-		solver.post(IntConstraintFactory.sum(ArrayUtils.flatten(x[eventIndex]), VariableFactory.fixed(eventNumberOfMatches * event.getMatchDuration(), solver)));
+		solver.post(IntConstraintFactory.sum(ArrayUtils.flatten(x[eventIndex]), VariableFactory.fixed(eventNumberOfMatches * event.getTimeslotsPerMatch(), solver)));
 	}
 }

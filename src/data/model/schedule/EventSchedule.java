@@ -80,7 +80,7 @@ public class EventSchedule extends Schedule {
 	 * Calcula los partidos que componen el horario 
 	 */
 	public void calculateMatches() {
-		int matchDuration = event.getMatchDuration();
+		int matchDuration = event.getTimeslotsPerMatch();
 		
 		// Horario donde solo se marcan los comienzos de partidos
 		ScheduleValue[][] scheduleBeginnings = new ScheduleValue[nPlayers][nTimeslots];

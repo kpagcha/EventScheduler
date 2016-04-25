@@ -10,7 +10,9 @@ import data.validation.validator.Validator;
  */
 public interface Validable {
 	/**
-	 * Inyecta el validador en la clase validable
+	 * Inyecta el validador en la clase validablez
+	 * @param <T> tipo de dato que valida el validador
+	 * 
 	 * @param validator validador no nulo
 	 */
 	public <T> void setValidator(Validator<T> validator);

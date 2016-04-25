@@ -60,7 +60,7 @@ public class Tournament {
 	/**
 	 * Construye del torneo
 	 * 
-	 * @param name       nombre del torneo
+	 * @param name nombre del torneo
 	 * @param categories categorías que componen el torneo
 	 */
 	public Tournament(String name, List<Event> categories) {
@@ -91,7 +91,7 @@ public class Tournament {
 	
 	/**
 	 * Construye un torneo
-	 * @param name       nombre
+	 * @param name nombre
 	 * @param categories categorías que componen el torneo
 	 */
 	public Tournament(String name, Event... categories) {
@@ -287,7 +287,7 @@ public class Tournament {
 	 * y dicha hora)
 	 * 
 	 * @param localization localización de juego a invalidar
-	 * @param timeslot     hora a la que invalidar
+	 * @param timeslot hora a la que invalidar
 	 */
 	public void addUnavailableLocalization(Localization localization, Timeslot timeslot) {
 		for (Event event : events)
@@ -347,7 +347,7 @@ public class Tournament {
 				sb.append("\n");
 				
 				if (schedule != null && printMatches) {
-					sb.append(String.format("Match duration: %d timelots\n", schedule.getEvent().getMatchDuration()));
+					sb.append(String.format("Match duration: %d timelots\n", schedule.getEvent().getTimeslotsPerMatch()));
 					
 					schedule.calculateMatches();
 					List<Match> matches = schedule.getMatches();

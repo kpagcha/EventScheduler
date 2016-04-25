@@ -93,7 +93,7 @@ public class GroupedSchedule {
 				groupedSchedule[c][timeslots.indexOf(timeslot)] = new GroupedScheduleValue(GroupedScheduleValue.UNAVAILABLE);
 		}
 		
-		int matchDuration = event.getMatchDuration();
+		int matchDuration = event.getTimeslotsPerMatch();
 		for (Match match : matches) {
 			int c = localizations.indexOf(match.getLocalization());
 			int t = timeslots.indexOf(match.getStartTimeslot());

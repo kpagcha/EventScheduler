@@ -44,11 +44,7 @@ public class EventManager {
 		List<Localization> courts = buildGenericLocalizations(3, "Court");
 		List<Timeslot> timeslots = buildAbstractTimeslots(13);
 		
-		Event event = new Event("Event", players, courts, timeslots);
-		
-		event.setMatchDuration(2);
-		event.setMatchesPerPlayer(3);
-		event.setPlayersPerMatch(4);
+		Event event = new Event("Event", players, courts, timeslots, 3, 2, 4);
 		
 		event.setMatchupMode(MatchupMode.ALL_DIFFERENT);
 		
@@ -142,7 +138,7 @@ public class EventManager {
 		
 		// Duración de un partido: 3 timeslots
 		for (Event event : zarlon.getEvents())
-			event.setMatchDuration(3);
+			event.setTimeslotsPerMatch(3);
 		
 		
 		// Enfrentamientos alevín masculino

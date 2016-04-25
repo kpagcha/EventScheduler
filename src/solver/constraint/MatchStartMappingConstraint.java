@@ -25,7 +25,7 @@ public class MatchStartMappingConstraint extends TournamentConstraint {
 			int nPlayers = event.getPlayers().size();
 			int nLocalizations = event.getLocalizations().size();
 			int nTimeslots = event.getTimeslots().size();
-			int nTimeslotsPerMatch = event.getMatchDuration();
+			int nTimeslotsPerMatch = event.getTimeslotsPerMatch();
 			
 			for (int p = 0; p < nPlayers; p++) {
 				for (int c = 0; c < nLocalizations; c++) {

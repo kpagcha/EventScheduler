@@ -20,7 +20,7 @@ public class MatchesPerPlayerConstraint extends EventConstraint {
 		constraints = new ArrayList<Constraint>();
 		
 		// Que cada jugador juegue nMatchesPerPlayer partidos
-		int playerNumberOfTimeslots = event.getMatchesPerPlayer() * event.getMatchDuration();
+		int playerNumberOfTimeslots = event.getMatchesPerPlayer() * event.getTimeslotsPerMatch();
 
 		for (int p = 0; p < event.getPlayers().size(); p++) {
 			constraints.add(IntConstraintFactory.sum(ArrayUtils.flatten(g[eventIndex][p]), VariableFactory.fixed(event.getMatchesPerPlayer() , solver)));	

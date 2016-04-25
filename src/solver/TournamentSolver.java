@@ -146,7 +146,7 @@ public class TournamentSolver {
 	private Map<Event, Map<Player, Set<Localization>>> playersInLocalizations;
 	
 	/**
-	 * Por categoría, Diccionario de jugadores para cada cual los enfrentamientos de los que forme parte han de tener lugar
+	 * Por categoría, diccionario de jugadores para cada cual los enfrentamientos de los que forme parte han de tener lugar
 	 * en cualquiera de las horas de la lista de timeslots vinculada a su entrada
 	 */
 	private Map<Event, Map<Player, Set<Timeslot>>> playersAtTimeslots;
@@ -261,7 +261,7 @@ public class TournamentSolver {
 			nTimeslots[i] = events[i].getTimeslots().size();
 			
 			nMatchesPerPlayer[i] = events[i].getMatchesPerPlayer();
-			nTimeslotsPerMatch[i] = events[i].getMatchDuration();
+			nTimeslotsPerMatch[i] = events[i].getTimeslotsPerMatch();
 			nPlayersPerMatch[i] = events[i].getPlayersPerMatch();
 			
 			if (events[i].hasPlayersInLocalizations())
@@ -511,8 +511,8 @@ public class TournamentSolver {
 		// Si para el jugador_p en la categoría_e se indica que debe jugar en un conjunto de localizaciones,
 		// se marcan con 0 todas las localizaciones del evento que no sean ésas, de este modo invalidándolas
 		for (int e = 0; e < nCategories; e++) {
-			if (events[e].hasPlayersInLocalizations()) {
-				Map<Player, Set<Localization>> eventPlayersInLocalizations = events[e].getPlayersInLocalizations();
+			if (playersInLocalizations.containsKey(events[e])) {
+				Map<Player, Set<Localization>> eventPlayersInLocalizations = playersInLocalizations.get(events[e]);
 				Set<Player> players = eventPlayersInLocalizations.keySet();
 				
 				// Para cada jugador al que se le ha indicado una lista de pistas donde jugar, "invalidar" las pistas
@@ -543,8 +543,8 @@ public class TournamentSolver {
 		// Si para el jugador_p en la categoría_e se indica que debe jugar en un conjunto de timeslots,
 		// se marcan con 0 todos los timeslots del evento que no esan ésos, de este modo invalidándolos
 		for (int e = 0; e < nCategories; e++) {
-			if (events[e].hasPlayersAtTimeslots()) {
-				Map<Player, Set<Timeslot>> eventPlayersAtTimeslots = events[e].getPlayersAtTimeslots();
+			if (playersAtTimeslots.containsKey(events[e])) {
+				Map<Player, Set<Timeslot>> eventPlayersAtTimeslots = playersAtTimeslots.get(events[e]);
 				Set<Player> players = eventPlayersAtTimeslots.keySet();
 				
 				for (Player player : players) {
