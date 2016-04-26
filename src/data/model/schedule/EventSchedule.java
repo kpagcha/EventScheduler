@@ -12,6 +12,10 @@ import data.model.tournament.event.entity.Player;
 import data.model.tournament.event.entity.Team;
 import data.model.tournament.event.entity.timeslot.Timeslot;
 
+/**
+ * Horario de un evento o categoría en particular.
+ *
+ */
 public class EventSchedule extends Schedule {
 	/**
 	 * Evento al que pertenece el horario
@@ -19,13 +23,25 @@ public class EventSchedule extends Schedule {
 	private Event event;
 	
 	/**
-	 * Construye un horario final con las pistas donde juega cada
-	 * jugador a cada hora, a partir de la matriz 3D de Choco con la solución
+	 * Construye un horario final de un evento a partir de la información del mismo, y de la solución aportada por la matriz
+	 * tridimensional aportada por la herramienta Choco que contiene la información del horario calculado.
+	 * <p>
+	 * Este método procesa la matriz de IntVar proporcionada por Choco y construye el horario representado mediante una
+	 * matriz bidimensional de {@link ScheduleValue}.
 	 * 
 	 * @param event evento al que pertenece el horario que se va a construir
-	 * @param x 	array de IntVar de tres dimensiones con los valores de la solución calculada por el EventSolver
+	 * @param x array de IntVar de tres dimensiones con los valores de la solución calculada por el EventSolver
 	 */
 	public EventSchedule(Event event, IntVar[][][] x) {
+		if (event == null || x == null)
+			throw new IllegalArgumentException("Parameters cannot be null");
+		
+		for (int p = 0; p < nPlayers; p++)
+			for (int c = 0; c < nLocalizations; c++)
+				for (int t = 0; t < nTimeslots; t++)
+					if (x[p][c][t] == null)
+						throw new IllegalArgumentException("Solution matrix has not been initialized correctly");
+		
 		this.event = event;
 		
 		name = event.getName();
@@ -35,7 +51,7 @@ public class EventSchedule extends Schedule {
 		timeslots = event.getTimeslots();
 
 		nPlayers = players.size();
-		nCourts = localizations.size();
+		nLocalizations = localizations.size();
 		nTimeslots = timeslots.size();
 		
 		schedule = new ScheduleValue[nPlayers][nTimeslots];
@@ -51,7 +67,7 @@ public class EventSchedule extends Schedule {
 					schedule[p][t] = new ScheduleValue(ScheduleValue.FREE);
 					
 					boolean matchInCourt = false;
-					for (int c = 0; c < nCourts; c++) {
+					for (int c = 0; c < nLocalizations; c++) {
 						if (x[p][c][t].getValue() == 1) {
 							schedule[p][t] = new ScheduleValue(ScheduleValue.OCCUPIED, c);
 							matchInCourt = true;
@@ -60,7 +76,7 @@ public class EventSchedule extends Schedule {
 					}
 					
 					if (!matchInCourt) {
-						for (int c = 0; c < nCourts; c++) {
+						for (int c = 0; c < nLocalizations; c++) {
 							if (event.isLocalizationUnavailable(event.getLocalizations().get(c), timeslot)) {
 								schedule[p][t] = new ScheduleValue(ScheduleValue.LIMITED);
 								break;
@@ -77,7 +93,7 @@ public class EventSchedule extends Schedule {
 	}
 	
 	/**
-	 * Calcula los partidos que componen el horario 
+	 * Calcula los partidos que componen el horario basándose en los valores actuales del horario
 	 */
 	public void calculateMatches() {
 		int matchDuration = event.getTimeslotsPerMatch();

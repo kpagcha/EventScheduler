@@ -44,6 +44,11 @@ public class GroupedScheduleValue {
 	 */
 	private List<Integer> playersIndices;
 	
+	/**
+	 * Construye un valor de horario agrupado distinto de "ocupado"
+	 * 
+	 * @param val un valor distinto del correspondiente a {@link #OCCUPIED}
+	 */
 	public GroupedScheduleValue(int val) {
 		if (val == OCCUPIED)
 			throw new IllegalStateException("A match must be specified if the schedule value is OCCUPIED.");
@@ -51,9 +56,21 @@ public class GroupedScheduleValue {
 		value = val;
 	}
 	
+	/**
+	 * Construye un valor de horario "ocupado"
+	 * 
+	 * @param val el valor explícito de horario "ocupado", que debe equivaler al especificado por {@link #OCCUPIED}
+	 * @param indices un lista no <code>null</code> y no vacía de enteros no que representa índices de jugadores
+	 */
 	public GroupedScheduleValue(int val, List<Integer> indices) {
 		if (val != OCCUPIED)
 			throw new IllegalStateException("Only schedule values of OCCUPIED can specify a match taking place.");
+		
+		if (indices == null)
+			throw new IllegalArgumentException("Indices cannot be null");
+		
+		if (indices.isEmpty())
+			throw new IllegalAccessError("Indices cannot be empty");
 		
 		value = val;
 		playersIndices = indices;

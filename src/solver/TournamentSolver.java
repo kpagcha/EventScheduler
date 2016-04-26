@@ -152,7 +152,7 @@ public class TournamentSolver {
 	private Map<Event, Map<Player, Set<Timeslot>>> playersAtTimeslots;
 	
 	/**
-	 * Horario. x_e,p,c,t -> horario_categoria,jugador,pista,hora. Dominio [0, 1] 
+	 * Horario. x_e,p,c,t: horario_categoria,jugador,pista,hora. Dominio [0, 1] 
 	 */
 	private IntVar[][][][] x;
 	

@@ -11,7 +11,7 @@ import java.time.temporal.TemporalAmount;
  */
 public class UndefiniteTimeslot extends RangedTimeslot {
 	/**
-	 * @param temporalAmount     duración o período
+	 * @param temporalAmount duración o período
 	 * @param chronologicalOrder orden cronológico del timeslot
 	 */
 	public UndefiniteTimeslot(final TemporalAmount temporalAmount, final int chronologicalOrder) {

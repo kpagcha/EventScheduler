@@ -2,6 +2,7 @@ package data.model.tournament;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,6 +17,31 @@ import data.model.tournament.event.entity.Player;
 import data.model.tournament.event.entity.timeslot.Timeslot;
 import solver.TournamentSolver;
 
+/**
+ * Representa un torneo deportivo. Un torneo se compone de, al menos, un evento o categoría, ver {@link Event}.
+ * <p>
+ * El dominio un torneo en cuanto a jugadores, localizaciones de juego y horas de juego, es la suma de estos elementos
+ * no repetidos en cada una de las categorías del torneo.
+ * <p>
+ * A un torneo le corresponde una variable de la clase {@link TournamentSolver} que se encarga del proceso de resolución
+ * del problema que se modela gracias a la información que este torneo contiene y, sobre todo, sus eventos.
+ * <p>
+ * Un torneo lleva asociado un conjunto de horarios para cada evento (ver {@link EventSchedule}) y un horario combinado
+ * de todos estos que representa el horario de todo el torneo (ver {@link CombinedSchedule}). Inicialmente, el valor
+ * de estos horarios no ha sido asignado. Los horarios contendrán valores específicos una vez se ejecute el método
+ * {@link #solve()} que inicia por primera vez el proceso de resolución, del que es responsable {@link TournamentSolver}.
+ * <p>
+ * Si el proceso de resolución ha sido satisfactorio, los horarios de los eventos y, por ende, el horario del torneo combinado,
+ * se actualizarán a los valores de la primera solución encontrada. Si no se encuentra ninguna solución, los horarios permanecerán
+ * con un valor por defecto <code>null</code> sin asignar.
+ * <p>
+ * Los horarios se podrán actualizar al valor de la siguiente solución mediante el método {@link #nextSchedules()}. Es importante
+ * notar que este método sobrescribirá el valor actual de los horarios, de forma que si se pretenden guardar los valores previos,
+ * se deberá implementar una funcionalidad específica para este propósito. Si la clase que ejecuta la resolución del problema ya
+ * no encuentra más soluciones y se vuelve a invocar a {@link #nextSchedules()}, el valor de los horarios se volverán a reiniciar
+ * con el valor de <code>null</code>, indicando que no hay más horarios disponibles para este torneo.
+ *
+ */
 public class Tournament {
 	/**
 	 * Nombre del torneo
@@ -25,22 +51,22 @@ public class Tournament {
 	/**
 	 * Categorías que componen el torneo 
 	 */
-	private List<Event> events;
+	private final List<Event> events;
 	
 	/**
 	 * Todos los jugadores que participan en el torneo. No se repiten los presentes en múltiples categorías
 	 */
-	private List<Player> allPlayers;
+	private final List<Player> allPlayers;
 	
 	/**
 	 * Todos los terrenos de juego en los que se desarrolla en el torneo. No se repiten los presentes en múltiples categorías
 	 */
-	private List<Localization> allLocalizations;
+	private final List<Localization> allLocalizations;
 	
 	/**
 	 * Todos los timeslots en los que discurre el torneo. No se repiten los presentes en múltiples categorías
 	 */
-	private List<Timeslot> allTimeslots;
+	private final List<Timeslot> allTimeslots;
 
 	/**
 	 * Horarios para cada categoría
@@ -55,15 +81,30 @@ public class Tournament {
 	/**
 	 * El solver que obtendrá los horarios de cada categoría el torneo
 	 */
-	private TournamentSolver solver;
+	private final TournamentSolver solver;
 	
 	/**
-	 * Construye del torneo
+	 * Construye del torneo con un nombre y el conjunto de categorías que lo componen
 	 * 
-	 * @param name nombre del torneo
-	 * @param categories categorías que componen el torneo
+	 * @param name nombre del torneo, cadena no <code>null</code>
+	 * @param categories categorías no repetidas que componen el torneo, debe haber al menos una
+	 * @throws IllegalArgumentException si alguno de los parámetros es <code>null</code> o si la lista de categorías está vacía
 	 */
 	public Tournament(String name, List<Event> categories) {
+		if (name == null || categories == null)
+			throw new IllegalArgumentException("The parameters cannot be null");
+		
+		if (categories.isEmpty())
+			throw new IllegalArgumentException("The list of categories cannot be empty");
+		
+		if (categories.contains(null))
+			throw new IllegalArgumentException("A category cannot be null");
+		
+		for (int i = 0; i < categories.size() - 1; i++)
+			for (int j = i + 1; j < categories.size(); j++)
+				if (categories.get(i) == categories.get(j))
+					throw new IllegalArgumentException("A category cannot be repeated (" + categories.get(i) + " is present more than once)");
+		
 		this.name = name;
 		events = categories;
 		
@@ -91,8 +132,8 @@ public class Tournament {
 	
 	/**
 	 * Construye un torneo
-	 * @param name nombre
-	 * @param categories categorías que componen el torneo
+	 * @param name nombre del torneo, cadena no <code>null</code>
+	 * @param categories categorías que componen el torneo, debe haber al menos una
 	 */
 	public Tournament(String name, Event... categories) {
 		this(name, new ArrayList<Event>(Arrays.asList(categories)));
@@ -112,7 +153,16 @@ public class Tournament {
 		return solved;
 	}
 	
+	/**
+	 * Asigna un nombre no nulo al torneo
+	 * 
+	 * @param name nombre no <code>null</code> del torneo
+	 * @throws IllegalArgumentException si el nombre es <code>null</code>
+	 */
 	public void setName(String name) {
+		if (name == null)
+			throw new IllegalArgumentException("Name cannot be null");
+		
 		this.name = name;
 	}
 	
@@ -120,20 +170,40 @@ public class Tournament {
 		return name;
 	}
 	
+	/**
+	 * Devuelve la lista no modificable de eventos del torneo
+	 * 
+	 * @return lista de eventos del torneo envuelta en un wrapper que la hace no modificable
+	 */
 	public List<Event> getEvents() {
-		return events;
+		return Collections.unmodifiableList(events);
 	}
 	
+	/**
+	 * Devuelve la lista no modificable de todos los jugadores del torneo
+	 * 
+	 * @return lista de jugadores del torneo envuelta en un wrapper que la hace no modificable
+	 */
 	public List<Player> getAllPlayers() {
-		return allPlayers;
+		return Collections.unmodifiableList(allPlayers);
+	}
+	
+	/**
+	 * Devuelve la lista no modificable de todas las localizaciones de juego del torneo
+	 * 
+	 * @return lista de localizaciones de juego del torneo envuelta en un wrapper que la hace no modificable
+	 */
+	public List<Localization> getAllLocalizations() {
+		return Collections.unmodifiableList(allLocalizations);
 	}
 
+	/**
+	 * Devuelve la lista no modificable de todas las horas de juego del torneo
+	 * 
+	 * @return lista de timeslots del torneo envuelta en un wrapper que la hace no modificable
+	 */
 	public List<Timeslot> getAllTimeslots() {
-		return allTimeslots;
-	}
-	
-	public List<Localization> getAllLocalizations() {
-		return allLocalizations;
+		return Collections.unmodifiableList(allTimeslots);
 	}
 	
 	/**
@@ -194,46 +264,57 @@ public class Tournament {
 	}
 	
 	/**
-	 * Añade timeslots no disponibles para el jugador en todas las categorías donde participe
+	 * Añade timeslots no disponibles para el jugador en todas las categorías donde participe. Si el jugador no participa
+	 * en determinadas categorías o si éstas no incluyen en su horas de juego algunas de las horas en el conjunto <code>timeslots</code>,
+	 * se ignoran esos valores para esa categoría en concreto
 	 * 
-	 * @param player
-	 * @param timeslots
+	 * @param player cualquier jugador
+	 * @param timeslots cualquier conjunto de horas en las que el jugador no esté disponible
 	 */
 	public void addPlayerUnavailableTimeslots(Player player, Set<Timeslot> timeslots) {	
 		for (Event event : events)
 			if (event.getPlayers().contains(player))
-				event.addUnavailablePlayer(player, timeslots);
+				for (Timeslot timeslot : timeslots)
+					if (event.getTimeslots().contains(timeslot))
+						event.addUnavailablePlayer(player, timeslot);
 	}
 	
 	/**
-	 * Añade un timeslot no disponible para el jugador en todas las categorías donde participe
+	 * Añade un timeslot no disponible para el jugador en todas las categorías donde participe. Si el jugador no participa
+	 * en una categoría o si la hora <code>timeslot</code> no pertenece al dominio de juego de la misma, se ignora para esa
+	 * categoría, así como si la hora ya ha sido marcada como no disponible para el jugador
 	 * 
-	 * @param player
-	 * @param timeslot
+	 * @param player culaquier jugador
+	 * @param timeslot culquier hora
 	 */
 	public void addPlayerUnavailableTimeslot(Player player, Timeslot timeslot) {
 		for (Event event : events)
-			if (event.getPlayers().contains(player))
+			if (event.getPlayers().contains(player) && event.getTimeslots().contains(timeslot) && 
+				(!event.getUnavailableLocalizations().containsKey(player) ||
+					!event.getUnavailableLocalizations().get(player).contains(timeslot)))
 				event.addUnavailablePlayer(player, timeslot);
 	}
 	
 	/**
-	 * Si el jugador no está disponible a la hora timeslot, se elimina de la lista y vuelve a estar disponible a esa hora,
-	 * para todas las categorías
+	 * Si el jugador no está disponible a la hora <code>timeslot</code>, se elimina de la lista y vuelve a estar disponible a esa hora,
+	 * para todas las categorías. Si el jugador no pertenece a una categoría o la hora no existe en el dominio de ésta, no se
+	 * lleva a cabo ninguna acción para esa categoría, así como si la hora ya ha sido marcada como no disponible para el jugador
 	 * 
-	 * @param player
-	 * @param timeslot
+	 * @param player cualquier jugador
+	 * @param timeslot cualquier hora
 	 */
 	public void removePlayerUnavailableTimeslot(Player player, Timeslot timeslot) {
 		for (Event event : events)
-			if (event.getPlayers().contains(player))
+			if (event.getPlayers().contains(player) && event.getTimeslots().contains(timeslot))
 				event.removePlayerUnavailableTimeslot(player, timeslot);
 	}
 	
 	/**
-	 * Marca los timeslots de la lista como breaks para todas las categorías
+	 * Marca los timeslots de la lista como breaks para todas las categorías, si la categoría incluye en su dominio de horas de
+	 * juego cada hora de la lista de breaks; si no lo incluye o si esa hora ya está marcada como break,
+	 * no se ejecuta ninguna acción para ese timeslot
 	 * 
-	 * @param breakTimeslots
+	 * @param timeslotBreaks una lista de horas que indican un período de descanso o break
 	 */
 	public void addBreaks(List<Timeslot> timeslotBreaks) {
 		for (Timeslot timeslot : timeslotBreaks)
@@ -243,75 +324,61 @@ public class Tournament {
 	}
 	
 	/**
-	 * Añade el timeslot como un break para todas las categorías
+	 * Añade el timeslot como un break para todas las categorías. Si una categoría no incluye en su dominio el timeslot o si éste
+	 * ya ha sido marcado como break, no se lleva a cabo ninguna acción
 	 * 
-	 * @param timeslotBreak
+	 * @param timeslotBreak una hora cualquiera
 	 */
 	public void addBreak(Timeslot timeslotBreak) {
 		for (Event event : events)
-			if (event.getTimeslots().contains(timeslotBreak))
+			if (event.getTimeslots().contains(timeslotBreak) && !event.isBreak(timeslotBreak))
 				event.addBreak(timeslotBreak);
 	}
 	
 	/**
-	 * Elimina el break para todas las categorías
+	 * Elimina el break para todas las categorías, si existe ese timeslot en el dominio del evento y si ha sido marcado como 
+	 * break, de lo contrario no se hace nada
 	 * 
-	 * @param timeslotBreak
+	 * @param timeslot una hora cualquiera que se marca como break
 	 */
 	public void removeBreak(Timeslot timeslot) {
 		for (Event event : events)
-			if (event.isBreak(timeslot))
+			if (event.getTimeslots().contains(timeslot) && event.isBreak(timeslot))
 				event.removeBreak(timeslot);
 	}
 	
 	/**
-	 * Invalida las pistas del diccionario a las horas indicadas para todas las categorías (si la categoría tiene
-	 * esa pista y esos timeslots)
-	 * 
-	 * @param unavailableLocalizations diccionario de localizaciones de juego descartadas en la lista de timeslots
-	 */
-	public void setUnavailableLocalizations(HashMap<Localization, List<Timeslot>> unavailableLocalizations) {
-		Set<Localization> localizations = unavailableLocalizations.keySet();	
-		for (Event event : events)
-			for (Localization localization : localizations)
-				if (event.getLocalizations().contains(localization)) {
-					List<Timeslot> timeslots = unavailableLocalizations.get(localization);
-					for (Timeslot timeslot : timeslots)
-						if (event.getTimeslots().contains(timeslot))
-							event.addUnavailableLocalization(localization, timeslot);
-				}
-	}
-	
-	/**
-	 * Invalida una pista a una hora o timeslot para todas las categorías (si la categoría tiene dicha pista
-	 * y dicha hora)
+	 * Invalida una pista a una hora o timeslot para todas las categorías, si la categoría tiene dicha pista
+	 * y dicha hora, de lo contrario no se toma ninguna acción, así como si la hora ya ha sido marcada 
+	 * como no disponible para la localización
 	 * 
 	 * @param localization localización de juego a invalidar
 	 * @param timeslot hora a la que invalidar
 	 */
 	public void addUnavailableLocalization(Localization localization, Timeslot timeslot) {
 		for (Event event : events)
-			if (event.getLocalizations().contains(localization) && event.getTimeslots().contains(timeslot))
+			if (event.getLocalizations().contains(localization) && event.getTimeslots().contains(timeslot) &&
+				(!event.getUnavailableLocalizations().containsKey(localization) ||
+					!event.getUnavailableLocalizations().get(localization).contains(timeslot)))
 				event.addUnavailableLocalization(localization, timeslot);
 	}
 	
 	/**
 	 * Añade una pista no disponible a las horas indicadas para todas las categorías
 	 * 
-	 * @param localization
-	 * @param timeslots
+	 * @param localization una localización de juego que se marca como inválida a las horas especificadas
+	 * @param timeslots el conjunto de horas a las que se marca la pista inválida
 	 */
 	public void addUnavailableLocalization(Localization localization, List<Timeslot> timeslots) {
-		for (Event event : events)
-			for (Timeslot timeslot : timeslots)
-				if (event.getLocalizations().contains(localization) && event.getTimeslots().contains(timeslot))
-					event.addUnavailableLocalization(localization, timeslot);
+		for (Timeslot timeslot : timeslots)
+			addUnavailableLocalization(localization, timeslot);
 	}
 	
 	/**
-	 * Para cada categoría que contenga la pista, elimina la invalidez de dicha localización
+	 * Revierte la no disponibilidad de una localización de juego, si existe para las categorías que la incluyan en 
+	 * su dominio, es decir, en su lista de localizaciones de juego.
 	 * 
-	 * @param localization
+	 * @param localization localización que vuelve a estar disponible para todas las horas
 	 */
 	public void removeUnavailableLocalization(Localization localization) {
 		for (Event event : events)
@@ -320,9 +387,12 @@ public class Tournament {
 	}
 	
 	/**
-	 * Para cada categoría que contenga la pista y el timeslot, elimina la invalidez de dicha localización
+	 * Revierte la no disponibilidad de una localización de juego a la hora especificada, si existe para las categorías
+	 * en las que tanto la localización como la hora existan en sus correspondientes dominios, así como que la localización
+	 * se encuentre marcada como no disponible a la hora <code>timeslot</code>; de lo contrario, no se tomará ninguna acción
 	 * 
-	 * @param localization
+	 * @param localization localización de juego para la que se va a marcar una hora como disponible de nuevo
+	 * @param timeslot hora que se va a marcar nuevamente como disponible una localización
 	 */
 	public void removeUnavailableLocalizationTimeslot(Localization localization, Timeslot timeslot) {
 		for (Event event : events)
@@ -333,7 +403,8 @@ public class Tournament {
 	/**
 	 * Muestra por la salida estándar una representación de los horarios de cada categoría
 	 * 
-	 * @param printMatches si es true se mostrará un resumen de los partidos por cada categoría, y si es false, no
+	 * @param printMatches si es <code>true</code> se mostrará adicionalmente un resumen de los partidos para cada categoría, 
+	 * y si es <code>false</code>, solamente se mostrarán los horarios
 	 */
 	public void printCurrentSchedules(boolean printMatches) {
 		StringBuilder sb = new StringBuilder();
@@ -363,13 +434,15 @@ public class Tournament {
 	}
 	
 	/**
-	 * Llama a printCurrentSchedules(true), mostrándose por la salida estándar los horarios y los partidos
+	 * Muestra los horarios y los partidos por la salida estándar
 	 */
 	public void printCurrentSchedules() {
 		printCurrentSchedules(true);
 	}
 	
 	/**
+	 * Devuelve el número de partidos del torneo
+	 * 
 	 * @return número de partidos que se juegan en el torneo
 	 */
 	public int getNumberOfMatches() {

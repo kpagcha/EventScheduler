@@ -9,27 +9,66 @@ import data.model.tournament.event.entity.Localization;
 import data.model.tournament.event.entity.Player;
 import data.model.tournament.event.entity.timeslot.Timeslot;
 
+/**
+ * Representa un horario mediante una matriz bidimensional de {@link ScheduleValue} que dota de significado a cada elemento.
+ * <p>
+ * La primera dimensión de la matriz (filas) corresponde a los jugadores y la segunda dimensión (columnas)
+ * corresponde con las horas de juego
+ * <p>
+ * Además, mantiene una lista de partidos (ver {@link Match}) que se extraen del procesamiento de la matriz mencionada.
+ *
+ */
 public abstract class Schedule {
 	
 	/**
-	 * Representación del horario con la ayuda de la clase ScheduleValue
+	 * Representación del horario con la ayuda de la clase {@link ScheduleValue}
 	 */
 	protected ScheduleValue[][] schedule;
 	
+	/**
+	 * Lista de partidos que se dan en el horario
+	 */
 	protected List<Match> matches;
 
+	/**
+	 * Número de jugadores
+	 */
 	protected int nPlayers;
-	protected int nCourts;
+	
+	/**
+	 * Número de pistas
+	 */
+	protected int nLocalizations;
+	
+	/**
+	 * Número de timeslots
+	 */
 	protected int nTimeslots;
 
+	/**
+	 * Lista de jugadores
+	 */
 	protected List<Player> players;
+	
+	/**
+	 * Lista de localizaciones de juego
+	 */
 	protected List<Localization> localizations;
+	
+	/**
+	 * Lista de horas de juego
+	 */
 	protected List<Timeslot> timeslots;
 	
+	/**
+	 * Nombre del evento o torneo al que corresponde el horario
+	 */
 	protected String name;
 	
 	/**
-	 * @return el horario como array bidimensional de enteros
+	 * Devuelve la matriz bidimensional con la representación del horario
+	 * 
+	 * @return matriz bidimensional que representa el horario
 	 */
 	public ScheduleValue[][] getSchedule() {
 		return schedule;
@@ -45,8 +84,8 @@ public abstract class Schedule {
 	/**
 	 * Devuelve el conjunto de partidos en los que participa el jugador
 	 * 
-	 * @param player
-	 * @return lista de partidos
+	 * @param player jugador del que se quieren obtener los partidos
+	 * @return lista de partidos, <code>null</code> si la lista de partidos aún no ha sido calculada
 	 */
 	public List<Match> getMatchesByPlayer(Player player) {
 		List<Match> playerMatches = null;
@@ -63,8 +102,8 @@ public abstract class Schedule {
 	/**
 	 * Devuelve el conjunto de partidos en los que participan los jugadores
 	 * 
-	 * @param players
-	 * @return lista de partidos
+	 * @param players jugadores de los que se quieren obtener los partidos
+	 * @return lista de partidos, <code>null</code> si la lista de partidos aún no ha sido calculada
 	 */
 	public List<Match> getMatchesByPlayers(List<Player> players) {
 		List<Match> playersMatches = null;
@@ -82,8 +121,8 @@ public abstract class Schedule {
 	/**
 	 * Devuelve el conjunto de partidos que tienen lugar en la localización de juego
 	 * 
-	 * @param localization
-	 * @return lista de partidos
+	 * @param localization localización de juego de la que se quiere obtener la lista de partidos
+	 * @return lista de partidos, <code>null</code> si la lista de partidos aún no ha sido calculada
 	 */
 	public List<Match> getMatchesByLocalization(Localization localization) {
 		List<Match> localizationMatches = null;
@@ -100,8 +139,8 @@ public abstract class Schedule {
 	/**
 	 * Devuelve el conjunto de partidos que tienen lugar en cualquiera de las localizaciones de juego
 	 * 
-	 * @param localization
-	 * @return lista de partidos
+	 * @param localizations localizaciones para las que se quiere obtener la lista de partidos
+	 * @return lista de partidos, <code>null</code> si la lista de partidos aún no ha sido calculada
 	 */
 	public List<Match> getMatchesByLocalizations(List<Localization> localizations) {
 		List<Match> localizationMatches = null;
@@ -121,8 +160,8 @@ public abstract class Schedule {
 	/**
 	 * Devuelve el conjunto de partidos que empiezan en el timeslot indicado
 	 * 
-	 * @param timeslot
-	 * @return lista de partidos
+	 * @param timeslot hora de comienzo para la que se quiere obtener la lista de partidos
+	 * @return lista de partidos, <code>null</code> si la lista de partidos aún no ha sido calculada
 	 */
 	public List<Match> getMatchesByStartTimeslot(Timeslot timeslot) {
 		List<Match> timeslotMatches = null;
@@ -139,8 +178,8 @@ public abstract class Schedule {
 	/**
 	 * Devuelve el conjunto de partidos que terminan en el timeslot indicado
 	 * 
-	 * @param timeslot
-	 * @return lista de partidos
+	 * @param timeslot hora de final para la que se quiere obtener la lista de partidos
+	 * @return lista de partidos, <code>null</code> si la lista de partidos aún no ha sido calculada
 	 */
 	public List<Match> getMatchesByEndTimeslot(Timeslot timeslot) {
 		List<Match> timeslotMatches = null;
@@ -158,8 +197,8 @@ public abstract class Schedule {
 	 * Devuelve el conjunto de partidos que empiezan en el timeslot inicial y terminan en el final
 	 * 
 	 * @param start timeslot de comienzo
-	 * @param end   timeslot final
-	 * @return lista de partidos
+	 * @param end timeslot final
+	 * @return lista de partidos, <code>null</code> si la lista de partidos aún no ha sido calculada
 	 */
 	public List<Match> getMatchesByTimeslotRange(Timeslot start, Timeslot end) {
 		List<Match> timeslotMatches = null;
@@ -176,10 +215,13 @@ public abstract class Schedule {
 	/**
 	 * Devuelve el conjunto de partidos cuyo transcurso discurre sobre el timeslot indicado
 	 * 
-	 * @param timeslot
-	 * @return lista de partidos
+	 * @param timeslot hora para la que se quieren buscar partidos que discurren sobre ella. No <code>null</code>
+	 * @return lista de partidos, <code>null</code> si la lista de partidos aún no ha sido calculada
 	 */
 	public List<Match> getMatchesByTimeslot(Timeslot timeslot) {
+		if (timeslot == null)
+			throw new IllegalArgumentException("Timeslot cannot be null");
+		
 		List<Match> timeslotMatches = null;
 		if (matches != null) {
 			timeslotMatches = new ArrayList<Match>();
@@ -196,6 +238,8 @@ public abstract class Schedule {
 	}
 	
 	/**
+	 * Cadena que representa un horario
+	 * 
 	 * @param scheduleArray array que representa un horario
 	 * @return cadena que representa el horario
 	 */

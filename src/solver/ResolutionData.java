@@ -112,7 +112,6 @@ public class ResolutionData {
 	 * @param solver                      el solver al que pertenece la información que una instancia de esta clase almacenará
 	 * @param tournament                  el torneo al que pertenece la resolución
 	 * @param searchStrategyName          nombres de las estrategias de búsqueda empleadas
-	 * @param randomDrawingsCount         número de categorías por sorteo
 	 * @param resolutionProcessCompleted  true si se ha completado el proceso de resolución, false si no
 	 */
 	public ResolutionData(Solver solver, Tournament tournament, String searchStrategyName, boolean resolutionProcessCompleted) {

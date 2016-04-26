@@ -38,7 +38,7 @@ public class CombinedSchedule extends Schedule {
 		timeslots = tournament.getAllTimeslots();
 		
 		nPlayers = players.size();
-		nCourts = localizations.size();
+		nLocalizations = localizations.size();
 		nTimeslots = timeslots.size();
 		
 		schedule = new ScheduleValue[nPlayers][nTimeslots];

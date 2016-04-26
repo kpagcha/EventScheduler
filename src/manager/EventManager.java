@@ -121,13 +121,13 @@ public class EventManager {
 		List<Player> pAlevinF = buildPlayers(new String[]{ "VILLANUEVA, L.", "TRIVIÑO, I." });
 		
 		Event veterano = new Event("Veterano", pVeterano, pistas, timeslots);
-		Event infantilM = new Event("Infantil Masculino", pInfantilM, pistas, timeslots);
+		//Event infantilM = new Event("Infantil Masculino", pInfantilM, pistas, timeslots);
 		Event infantilF = new Event("Infantil Femenino", pInfantilF, pistas, timeslots);
-		Event cadeteM = new Event("Cadete Masculino", pCadeteM, pistas, timeslots);
-		Event cadeteF = new Event("Cadete Femenino", pCadeteF, pistas, timeslots);
+		//Event cadeteM = new Event("Cadete Masculino", pCadeteM, pistas, timeslots);
+		//Event cadeteF = new Event("Cadete Femenino", pCadeteF, pistas, timeslots);
 		Event alevinM = new Event("Alevin Masculino", pAlevinM, pistas, timeslots);
-		Event alevinF = new Event("Alevin Femenino", pAlevinF, pistas, timeslots);
-		Event absoluto = new Event("Absoluto", pAbsoluto, pistas, timeslots);
+		//Event alevinF = new Event("Alevin Femenino", pAlevinF, pistas, timeslots);
+		//Event absoluto = new Event("Absoluto", pAbsoluto, pistas, timeslots);
 		
 		Tournament zarlon = new Tournament(
 			"Torneo Zarlon",

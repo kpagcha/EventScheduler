@@ -47,6 +47,11 @@ public class ScheduleValue {
 	 */
 	private int localization;
 	
+	/**
+	 * Construye el valor de un horario distinto de "ocupado"
+	 * 
+	 * @param val un valor distinto de {@link #OCCUPIED}
+	 */
 	public ScheduleValue(int val) {
 		if (val == OCCUPIED)
 			throw new IllegalStateException("A localization must be specified if the schedule value is OCCUPIED.");
@@ -54,6 +59,12 @@ public class ScheduleValue {
 		value = val;
 	}
 	
+	/**
+	 * Construye un valor de horario "ocupado"
+	 * 
+	 * @param val un valor equivalente a {@link #OCCUPIED}
+	 * @param l el valor de una localización de juego como un entero, es decir, su índice
+	 */
 	public ScheduleValue(int val, int l) {
 		if (val != OCCUPIED)
 			throw new IllegalStateException("Only schedule values of OCCUPIED can specify a localization.");

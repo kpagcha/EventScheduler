@@ -15,11 +15,15 @@ public abstract class RangedTimeslot extends AbstractTimeslot {
 	/**
 	 * Construye un timeslot con duración
 	 * 
-	 * @param duration
-	 * @param chronologicalOrder
+	 * @param duration duración del período, no <code>null</code>
+	 * @param chronologicalOrder orden cronológico de este timeslot
 	 */
 	public RangedTimeslot(final TemporalAmount duration, int chronologicalOrder) {
 		super(chronologicalOrder);
+		
+		if (duration == null)
+			throw new IllegalArgumentException("Duration cannot be null");
+		
 		this.duration = duration;
 	}
 	

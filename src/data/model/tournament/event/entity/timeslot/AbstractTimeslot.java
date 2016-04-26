@@ -20,10 +20,15 @@ import data.model.tournament.event.entity.Entity;
 public class AbstractTimeslot extends Entity implements Timeslot {
 	/**
 	 * Orden cronológico o jerárquico que indica la posición de este timeslot en una jerarquía
-	 * indefinida de timeslots anónimos. La maginitud de prioridad es inversa al valor numérico (1 > 2)
+	 * indefinida de timeslots anónimos. La maginitud de prioridad es inversa al valor numérico
 	 */
 	protected final int chronologicalOrder;
 	
+	/**
+	 * Constructor de un timeslot abstracto
+	 * 
+	 * @param chronologicalOrder orden cronológico de este timeslot
+	 */
 	public AbstractTimeslot(final int chronologicalOrder) {
 		this.chronologicalOrder = chronologicalOrder;
 	}
@@ -34,6 +39,9 @@ public class AbstractTimeslot extends Entity implements Timeslot {
 	}
 	
 	public int compareTo(Timeslot o) {
+		if (o == null)
+			return 1;
+		
 		AbstractTimeslot timeslot = (AbstractTimeslot)o;
 		if (chronologicalOrder < timeslot.chronologicalOrder)
 			return 1;

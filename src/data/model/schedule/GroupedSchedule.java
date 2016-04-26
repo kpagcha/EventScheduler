@@ -15,7 +15,8 @@ import data.model.tournament.event.entity.Player;
 import data.model.tournament.event.entity.timeslot.Timeslot;
 
 /**
- * Un horario agrupado por localizaciones de juego y horas
+ * Representa un horario agrupado por localizaciones de juego y horas de juego mediante una matriz
+ * bidimensional de {@link GroupedScheduleValue}.
  *
  */
 public class GroupedSchedule {
@@ -63,10 +64,20 @@ public class GroupedSchedule {
 	 * Construye el horario agrupado de un evento, teniendo en cuenta los partidos del horario, los breaks
 	 * y la indisponibilidad de pistas
 	 * 
-	 * @param event
-	 * @param matches
+	 * @param event evento no nulo
+	 * @param matches lista de partidos a partir de los que se construye el horario
+	 * 
+	 * @throws IllegalArgumentException si los parámetos son <code>null</code> o si el tamaño de la lista de
+	 * partidos no se corresponde por el esperado por el evento
 	 */
 	public GroupedSchedule(Event event, List<Match> matches) {
+		if (event == null || matches == null)
+			throw new IllegalArgumentException("The parameters cannot be null");
+		
+		if (matches.size() != event.getNumberOfMatches())
+			throw new IllegalArgumentException("The size of the list of matches (" + matches.size() + ") should be " +
+				"equal to the expected number of matches for the event (" + event.getNumberOfMatches() + ")");
+			
 		name = event.getName();
 		players = event.getPlayers();
 		localizations = event.getLocalizations();
@@ -111,7 +122,22 @@ public class GroupedSchedule {
 		}
 	}
 	
+	/** Construye el horario agrupado de un torneo
+	 * 
+	 * @param tournament torneo cuyo horario agrupado se va a construir
+	 * @param matches lista de partidos a partir de la que se construye este objeto
+	 * 
+	 * @throws IllegalArgumentException si los parámetos son <code>null</code> o si el tamaño de la lista de
+	 * partidos no se corresponde por el esperado por el torneo
+	 */
 	public GroupedSchedule(Tournament tournament, List<Match> matches) {
+		if (tournament == null || matches == null)
+			throw new IllegalArgumentException("The parameters cannot be null");
+		
+		if (matches.size() != tournament.getNumberOfMatches())
+			throw new IllegalArgumentException("The size of the list of matches (" + matches.size() + ") should be " +
+				"equal to the expected number of matches for the tournament (" + tournament.getNumberOfMatches() + ")");
+		
 		name = tournament.getName();
 		players = tournament.getAllPlayers();
 		localizations = tournament.getAllLocalizations();
@@ -234,13 +260,19 @@ public class GroupedSchedule {
 	}
 	
 	/**
-	 * Calcula el número total de timeslots del horario
-	 * @return un valor mayor que 0
+	 * Calcula el número total de <i>timeslots</i> del horario
+	 * 
+	 * @return el número total de horas de juego (<i>timeslots</i>), no negativo
 	 */
 	public int getTotalTimeslots() {
 		return localizations.size() * timeslots.size();
 	}
 	
+	/**
+	 * Devuelve el número de <i>timeslots</i> disponibles, es decir, donde partidos podrían tener lugar
+	 * 
+	 * @return el número de <i>timeslots</i> disponibles, no negativo
+	 */
 	public int getAvailableTimeslots() {
 		if (availableTimeslots < 0) {
 			for (int c = 0; c < localizations.size(); c++) {
@@ -254,6 +286,11 @@ public class GroupedSchedule {
 		return availableTimeslots;
 	}
 	
+	/**
+	 * Devuelve el número de huecos del horario ocupados para todas las pistas
+	 * 
+	 * @return tasa de ocupación del horario
+	 */
 	public int getOccupation() {
 		if (occupation < 0) {
 			for (int c = 0; c < localizations.size(); c++) {

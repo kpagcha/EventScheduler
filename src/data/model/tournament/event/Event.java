@@ -19,6 +19,28 @@ import data.validation.validator.Validator;
 import data.validation.validator.event.EventValidator;
 import solver.TournamentSolver.MatchupMode;
 
+/**
+ * Representación de un evento o categoría deportiva en el contexto de un torneo deportivo.
+ * <p>
+ * Un evento se compone de jugadores que componen enfrentamientos y partidos en los que participan, y que discurren
+ * en determinadas localizaciones de juego asignadas al evento, y a determinadas hora de juego.
+ * <p>
+ * Una categoría además incluye información adicional que especifica elementos más detallados:
+ * <ul>
+ * <li>Número de partidos que cada jugador del evento debe jugar
+ * <li>Número de horas o <i>timeslots</i> que un partido ocupa, es decir, su duración
+ * <li>Número de jugadores que componen un partido
+ * <li>Equipos, entendidos como asociación de jugadores individuales, que participan en el evento, si los hubiese
+ * <li>Conjunto de horas del evento en las que un enfrentamiento no puede tener lugar, es decir, <i>breaks</i> o descansos, como descansos para comer, la noche, etc...
+ * <li>Registro de horas a las que cada jugador no está disponible para tomar parte en un enfrentamiento, si hubiese
+ * <li>Registro de localizaciones de juego que no se encuentran disponibles a determinadas horas por cualquier razón, si hubiese
+ * <li>Registro de enfrentamientos fijos o predefinidos de antemano entre distintos jugadores en particular, si hubiese
+ * <li>Registro de localizaciones de juego predefinidas de antemano donde los jugadores especificados deben jugar, si hubiese
+ * <li>Registro de horas de juego predefinidas de antemano cuando los jugadores especificados deben jugar, si hubiese
+ * <li>Modo de enfrentamiento, que especifica el modo como se calcularán los emparejamientos
+ * </ul>
+ *
+ */
 public class Event implements Validable {
 	/**
 	 * Nombre del evento o la categoría
@@ -111,7 +133,8 @@ public class Event implements Validable {
 	 * @param timeslots horas o timeslots en los que discurrirá, lista no nula
 	 * 
 	 * @throws IllegalArgumentException si no se cumple alguna de las siguientes precondiciones:<br>
-	 * <ul><strong>Jugadores:</strong>
+	 * <h2>Jugadores:</h2>
+	 * <ul>
 	 * <li>La lista de jugadores no puede ser <code>null</code>
 	 * <li>El número de jugadores no puede ser inferior a 1
 	 * <li>El número de jugadores por partido no puede ser inferior a 1
@@ -120,13 +143,15 @@ public class Event implements Validable {
 	 * <li>Un jugador no puede estar repetido
 	 * </ul>
 	 * <br>
-	 * <ul><strong>Localizaciones:</strong>
+	 * <h2>Localizaciones:</h2>
+	 * <ul>
 	 * <li>La lista de localizaciones no es <code>null</code>
 	 * <li>La lista de localizaciones tiene más de un elemento
 	 * <li>La lista de localizaciones no tiene ningún elemento repetido
 	 * </ul>
 	 * <br>
-	 * <ul><strong>Horas</strong>
+	 * <h2>Horas</h2>
+	 * <ul>
 	 * <li>La lista de horas no es <code>null</code>
 	 * <li>La lista de horas tiene más de un timeslot
 	 * <li>La duración de un partido es superior a 1 timeslot
@@ -137,7 +162,7 @@ public class Event implements Validable {
 	 * <li>Una hora no puede estar repetida
 	 * </ul>
 	 */
-	public Event(String name, List<Player> players, List<Localization> localizations, List<Timeslot> timeslots) throws IllegalArgumentException {
+	public Event(String name, List<Player> players, List<Localization> localizations, List<Timeslot> timeslots) {
 		if (name == null)
 			throw new IllegalArgumentException("The name cannot be null");
 		
@@ -189,12 +214,15 @@ public class Event implements Validable {
 	 * @param nPlayersPerMatch número de jugadores por partido
 	 * @throws IllegalArgumentException si no se cumple alguna de las precondiciones de jugadores, ver {@link #Event(String, List, List, List)})
 	 */
-	private void checkPlayersPreconditions(List<Player> players, int nPlayersPerMatch) throws IllegalArgumentException {
+	private void checkPlayersPreconditions(List<Player> players, int nPlayersPerMatch) {
 		if (players == null)
 			throw new IllegalArgumentException("The list of players cannot be null");
 		
 		if (players.size() < 1)
 			throw new IllegalArgumentException("The number of players (" + players.size() + ") cannot be less than 1");
+		
+		if (players.contains(null))
+			throw new IllegalArgumentException("A player cannot be null");
 		
 		if (nPlayersPerMatch < 1)
 			throw new IllegalArgumentException("The number of players per match (" + nPlayersPerMatch + ") cannot be less than 1");
@@ -217,12 +245,15 @@ public class Event implements Validable {
 	 * @param localizations lista de localizaciones de juego
 	 * @throws IllegalArgumentException si no se cumple alguna de las precondiciones
 	 */
-	private void checkLocalizationsPreconditions(List<Localization> localizations) throws IllegalArgumentException {
+	private void checkLocalizationsPreconditions(List<Localization> localizations) {
 		if (localizations == null)
 			throw new IllegalArgumentException("The list of localizations cannot be null");
 		
 		if (localizations.size() < 1)
 			throw new IllegalArgumentException("The number of localizations (" + localizations.size() + ") cannot be less than 1");
+		
+		if (localizations.contains(null))
+			throw new IllegalArgumentException("A localization cannot be null");
 		
 		for (int i = 0; i < localizations.size() - 1; i++)
 			for (int j = i + 1; j < localizations.size(); j++)
@@ -238,12 +269,15 @@ public class Event implements Validable {
 	 * @param nMatchesPerPlayer número de partidos por jugador, superior a 1
 	 * @throws IllegalArgumentException si alguna precondición falla (ver {@link #Event(String, List, List, List)})
 	 */
-	private void checkTimeslotsPreconditions(List<Timeslot> timeslots, int nTimeslotsPerMatch, int nMatchesPerPlayer) throws IllegalArgumentException {
+	private void checkTimeslotsPreconditions(List<Timeslot> timeslots, int nTimeslotsPerMatch, int nMatchesPerPlayer) {
 		if (timeslots == null)
 			throw new IllegalArgumentException("The list of timeslots cannot be null");
 		
 		if (timeslots.size() < 1)
 				throw new IllegalArgumentException("The number of timeslots (" + timeslots.size() + ") cannot be less than 1");
+		
+		if (timeslots.contains(null))
+			throw new IllegalArgumentException("A timeslot cannot be null");
 		
 		if (nTimeslotsPerMatch < 1)
 			throw new IllegalArgumentException("The number of timeslots per match (" + nTimeslotsPerMatch + ") cannot be less than 1");
@@ -334,7 +368,7 @@ public class Event implements Validable {
 	 * @param nMatchesPerPlayer número de partidos por jugador, mínimo 1
 	 * @throws IllegalArgumentException si no se cumple alguna de las precondiciones de los timeslots (ver {@link #Event(String, List, List, List)})
 	 */
-	public void setMatchesPerPlayer(int nMatchesPerPlayer) throws IllegalArgumentException {
+	public void setMatchesPerPlayer(int nMatchesPerPlayer) {
 		checkTimeslotsPreconditions(timeslots, nTimeslotsPerMatch, nMatchesPerPlayer);
 		
 		this.nMatchesPerPlayer = nMatchesPerPlayer;
@@ -350,7 +384,7 @@ public class Event implements Validable {
 	 * @param nTimeslotsPerMatch número de timeslots por partidos, superior a 1
 	 * @throws IllegalArgumentException si falla alguna precondición de timeslots (ver {@link #Event(String, List, List, List)})
 	 */
-	public void setTimeslotsPerMatch(int nTimeslotsPerMatch) throws IllegalArgumentException {
+	public void setTimeslotsPerMatch(int nTimeslotsPerMatch) {
 		checkTimeslotsPreconditions(timeslots, nTimeslotsPerMatch, nMatchesPerPlayer);
 		
 		this.nTimeslotsPerMatch = nTimeslotsPerMatch;
@@ -364,9 +398,9 @@ public class Event implements Validable {
 	 * Asigna el número de jugadores por partido. Limpia la lista de equipos y la lista de emparejamientos fijos
 	 * 
 	 * @param nPlayersPerMatch número de jugadores por partido, superior a 1
-	 * @throws IllegalArgumentException si falla alguna de las precondiciones de jugadores (ver {@link #setPlayers(List, int)})
+	 * @throws IllegalArgumentException si falla alguna de las precondiciones de jugadores (ver {@link #Event(String, List, List, List)})
 	 */
-	public void setPlayersPerMatch(int nPlayersPerMatch) throws IllegalArgumentException {
+	public void setPlayersPerMatch(int nPlayersPerMatch) {
 		checkPlayersPreconditions(players, nPlayersPerMatch);
 		
 		this.nPlayersPerMatch = nPlayersPerMatch;
@@ -394,7 +428,7 @@ public class Event implements Validable {
 	 * <li>El número total de jugadores que componen todos los equipos debe ser igual al número de jugadores del evento
 	 * </ul>
 	 */
-	public void setTeams(List<Team> teams)  throws IllegalArgumentException {
+	public void setTeams(List<Team> teams)  {
 		checkTeamsPreconditions(teams);
 			
 		this.teams = teams;
@@ -406,7 +440,7 @@ public class Event implements Validable {
 	 * @param teams lista de equipos
 	 * @throws IllegalArgumentException si alguna de las precondiciones no se cumple, ver {@link #setTeams(List)}
 	 */
-	private void checkTeamsPreconditions(List<Team> teams) throws IllegalArgumentException {
+	private void checkTeamsPreconditions(List<Team> teams) {
 		if (teams == null)
 			throw new IllegalArgumentException("Teams cannot be null");
 		
@@ -416,10 +450,10 @@ public class Event implements Validable {
 		int totalPlayers = 0;
 		int playersPerTeam = teams.get(0).getPlayers().size();
 		
-		if (playersPerTeam < 2)
-			throw new IllegalArgumentException("Teams cannot be composed of less than 2 players");
-		
 		for (Team team : teams) {
+			if (team == null)
+				throw new IllegalArgumentException("A team cannot be null");
+			
 			int teamSize = team.getPlayers().size();
 			if (teamSize != playersPerTeam)
 				throw new IllegalArgumentException("All teams must have the same number of players (" + playersPerTeam + ", and this team has " + teamSize +")");
@@ -448,21 +482,17 @@ public class Event implements Validable {
 	 * <li>El equipo no puede existir ya, o ninguno de los jugadores que lo componen puede estar ya asignados a otro equipo
 	 * </ul>
 	 */
-	private void checkTeamPreconditions(Team team) throws IllegalArgumentException {
+	private void checkTeamPreconditions(Team team) {
 		if (team == null)
 			throw new IllegalArgumentException("Team cannot be null");
-		
-		int teamSize = team.getPlayers().size();
-		if (teamSize < 2)
-			throw new IllegalArgumentException("A team cannot be composed of less than 2 players");
 		
 		for (Player player : team.getPlayers())
 			if (!players.contains(player))
 				throw new IllegalArgumentException("The player (" + player + ") does not exist in the list of players of this event");
 		
 		if (!teams.isEmpty()) {
-			if (teamSize != teams.get(0).getPlayers().size())
-				throw new IllegalArgumentException("The number of players in the team (" + teamSize + ") must be equal");
+			if (team.getPlayers().size() != teams.get(0).getPlayers().size())
+				throw new IllegalArgumentException("The number of players in the team (" + team.getPlayers().size() + ") must be equal");
 			
 			for (Player player : team.getPlayers())
 				for (Team t : teams)
@@ -483,10 +513,10 @@ public class Event implements Validable {
 	/**
 	 * Añade un equipo, si la composición del mismo no es nula, de dos jugadores o más y pertenecientes al evento.
 	 * 
-	 * @param players jugadores que compondrán el nuevo equipo a añadir y pertenecientes a este evento
+	 * @param teamPlayers jugadores que compondrán el nuevo equipo a añadir y pertenecientes a este evento
 	 * @throws IllegalArgumentException si no se cumplen las precondiciones
 	 */
-	public void addTeam(Player... teamPlayers) throws IllegalArgumentException {
+	public void addTeam(Player... teamPlayers) {
 		if (teamPlayers == null)
 			throw new IllegalArgumentException("Players cannot be null");
 		
@@ -503,7 +533,7 @@ public class Event implements Validable {
 	 * @param team un equipo de jugadores
 	 * @throws IllegalArgumentException si no se cumplen las precondiciones
 	 */
-	public void removeTeam(Team team) throws IllegalArgumentException {
+	public void removeTeam(Team team) {
 		if (!teams.contains(team))
 			throw new IllegalArgumentException("The team (" + team + ") does not exist in the list of teams of this event");
 		
@@ -530,7 +560,7 @@ public class Event implements Validable {
 	 * <li>Cada hora del conjunto de horas no disponibles asociada a un jugador debe existir en el evento 
 	 * </ul>
 	 */
-	public void setUnavailablePlayers(Map<Player, Set<Timeslot>> unavailability) throws IllegalArgumentException {
+	public void setUnavailablePlayers(Map<Player, Set<Timeslot>> unavailability) {
 		checkUnavailablePlayersPreconditions(unavailability);
 			
 		unavailablePlayers = unavailability;
@@ -542,7 +572,7 @@ public class Event implements Validable {
 	 * @param unavailability diccionario no nulo
 	 * @throws IllegalArgumentException si no se cumple alguna precondición, ver {@linkplain #setUnavailableLocalizations(Map)}
 	 */
-	private void checkUnavailablePlayersPreconditions(Map<Player, Set<Timeslot>> unavailability) throws IllegalArgumentException {
+	private void checkUnavailablePlayersPreconditions(Map<Player, Set<Timeslot>> unavailability) {
 		if (unavailability == null)
 			throw new IllegalArgumentException("Map cannot be null");
 		
@@ -579,7 +609,7 @@ public class Event implements Validable {
 	 * @param timeslot hora perteneciente al dominio de este evento y no existente en el conjunto de horas no disponibles del jugador
 	 * @throws IllegalArgumentException si no se cumple alguna precondición
 	 */
-	public void addUnavailablePlayer(Player player, Timeslot timeslot) throws IllegalArgumentException {
+	public void addUnavailablePlayer(Player player, Timeslot timeslot) {
 		if (player == null || timeslot == null)
 			throw new IllegalArgumentException("The parameters cannot be null.");
 		
@@ -608,7 +638,7 @@ public class Event implements Validable {
 	 * @param timeslots conjunto no vacío de horas, y todas ellas pertenecientes al dominio del evento
 	 * @throws IllegalArgumentException si no se cumple alguna precondición, ver {@link #addUnavailablePlayer(Player, Timeslot)}
 	 */
-	public void addUnavailablePlayer(Player player, Set<Timeslot> timeslots) throws IllegalArgumentException {	
+	public void addUnavailablePlayer(Player player, Set<Timeslot> timeslots) {	
 		if (player == null || timeslots == null)
 			throw new IllegalArgumentException("The parameters cannot be null");
 		
@@ -623,7 +653,7 @@ public class Event implements Validable {
 	 * @param timeslot hora perteneciente al dominio del evento
 	 * @throws IllegalArgumentException si no se cumple alguna precondición
 	 */
-	public void removePlayerUnavailableTimeslot(Player player, Timeslot timeslot) throws IllegalArgumentException {
+	public void removePlayerUnavailableTimeslot(Player player, Timeslot timeslot) {
 		if (player == null || timeslot == null)
 			throw new IllegalArgumentException("The parameters cannot be null");
 		
@@ -656,7 +686,7 @@ public class Event implements Validable {
 	 * <li>Todos los jugadores deben existir en la lista de jugadores del evento
 	 * </ul>
 	 */
-	public void setFixedMatchups(List<Set<Player>> fixedMatchups) throws IllegalArgumentException {
+	public void setFixedMatchups(List<Set<Player>> fixedMatchups) {
 		checkFixedMatchupsPreconditions(fixedMatchups);
 		
 		this.fixedMatchups = fixedMatchups;
@@ -668,7 +698,7 @@ public class Event implements Validable {
 	 * @param fixedMatchups lista de emparejamientos fijos sujeta a las precondiciones definidas en {@link #setFixedMatchups(List)}
 	 * @throws IllegalArgumentException si no se cumple alguna de las precondiciones
 	 */
-	private void checkFixedMatchupsPreconditions(List<Set<Player>> fixedMatchups) throws IllegalArgumentException {
+	private void checkFixedMatchupsPreconditions(List<Set<Player>> fixedMatchups) {
 		if (fixedMatchups == null)
 			throw new IllegalArgumentException("List of fixed matchups cannot be null");
 		
@@ -716,7 +746,7 @@ public class Event implements Validable {
 	 * @param matchup conjunto de jugadores que cumplen las reglas de un enfrentamiento, ver precondiciones en {@link #setFixedMatchups(List)}
 	 * @throws IllegalArgumentException si no se cumple alguna de las precondiciones
 	 */
-	public void addFixedMatchup(Set<Player> matchup) throws IllegalArgumentException {
+	public void addFixedMatchup(Set<Player> matchup) {
 		checkFixedMatchupPreconditions(matchup);
 				
 		fixedMatchups.add(matchup);
@@ -729,7 +759,7 @@ public class Event implements Validable {
 	 * cumplen las reglas de un enfrentamiento, ver precondiciones en {@link #setFixedMatchups(List)}
 	 * @throws IllegalArgumentException si no se cumple alguna de las precondiciones
 	 */
-	public void addFixedMatchup(Player... players) throws IllegalArgumentException {
+	public void addFixedMatchup(Player... players) {
 		if (players == null)
 			throw new IllegalArgumentException("The players cannot be null.");
 		
@@ -742,7 +772,7 @@ public class Event implements Validable {
 	 * @param matchup conjunto de equipos existentes en el torneo entre los cuales habrá de darse un enfrentamiento
 	 * @throws IllegalArgumentException si no se cumple alguna de las precondiciones
 	 */
-	public void addFixedTeamsMatchup(Set<Team> matchup) throws IllegalArgumentException {
+	public void addFixedTeamsMatchup(Set<Team> matchup) {
 		if (matchup == null)
 			throw new IllegalArgumentException("The matchup cannot be null.");
 		
@@ -794,7 +824,7 @@ public class Event implements Validable {
 	 * @param breaks lista no nula de horas existentes en el torneo que serán interpretadas como breaks
 	 * @throws IllegalArgumentException si la lista es nula o contiene horas que no existen en este evento
 	 */
-	public void setBreaks(List<Timeslot> breaks) throws IllegalArgumentException {
+	public void setBreaks(List<Timeslot> breaks) {
 		if (breaks == null)
 			throw new IllegalArgumentException("The list of breaks cannot be null");
 		
@@ -820,7 +850,7 @@ public class Event implements Validable {
 	 * @param timeslotBreak una hora del evento que no exista ya en la lista de breaks
 	 * @throws IllegalArgumentException si no se cumplen todas las precondiciones
 	 */
-	public void addBreak(Timeslot timeslotBreak) throws IllegalArgumentException {
+	public void addBreak(Timeslot timeslotBreak) {
 		if (timeslotBreak == null)
 			throw new IllegalArgumentException("The timeslot break cannot be null");
 		
@@ -841,7 +871,7 @@ public class Event implements Validable {
 	 * @param timeslotBreak una hora del evento
 	 * @throws IllegalArgumentException si no se cumplen las precondiciones
 	 */
-	public void removeBreak(Timeslot timeslotBreak) throws IllegalArgumentException {
+	public void removeBreak(Timeslot timeslotBreak) {
 		if (timeslotBreak == null)
 			throw new IllegalArgumentException("The timeslot break cannot be null");
 		
@@ -854,11 +884,11 @@ public class Event implements Validable {
 	/**
 	 * Comprueba si un timeslot es un break
 	 * 
-	 * @param hora perteneciente al conjunto del evento
+	 * @param timeslot hora perteneciente al conjunto del evento
 	 * @return <code>true</code> si es break, <code>false</code> si no
 	 * @throws IllegalArgumentException si no se cumplen las precondiciones
 	 */
-	public boolean isBreak(Timeslot timeslot) throws IllegalArgumentException {
+	public boolean isBreak(Timeslot timeslot) {
 		if (timeslot == null)
 			throw new IllegalArgumentException("The timeslot cannot be null");
 		
@@ -888,7 +918,7 @@ public class Event implements Validable {
 	 * <li>Todas las horas asignadas a cada localización pertenecen al dominio del evento
 	 * </ul>
 	 */
-	public void setUnavailableLocalizations(Map<Localization, Set<Timeslot>> unavailableLocalizations) throws IllegalArgumentException {
+	public void setUnavailableLocalizations(Map<Localization, Set<Timeslot>> unavailableLocalizations) {
 		if (unavailableLocalizations == null)
 			throw new IllegalArgumentException("The dictionary of unavailable localizations cannot be null");
 		
@@ -925,7 +955,7 @@ public class Event implements Validable {
 	 * no disponibles de la localización
 	 * @throws IllegalArgumentException si no se cumplen las precondiciones
 	 */
-	public void addUnavailableLocalization(Localization localization, Timeslot timeslot) throws IllegalArgumentException {
+	public void addUnavailableLocalization(Localization localization, Timeslot timeslot) {
 		if (localization == null || timeslot == null)
 			throw new IllegalArgumentException("The parameters cannot be null");
 		
@@ -949,11 +979,11 @@ public class Event implements Validable {
 	 * Marca como inválida o no disponible una localización de juego a un conjunto de horas determinado
 	 * 
 	 * @param localization localización perteneciente al conjunto de localizaciones del evento
-	 * @param timeslot conjunto de horas pertenecientes al dominio del evento y no existentes en el conjunto de horas no 
+	 * @param timeslots conjunto de horas pertenecientes al dominio del evento y no existentes en el conjunto de horas no 
 	 * disponibles de la localización
 	 * @throws IllegalArgumentException si no se cumplen las precondiciones
 	 */
-	public void addUnavailableLocalization(Localization localization, Set<Timeslot> timeslots) throws IllegalArgumentException {
+	public void addUnavailableLocalization(Localization localization, Set<Timeslot> timeslots) {
 		if (localization == null || timeslots == null)
 			throw new IllegalArgumentException("The parameters cannot be null");
 		
@@ -968,7 +998,7 @@ public class Event implements Validable {
 	 * @param localization localización perteneciente al conjunto de localizaciones del evento
 	 * @throws IllegalArgumentException si no se cumplen las precondiciones
 	 */
-	public void removeUnavailableLocalization(Localization localization) throws IllegalArgumentException {
+	public void removeUnavailableLocalization(Localization localization) {
 		if (localization == null)
 			throw new IllegalArgumentException("The localization cannot be null");
 		
@@ -985,7 +1015,7 @@ public class Event implements Validable {
 	 * @param localization localización perteneciente al conjunto de localizaciones del evento
 	 * @param timeslot     hora perteneciente al conjunto de horas en las que el evento discurre
 	 */
-	public void removeUnavailableLocalizationTimeslot(Localization localization, Timeslot timeslot) throws IllegalArgumentException {
+	public void removeUnavailableLocalizationTimeslot(Localization localization, Timeslot timeslot) {
 		if (localization == null || timeslot == null)
 			throw new IllegalArgumentException("The parameters cannot be null");
 		
@@ -1020,7 +1050,7 @@ public class Event implements Validable {
 	 * existentes en este evento
 	 * @throws IllegalArgumentException si no se cumplen las precondiciones
 	 */
-	public void setPlayersInLocalizations(Map<Player, Set<Localization>> playersInLocalizations) throws IllegalArgumentException {
+	public void setPlayersInLocalizations(Map<Player, Set<Localization>> playersInLocalizations) {
 		if (playersInLocalizations == null)
 			throw new IllegalArgumentException("The parameter cannot be null");
 		
@@ -1056,7 +1086,7 @@ public class Event implements Validable {
 	 * @param localization localización perteneciente al conjunto de localizaciones del evento y que no haya sido ya asignada al jugador
 	 * @throws IllegalArgumentException si no se cumplen las precondiciones
 	 */
-	public void addPlayerInLocalization(Player player, Localization localization) throws IllegalArgumentException {
+	public void addPlayerInLocalization(Player player, Localization localization) {
 		if (player == null || localization == null)
 			throw new IllegalArgumentException("The parameters cannot be null");
 		
@@ -1084,7 +1114,7 @@ public class Event implements Validable {
 	 * @param localization localización perteneciente al conjunto de localizaciones del evento
 	 * @throws IllegalArgumentException si no se cumplen las precondiciones
 	 */
-	public void removePlayerInLocalization(Player player, Localization localization) throws IllegalArgumentException {
+	public void removePlayerInLocalization(Player player, Localization localization) {
 		if (player == null || localization == null)
 			throw new IllegalArgumentException("The parameters cannot be null");
 		
@@ -1119,7 +1149,7 @@ public class Event implements Validable {
 	 * el evento, a las que sus partidos deben tener lugar
 	 * @throws IllegalArgumentException si no se cumplen las precondiciones
 	 */
-	public void setPlayersAtTimeslots(Map<Player, Set<Timeslot>> playersAtTimeslots) throws IllegalArgumentException {
+	public void setPlayersAtTimeslots(Map<Player, Set<Timeslot>> playersAtTimeslots) {
 		if (playersAtTimeslots == null)
 			throw new IllegalArgumentException("The parameter cannot be null");
 		
@@ -1155,7 +1185,7 @@ public class Event implements Validable {
 	 * @param timeslot hora del evento, no asignada aún
 	 * @throws IllegalArgumentException si no se cumplen las precondiciones
 	 */
-	private void checkPlayerAtTimeslotPreconditions(Player player, Timeslot timeslot) throws IllegalArgumentException {
+	private void checkPlayerAtTimeslotPreconditions(Player player, Timeslot timeslot) {
 		if (player == null)
 			throw new IllegalArgumentException("Player cannot be null");
 		
@@ -1180,7 +1210,7 @@ public class Event implements Validable {
 	 * @param timeslot hora perteneciente al conjunto de horas en las que el evento discurre y que no se haya añadido ya
 	 * @throws IllegalArgumentException si no se cumplen las precondiciones
 	 */
-	public void addPlayerAtTimeslot(Player player, Timeslot timeslot) throws IllegalArgumentException {
+	public void addPlayerAtTimeslot(Player player, Timeslot timeslot) {
 		checkPlayerAtTimeslotPreconditions(player, timeslot);
 		
 		Set<Timeslot> playerTimeslots = playersAtTimeslots.get(player);
@@ -1197,7 +1227,7 @@ public class Event implements Validable {
 	 * @param timeslots conjunto de horas no asignadas pertenecientes al conjunto de horas en las que el evento discurre
 	 * @throws IllegalArgumentException si no se cumplen las precondiciones
 	 */
-	public void addPlayerAtTimeslots(Player player, List<Timeslot> timeslots) throws IllegalArgumentException {
+	public void addPlayerAtTimeslots(Player player, List<Timeslot> timeslots) {
 		if (timeslots == null)
 			throw new IllegalArgumentException("Timeslots cannot be null");
 		
@@ -1212,7 +1242,7 @@ public class Event implements Validable {
 	 * @param timeslots conjunto de horas no asignadas pertenecientes al conjunto de horas en las que el evento discurre
 	 * @throws IllegalArgumentException si no se cumplen las precondiciones
 	 */
-	public void addPlayersAtTimeslots(List<Player> players, List<Timeslot> timeslots) throws IllegalArgumentException {
+	public void addPlayersAtTimeslots(List<Player> players, List<Timeslot> timeslots) {
 		if (players == null || timeslots == null)
 			throw new IllegalArgumentException("The parameters cannot be null");
 		
@@ -1227,7 +1257,7 @@ public class Event implements Validable {
 	 * @param timeslot hora perteneciente al conjunto de horas en las que el evento discurre
 	 * @throws IllegalArgumentException si no se cumplen las precondiciones
 	 */
-	public void removePlayerAtTimeslot(Player player, Timeslot timeslot) throws IllegalArgumentException {
+	public void removePlayerAtTimeslot(Player player, Timeslot timeslot) {
 		if (player == null || timeslot == null)
 			throw new IllegalArgumentException("The parameters cannot be null");
 		
@@ -1253,7 +1283,7 @@ public class Event implements Validable {
 	 * @param timeslots conjunto de horas pertenecientes al conjunto de horas en las que el evento discurre
 	 * @throws IllegalArgumentException si no se cumplen las precondiciones
 	 */
-	public void removePlayerAtTimeslots(Player player, List<Timeslot> timeslots) throws IllegalArgumentException {
+	public void removePlayerAtTimeslots(Player player, List<Timeslot> timeslots) {
 		if (player == null || timeslots == null)
 			throw new IllegalArgumentException("The parameters cannot be null");
 		

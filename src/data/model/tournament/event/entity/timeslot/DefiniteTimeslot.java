@@ -18,12 +18,16 @@ public class DefiniteTimeslot extends RangedTimeslot {
 	protected final TemporalAccessor start;
 	
 	/**
-	 * @param start
-	 * @param duration
-	 * @param chronologicalOrder
+	 * @param start comienzo del período, no <code>null</code>
+	 * @param duration duración del período, no <code>null</code>
+	 * @param chronologicalOrder orden cronológico y jerárquico
 	 */
 	public DefiniteTimeslot(final TemporalAccessor start, final TemporalAmount duration, final int chronologicalOrder) {
 		super(duration, chronologicalOrder);
+		
+		if (start == null)
+			throw new IllegalArgumentException("Start cannot be null");
+		
 		this.start = start;
 	}
 	
@@ -33,6 +37,9 @@ public class DefiniteTimeslot extends RangedTimeslot {
 	
 	@SuppressWarnings("unchecked")
 	public int compareTo(Timeslot timeslot) {
+		if (timeslot == null)
+			return 1;
+		
 		if (!(timeslot instanceof DefiniteTimeslot))
 			return -1;
 		
@@ -52,6 +59,6 @@ public class DefiniteTimeslot extends RangedTimeslot {
 	}
 	
 	public String toString() {
-		return "[" + chronologicalOrder + "] " + start + " (" + duration + ")";
+		return start + " (" + duration + ") [" + chronologicalOrder + "]";
 	}
 }
