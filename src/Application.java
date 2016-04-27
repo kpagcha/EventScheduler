@@ -6,6 +6,7 @@ import data.model.schedule.GroupedSchedule;
 import data.model.schedule.data.Match;
 import data.model.tournament.Tournament;
 import data.model.tournament.event.entity.Player;
+import data.validation.validable.ValidationException;
 import manager.EventManager;
 
 public class Application {
@@ -65,7 +66,13 @@ public class Application {
 			e.printStackTrace();
 		}*/
 		
-		boolean solutionFound = tournament.solve();
+		boolean solutionFound = false;
+		try {
+			solutionFound = tournament.solve();
+		} catch (ValidationException e) {
+			for (String err : t.getMessages())
+				System.out.println(err);
+		}
 		
 		if (solutionFound) {
 			do {

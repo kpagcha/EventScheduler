@@ -1,4 +1,4 @@
-package data.validation.validator.event;
+package data.validation.validator.tournament;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -390,53 +390,55 @@ public class EventValidator implements Validator<Event> {
 		
 		boolean isValid = true;
 		
-		if (teams.size() < 2) {
-			isValid = false;
-			messages.add("There cannot be less than 2 teams");
-		}
-		
-		if (teams.contains(null)) {
-			messages.add("Teams cannot contain a null team");
-			return false;
-		}
-		
-		for (int i = 0; i < teams.size() - 1; i++)
-			for (int j = i + 1; j < teams.size(); j++)
-				if (teams.get(i) == teams.get(j)) {
-					isValid = false;
-					messages.add(String.format("Teams cannot be duplicated; team (%s) is", teams.get(i)));
-				}
-		
-		int nPlayersPerTeam = teams.get(0).getPlayers().size();
-		for (int i = 1; i < teams.size(); i++)
-			if (teams.get(i).getPlayers().size() != nPlayersPerTeam) {
+		if (!teams.isEmpty()) {
+			if (teams.size() < 2) {
 				isValid = false;
-				messages.add(String.format("All teams must have the same number of players (%d); team (%s) has %d",
-						nPlayersPerTeam, teams.get(i), teams.get(i).getPlayers().size()));
+				messages.add("There cannot be less than 2 teams");
 			}
-		
-		for (Team team : teams)
-			for (Player player : team.getPlayers())
-				if (!event.getPlayers().contains(player)) {
-					isValid = false;
-					messages.add(String.format("All players must exist in the list of players of the event; player (%s) does not", player));
-				}
-		
-		for (int i = 0; i < teams.size() - 1; i++)
-			for (Player player : teams.get(i).getPlayers())
+			
+			if (teams.contains(null)) {
+				messages.add("Teams cannot contain a null team");
+				return false;
+			}
+			
+			for (int i = 0; i < teams.size() - 1; i++)
 				for (int j = i + 1; j < teams.size(); j++)
-					if (teams.get(j).getPlayers().contains(player)) {
+					if (teams.get(i) == teams.get(j)) {
 						isValid = false;
-						messages.add(String.format("A player cannot exist in multiple teams; player (%s) is duplicated", player));
+						messages.add(String.format("Teams cannot be duplicated; team (%s) is", teams.get(i)));
 					}
-		
-		int nPlayers = 0;
-		for (Team team : teams)
-			nPlayers += team.getPlayers().size();
-		if (nPlayers > event.getPlayers().size()) {
-			isValid = false;
-			messages.add(String.format("The number of player in all teams (%d) cannot be greater than the total number of players in the event (%d)",
-					nPlayers, event.getPlayers().size()));
+			
+			int nPlayersPerTeam = teams.get(0).getPlayers().size();
+			for (int i = 1; i < teams.size(); i++)
+				if (teams.get(i).getPlayers().size() != nPlayersPerTeam) {
+					isValid = false;
+					messages.add(String.format("All teams must have the same number of players (%d); team (%s) has %d",
+							nPlayersPerTeam, teams.get(i), teams.get(i).getPlayers().size()));
+				}
+			
+			for (Team team : teams)
+				for (Player player : team.getPlayers())
+					if (!event.getPlayers().contains(player)) {
+						isValid = false;
+						messages.add(String.format("All players must exist in the list of players of the event; player (%s) does not", player));
+					}
+			
+			for (int i = 0; i < teams.size() - 1; i++)
+				for (Player player : teams.get(i).getPlayers())
+					for (int j = i + 1; j < teams.size(); j++)
+						if (teams.get(j).getPlayers().contains(player)) {
+							isValid = false;
+							messages.add(String.format("A player cannot exist in multiple teams; player (%s) is duplicated", player));
+						}
+			
+			int nPlayers = 0;
+			for (Team team : teams)
+				nPlayers += team.getPlayers().size();
+			if (nPlayers > event.getPlayers().size()) {
+				isValid = false;
+				messages.add(String.format("The number of player in all teams (%d) cannot be greater than the total number of players in the event (%d)",
+						nPlayers, event.getPlayers().size()));
+			}
 		}
 		
 		return isValid;

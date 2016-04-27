@@ -16,7 +16,7 @@ import data.model.tournament.event.entity.timeslot.Timeslot;
 import data.validation.validable.Validable;
 import data.validation.validable.ValidationException;
 import data.validation.validator.Validator;
-import data.validation.validator.event.EventValidator;
+import data.validation.validator.tournament.EventValidator;
 import solver.TournamentSolver.MatchupMode;
 
 /**
@@ -306,17 +306,13 @@ public class Event implements Validable {
 		this.validator = (Validator<Event>) validator;
 	}
 	
-	public Validator<Event> getValidator() {
-		return validator;
-	}
-	
 	public List<String> getMessages() {
 		return validator.getValidationMessages();
 	}
 	
 	public void validate() throws ValidationException {
 		if (!validator.validate(this))
-			throw new ValidationException("Event validation has failed.");
+			throw new ValidationException(String.format("Validation has failed for this event (%s)", name));
 	}
 	
 	/**

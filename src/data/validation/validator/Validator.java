@@ -10,10 +10,10 @@ public interface Validator<T> {
 	/**
 	 * Valida el objeto, comprobando si cumple todas las reglas definidas sobre él.
 	 * 
-	 * @param e objeto no nulo que se valida
+	 * @param o objeto no nulo que se valida
 	 * @return true si la validación es satisfactoria, y false si ha fallado
 	 */
-	public boolean validate(T e);
+	public boolean validate(T o);
 	
 	/**
 	 * Devuelve la lista de mensajes de error de la validación.

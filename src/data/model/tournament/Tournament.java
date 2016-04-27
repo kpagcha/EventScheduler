@@ -15,6 +15,10 @@ import data.model.tournament.event.Event;
 import data.model.tournament.event.entity.Localization;
 import data.model.tournament.event.entity.Player;
 import data.model.tournament.event.entity.timeslot.Timeslot;
+import data.validation.validable.Validable;
+import data.validation.validable.ValidationException;
+import data.validation.validator.Validator;
+import data.validation.validator.tournament.TournamentValidator;
 import solver.TournamentSolver;
 
 /**
@@ -42,7 +46,7 @@ import solver.TournamentSolver;
  * con el valor de <code>null</code>, indicando que no hay más horarios disponibles para este torneo.
  *
  */
-public class Tournament {
+public class Tournament implements Validable {
 	/**
 	 * Nombre del torneo
 	 */
@@ -82,6 +86,8 @@ public class Tournament {
 	 * El solver que obtendrá los horarios de cada categoría el torneo
 	 */
 	private final TournamentSolver solver;
+	
+	private Validator<Tournament> validator = new TournamentValidator();
 	
 	/**
 	 * Construye del torneo con un nombre y el conjunto de categorías que lo componen
@@ -143,8 +149,11 @@ public class Tournament {
 	 * Comienza el proceso de resolución para calcular un primer horario
 	 * 
 	 * @return true si se ha encontrado una solución, false si ocurre lo contrario
+	 * @throws ValidationException 
 	 */
-	public boolean solve() {
+	public boolean solve() throws ValidationException {
+		validate();
+		
 		boolean solved = solver.execute();
 		
 		currentSchedules = solver.getSchedules();
@@ -204,6 +213,23 @@ public class Tournament {
 	 */
 	public List<Timeslot> getAllTimeslots() {
 		return Collections.unmodifiableList(allTimeslots);
+	}
+	
+	@SuppressWarnings("unchecked")
+	public <T> void setValidator(Validator<T> validator) {
+		if (validator == null)
+			throw new IllegalArgumentException("The parameter cannot be null");
+		
+		this.validator = (Validator<Tournament>) validator;
+	}
+	
+	public List<String> getMessages() {
+		return validator.getValidationMessages();
+	}
+	
+	public void validate() throws ValidationException {
+		if (!validator.validate(this))
+			throw new ValidationException(String.format("Validation has failed for this tournament (%s)", name));
 	}
 	
 	/**
