@@ -8,7 +8,7 @@ import data.model.tournament.Tournament;
 import data.model.tournament.event.entity.Player;
 import manager.EventManager;
 
-public class App {
+public class Application {
 	public static void main(String[] args) {
 		Scanner sc = new Scanner(System.in);
 	

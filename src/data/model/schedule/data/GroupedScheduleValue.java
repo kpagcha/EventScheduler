@@ -50,6 +50,9 @@ public class GroupedScheduleValue {
 	 * @param val un valor distinto del correspondiente a {@link #OCCUPIED}
 	 */
 	public GroupedScheduleValue(int val) {
+		if (val < OCCUPIED && val > CONTINUATION)
+			throw new IllegalArgumentException("Illegal value (" + val + ")");
+		
 		if (val == OCCUPIED)
 			throw new IllegalStateException("A match must be specified if the schedule value is OCCUPIED.");
 		
@@ -63,6 +66,9 @@ public class GroupedScheduleValue {
 	 * @param indices un lista no <code>null</code> y no vacía de enteros no que representa índices de jugadores
 	 */
 	public GroupedScheduleValue(int val, List<Integer> indices) {
+		if (val < OCCUPIED && val > CONTINUATION)
+			throw new IllegalArgumentException("Illegal value (" + val + ")");
+		
 		if (val != OCCUPIED)
 			throw new IllegalStateException("Only schedule values of OCCUPIED can specify a match taking place.");
 		

@@ -576,6 +576,9 @@ public class Event implements Validable {
 		if (unavailability == null)
 			throw new IllegalArgumentException("Map cannot be null");
 		
+		if (unavailability.containsKey(null))
+			throw new IllegalArgumentException("A player cannot be null");
+		
 		for (Player player : unavailability.keySet()) {
 			if (!players.contains(player))
 				throw new IllegalArgumentException("The player (" + player + ") does not exist in the list of players of this event");
@@ -721,6 +724,9 @@ public class Event implements Validable {
 		if (matchup == null)
 			throw new IllegalArgumentException("A matchup cannot be null");
 		
+		if (matchup.contains(null))
+			throw new IllegalArgumentException("A player cannot be null");
+		
 		if (!players.containsAll(matchup))
 			throw new IllegalArgumentException("All players must exist in the list of players of the event");
 		
@@ -822,11 +828,20 @@ public class Event implements Validable {
 	 * Asigna la lista de horas que son descansos o breaks
 	 * 
 	 * @param breaks lista no nula de horas existentes en el torneo que serán interpretadas como breaks
-	 * @throws IllegalArgumentException si la lista es nula o contiene horas que no existen en este evento
+	 * @throws IllegalArgumentException si la lista es nula o contiene horas que no existen en este evento o hay
+	 * elementos repetidos
 	 */
 	public void setBreaks(List<Timeslot> breaks) {
 		if (breaks == null)
 			throw new IllegalArgumentException("The list of breaks cannot be null");
+		
+		if (breaks.contains(null))
+			throw new IllegalArgumentException("A break cannot be null");
+		
+		for (int i = 0; i < breaks.size() - 1; i++)
+			for (int j = i + 1; j < breaks.size(); j++)
+				if (breaks.get(i) == breaks.get(j))
+					throw new IllegalArgumentException("Break cannot be repeated");
 		
 		if (!timeslots.containsAll(breaks))
 			throw new IllegalArgumentException("All break timeslots must exist in the list of timeslots of this event");
@@ -921,6 +936,9 @@ public class Event implements Validable {
 	public void setUnavailableLocalizations(Map<Localization, Set<Timeslot>> unavailableLocalizations) {
 		if (unavailableLocalizations == null)
 			throw new IllegalArgumentException("The dictionary of unavailable localizations cannot be null");
+		
+		if (unavailableLocalizations.containsKey(null))
+			throw new IllegalArgumentException("A localization cannot be null");
 		
 		for (Localization localization : unavailableLocalizations.keySet()) {
 			if (!localizations.contains(localization))
@@ -1054,6 +1072,9 @@ public class Event implements Validable {
 		if (playersInLocalizations == null)
 			throw new IllegalArgumentException("The parameter cannot be null");
 		
+		if (playersInLocalizations.containsKey(null))
+			throw new IllegalArgumentException("A player cannot be null");
+		
 		for (Player player : playersInLocalizations.keySet()) {
 			if (!players.contains(player))
 				throw new IllegalArgumentException("The player (" + player + ") does not exist in the list of players of this event");
@@ -1152,6 +1173,9 @@ public class Event implements Validable {
 	public void setPlayersAtTimeslots(Map<Player, Set<Timeslot>> playersAtTimeslots) {
 		if (playersAtTimeslots == null)
 			throw new IllegalArgumentException("The parameter cannot be null");
+		
+		if (playersAtTimeslots.containsKey(null))
+			throw new IllegalArgumentException("A player cannot be null");
 		
 		for (Player player : playersAtTimeslots.keySet()) {
 			if (!players.contains(player))
