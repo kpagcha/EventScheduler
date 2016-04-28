@@ -3,14 +3,13 @@ package data.model.schedule;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.chocosolver.solver.variables.IntVar;
-
 import data.model.schedule.data.Match;
 import data.model.schedule.data.ScheduleValue;
 import data.model.tournament.event.Event;
 import data.model.tournament.event.entity.Player;
 import data.model.tournament.event.entity.Team;
 import data.model.tournament.event.entity.timeslot.Timeslot;
+import solver.TournamentSolver;
 
 /**
  * Horario de un evento o categoría en particular.
@@ -24,23 +23,17 @@ public class EventSchedule extends Schedule {
 	
 	/**
 	 * Construye un horario final de un evento a partir de la información del mismo, y de la solución aportada por la matriz
-	 * tridimensional aportada por la herramienta Choco que contiene la información del horario calculado.
+	 * tridimensional de enteros que contiene la información del horario calculado por la clase {@link TournamentSolver}.
 	 * <p>
-	 * Este método procesa la matriz de IntVar proporcionada por Choco y construye el horario representado mediante una
+	 * Este método procesa la matriz de enteros con la solución y construye el horario representado mediante una
 	 * matriz bidimensional de {@link ScheduleValue}.
 	 * 
 	 * @param event evento al que pertenece el horario que se va a construir
 	 * @param x array de IntVar de tres dimensiones con los valores de la solución calculada por el EventSolver
 	 */
-	public EventSchedule(Event event, IntVar[][][] x) {
+	public EventSchedule(Event event, int[][][] x) {
 		if (event == null || x == null)
 			throw new IllegalArgumentException("Parameters cannot be null");
-		
-		for (int p = 0; p < nPlayers; p++)
-			for (int c = 0; c < nLocalizations; c++)
-				for (int t = 0; t < nTimeslots; t++)
-					if (x[p][c][t] == null)
-						throw new IllegalArgumentException("Solution matrix has not been initialized correctly");
 		
 		this.event = event;
 		
@@ -68,7 +61,7 @@ public class EventSchedule extends Schedule {
 					
 					boolean matchInCourt = false;
 					for (int c = 0; c < nLocalizations; c++) {
-						if (x[p][c][t].getValue() == 1) {
+						if (x[p][c][t] == 1) {
 							schedule[p][t] = new ScheduleValue(ScheduleValue.OCCUPIED, c);
 							matchInCourt = true;
 							break;

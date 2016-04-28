@@ -807,6 +807,32 @@ public class TournamentSolver {
 	 */
 	private void buildSchedules() {
 		for (int i = 0; i < nCategories; i++)
-			schedules.add(new EventSchedule(events[i], x[i]));
+			schedules.add(new EventSchedule(events[i], solutionMatrixToInt(events[i], x[i])));
+	}
+	
+	/**
+	 * Transforma la matriz de IntVar de Choco en una matriz de enteros, tomando el valor actual de
+	 * la solución
+	 * 
+	 * @param event evento no nulo
+	 * @param x matriz de IntVar inicializada
+	 * @return matriz de enteros con los correspondientes valores de la solución
+	 */
+	private int[][][] solutionMatrixToInt(Event event, IntVar[][][] x) {
+		int nPlayers = event.getPlayers().size();
+		int nLocalizations = event.getLocalizations().size();
+		int nTimeslots = event.getTimeslots().size();
+		
+		int[][][] matrix = new int[nPlayers][][];
+		for (int p = 0; p < nPlayers; p++) {
+			matrix[p] = new int[nLocalizations][];
+			for (int c = 0; c < nLocalizations; c++) {
+				matrix[p][c] = new int[nTimeslots];
+				for (int t = 0; t < nTimeslots; t++)
+					matrix[p][c][t] = x[p][c][t].getValue();
+			}
+		}
+		
+		return matrix;
 	}
 }
