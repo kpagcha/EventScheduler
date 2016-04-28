@@ -75,7 +75,7 @@ public class Tournament implements Validable {
 	/**
 	 * Horarios para cada categoría
 	 */
-	private List<EventSchedule> currentSchedules;
+	private Map<Event, EventSchedule> currentSchedules;
 	
 	/**
 	 * Horario del torneo que combina los horarios de todas las categorías en uno solo
@@ -273,7 +273,7 @@ public class Tournament implements Validable {
 	 * 
 	 * @return los horarios de cada categoría
 	 */
-	public List<EventSchedule> getSchedules() {
+	public Map<Event, EventSchedule> getSchedules() {
 		return currentSchedules;
 	}
 	
@@ -438,7 +438,7 @@ public class Tournament implements Validable {
 		if (currentSchedules == null)
 			sb.append("Empty schedule.\n");
 		else {
-			for (EventSchedule schedule : currentSchedules) {
+			for (EventSchedule schedule : currentSchedules.values()) {
 				sb.append(schedule.toString());
 				
 				sb.append("\n");

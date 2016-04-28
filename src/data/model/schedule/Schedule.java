@@ -70,7 +70,7 @@ public abstract class Schedule {
 	 * 
 	 * @return matriz bidimensional que representa el horario
 	 */
-	public ScheduleValue[][] getSchedule() {
+	public ScheduleValue[][] getScheduleValues() {
 		return schedule;
 	}
 	

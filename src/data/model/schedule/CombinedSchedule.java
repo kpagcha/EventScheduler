@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 
 import data.model.schedule.data.Match;
 import data.model.schedule.data.ScheduleValue;
@@ -26,7 +27,7 @@ public class CombinedSchedule extends Schedule {
 	public CombinedSchedule(Tournament tournament) {
 		this.tournament = tournament;
 		
-		List<EventSchedule> schedules = tournament.getSchedules();
+		Map<Event, EventSchedule> schedules = tournament.getSchedules();
 		
 		if (schedules == null)
 			throw new IllegalStateException("Tournament schedule not calculated yet.");
@@ -47,10 +48,8 @@ public class CombinedSchedule extends Schedule {
 			for (int t = 0; t < nTimeslots; t++)
 				schedule[p][t] = new ScheduleValue(ScheduleValue.NOT_IN_DOMAIN);
 		
-		for (int s = 0; s < schedules.size(); s++) {
-			ScheduleValue[][] eventSchedule = schedules.get(s).getSchedule();
-			
-			Event event = schedules.get(s).getEvent();
+		for (Event event : tournament.getEvents()) {
+			ScheduleValue[][] eventSchedule = schedules.get(event).getScheduleValues();
 			
 			int nPlayers = event.getPlayers().size();
 			int nTimeslots = event.getTimeslots().size();
@@ -81,7 +80,7 @@ public class CombinedSchedule extends Schedule {
 	 */
 	public void calculateMatches() {	
 		matches = new ArrayList<Match>(tournament.getNumberOfMatches());
-		for (EventSchedule schedule : tournament.getSchedules()) {
+		for (EventSchedule schedule : tournament.getSchedules().values()) {
 			schedule.calculateMatches();
 			List<Match> eventMatches = schedule.getMatches();
 			

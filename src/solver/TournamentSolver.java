@@ -164,7 +164,7 @@ public class TournamentSolver {
 	/**
 	 * Horarios calculados de la solución actual
 	 */
-	private List<EventSchedule> schedules;
+	private Map<Event, EventSchedule> schedules;
 	
 	/**
 	 * Índices de cada jugador en el array de jugadores correspondiente a cada categoría
@@ -776,7 +776,7 @@ public class TournamentSolver {
 	 * 
 	 * @return los horarios de cada categoría
 	 */
-	public List<EventSchedule> getSchedules() {
+	public Map<Event, EventSchedule> getSchedules() {
 		// Cuando se llega a la última solución, si se vuelve a llamar a este método se "limpian" los horarios
 		if (lastSolutionFound && schedules != null)
 			schedules = null;
@@ -786,7 +786,7 @@ public class TournamentSolver {
 			schedules = null;
 			
 		} else if (schedules == null) {   // Se ha encontrado la primera solución
-			schedules = new ArrayList<EventSchedule>(nCategories);
+			schedules = new HashMap<Event, EventSchedule>(nCategories);
 			buildSchedules();
 			
 		} else {                          // Se ha encontrado una siguiente solución
@@ -807,7 +807,7 @@ public class TournamentSolver {
 	 */
 	private void buildSchedules() {
 		for (int i = 0; i < nCategories; i++)
-			schedules.add(new EventSchedule(events[i], solutionMatrixToInt(events[i], x[i])));
+			schedules.put(events[i], new EventSchedule(events[i], solutionMatrixToInt(events[i], x[i])));
 	}
 	
 	/**
