@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import data.model.schedule.CombinedSchedule;
+import data.model.schedule.TournamentSchedule;
 import data.model.schedule.EventSchedule;
 import data.model.schedule.data.Match;
 import data.model.tournament.event.Event;
@@ -31,7 +31,7 @@ import solver.TournamentSolver;
  * del problema que se modela gracias a la información que este torneo contiene y, sobre todo, sus eventos.
  * <p>
  * Un torneo lleva asociado un conjunto de horarios para cada evento (ver {@link EventSchedule}) y un horario combinado
- * de todos estos que representa el horario de todo el torneo (ver {@link CombinedSchedule}). Inicialmente, el valor
+ * de todos estos que representa el horario de todo el torneo (ver {@link TournamentSchedule}). Inicialmente, el valor
  * de estos horarios no ha sido asignado. Los horarios contendrán valores específicos una vez se ejecute el método
  * {@link #solve()} que inicia por primera vez el proceso de resolución, del que es responsable {@link TournamentSolver}.
  * <p>
@@ -80,7 +80,7 @@ public class Tournament implements Validable {
 	/**
 	 * Horario del torneo que combina los horarios de todas las categorías en uno solo
 	 */
-	private CombinedSchedule schedule;
+	private TournamentSchedule schedule;
 	
 	/**
 	 * El solver que obtendrá los horarios de cada categoría el torneo
@@ -156,7 +156,7 @@ public class Tournament implements Validable {
 		
 		boolean solved = solver.execute();
 		
-		currentSchedules = solver.getSchedules();
+		currentSchedules = solver.getSolvedSchedules();
 		schedule = null;
 		
 		return solved;
@@ -261,7 +261,7 @@ public class Tournament implements Validable {
 	 * se ha alcanzado la última solución
 	 */
 	public boolean nextSchedules() {
-		currentSchedules = solver.getSchedules();
+		currentSchedules = solver.getSolvedSchedules();
 		schedule = null;
 		return currentSchedules != null;
 	}
@@ -273,7 +273,7 @@ public class Tournament implements Validable {
 	 * 
 	 * @return los horarios de cada categoría
 	 */
-	public Map<Event, EventSchedule> getSchedules() {
+	public Map<Event, EventSchedule> getCurrentSchedules() {
 		return currentSchedules;
 	}
 	
@@ -283,9 +283,9 @@ public class Tournament implements Validable {
 	 * 
 	 * @return horario combinado del torneo
 	 */
-	public CombinedSchedule getSchedule() {
+	public TournamentSchedule getSchedule() {
 		if (schedule == null)
-			schedule = new CombinedSchedule(this);
+			schedule = new TournamentSchedule(this);
 		return schedule;
 	}
 	
@@ -446,7 +446,6 @@ public class Tournament implements Validable {
 				if (schedule != null && printMatches) {
 					sb.append(String.format("Match duration: %d timelots\n", schedule.getEvent().getTimeslotsPerMatch()));
 					
-					schedule.calculateMatches();
 					List<Match> matches = schedule.getMatches();
 					for (Match match : matches)
 						sb.append(match).append("\n");

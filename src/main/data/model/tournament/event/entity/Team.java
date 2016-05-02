@@ -55,10 +55,28 @@ public class Team extends Entity {
 	/**
 	 * Construye un equipo a partir de un array de jugadores
 	 * 
-	 * @param playersArray array de jugadores
+	 * @param playersArray array no nulo de jugadores únicos
 	 */
 	public Team(Player... playersArray) {
-		this(StringUtils.join(playersArray, "-"), new HashSet<Player>(Arrays.asList(playersArray)));
+		super(StringUtils.join(playersArray, "-"));
+		
+		if (playersArray == null)
+			throw new IllegalArgumentException("Players cannot be null");
+		
+		for (int i = 0; i < playersArray.length - 1; i++)
+			for (int j = i + 1; j < playersArray.length; j++)
+				if (playersArray[i] == playersArray[j])
+					throw new IllegalArgumentException(String.format("All players must be unique; player(%s) is duplicated", playersArray[i]));
+		
+		Set<Player> players = new HashSet<Player>(Arrays.asList(playersArray));
+		
+		if (players.size() < 2)
+			throw new IllegalArgumentException("A team cannot have less than two players");
+		
+		if (players.contains(null))
+			throw new IllegalArgumentException("A team cannot contain a null player");
+		
+		this.players = players;
 	}
 	
 	public Set<Player> getPlayers() {

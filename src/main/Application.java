@@ -1,33 +1,39 @@
 import java.util.List;
 import java.util.Scanner;
 
-import data.model.schedule.CombinedSchedule;
+import data.model.schedule.TournamentSchedule;
 import data.model.schedule.GroupedSchedule;
 import data.model.schedule.data.Match;
 import data.model.tournament.Tournament;
 import data.model.tournament.event.entity.Player;
 import data.validation.validable.ValidationException;
-import manager.EventManager;
+import utils.TournamentUtils;
 
 public class Application {
 	public static void main(String[] args) {
+		TournamentUtils.weirdSchedule();
+		
 		Scanner sc = new Scanner(System.in);
 	
 		System.out.println("0 Zarlon");
 		System.out.println("1 Tournament");
+		System.out.println("2 ATP");
 		System.out.print("Choose tournament: ");
 		int tournamentOption = sc.nextInt();
 		
 		Tournament t = null;
 		switch (tournamentOption) {
 			case 0:
-				t = EventManager.getInstance().getZarlonTournament();
+				t = TournamentUtils.getZarlonTournament();
 				break;
 			case 1:
-				t = EventManager.getInstance().getSampleTournament();
+				t = TournamentUtils.getSampleTournament();
+				break;
+			case 2:
+				t = TournamentUtils.getSampleAtp();
 				break;
 			default:
-				t = EventManager.getInstance().getSampleTournament();
+				t = TournamentUtils.getSampleTournament();
 				break;
 		}
 		
@@ -81,13 +87,11 @@ public class Application {
 					System.out.println(tournament + "\n");
 					tournament.printCurrentSchedules(printMatches);
 					
-					if (tournament.getSchedules() != null) {
-						CombinedSchedule combinedSchedule = tournament.getSchedule();
+					if (tournament.getCurrentSchedules() != null) {
+						TournamentSchedule combinedSchedule = tournament.getSchedule();
 					
 						System.out.println("All schedules combined in one");
 						System.out.println(combinedSchedule);
-						
-						combinedSchedule.calculateMatches();
 						
 						if (printMatches) {
 							List<Match> matches = combinedSchedule.getMatches();

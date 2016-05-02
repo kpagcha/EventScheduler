@@ -776,7 +776,7 @@ public class TournamentSolver {
 	 * 
 	 * @return los horarios de cada categoría
 	 */
-	public Map<Event, EventSchedule> getSchedules() {
+	public Map<Event, EventSchedule> getSolvedSchedules() {
 		// Cuando se llega a la última solución, si se vuelve a llamar a este método se "limpian" los horarios
 		if (lastSolutionFound && schedules != null)
 			schedules = null;

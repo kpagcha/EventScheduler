@@ -13,7 +13,11 @@ import data.model.tournament.event.Event;
 import data.model.tournament.event.entity.Player;
 import data.model.tournament.event.entity.timeslot.Timeslot;
 
-public class CombinedSchedule extends Schedule {
+/**
+ * Horario de un torneo formado por la combinación de los horarios de cada categoría que lo compone
+ *
+ */
+public class TournamentSchedule extends Schedule {
 	/**
 	 * Torneo al que el horario combinado pertenece
 	 */
@@ -24,10 +28,10 @@ public class CombinedSchedule extends Schedule {
 	 * torneo
 	 * @param tournament torneo al que pertenece el horario que se va a construir
 	 */
-	public CombinedSchedule(Tournament tournament) {
+	public TournamentSchedule(Tournament tournament) {
 		this.tournament = tournament;
 		
-		Map<Event, EventSchedule> schedules = tournament.getSchedules();
+		Map<Event, EventSchedule> schedules = tournament.getCurrentSchedules();
 		
 		if (schedules == null)
 			throw new IllegalStateException("Tournament schedule not calculated yet.");
@@ -73,14 +77,16 @@ public class CombinedSchedule extends Schedule {
 				}
 			}
 		}
+		
+		calculateMatches();
 	}
 	
 	/**
 	 * Construye los partidos a partir del horario combinado
 	 */
-	public void calculateMatches() {	
+	private void calculateMatches() {	
 		matches = new ArrayList<Match>(tournament.getNumberOfMatches());
-		for (EventSchedule schedule : tournament.getSchedules().values()) {
+		for (EventSchedule schedule : tournament.getCurrentSchedules().values()) {
 			schedule.calculateMatches();
 			List<Match> eventMatches = schedule.getMatches();
 			

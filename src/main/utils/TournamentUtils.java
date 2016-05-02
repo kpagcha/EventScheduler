@@ -1,4 +1,4 @@
-package manager;
+package utils;
 
 import java.lang.reflect.Array;
 import java.time.DayOfWeek;
@@ -14,6 +14,8 @@ import java.util.Random;
 
 import org.apache.commons.lang3.StringUtils;
 
+import data.model.schedule.EventSchedule;
+import data.model.schedule.data.Match;
 import data.model.tournament.Tournament;
 import data.model.tournament.event.Event;
 import data.model.tournament.event.entity.Localization;
@@ -25,21 +27,11 @@ import data.model.tournament.event.entity.timeslot.DefiniteTimeslot;
 import data.model.tournament.event.entity.timeslot.Timeslot;
 
 @SuppressWarnings("unused")
-public class EventManager {
-	private static EventManager instance = null;
-	
-	private EventManager() { }
-	
-	public static EventManager getInstance() {
-		if (instance == null)
-			instance = new EventManager();
-		return instance;
-	}
-	
+public class TournamentUtils {
 	/*
 	 * TORNEO 1
 	 */
-	public Tournament getSampleTournament() {
+	public static Tournament getSampleTournament() {
 		List<Player> players = buildGenericPlayers(16, "Jug");
 		List<Localization> courts = buildGenericLocalizations(3, "Court");
 		List<Timeslot> timeslots = buildAbstractTimeslots(13);
@@ -49,17 +41,75 @@ public class EventManager {
 		event.setMatchupMode(MatchupMode.ALL_DIFFERENT);
 		
 		for (int i = 0; i < players.size(); i += 2)
-			event.addTeam(players.get(i), players.get(i + 1));
+			event.addTeamPlayers(players.get(i), players.get(i + 1));
 		
 		Tournament tournament = new Tournament("Tournament", event);
 		
 		return tournament;
 	}
 	
+	/*
+	 * TORNEO 2: ATP
+	 */
+	public static Tournament getSampleAtp() {
+		List<Player> players = buildPlayers(new String[]{
+			"Djokovic", "Murray", "Federer", "Wawrinka", "Nadal", "Nishikori", "Tsonga", "Berdych"
+		});
+		List<Localization> courts = buildGenericLocalizations(2, "Pista");
+		List<Timeslot> timeslots = buildAbstractTimeslots(13);
+		
+		Event event = new Event("Cuadro individual", players, courts, timeslots, 2, 2, 2);
+		
+		event.addBreak(timeslots.get(4));
+		
+		event.addUnavailableLocalization(
+			courts.get(0),
+			new HashSet<Timeslot>(Arrays.asList(
+				timeslots.get(0), timeslots.get(1), timeslots.get(2), timeslots.get(3), timeslots.get(4)
+			))
+		);
+		
+		event.addUnavailablePlayerAtTimeslots(
+			players.get(0),
+			new HashSet<Timeslot>(Arrays.asList(
+				timeslots.get(5), timeslots.get(6)
+			))
+		);
+		
+		return new Tournament("Torneo ATP", event);
+	}
+	
+
+	/*
+	 * Horario extraño o malformado
+	 */
+	public static void weirdSchedule() {
+		// Devuelve un torneo con el evento al que se refiere el horario ejemplo mostrado
+		Tournament tournament = getSampleAtp();
+		
+		Event e = tournament.getEvents().get(0);
+		
+		int[][][] x = new int[e.getPlayers().size()][4][e.getTimeslots().size()];
+		for (int p = 0; p < e.getPlayers().size(); p++) {
+			for (int c = 0; c < e.getLocalizations().size(); c++) {
+				for (int t = 0; t < e.getTimeslots().size(); t++) {
+					x[p][c][t] = new Random().nextInt(2);
+				}
+			}
+		}
+		
+		EventSchedule schedule = new EventSchedule(e, x);
+		
+		System.out.println(schedule);
+		for (Match m : schedule.getMatches())
+			System.out.println(m);
+	}
+	
+	
 	/* 
 	 * TORNEO ZARLON 15 ABRIL
 	 */
-	public Tournament getZarlonTournament() {
+	public static Tournament getZarlonTournament() {
 		int nTimeslots = 12;
 		int startHour = 17;
 		int startMinute = 0;
@@ -142,27 +192,27 @@ public class EventManager {
 		
 		
 		// Enfrentamientos alevín masculino
-		alevinM.addFixedMatchup(findPlayerByName("vazquez", pAlevinM), findPlayerByName("parrado", pAlevinM));
-		alevinM.addFixedMatchup(findPlayerByName("oliva", pAlevinM), findPlayerByName("castilla", pAlevinM));
-		alevinM.addFixedMatchup(findPlayerByName("ramirez", pAlevinM), findPlayerByName("barbera", pAlevinM));
+		alevinM.addFixedPlayersMatchup(findPlayerByName("vazquez", pAlevinM), findPlayerByName("parrado", pAlevinM));
+		alevinM.addFixedPlayersMatchup(findPlayerByName("oliva", pAlevinM), findPlayerByName("castilla", pAlevinM));
+		alevinM.addFixedPlayersMatchup(findPlayerByName("ramirez", pAlevinM), findPlayerByName("barbera", pAlevinM));
 		//alevinM.addFixedMatchup(findPlayerByName("herrera", pAlevinM), findPlayerByName("real", pAlevinM));
-		alevinM.addFixedMatchup(findPlayerByName("bocanegra", pAlevinM), findPlayerByName("davila", pAlevinM));
-		alevinM.addFixedMatchup(findPlayerByName("boloix", pAlevinM), findPlayerByName("galera", pAlevinM));
-		alevinM.addFixedMatchup(findPlayerByName("miguel", pAlevinM), findPlayerByName("moreno", pAlevinM));
-		alevinM.addFixedMatchup(findPlayerByName("rizo", pAlevinM), findPlayerByName("portales", pAlevinM));
+		alevinM.addFixedPlayersMatchup(findPlayerByName("bocanegra", pAlevinM), findPlayerByName("davila", pAlevinM));
+		alevinM.addFixedPlayersMatchup(findPlayerByName("boloix", pAlevinM), findPlayerByName("galera", pAlevinM));
+		alevinM.addFixedPlayersMatchup(findPlayerByName("miguel", pAlevinM), findPlayerByName("moreno", pAlevinM));
+		alevinM.addFixedPlayersMatchup(findPlayerByName("rizo", pAlevinM), findPlayerByName("portales", pAlevinM));
 		
 		// Enfrentamientos infantil femenino
-		infantilF.addFixedMatchup(findPlayerByName("garcia", pInfantilF), findPlayerByName("villanueva", pInfantilF));
+		infantilF.addFixedPlayersMatchup(findPlayerByName("garcia", pInfantilF), findPlayerByName("villanueva", pInfantilF));
 		
 		// Enfrentamientos Veterano
-		veterano.addFixedMatchup(findPlayerByName("fernandez", pVeterano), findPlayerByName("piedrola", pVeterano));
-		veterano.addFixedMatchup(findPlayerByName("devos", pVeterano), findPlayerByName("caneda", pVeterano));
-		veterano.addFixedMatchup(findPlayerByName("funke", pVeterano), findPlayerByName("rivas", pVeterano));
-		veterano.addFixedMatchup(findPlayerByName("moreno", pVeterano), findPlayerByName("arrieta", pVeterano));
-		veterano.addFixedMatchup(findPlayerByName("iglesias", pVeterano), findPlayerByName("maestre", pVeterano));
-		veterano.addFixedMatchup(findPlayerByName("pardal", pVeterano), findPlayerByName("romero", pVeterano));
-		veterano.addFixedMatchup(findPlayerByName("real", pVeterano), findPlayerByName("perez", pVeterano));
-		veterano.addFixedMatchup(findPlayerByName("romera", pVeterano), findPlayerByName("de miguel", pVeterano));
+		veterano.addFixedPlayersMatchup(findPlayerByName("fernandez", pVeterano), findPlayerByName("piedrola", pVeterano));
+		veterano.addFixedPlayersMatchup(findPlayerByName("devos", pVeterano), findPlayerByName("caneda", pVeterano));
+		veterano.addFixedPlayersMatchup(findPlayerByName("funke", pVeterano), findPlayerByName("rivas", pVeterano));
+		veterano.addFixedPlayersMatchup(findPlayerByName("moreno", pVeterano), findPlayerByName("arrieta", pVeterano));
+		veterano.addFixedPlayersMatchup(findPlayerByName("iglesias", pVeterano), findPlayerByName("maestre", pVeterano));
+		veterano.addFixedPlayersMatchup(findPlayerByName("pardal", pVeterano), findPlayerByName("romero", pVeterano));
+		veterano.addFixedPlayersMatchup(findPlayerByName("real", pVeterano), findPlayerByName("perez", pVeterano));
+		veterano.addFixedPlayersMatchup(findPlayerByName("romera", pVeterano), findPlayerByName("de miguel", pVeterano));
 		
 		
 		// Pista 1
@@ -195,7 +245,7 @@ public class EventManager {
 	 * * * * * * * * * * * *
 	 */
 	
-	private Player findPlayerByName(String name, List<Player> players) {
+	public static Player findPlayerByName(String name, List<Player> players) {
 		Player player = null;
 		for (Player p : players)
 			if (StringUtils.containsIgnoreCase(p.getName(), name))
@@ -203,14 +253,27 @@ public class EventManager {
 		return player;
 	}
 	
-	private List<Player> buildPlayers(String[] playersArray) {
+	/**
+	 * Construye una lista de jugadores a partir de nombres
+	 * 
+	 * @param playersArray array de cadenas
+	 * @return lista de jugadores con los nombres indicados
+	 */
+	public static List<Player> buildPlayers(String[] playersArray) {
 		Player[] players = new Player[playersArray.length];
 		for (int i = 0; i < playersArray.length; i++)
 			players[i] = new Player(playersArray[i]);
 		return new ArrayList<Player>(Arrays.asList(players));
 	}
 	
-	private List<Player> buildGenericPlayers(int n, String placeholder) {
+	/**
+	 * Construye una lista de jugadores genéricos
+	 * 
+	 * @param n número de jugadores no negativo
+	 * @param placeholder nombre genérico de los jugadores
+	 * @return lista de jugadores genéricos
+	 */
+	public static List<Player> buildGenericPlayers(int n, String placeholder) {
 		if (placeholder.isEmpty())
 			placeholder = "Player";
 		Player[] players = new Player[n];
@@ -219,14 +282,14 @@ public class EventManager {
 		return new ArrayList<Player>(Arrays.asList(players));
 	}
 	
-	private List<Localization> buildLocalizations(int[] courtsArray) {
-		Localization[] localizations = new Localization[courtsArray.length];
-		for (int i = 0; i < courtsArray.length; i++)
-			localizations[i] = new Localization("Court " + (i + 1));
-		return new ArrayList<Localization>(Arrays.asList(localizations));
-	}
-	
-	private List<Localization>  buildGenericLocalizations(int n, String placeholder) {
+	/**
+	 * Construye una lista de localizaciones genéricas
+	 * 
+	 * @param n número de localizaciones
+	 * @param placeholder nombre genérico
+	 * @return lista de localizaciones
+	 */
+	public static List<Localization>  buildGenericLocalizations(int n, String placeholder) {
 		if (placeholder.isEmpty())
 			placeholder = "Court";
 		
@@ -236,14 +299,26 @@ public class EventManager {
 		return new ArrayList<Localization>(Arrays.asList(localizations));
 	}
 	
-	private List<Timeslot> buildAbstractTimeslots(int nTimeslots) {
+	/**
+	 * Construye una lista de <i>timeslots</i> abstractos
+	 * 
+	 * @param nTimeslots número de horas de juego
+	 * @return lista de <i>timeslots</i>
+	 */
+	public static List<Timeslot> buildAbstractTimeslots(int nTimeslots) {
 		Timeslot[] timeslots = new Timeslot[nTimeslots];
 		for (int i = 0; i < nTimeslots; i++)
 			timeslots[i] = new AbstractTimeslot(i);
 		return new ArrayList<Timeslot>(Arrays.asList(timeslots));
 	}
 	
-	private List<Timeslot>  buildDefiniteDayOfWeekTimeslots(int nTimeslots) {
+	/**
+	 * Construye una lista de <i>timeslots</i> definidos que representan días de la semana
+	 * 
+	 * @param nTimeslots número de <i>timeslots</i>
+	 * @return lista de <i>timeslots</i>
+	 */
+	public static List<Timeslot>  buildDefiniteDayOfWeekTimeslots(int nTimeslots) {
 		Timeslot[] timeslots = new Timeslot[nTimeslots];
 		int order = 0;
 		for (int i = 0; i < nTimeslots; i++) {
@@ -253,7 +328,13 @@ public class EventManager {
 		return new ArrayList<Timeslot>(Arrays.asList(timeslots));
 	}
 	
-	private List<Timeslot>  buildDefiniteLocalTimeTimeslots(int nTimeslots) {
+	/**
+	 * Construye una lista de <i>timeslots</i> definidos que representan una hora del día
+	 * 
+	 * @param nTimeslots número de horas de juego
+	 * @return lista de <i>timeslots</i>
+	 */
+	public static List<Timeslot>  buildDefiniteLocalTimeTimeslots(int nTimeslots) {
 		Timeslot[] timeslots = new Timeslot[nTimeslots];
 		int order = 0;
 		for (int i = 0; i < nTimeslots; i++) {
@@ -263,7 +344,13 @@ public class EventManager {
 		return new ArrayList<Timeslot>(Arrays.asList(timeslots));
 	}
 	
-	private List<Timeslot>  buildUndefiniteTimeslots(int nTimeslots) {
+	/**
+	 * Construye una lista de horas de juego indefinidas de una duración de 1 hora
+	 * 
+	 * @param nTimeslots número de <i>timeslots</i>
+	 * @return lista de <i>timeslot</i>
+	 */
+	public static List<Timeslot> buildUndefiniteTimeslots(int nTimeslots) {
 		Timeslot[] timeslots = new Timeslot[nTimeslots];
 		for (int i = 0; i < nTimeslots; i++)
 			timeslots[i] = new UndefiniteTimeslot(Duration.ofHours(1), i);

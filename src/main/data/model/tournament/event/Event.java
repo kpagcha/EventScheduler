@@ -227,11 +227,8 @@ public class Event implements Validable {
 		if (nPlayersPerMatch < 1)
 			throw new IllegalArgumentException("The number of players per match (" + nPlayersPerMatch + ") cannot be less than 1");
 		
-		if (nPlayersPerMatch > players.size())
-			throw new IllegalArgumentException("The number of players per match (" + nPlayersPerMatch + ") cannot be greater than the number of players (" + players.size() + ")");
-		
 		if (players.size() % nPlayersPerMatch != 0)
-			throw new IllegalArgumentException("The number of players (" + players.size() + ") must be  a multiple of the number of players per match specified in this event (" + nPlayersPerMatch + ")");
+			throw new IllegalArgumentException("The number of players (" + players.size() + ") must be a multiple of the number of players per match specified in this event (" + nPlayersPerMatch + ")");
 	
 		for (int i = 0; i < players.size() - 1; i++)
 			for (int j = i + 1; j < players.size(); j++)
@@ -322,7 +319,7 @@ public class Event implements Validable {
 	 */
 	public void setName(String name) {
 		if (name == null)
-			throw new IllegalArgumentException("Name cannot be null.");
+			throw new IllegalArgumentException("Name cannot be null");
 			
 		this.name = name;
 	}
@@ -443,7 +440,6 @@ public class Event implements Validable {
 		if (teams.size() < 2)
 			throw new IllegalArgumentException("There must be at least two teams");
 		
-		int totalPlayers = 0;
 		int playersPerTeam = teams.get(0).getPlayers().size();
 		
 		for (Team team : teams) {
@@ -452,19 +448,26 @@ public class Event implements Validable {
 			
 			int teamSize = team.getPlayers().size();
 			if (teamSize != playersPerTeam)
-				throw new IllegalArgumentException("All teams must have the same number of players (" + playersPerTeam + ", and this team has " + teamSize +")");
+				throw new IllegalArgumentException(
+					"All teams must have the same number of players (" + playersPerTeam + ", and this team has " + teamSize +")"
+				);
 			
-			totalPlayers += teamSize;
+			for (Player player : team.getPlayers())
+				if (!players.contains(player))
+					throw new IllegalArgumentException("The player (" + player + ") does not exist in the list of players of this event");
 		}
+		
+		if (nPlayersPerMatch % playersPerTeam != 0)
+			throw new IllegalArgumentException(String.format(
+				"Number of players in a team (%d) must be a divisor of the number of players per match (%d)",
+				playersPerTeam, nPlayersPerMatch));
 		
 		for (int i = 0; i < teams.size() - 1; i++)
 			for (Player player : teams.get(i).getPlayers())
 				for (int j = i + 1; j < teams.size(); j++)
 					if (teams.get(j).getPlayers().contains(player))
-						throw new IllegalArgumentException("A player (" + player + ") can only be present in one team (player is in " + teams.get(i) + " and " + teams.get(j) + ")");
-		
-		if (totalPlayers != players.size())
-			throw new IllegalArgumentException("The number of players in all teams (" + totalPlayers + ") must be equal to the number of players this event has (" + players.size() + ")");
+						throw new IllegalArgumentException("A player (" + player + ") can only be present " + 
+								"in one team (player is in " + teams.get(i) + " and " + teams.get(j) + ")");
 	}
 	
 	/**
@@ -486,15 +489,22 @@ public class Event implements Validable {
 			if (!players.contains(player))
 				throw new IllegalArgumentException("The player (" + player + ") does not exist in the list of players of this event");
 		
+		int playersInTeam = teams.isEmpty() ? team.getPlayers().size() : teams.get(0).getPlayers().size();
+		
 		if (!teams.isEmpty()) {
-			if (team.getPlayers().size() != teams.get(0).getPlayers().size())
-				throw new IllegalArgumentException("The number of players in the team (" + team.getPlayers().size() + ") must be equal");
+			if (team.getPlayers().size() != playersInTeam)
+				throw new IllegalArgumentException("The number of players in the team (" + team.getPlayers().size() + ") must be the same");
 			
 			for (Player player : team.getPlayers())
 				for (Team t : teams)
 					if (t.getPlayers().contains(player))
 						throw new IllegalArgumentException("A player (" + player + ") can only be present in one team (player is already in " + t + ")");
 		}
+		
+		if (nPlayersPerMatch % playersInTeam != 0)
+			throw new IllegalArgumentException(String.format(
+				"Number of players in a team (%d) must be a divisor of the number of players per match (%d)",
+				playersInTeam, nPlayersPerMatch));
 	}
 	
 	/**
@@ -512,12 +522,24 @@ public class Event implements Validable {
 	 * @param teamPlayers jugadores que compondrán el nuevo equipo a añadir y pertenecientes a este evento
 	 * @throws IllegalArgumentException si no se cumplen las precondiciones
 	 */
-	public void addTeam(Player... teamPlayers) {
+	public void addTeamPlayers(Player... teamPlayers) {
 		if (teamPlayers == null)
 			throw new IllegalArgumentException("Players cannot be null");
 		
 		Team team = new Team(teamPlayers);
 		
+		checkTeamPreconditions(team);
+		
+		teams.add(team);
+	}
+	
+	/**
+	 * Añade un equipo
+	 * 
+	 * @param team equipo no nulo
+	 * @throws IllegalArgumentException si no se cumplen las precondiciones
+	 */
+	public void addTeam(Team team) {
 		checkTeamPreconditions(team);
 		
 		teams.add(team);
@@ -587,7 +609,9 @@ public class Event implements Validable {
 				throw new IllegalArgumentException("The set of unavailable timeslots for a player cannot be empty");
 			
 			for (Timeslot timeslot : playerUnavaible)
-				if (!timeslots.contains(timeslot))
+				if (timeslot == null)
+					throw new IllegalArgumentException("The timeslot cannot be null");
+				else if (!timeslots.contains(timeslot))
 					throw new IllegalArgumentException("The timeslot (" + timeslot + ") does not exist in this event");
 		}
 	}
@@ -610,13 +634,13 @@ public class Event implements Validable {
 	 */
 	public void addUnavailablePlayer(Player player, Timeslot timeslot) {
 		if (player == null || timeslot == null)
-			throw new IllegalArgumentException("The parameters cannot be null.");
+			throw new IllegalArgumentException("The parameters cannot be null");
 		
 		if (!players.contains(player))
-			throw new IllegalArgumentException("The player (" + player + ") does not exist in the list of players of the event.");
+			throw new IllegalArgumentException("The player (" + player + ") does not exist in the list of players of the event");
 		
 		if (!timeslots.contains(timeslot))
-			throw new IllegalArgumentException("The timeslot (" + timeslot + ") doest not exist in the list of timeslots of the event.");
+			throw new IllegalArgumentException("The timeslot (" + timeslot + ") doest not exist in the list of timeslots of the event");
 		
 		Set<Timeslot> unavailablePlayerTimeslots = unavailablePlayers.get(player);
 		
@@ -637,7 +661,7 @@ public class Event implements Validable {
 	 * @param timeslots conjunto no vacío de horas, y todas ellas pertenecientes al dominio del evento
 	 * @throws IllegalArgumentException si no se cumple alguna precondición, ver {@link #addUnavailablePlayer(Player, Timeslot)}
 	 */
-	public void addUnavailablePlayer(Player player, Set<Timeslot> timeslots) {	
+	public void addUnavailablePlayerAtTimeslots(Player player, Set<Timeslot> timeslots) {	
 		if (player == null || timeslots == null)
 			throw new IllegalArgumentException("The parameters cannot be null");
 		
@@ -657,10 +681,10 @@ public class Event implements Validable {
 			throw new IllegalArgumentException("The parameters cannot be null");
 		
 		if (!players.contains(player))
-			throw new IllegalArgumentException("The player (" + player + ") does not exist in the list of players of the event.");
+			throw new IllegalArgumentException("The player (" + player + ") does not exist in the list of players of the event");
 		
 		if (!timeslots.contains(timeslot))
-			throw new IllegalArgumentException("The timeslot (" + timeslot + ") does not exist in the list of timeslots of the event.");
+			throw new IllegalArgumentException("The timeslot (" + timeslot + ") does not exist in the list of timeslots of the event");
 			
 		Set<Timeslot> unavailablePlayerTimeslots = unavailablePlayers.get(player);
 		
@@ -670,7 +694,15 @@ public class Event implements Validable {
 			if (unavailablePlayerTimeslots.isEmpty())
 				unavailablePlayers.remove(player);
 		}
-		
+	}
+	
+	/**
+	 * Comprueba si hay jugadores no disponibles a ciertas horas
+	 * 
+	 * @return <code>true</code> si hay algún jugador no disponible a algunas horas, de lo contrario <code>false</code> 
+	 */
+	public boolean hasUnavailablePlayers() {
+		return !unavailablePlayers.isEmpty();
 	}
 	
 	/**
@@ -683,6 +715,7 @@ public class Event implements Validable {
 	 * <li>El número de jugadores de cada enfrentamiento debe ser igual al número de jugadores por partido definido por este evento
 	 * <li>No puede haber un enfrentamiento repetido
 	 * <li>Todos los jugadores deben existir en la lista de jugadores del evento
+	 * <li>Un jugador no puede formar parte de un número de enfrentamientos predefinidos mayor que el número de partidos por jugador
 	 * </ul>
 	 */
 	public void setFixedMatchups(List<Set<Player>> fixedMatchups) {
@@ -708,6 +741,17 @@ public class Event implements Validable {
 			for (int j = i + 1; j < fixedMatchups.size(); j++)
 				if (fixedMatchups.get(i).equals(fixedMatchups.get(j)))
 					throw new IllegalArgumentException("The matchup cannot be repeated (" + fixedMatchups.get(i) + ")");
+		
+		for (Set<Player> matchup : fixedMatchups) {
+			for (Player player : matchup) {
+				long count = fixedMatchups.stream().filter(m -> m.contains(player)).count();
+				if (count > nMatchesPerPlayer)
+					throw new IllegalArgumentException(String.format(
+						"Player (%s) cannot be present in more than the number of matches per player (%d) fixed matchups", 
+						player, nMatchesPerPlayer)
+					);
+			}
+		}
 	}
 	
 	/**
@@ -731,6 +775,15 @@ public class Event implements Validable {
 	
 		if (fixedMatchups.contains(matchup))
 			throw new IllegalArgumentException("The same matchup cannot be added more than once (" + matchup + ")");
+		
+		for (Player player : matchup) {
+			long count = fixedMatchups.stream().filter(m -> m.contains(player)).count();
+			if (count >= nMatchesPerPlayer)
+				throw new IllegalArgumentException(String.format(
+					"Player (%s) cannot be present in more than the number of matches per player (%d) fixed matchups", 
+					player, nMatchesPerPlayer)
+				);
+		}
 	}
 	
 	/**
@@ -761,9 +814,9 @@ public class Event implements Validable {
 	 * cumplen las reglas de un enfrentamiento, ver precondiciones en {@link #setFixedMatchups(List)}
 	 * @throws IllegalArgumentException si no se cumple alguna de las precondiciones
 	 */
-	public void addFixedMatchup(Player... players) {
+	public void addFixedPlayersMatchup(Player... players) {
 		if (players == null)
-			throw new IllegalArgumentException("The players cannot be null.");
+			throw new IllegalArgumentException("The players cannot be null");
 		
 		addFixedMatchup(new HashSet<Player>(Arrays.asList(players)));
 	}
@@ -776,7 +829,7 @@ public class Event implements Validable {
 	 */
 	public void addFixedTeamsMatchup(Set<Team> matchup) {
 		if (matchup == null)
-			throw new IllegalArgumentException("The matchup cannot be null.");
+			throw new IllegalArgumentException("The matchup cannot be null");
 		
 		for (Team team : matchup)
 			if (!teams.contains(team))
@@ -804,6 +857,9 @@ public class Event implements Validable {
 	 * @param matchup un conjunto de equipos cuyo enfrentamiento se eliminará de la lista, si existe
 	 */
 	public void removeFixedTeamsMatchup(Set<Team> matchup) {
+		if (matchup == null)
+			throw new IllegalArgumentException("The matchup cannot be null");
+		
 		Set<Player> playersInMatchup = new HashSet<Player>();
 		for (Team team : matchup)
 			playersInMatchup.addAll(team.getPlayers());
