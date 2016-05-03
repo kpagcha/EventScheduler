@@ -62,7 +62,7 @@ public class TournamentUtils {
 		
 		event.addBreak(timeslots.get(4));
 		
-		event.addUnavailableLocalization(
+		event.addUnavailableLocalizationAtTimeslots(
 			courts.get(0),
 			new HashSet<Timeslot>(Arrays.asList(
 				timeslots.get(0), timeslots.get(1), timeslots.get(2), timeslots.get(3), timeslots.get(4)

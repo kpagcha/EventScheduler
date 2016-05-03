@@ -365,6 +365,8 @@ public class Event implements Validable {
 		checkTimeslotsPreconditions(timeslots, nTimeslotsPerMatch, nMatchesPerPlayer);
 		
 		this.nMatchesPerPlayer = nMatchesPerPlayer;
+		if (nMatchesPerPlayer == 1)
+			matchupMode = MatchupMode.ANY;
 	}
 	
 	public int getMatchesPerPlayer() {
@@ -400,6 +402,9 @@ public class Event implements Validable {
 		
 		teams.clear();
 		fixedMatchups.clear();
+		
+		if (nPlayersPerMatch == 1)
+			matchupMode = MatchupMode.ANY;
 	}
 	
 	public int getPlayersPerMatch() {
@@ -1053,7 +1058,7 @@ public class Event implements Validable {
 	 * disponibles de la localización
 	 * @throws IllegalArgumentException si no se cumplen las precondiciones
 	 */
-	public void addUnavailableLocalization(Localization localization, Set<Timeslot> timeslots) {
+	public void addUnavailableLocalizationAtTimeslots(Localization localization, Set<Timeslot> timeslots) {
 		if (localization == null || timeslots == null)
 			throw new IllegalArgumentException("The parameters cannot be null");
 		
@@ -1290,7 +1295,7 @@ public class Event implements Validable {
 		checkPlayerAtTimeslotPreconditions(player, timeslot);
 		
 		Set<Timeslot> playerTimeslots = playersAtTimeslots.get(player);
-		if (playersAtTimeslots == null)
+		if (playerTimeslots == null)
 			playersAtTimeslots.put(player, new HashSet<Timeslot>(Arrays.asList(timeslot)));
 		else
 			playerTimeslots.add(timeslot);	
@@ -1303,7 +1308,7 @@ public class Event implements Validable {
 	 * @param timeslots conjunto de horas no asignadas pertenecientes al conjunto de horas en las que el evento discurre
 	 * @throws IllegalArgumentException si no se cumplen las precondiciones
 	 */
-	public void addPlayerAtTimeslots(Player player, List<Timeslot> timeslots) {
+	public void addPlayerAtTimeslots(Player player, Set<Timeslot> timeslots) {
 		if (timeslots == null)
 			throw new IllegalArgumentException("Timeslots cannot be null");
 		
@@ -1318,7 +1323,7 @@ public class Event implements Validable {
 	 * @param timeslots conjunto de horas no asignadas pertenecientes al conjunto de horas en las que el evento discurre
 	 * @throws IllegalArgumentException si no se cumplen las precondiciones
 	 */
-	public void addPlayersAtTimeslots(List<Player> players, List<Timeslot> timeslots) {
+	public void addPlayersAtTimeslots(Set<Player> players, Set<Timeslot> timeslots) {
 		if (players == null || timeslots == null)
 			throw new IllegalArgumentException("The parameters cannot be null");
 		
@@ -1341,7 +1346,7 @@ public class Event implements Validable {
 			throw new IllegalArgumentException("The player (" + player + ") does not exist in the list of players of this event");
 		
 		if (!timeslots.contains(timeslot))
-			throw new IllegalArgumentException("The timeslot (" + timeslot + ") does not exist in this event");
+			throw new IllegalArgumentException("The timeslot (" + timeslot + ") does not exist in the list of timeslots of this event");
 		
 		Set<Timeslot> playerTimeslots = playersAtTimeslots.get(player);
 		if (playerTimeslots != null) {
@@ -1359,9 +1364,9 @@ public class Event implements Validable {
 	 * @param timeslots conjunto de horas pertenecientes al conjunto de horas en las que el evento discurre
 	 * @throws IllegalArgumentException si no se cumplen las precondiciones
 	 */
-	public void removePlayerAtTimeslots(Player player, List<Timeslot> timeslots) {
-		if (player == null || timeslots == null)
-			throw new IllegalArgumentException("The parameters cannot be null");
+	public void removePlayerAtTimeslots(Player player, Set<Timeslot> timeslots) {
+		if (timeslots == null)
+			throw new IllegalArgumentException("Timeslots cannot be null");
 		
 		for (Timeslot timeslot : timeslots)
 			removePlayerAtTimeslot(player, timeslot);
@@ -1388,6 +1393,8 @@ public class Event implements Validable {
 		
 		if (nMatchesPerPlayer > 1 && nPlayersPerMatch > 1)
 			this.matchupMode = matchupMode;
+		else
+			this.matchupMode = MatchupMode.ANY;
 	}
 	
 	public MatchupMode getMatchupMode() {
@@ -1402,13 +1409,7 @@ public class Event implements Validable {
 	 * @return equipo al que pertenece el jugador, o <code>null</code> si no pertenece a ningún equipo o el jugador no existe en este evento
 	 */
 	public Team getTeamByPlayer(Player player) {
-		for (Team team : teams) {
-			Set<Player> playersInTeam = team.getPlayers();
-			for (Player p : playersInTeam)
-				if (p.equals(player))
-					return team;
-		}
-		return null;
+		return teams.stream().filter(team -> team.getPlayers().contains(player)).limit(1).findFirst().orElse(null);
 	}
 	
 	/**
@@ -1430,15 +1431,8 @@ public class Event implements Validable {
 	 * @return <code>true</code> si la localización no está disponible a la hora indicada, <code>false</code> si está disponible
 	 */
 	public boolean isLocalizationUnavailable(Localization localization, Timeslot timeslot) {
-		Set<Localization> localizations = unavailableLocalizations.keySet();
-		if (localizations.contains(localization)) {
-			for (Localization l : localizations) {
-				if (unavailableLocalizations.get(l).contains(timeslot))
-					return true;
-			}
-		}
-		return false;
-	}
+		return unavailableLocalizations.containsKey(localization) && unavailableLocalizations.get(localization).contains(timeslot);
+ 	}
 	
 	/**
 	 * Devuelve el número total de partidos que se jugarán en este evento
