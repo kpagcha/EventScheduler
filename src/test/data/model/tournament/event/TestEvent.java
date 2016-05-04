@@ -1,4 +1,4 @@
-package data.tournament.event;
+package data.model.tournament.event;
 
 import static org.junit.Assert.*;
 

@@ -29,7 +29,7 @@ public interface Timeslot extends Comparable<Timeslot> {
 	 */
 	public static int compare(Timeslot t1, Timeslot t2) {
 		if (t1 == null)
-			return -1;
+			return t2 == null ? 0 : -1;
 		return t1.compareTo(t2);
 	}
 }

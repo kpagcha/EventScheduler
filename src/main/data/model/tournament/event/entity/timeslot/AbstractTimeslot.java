@@ -30,6 +30,7 @@ public class AbstractTimeslot extends Entity implements Timeslot {
 	 * @param chronologicalOrder orden cronológico de este timeslot
 	 */
 	public AbstractTimeslot(final int chronologicalOrder) {
+		super("Timeslot [order=" + chronologicalOrder + "]");
 		this.chronologicalOrder = chronologicalOrder;
 	}
 

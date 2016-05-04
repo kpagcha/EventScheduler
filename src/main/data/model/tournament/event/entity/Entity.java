@@ -11,13 +11,6 @@ public abstract class Entity {
 	protected String name;
 	
 	/**
-	 * Constructor predeterminado de una entidad. El nombre es una cadena vacía.
-	 */
-	public Entity() {
-		name = "";
-	}
-	
-	/**
 	 * Constructor de una entidad que inicializa su nombre con un valor no <code>null</code>
 	 * 
 	 * @param name cadena no <code>null</code>

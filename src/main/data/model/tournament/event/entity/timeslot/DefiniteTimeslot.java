@@ -41,7 +41,7 @@ public class DefiniteTimeslot extends RangedTimeslot {
 			return 1;
 		
 		if (!(timeslot instanceof DefiniteTimeslot))
-			return -1;
+			return super.compareTo(timeslot);
 		
 		final DefiniteTimeslot definiteTimeslot = (DefiniteTimeslot)timeslot;
 		

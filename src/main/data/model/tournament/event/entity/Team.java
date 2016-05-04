@@ -60,9 +60,6 @@ public class Team extends Entity {
 	public Team(Player... playersArray) {
 		super(StringUtils.join(playersArray, "-"));
 		
-		if (playersArray == null)
-			throw new IllegalArgumentException("Players cannot be null");
-		
 		for (int i = 0; i < playersArray.length - 1; i++)
 			for (int j = i + 1; j < playersArray.length; j++)
 				if (playersArray[i] == playersArray[j])
