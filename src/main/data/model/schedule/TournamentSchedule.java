@@ -34,7 +34,7 @@ public class TournamentSchedule extends Schedule {
 		Map<Event, EventSchedule> schedules = tournament.getCurrentSchedules();
 		
 		if (schedules == null)
-			throw new IllegalStateException("Tournament schedule not calculated yet.");
+			throw new IllegalStateException("Tournament schedules not calculated");
 		
 		name = tournament.getName();
 		

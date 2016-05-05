@@ -3,6 +3,7 @@ package solver.constraint;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.chocosolver.solver.constraints.IntConstraintFactory;
 import org.chocosolver.solver.variables.IntVar;
@@ -20,7 +21,7 @@ public class LocalizationCollisionConstraint extends TournamentConstraint {
 	public LocalizationCollisionConstraint(Tournament trmnt) {
 		super(trmnt);
 		
-		Map<Integer, List<Event>> eventsByNumberOfPlayersPerMatch = tournament.groupEventsByNumberOfPlayersPerMatch();
+		Map<Integer, Set<Event>> eventsByNumberOfPlayersPerMatch = tournament.groupEventsByNumberOfPlayersPerMatch();
 		
 		// Posibles números de jugadores que componen un partido del torneo (incluye 0)
 		int[] allPossibleNumberOfPlayers = getAllPosibleNumberOfPlayersPerMatchArray(eventsByNumberOfPlayersPerMatch);
@@ -81,7 +82,7 @@ public class LocalizationCollisionConstraint extends TournamentConstraint {
 					// Las posibles ocupaciones de los jugadores de la pista_c a la hora_t
 					List<IntVar> playerSum = new ArrayList<IntVar>();
 					
-					List<Event> eventList = eventsByNumberOfPlayersPerMatch.get(numberOfPlayersPerMatch);
+					Set<Event> eventList = eventsByNumberOfPlayersPerMatch.get(numberOfPlayersPerMatch);
 					for (Event event : eventList) {
 						int nPlayers = event.getPlayers().size();
 						int e = events.indexOf(event);
@@ -108,7 +109,7 @@ public class LocalizationCollisionConstraint extends TournamentConstraint {
 	 * el valor asociado la lista de categorías que definen ese número de jugadores por partido
 	 * @return posibles distintos números de jugadores por partido, incluyendo ninguno (0)
 	 */
-	private int[] getAllPosibleNumberOfPlayersPerMatchArray(Map<Integer, List<Event>> eventsByNumberOfPlayersPerMatch) {		
+	private int[] getAllPosibleNumberOfPlayersPerMatchArray(Map<Integer, Set<Event>> eventsByNumberOfPlayersPerMatch) {		
 		Integer[] keysArray = eventsByNumberOfPlayersPerMatch.keySet().toArray(new Integer[eventsByNumberOfPlayersPerMatch.keySet().size()]);
 		
 		int[] array = new int[keysArray.length + 1];

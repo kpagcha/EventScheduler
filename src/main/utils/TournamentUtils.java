@@ -216,22 +216,22 @@ public class TournamentUtils {
 		
 		
 		// Pista 1
-		zarlon.addUnavailableLocalization(pistas.get(0), new ArrayList<Timeslot>(Arrays.asList(
+		zarlon.addUnavailableLocalization(pistas.get(0), new HashSet<Timeslot>(Arrays.asList(
 			timeslots.get(0), timeslots.get(1), timeslots.get(2)))
 		);
 		
 		// Pista 2
-		zarlon.addUnavailableLocalization(pistas.get(1), new ArrayList<Timeslot>(Arrays.asList(
+		zarlon.addUnavailableLocalization(pistas.get(1), new HashSet<Timeslot>(Arrays.asList(
 			timeslots.get(0), timeslots.get(1), timeslots.get(2), timeslots.get(3), timeslots.get(4), timeslots.get(5), timeslots.get(6)))
 		);
 		
 		// Pista 5
-		zarlon.addUnavailableLocalization(pistas.get(4), new ArrayList<Timeslot>(Arrays.asList(
+		zarlon.addUnavailableLocalization(pistas.get(4), new HashSet<Timeslot>(Arrays.asList(
 			timeslots.get(6), timeslots.get(7), timeslots.get(8), timeslots.get(9), timeslots.get(10), timeslots.get(11)))
 		);
 		
 		// Pista 6
-		zarlon.addUnavailableLocalization(pistas.get(5), new ArrayList<Timeslot>(Arrays.asList(
+		zarlon.addUnavailableLocalization(pistas.get(5), new HashSet<Timeslot>(Arrays.asList(
 			timeslots.get(0), timeslots.get(1)))
 		);
 		
