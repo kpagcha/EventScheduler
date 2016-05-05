@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -87,6 +88,9 @@ public class Tournament implements Validable {
 	 */
 	private final TournamentSolver solver;
 	
+	/**
+	 * Validador del torneo
+	 */
 	private Validator<Tournament> validator = new TournamentValidator();
 	
 	/**
@@ -96,7 +100,7 @@ public class Tournament implements Validable {
 	 * @param categories categorías no repetidas que componen el torneo, debe haber al menos una
 	 * @throws IllegalArgumentException si alguno de los parámetros es <code>null</code> o si la lista de categorías está vacía
 	 */
-	public Tournament(String name, List<Event> categories) {
+	public Tournament(String name, Set<Event> categories) {
 		if (name == null || categories == null)
 			throw new IllegalArgumentException("The parameters cannot be null");
 		
@@ -106,13 +110,8 @@ public class Tournament implements Validable {
 		if (categories.contains(null))
 			throw new IllegalArgumentException("A category cannot be null");
 		
-		for (int i = 0; i < categories.size() - 1; i++)
-			for (int j = i + 1; j < categories.size(); j++)
-				if (categories.get(i) == categories.get(j))
-					throw new IllegalArgumentException("A category cannot be repeated (" + categories.get(i) + " is present more than once)");
-		
 		this.name = name;
-		events = categories;
+		events = new ArrayList<Event>(categories);
 		
 		allPlayers = new ArrayList<Player>();
 		for (Event event : events)
@@ -142,7 +141,7 @@ public class Tournament implements Validable {
 	 * @param categories categorías que componen el torneo, debe haber al menos una
 	 */
 	public Tournament(String name, Event... categories) {
-		this(name, new ArrayList<Event>(Arrays.asList(categories)));
+		this(name, new HashSet<Event>(Arrays.asList(categories)));
 	}
 	
 	/**
@@ -157,9 +156,44 @@ public class Tournament implements Validable {
 		boolean solved = solver.execute();
 		
 		currentSchedules = solver.getSolvedSchedules();
-		schedule = null;
+		schedule = new TournamentSchedule(this);
 		
 		return solved;
+	}
+	
+	/**
+	 * Actualiza el valor de los horarios con la nueva solución combinada. Si se ha llegado
+	 * a la última solución se establece el valor de los horarios a null. Además, se resetea el valor
+	 * del horario combinado
+	 * 
+	 * @return true si se han actualizado los horarios con una nueva solución, y false si
+	 * se ha alcanzado la última solución
+	 */
+	public boolean nextSchedules() {
+		currentSchedules = solver.getSolvedSchedules();
+		schedule = new TournamentSchedule(this);
+		return currentSchedules != null;
+	}
+	
+	/**
+	 * Devuelve los horarios de cada categoría con el valor actual. Si no se ha actualizado el valor llamando
+	 * al método nextSchedules o si el solver ha alcanzado la última solución y se ha llamado seguidamente a
+	 * nextSchedules, devuelve null
+	 * 
+	 * @return los horarios de cada categoría
+	 */
+	public Map<Event, EventSchedule> getCurrentSchedules() {
+		return currentSchedules;
+	}
+	
+	/**
+	 * Devuelve un único horario combinado del torneo que include todos los jugadores, todas las localizaciones de
+	 * juego y todas las horas o timeslots de los que compone
+	 * 
+	 * @return horario combinado del torneo
+	 */
+	public TournamentSchedule getSchedule() {
+		return schedule;
 	}
 	
 	/**
@@ -215,6 +249,22 @@ public class Tournament implements Validable {
 		return Collections.unmodifiableList(allTimeslots);
 	}
 	
+	/**
+	 * Devuelve el número de partidos del torneo
+	 * 
+	 * @return número de partidos que se juegan en el torneo
+	 */
+	public int getNumberOfMatches() {
+		int numberOfMatches = 0;
+		for (Event event : events)
+			numberOfMatches += event.getNumberOfMatches();
+		return numberOfMatches;
+	}
+	
+	public TournamentSolver getSolver() {
+		return solver;
+	}
+	
 	@SuppressWarnings("unchecked")
 	public <T> void setValidator(Validator<T> validator) {
 		if (validator == null)
@@ -250,43 +300,6 @@ public class Tournament implements Validable {
 		}
 		
 		return eventsByNumberOfPlayersPerMatch;
-	}
-	
-	/**
-	 * Actualiza el valor de los horarios con la nueva solución combinada. Si se ha llegado
-	 * a la última solución se establece el valor de los horarios a null. Además, se resetea el valor
-	 * del horario combinado
-	 * 
-	 * @return true si se han actualizado los horarios con una nueva solución, y false si
-	 * se ha alcanzado la última solución
-	 */
-	public boolean nextSchedules() {
-		currentSchedules = solver.getSolvedSchedules();
-		schedule = null;
-		return currentSchedules != null;
-	}
-	
-	/**
-	 * Devuelve los horarios de cada categoría con el valor actual. Si no se ha actualizado el valor llamando
-	 * al método nextSchedules o si el solver ha alcanzado la última solución y se ha llamado seguidamente a
-	 * nextSchedules, devuelve null
-	 * 
-	 * @return los horarios de cada categoría
-	 */
-	public Map<Event, EventSchedule> getCurrentSchedules() {
-		return currentSchedules;
-	}
-	
-	/**
-	 * Devuelve un único horario combinado del torneo que include todos los jugadores, todas las localizaciones de
-	 * juego y todas las horas o timeslots de los que compone
-	 * 
-	 * @return horario combinado del torneo
-	 */
-	public TournamentSchedule getSchedule() {
-		if (schedule == null)
-			schedule = new TournamentSchedule(this);
-		return schedule;
 	}
 	
 	/**
@@ -463,22 +476,6 @@ public class Tournament implements Validable {
 	 */
 	public void printCurrentSchedules() {
 		printCurrentSchedules(true);
-	}
-	
-	/**
-	 * Devuelve el número de partidos del torneo
-	 * 
-	 * @return número de partidos que se juegan en el torneo
-	 */
-	public int getNumberOfMatches() {
-		int numberOfMatches = 0;
-		for (Event event : events)
-			numberOfMatches += event.getNumberOfMatches();
-		return numberOfMatches;
-	}
-	
-	public TournamentSolver getSolver() {
-		return solver;
 	}
 	
 	public String toString() {
