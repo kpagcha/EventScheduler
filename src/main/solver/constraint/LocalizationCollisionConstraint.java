@@ -26,8 +26,10 @@ public class LocalizationCollisionConstraint extends TournamentConstraint {
 		// Posibles números de jugadores que componen un partido del torneo (incluye 0)
 		int[] allPossibleNumberOfPlayers = getAllPosibleNumberOfPlayersPerMatchArray(eventsByNumberOfPlayersPerMatch);
 		
+		List<Timeslot> timeslots = tournament.getAllTimeslots();
+		
 		int nAllCourts = tournament.getAllLocalizations().size();
-		int nAllTimeslots = tournament.getAllTimeslots().size();
+		int nAllTimeslots = timeslots.size();
 		int nCategories = tournament.getEvents().size();
 		
 		int[][] timeslotsIndices = tournamentSolver.getTimeslotsIndices();
@@ -44,7 +46,6 @@ public class LocalizationCollisionConstraint extends TournamentConstraint {
 				
 				for (int e = 0; e < nCategories; e++) {
 					Event event = events.get(e);
-					List<Timeslot> timeslots = event.getTimeslots();
 					int nPlayers = event.getPlayers().size();
 					
 					// Si en el evento_e se puede jugar en la pista_c y a la hora_t y la hora_t no es un break

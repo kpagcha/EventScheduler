@@ -79,32 +79,37 @@ public class TournamentUtils {
 		return new Tournament("Torneo ATP", event);
 	}
 	
-
 	/*
-	 * Horario extraño o malformado
+	 * TORNEO 3
 	 */
-	public static void weirdSchedule() {
-		// Devuelve un torneo con el evento al que se refiere el horario ejemplo mostrado
-		Tournament tournament = getSampleAtp();
+	public static Tournament getSampleWithDifferentDomains() {
+		List<Localization> localizations = TournamentUtils.buildGenericLocalizations(2, "Courts");
+		List<Timeslot> timeslots = TournamentUtils.buildAbstractTimeslots(10);
 		
-		Event e = tournament.getEvents().get(0);
+		Event singles = new Event("Singles", TournamentUtils.buildGenericPlayers(8, "SPl"), localizations, timeslots);
+		Event doubles = new Event(
+			"Doubles",
+			TournamentUtils.buildGenericPlayers(8, "DPl"),
+			localizations,
+			timeslots.subList(3, 8),
+			1, 2, 4
+		);
 		
-		int[][][] x = new int[e.getPlayers().size()][4][e.getTimeslots().size()];
-		for (int p = 0; p < e.getPlayers().size(); p++) {
-			for (int c = 0; c < e.getLocalizations().size(); c++) {
-				for (int t = 0; t < e.getTimeslots().size(); t++) {
-					x[p][c][t] = new Random().nextInt(2);
-				}
+		System.out.println(singles.getTimeslots());
+		System.out.println(doubles.getTimeslots() + "\n");
+		
+		Tournament tournament = new Tournament("Tennis Tournament", singles, doubles);
+		
+		int[][] tIndices = tournament.getSolver().getTimeslotsIndices();
+		for (int i = 0; i < timeslots.size(); i++) {
+			for (int j = 0; j < tournament.getEvents().size(); j++) {
+				System.out.print(tIndices[i][j] + " ");
 			}
+			System.out.println();
 		}
 		
-		EventSchedule schedule = new EventSchedule(e, x);
-		
-		System.out.println(schedule);
-		for (Match m : schedule.getMatches())
-			System.out.println(m);
+		return tournament;
 	}
-	
 	
 	/* 
 	 * TORNEO ZARLON 15 ABRIL
@@ -192,58 +197,51 @@ public class TournamentUtils {
 		
 		
 		// Enfrentamientos alevín masculino
-		alevinM.addFixedPlayersMatchup(findPlayerByName("vazquez", pAlevinM), findPlayerByName("parrado", pAlevinM));
-		alevinM.addFixedPlayersMatchup(findPlayerByName("oliva", pAlevinM), findPlayerByName("castilla", pAlevinM));
-		alevinM.addFixedPlayersMatchup(findPlayerByName("ramirez", pAlevinM), findPlayerByName("barbera", pAlevinM));
+		alevinM.addFixedMatchup(findPlayerByName("vazquez", pAlevinM), findPlayerByName("parrado", pAlevinM));
+		alevinM.addFixedMatchup(findPlayerByName("oliva", pAlevinM), findPlayerByName("castilla", pAlevinM));
+		alevinM.addFixedMatchup(findPlayerByName("ramirez", pAlevinM), findPlayerByName("barbera", pAlevinM));
 		//alevinM.addFixedMatchup(findPlayerByName("herrera", pAlevinM), findPlayerByName("real", pAlevinM));
-		alevinM.addFixedPlayersMatchup(findPlayerByName("bocanegra", pAlevinM), findPlayerByName("davila", pAlevinM));
-		alevinM.addFixedPlayersMatchup(findPlayerByName("boloix", pAlevinM), findPlayerByName("galera", pAlevinM));
-		alevinM.addFixedPlayersMatchup(findPlayerByName("miguel", pAlevinM), findPlayerByName("moreno", pAlevinM));
-		alevinM.addFixedPlayersMatchup(findPlayerByName("rizo", pAlevinM), findPlayerByName("portales", pAlevinM));
+		alevinM.addFixedMatchup(findPlayerByName("bocanegra", pAlevinM), findPlayerByName("davila", pAlevinM));
+		alevinM.addFixedMatchup(findPlayerByName("boloix", pAlevinM), findPlayerByName("galera", pAlevinM));
+		alevinM.addFixedMatchup(findPlayerByName("miguel", pAlevinM), findPlayerByName("moreno", pAlevinM));
+		alevinM.addFixedMatchup(findPlayerByName("rizo", pAlevinM), findPlayerByName("portales", pAlevinM));
 		
 		// Enfrentamientos infantil femenino
-		infantilF.addFixedPlayersMatchup(findPlayerByName("garcia", pInfantilF), findPlayerByName("villanueva", pInfantilF));
+		infantilF.addFixedMatchup(findPlayerByName("garcia", pInfantilF), findPlayerByName("villanueva", pInfantilF));
 		
 		// Enfrentamientos Veterano
-		veterano.addFixedPlayersMatchup(findPlayerByName("fernandez", pVeterano), findPlayerByName("piedrola", pVeterano));
-		veterano.addFixedPlayersMatchup(findPlayerByName("devos", pVeterano), findPlayerByName("caneda", pVeterano));
-		veterano.addFixedPlayersMatchup(findPlayerByName("funke", pVeterano), findPlayerByName("rivas", pVeterano));
-		veterano.addFixedPlayersMatchup(findPlayerByName("moreno", pVeterano), findPlayerByName("arrieta", pVeterano));
-		veterano.addFixedPlayersMatchup(findPlayerByName("iglesias", pVeterano), findPlayerByName("maestre", pVeterano));
-		veterano.addFixedPlayersMatchup(findPlayerByName("pardal", pVeterano), findPlayerByName("romero", pVeterano));
-		veterano.addFixedPlayersMatchup(findPlayerByName("real", pVeterano), findPlayerByName("perez", pVeterano));
-		veterano.addFixedPlayersMatchup(findPlayerByName("romera", pVeterano), findPlayerByName("de miguel", pVeterano));
+		veterano.addFixedMatchup(findPlayerByName("fernandez", pVeterano), findPlayerByName("piedrola", pVeterano));
+		veterano.addFixedMatchup(findPlayerByName("devos", pVeterano), findPlayerByName("caneda", pVeterano));
+		veterano.addFixedMatchup(findPlayerByName("funke", pVeterano), findPlayerByName("rivas", pVeterano));
+		veterano.addFixedMatchup(findPlayerByName("moreno", pVeterano), findPlayerByName("arrieta", pVeterano));
+		veterano.addFixedMatchup(findPlayerByName("iglesias", pVeterano), findPlayerByName("maestre", pVeterano));
+		veterano.addFixedMatchup(findPlayerByName("pardal", pVeterano), findPlayerByName("romero", pVeterano));
+		veterano.addFixedMatchup(findPlayerByName("real", pVeterano), findPlayerByName("perez", pVeterano));
+		veterano.addFixedMatchup(findPlayerByName("romera", pVeterano), findPlayerByName("de miguel", pVeterano));
 		
 		
 		// Pista 1
-		zarlon.addUnavailableLocalization(pistas.get(0), new HashSet<Timeslot>(Arrays.asList(
+		zarlon.addUnavailableLocalizationAtTimeslots(pistas.get(0), new HashSet<Timeslot>(Arrays.asList(
 			timeslots.get(0), timeslots.get(1), timeslots.get(2)))
 		);
 		
 		// Pista 2
-		zarlon.addUnavailableLocalization(pistas.get(1), new HashSet<Timeslot>(Arrays.asList(
+		zarlon.addUnavailableLocalizationAtTimeslots(pistas.get(1), new HashSet<Timeslot>(Arrays.asList(
 			timeslots.get(0), timeslots.get(1), timeslots.get(2), timeslots.get(3), timeslots.get(4), timeslots.get(5), timeslots.get(6)))
 		);
 		
 		// Pista 5
-		zarlon.addUnavailableLocalization(pistas.get(4), new HashSet<Timeslot>(Arrays.asList(
+		zarlon.addUnavailableLocalizationAtTimeslots(pistas.get(4), new HashSet<Timeslot>(Arrays.asList(
 			timeslots.get(6), timeslots.get(7), timeslots.get(8), timeslots.get(9), timeslots.get(10), timeslots.get(11)))
 		);
 		
 		// Pista 6
-		zarlon.addUnavailableLocalization(pistas.get(5), new HashSet<Timeslot>(Arrays.asList(
+		zarlon.addUnavailableLocalizationAtTimeslots(pistas.get(5), new HashSet<Timeslot>(Arrays.asList(
 			timeslots.get(0), timeslots.get(1)))
 		);
 		
 		return zarlon;
 	}
-	
-	/* * * * * * * * * * * *
-	 * * * * * * * * * * * *
-	 * MÉTODOS AUXILIARES  *
-	 * * * * * * * * * * * *
-	 * * * * * * * * * * * *
-	 */
 	
 	public static Player findPlayerByName(String name, List<Player> players) {
 		Player player = null;

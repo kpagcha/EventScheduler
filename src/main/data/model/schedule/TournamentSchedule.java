@@ -29,6 +29,9 @@ public class TournamentSchedule extends Schedule {
 	 * @param tournament torneo al que pertenece el horario que se va a construir
 	 */
 	public TournamentSchedule(Tournament tournament) {
+		if (tournament == null)
+			throw new IllegalArgumentException("Tournament cannot be null");
+		
 		this.tournament = tournament;
 		
 		Map<Event, EventSchedule> schedules = tournament.getCurrentSchedules();

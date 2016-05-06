@@ -168,8 +168,8 @@ public class TournamentSolver {
 	
 	/**
 	 * Índices de cada jugador en el array de jugadores correspondiente a cada categoría
-	 * p.e. playersIndices[2][1] = 3 significa que el índice del jugador número 3 en
-	 * la categoría número 2 es 3 (si el jugador no existe en la categoría, el índice es -1)
+	 * p.e. playersIndices[2][1] = 1 significa que el índice del jugador del torneo número 3, en
+	 * la categoría número 2 es 1 (si el jugador no existe en la categoría, el índice es -1)
 	 */
 	private int[][] playersIndices;
 	

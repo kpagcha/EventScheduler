@@ -1,5 +1,7 @@
 package data.model.schedule.data;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
@@ -73,15 +75,21 @@ public class Match {
 		if (duration > 1 && start.compareTo(end) == 0)
 			throw new IllegalArgumentException("The duration of the match cannot amount to a timeslot span greater than 1 if the start timeslot is the same than the end timeslot");
 		
+		for (int i = 0; i < players.size() - 1; i++)
+			for (int j = i + 1; j < players.size(); j++)
+				if (players.get(i) == players.get(j))
+					throw new IllegalArgumentException("Players cannot be duplicated");
+		
 		this.players = players;
 		this.localization = localization;
 		startTimeslot = start;
 		endTimeslot = end;
 		this.duration = duration;
+		teams = new ArrayList<Team>();
 	}
 	
 	public List<Player> getPlayers() {
-		return players;
+		return Collections.unmodifiableList(players);
 	}
 
 	public Localization getLocalization() {
@@ -113,15 +121,26 @@ public class Match {
 			throw new IllegalArgumentException("Teams cannot be null");
 		
 		if (teams.size() < 2)
-			throw new IllegalArgumentException("Teams cannot have less than 2 elements");
+			throw new IllegalArgumentException("List of teams cannot have less the two teams");
 		
 		if (teams.contains(null))
 			throw new IllegalArgumentException("Teams cannot contain a null team");
+		
+		for (int i = 0; i < teams.size() - 1; i++)
+			for (int j = i + 1; j < teams.size(); j++)
+				if (teams.get(i) == teams.get(j))
+					throw new IllegalArgumentException("Teams cannot be duplicated");
 		
 		int nPlayersPerTeam = teams.get(0).getPlayers().size();
 		for (int i = 1; i < teams.size(); i++)
 			if (teams.get(i).getPlayers().size() != nPlayersPerTeam)
 				throw new IllegalArgumentException("Teams cannot have different number of players");
+		
+		if (players.size() % nPlayersPerTeam != 0)
+			throw new IllegalArgumentException(String.format(
+				"The number of players in a team (%d) must be a divisor of the number of players of the match (%d)", 
+				nPlayersPerTeam, players.size())
+			);
 		
 		for (Team team : teams)
 			if (!players.containsAll(team.getPlayers()))
@@ -131,7 +150,7 @@ public class Match {
 	}
 	
 	public List<Team> getTeams() {
-		return teams;
+		return Collections.unmodifiableList(teams);
 	}
 
 	public String toString() {
@@ -139,7 +158,7 @@ public class Match {
 		
 		sb.append(String.format("At %s in %s: ", startTimeslot, localization));
 		
-		if (teams == null)
+		if (teams.isEmpty())
 			sb.append(StringUtils.join(players, " vs "));
 		else
 			sb.append(StringUtils.join(teams, " vs "));

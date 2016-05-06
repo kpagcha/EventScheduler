@@ -50,11 +50,11 @@ public class GroupedScheduleValue {
 	 * @param val un valor distinto del correspondiente a {@link #OCCUPIED}
 	 */
 	public GroupedScheduleValue(int val) {
-		if (val < OCCUPIED && val > CONTINUATION)
+		if (!(val >= OCCUPIED && val <= CONTINUATION))
 			throw new IllegalArgumentException("Illegal value (" + val + ")");
 		
 		if (val == OCCUPIED)
-			throw new IllegalStateException("A match must be specified if the schedule value is OCCUPIED.");
+			throw new IllegalStateException("A match must be specified if the schedule value is OCCUPIED");
 		
 		value = val;
 	}
@@ -66,17 +66,20 @@ public class GroupedScheduleValue {
 	 * @param indices un lista no <code>null</code> y no vacía de enteros no que representa índices de jugadores
 	 */
 	public GroupedScheduleValue(int val, List<Integer> indices) {
-		if (val < OCCUPIED && val > CONTINUATION)
+		if (!(val >= OCCUPIED && val <= CONTINUATION))
 			throw new IllegalArgumentException("Illegal value (" + val + ")");
 		
 		if (val != OCCUPIED)
-			throw new IllegalStateException("Only schedule values of OCCUPIED can specify a match taking place.");
+			throw new IllegalStateException("Only schedule values of OCCUPIED can specify a match taking place");
 		
 		if (indices == null)
 			throw new IllegalArgumentException("Indices cannot be null");
 		
 		if (indices.isEmpty())
-			throw new IllegalAccessError("Indices cannot be empty");
+			throw new IllegalArgumentException("Indices cannot be empty");
+		
+		if (indices.contains(null))
+			throw new IllegalArgumentException("Index cannot be null");
 		
 		value = val;
 		playersIndices = indices;
@@ -88,7 +91,7 @@ public class GroupedScheduleValue {
 	
 	public List<Integer> getPlayersIndices() {
 		if (value != OCCUPIED)
-			throw new IllegalStateException("Only schedule values of OCCUPIED can specify a match taking place.");
+			throw new IllegalStateException("Only schedule values of OCCUPIED can specify a match taking place");
 		
 		return playersIndices;
 	}

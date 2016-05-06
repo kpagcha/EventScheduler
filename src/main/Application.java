@@ -11,13 +11,12 @@ import utils.TournamentUtils;
 
 public class Application {
 	public static void main(String[] args) {
-		TournamentUtils.weirdSchedule();
-		
 		Scanner sc = new Scanner(System.in);
 	
 		System.out.println("0 Zarlon");
 		System.out.println("1 Tournament");
 		System.out.println("2 ATP");
+		System.out.println("3 Different domains");
 		System.out.print("Choose tournament: ");
 		int tournamentOption = sc.nextInt();
 		
@@ -31,6 +30,9 @@ public class Application {
 				break;
 			case 2:
 				t = TournamentUtils.getSampleAtp();
+				break;
+			case 3:
+				t = TournamentUtils.getSampleWithDifferentDomains();
 				break;
 			default:
 				t = TournamentUtils.getSampleTournament();

@@ -196,8 +196,8 @@ public class GroupedSchedule {
 				
 				// Si todas las categorías tienen un break a la hora_t, se marca como no disponible
 				for (Event event : events) {
-					if (!event.getLocalizations().contains(localization) || !event.getTimeslots().contains(timeslot) || !breaks.containsKey(event) ||
-						!breaks.get(event).contains(timeslot)) {
+					if (!event.getLocalizations().contains(localization) || !event.getTimeslots().contains(timeslot) || 
+							!breaks.containsKey(event) || !breaks.get(event).contains(timeslot)) {
 						all = false;
 						break;
 					}
@@ -208,28 +208,29 @@ public class GroupedSchedule {
 		}
 		
 		// Si todos los eventos tienen la pista no disponible a la misma hora se marca como no disponible
-		for (Event e1 : events) {
-			if (unavailableLocalizations.containsKey(e1)) {
-				Map<Localization, Set<Timeslot>> e1UnavailableLocalizations = unavailableLocalizations.get(e1);
+		for (int i = 0; i < events.size() - 1; i++) {
+			Event thisEvent = events.get(i);
+			
+			if (unavailableLocalizations.containsKey(thisEvent)) {
+				Map<Localization, Set<Timeslot>> eventUnavailableLocalizations = unavailableLocalizations.get(thisEvent);
 				
-				for (Localization e1Localization : e1UnavailableLocalizations.keySet()) {
-					int c = localizations.indexOf(e1Localization);
-					Set<Timeslot> e1UnavailableTimeslots = e1UnavailableLocalizations.get(e1Localization);
-					
-					for (Timeslot e1Timeslot : e1UnavailableTimeslots) {
+				for (Localization localization : eventUnavailableLocalizations.keySet()) {
+					int c = localizations.indexOf(localization);
+			
+					for (Timeslot unavailableLocalizationTimeslot : eventUnavailableLocalizations.get(localization)) {
 						boolean all = true;
-						int t = timeslots.indexOf(e1Timeslot);
+						int t = timeslots.indexOf(unavailableLocalizationTimeslot);
 						
-						for (Event e2 : events) {
-							if (!e2.equals(e1) && unavailableLocalizations.containsKey(e2)) {
-								if (!e2.getLocalizations().contains(e1Localization) || ! e2.getPlayersAtTimeslots().containsKey(e1Timeslot))
-									continue;
+						for (int j = i + 1; j < events.size(); j++) {
+							Event otherEvent = events.get(j);
+							
+							if (unavailableLocalizations.containsKey(otherEvent) && otherEvent.getLocalizations().contains(localization) && 
+								otherEvent.getPlayersAtTimeslots().containsKey(unavailableLocalizationTimeslot) && 
+									!(unavailableLocalizations.get(otherEvent).containsKey(localization) && 
+										unavailableLocalizations.get(otherEvent).get(localization).contains(unavailableLocalizationTimeslot))) {
 								
-								if (!(unavailableLocalizations.get(e2).containsKey(e1Localization) && 
-										unavailableLocalizations.get(e2).get(e1Localization).contains(e1Timeslot))) {
-									all = false;
-									break;
-								}
+								all = false;
+								break;
 							}
 						}
 						
@@ -259,6 +260,10 @@ public class GroupedSchedule {
 		}
 	}
 	
+	public GroupedScheduleValue[][] getScheduleValues() {
+		return groupedSchedule;
+	}
+	
 	/**
 	 * Calcula el número total de <i>timeslots</i> del horario
 	 * 
@@ -275,6 +280,7 @@ public class GroupedSchedule {
 	 */
 	public int getAvailableTimeslots() {
 		if (availableTimeslots < 0) {
+			availableTimeslots = 0;
 			for (int c = 0; c < localizations.size(); c++) {
 				for (int t = 0; t < timeslots.size(); t++) {
 					GroupedScheduleValue val = groupedSchedule[c][t];
@@ -293,6 +299,7 @@ public class GroupedSchedule {
 	 */
 	public int getOccupation() {
 		if (occupation < 0) {
+			occupation = 0;
 			for (int c = 0; c < localizations.size(); c++) {
 				for (int t = 0; t < timeslots.size(); t++) {
 					GroupedScheduleValue val = groupedSchedule[c][t];

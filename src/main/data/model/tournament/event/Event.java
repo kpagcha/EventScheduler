@@ -637,7 +637,7 @@ public class Event implements Validable {
 	 * @param timeslot hora perteneciente al dominio de este evento y no existente en el conjunto de horas no disponibles del jugador
 	 * @throws IllegalArgumentException si no se cumple alguna precondición
 	 */
-	public void addUnavailablePlayer(Player player, Timeslot timeslot) {
+	public void addUnavailablePlayerAtTimeslot(Player player, Timeslot timeslot) {
 		if (player == null || timeslot == null)
 			throw new IllegalArgumentException("The parameters cannot be null");
 		
@@ -664,14 +664,14 @@ public class Event implements Validable {
 	 * 
 	 * @param player jugador que pertenece a este evento
 	 * @param timeslots conjunto no vacío de horas, y todas ellas pertenecientes al dominio del evento
-	 * @throws IllegalArgumentException si no se cumple alguna precondición, ver {@link #addUnavailablePlayer(Player, Timeslot)}
+	 * @throws IllegalArgumentException si no se cumple alguna precondición, ver {@link #addUnavailablePlayerAtTimeslot(Player, Timeslot)}
 	 */
 	public void addUnavailablePlayerAtTimeslots(Player player, Set<Timeslot> timeslots) {	
 		if (player == null || timeslots == null)
 			throw new IllegalArgumentException("The parameters cannot be null");
 		
 		for (Timeslot timeslot : timeslots)
-			addUnavailablePlayer(player, timeslot);
+			addUnavailablePlayerAtTimeslot(player, timeslot);
 	}
 	
 	/**
@@ -681,7 +681,7 @@ public class Event implements Validable {
 	 * @param timeslot hora perteneciente al dominio del evento
 	 * @throws IllegalArgumentException si no se cumple alguna precondición
 	 */
-	public void removePlayerUnavailableTimeslot(Player player, Timeslot timeslot) {
+	public void removePlayerUnavailableAtTimeslot(Player player, Timeslot timeslot) {
 		if (player == null || timeslot == null)
 			throw new IllegalArgumentException("The parameters cannot be null");
 		
@@ -819,7 +819,7 @@ public class Event implements Validable {
 	 * cumplen las reglas de un enfrentamiento, ver precondiciones en {@link #setFixedMatchups(List)}
 	 * @throws IllegalArgumentException si no se cumple alguna de las precondiciones
 	 */
-	public void addFixedPlayersMatchup(Player... players) {
+	public void addFixedMatchup(Player... players) {
 		if (players == null)
 			throw new IllegalArgumentException("The players cannot be null");
 		
@@ -832,7 +832,7 @@ public class Event implements Validable {
 	 * @param matchup conjunto de equipos existentes en el torneo entre los cuales habrá de darse un enfrentamiento
 	 * @throws IllegalArgumentException si no se cumple alguna de las precondiciones
 	 */
-	public void addFixedTeamsMatchup(Set<Team> matchup) {
+	public void addFixedMatchupBetweenTeams(Set<Team> matchup) {
 		if (matchup == null)
 			throw new IllegalArgumentException("The matchup cannot be null");
 		
@@ -1030,7 +1030,7 @@ public class Event implements Validable {
 	 * no disponibles de la localización
 	 * @throws IllegalArgumentException si no se cumplen las precondiciones
 	 */
-	public void addUnavailableLocalization(Localization localization, Timeslot timeslot) {
+	public void addUnavailableLocalizationAtTimeslot(Localization localization, Timeslot timeslot) {
 		if (localization == null || timeslot == null)
 			throw new IllegalArgumentException("The parameters cannot be null");
 		
@@ -1063,7 +1063,7 @@ public class Event implements Validable {
 			throw new IllegalArgumentException("The parameters cannot be null");
 		
 		for (Timeslot timeslot : timeslots)
-			addUnavailableLocalization(localization, timeslot);
+			addUnavailableLocalizationAtTimeslot(localization, timeslot);
 	}
 	
 	/**
@@ -1441,6 +1441,15 @@ public class Event implements Validable {
 	 */
 	public int getNumberOfMatches() {
 		return players.size() / nPlayersPerMatch * nMatchesPerPlayer;
+	}
+	
+	/**
+	 * Devuelve el número total de <i>timeslots</i> que se ocuparán con partidos
+	 * 
+	 * @return número de horas ocupadas, mayor que 0
+	 */
+	public int getNumberOfOccupiedTimeslots() {
+		return  players.size() * nMatchesPerPlayer * nTimeslotsPerMatch;
 	}
 	
 	public String toString() {

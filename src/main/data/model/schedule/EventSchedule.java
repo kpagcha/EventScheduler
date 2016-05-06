@@ -146,20 +146,22 @@ public class EventSchedule extends Schedule {
 					}
 
 					if (matchCompleted || nPlayersPerMatch == 1) {
-						List<Player> playersList = new ArrayList<Player>(nPlayersPerMatch);
+						List<Player> playersSet = new ArrayList<Player>(nPlayersPerMatch);
 						for (int playerIndex : playersBelongingToMatch)
-							playersList.add(event.getPlayers().get(playerIndex));
+							playersSet.add(event.getPlayers().get(playerIndex));
 
-						Match match = new Match(playersList,
-								event.getLocalizations().get(scheduleBeginnings[thisPlayer][t].getLocalization()),
-								event.getTimeslots().get(t), event.getTimeslots().get(t + matchDuration - 1),
-								matchDuration);
+						Match match = new Match(
+							playersSet,
+							event.getLocalizations().get(scheduleBeginnings[thisPlayer][t].getLocalization()),
+							event.getTimeslots().get(t), event.getTimeslots().get(t + matchDuration - 1),
+							matchDuration
+						);
 
 						matches.add(match);
 
 						if (event.hasTeams()) {
 							List<Team> teamsInMatch = new ArrayList<Team>();
-							for (Player player : playersList) {
+							for (Player player : playersSet) {
 								Team team = event.getTeamByPlayer(player);
 								if (!teamsInMatch.contains(team))
 									teamsInMatch.add(team);

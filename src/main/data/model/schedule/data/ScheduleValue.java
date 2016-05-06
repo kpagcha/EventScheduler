@@ -53,11 +53,11 @@ public class ScheduleValue {
 	 * @param val un valor distinto de {@link #OCCUPIED}
 	 */
 	public ScheduleValue(int val) {
-		if (val < OCCUPIED && val > NOT_IN_DOMAIN)
+		if (!(val >= OCCUPIED && val <= NOT_IN_DOMAIN))
 			throw new IllegalArgumentException("Illegal value (" + val + ")");
 			
 		if (val == OCCUPIED)
-			throw new IllegalArgumentException("A localization must be specified if the schedule value is OCCUPIED.");
+			throw new IllegalArgumentException("A localization must be specified if the schedule value is OCCUPIED");
 		
 		value = val;
 	}
@@ -69,11 +69,11 @@ public class ScheduleValue {
 	 * @param l el valor de una localización de juego como un entero, es decir, su índice
 	 */
 	public ScheduleValue(int val, int l) {
-		if (val < OCCUPIED && val > NOT_IN_DOMAIN)
+		if (!(val >= OCCUPIED && val <= NOT_IN_DOMAIN))
 			throw new IllegalArgumentException("Illegal value (" + val + ")");
 		
 		if (val != OCCUPIED)
-			throw new IllegalStateException("Only schedule values of OCCUPIED can specify a localization.");
+			throw new IllegalArgumentException("Only schedule values of OCCUPIED can specify a localization");
 		
 		value = val;
 		localization = l;
@@ -85,7 +85,7 @@ public class ScheduleValue {
 	
 	public int getLocalization() {
 		if (value != OCCUPIED)
-			throw new IllegalStateException("Only schedule values of OCCUPIED can specify a localization.");
+			throw new IllegalStateException("Only schedule values of OCCUPIED can specify a localization");
 		
 		return localization;
 	}

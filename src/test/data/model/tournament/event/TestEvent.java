@@ -696,14 +696,14 @@ public class TestEvent {
 	public void addUnavailablePlayerTest() {
 		assertFalse(event.hasUnavailablePlayers());
 		
-		event.addUnavailablePlayer(players.get(3), timeslots.get(5));
+		event.addUnavailablePlayerAtTimeslot(players.get(3), timeslots.get(5));
 		
 		assertTrue(event.hasUnavailablePlayers());
 		assertEquals(1, event.getUnavailablePlayers().size());
 		assertEquals(1, event.getUnavailablePlayers().get(players.get(3)).size());
 		assertEquals(timeslots.get(5), event.getUnavailablePlayers().get(players.get(3)).iterator().next());
 		
-		event.addUnavailablePlayer(players.get(3), timeslots.get(6));
+		event.addUnavailablePlayerAtTimeslot(players.get(3), timeslots.get(6));
 		assertEquals(1, event.getUnavailablePlayers().size());
 		assertEquals(2, event.getUnavailablePlayers().get(players.get(3)).size());
 		assertTrue(event.getUnavailablePlayers().get(players.get(3)).contains(timeslots.get(6)));
@@ -713,37 +713,37 @@ public class TestEvent {
 	public void addUnavailablePlayerNullPlayerTest() {
 		expectedEx.expect(IllegalArgumentException.class);
 		expectedEx.expectMessage("parameters cannot be null");
-		event.addUnavailablePlayer(null, timeslots.get(5));
+		event.addUnavailablePlayerAtTimeslot(null, timeslots.get(5));
 	}
 	
 	@Test
 	public void addUnavailablePlayerNullTimeslotTest() {
 		expectedEx.expect(IllegalArgumentException.class);
 		expectedEx.expectMessage("parameters cannot be null");
-		event.addUnavailablePlayer(players.get(4), null);
+		event.addUnavailablePlayerAtTimeslot(players.get(4), null);
 	}
 	
 	@Test
 	public void addUnavailablePlayerNonexistingPlayerTest() {
 		expectedEx.expect(IllegalArgumentException.class);
 		expectedEx.expectMessage("does not exist in the list of players of the event");
-		event.addUnavailablePlayer(new Player("Unknown Player"), timeslots.get(5));
+		event.addUnavailablePlayerAtTimeslot(new Player("Unknown Player"), timeslots.get(5));
 	}
 	
 	@Test
 	public void addUnavailablePlayerNonexistingTimeslotTest() {
 		expectedEx.expect(IllegalArgumentException.class);
 		expectedEx.expectMessage("doest not exist in the list of timeslots of the event");
-		event.addUnavailablePlayer(players.get(3), new DefiniteTimeslot(LocalTime.of(10, 0), Duration.ofHours(2), 1));
+		event.addUnavailablePlayerAtTimeslot(players.get(3), new DefiniteTimeslot(LocalTime.of(10, 0), Duration.ofHours(2), 1));
 	}
 	
 	@Test
 	public void addUnavailablePlayerAlreadyExistingTimeslotTest() {
-		event.addUnavailablePlayer(players.get(3), timeslots.get(5));
+		event.addUnavailablePlayerAtTimeslot(players.get(3), timeslots.get(5));
 		
 		expectedEx.expect(IllegalArgumentException.class);
 		expectedEx.expectMessage("already exists in the set of unvailable timeslots for the player");
-		event.addUnavailablePlayer(players.get(3), timeslots.get(5));
+		event.addUnavailablePlayerAtTimeslot(players.get(3), timeslots.get(5));
 	}
 	
 	@Test
@@ -783,17 +783,17 @@ public class TestEvent {
 	public void removeUnavailablePlayerTest() {
 		assertFalse(event.hasUnavailablePlayers());
 		
-		event.addUnavailablePlayer(players.get(3), timeslots.get(5));
-		event.addUnavailablePlayer(players.get(3), timeslots.get(6));
+		event.addUnavailablePlayerAtTimeslot(players.get(3), timeslots.get(5));
+		event.addUnavailablePlayerAtTimeslot(players.get(3), timeslots.get(6));
 		
 		assertTrue(event.hasUnavailablePlayers());
 		assertEquals(2, event.getUnavailablePlayers().get(players.get(3)).size());
 		
-		event.removePlayerUnavailableTimeslot(players.get(3), timeslots.get(5));
+		event.removePlayerUnavailableAtTimeslot(players.get(3), timeslots.get(5));
 		
 		assertEquals(1, event.getUnavailablePlayers().get(players.get(3)).size());
 		
-		event.removePlayerUnavailableTimeslot(players.get(3), timeslots.get(6));
+		event.removePlayerUnavailableAtTimeslot(players.get(3), timeslots.get(6));
 		
 		assertFalse(event.hasUnavailablePlayers());
 	}
@@ -802,39 +802,39 @@ public class TestEvent {
 	public void removeUnavailableNullPlayerTest() {
 		expectedEx.expect(IllegalArgumentException.class);
 		expectedEx.expectMessage("parameters cannot be null");
-		event.removePlayerUnavailableTimeslot(null, timeslots.get(3));
+		event.removePlayerUnavailableAtTimeslot(null, timeslots.get(3));
 	}
 	
 	@Test
 	public void removeUnavailablePlayerNullTimeslotsTest() {
 		expectedEx.expect(IllegalArgumentException.class);
 		expectedEx.expectMessage("parameters cannot be null");
-		event.removePlayerUnavailableTimeslot(players.get(2), null);
+		event.removePlayerUnavailableAtTimeslot(players.get(2), null);
 	}
 	
 	@Test
 	public void removeUnavailableNonexistingPlayerTest() {
 		expectedEx.expect(IllegalArgumentException.class);
 		expectedEx.expectMessage("does not exist in the list of players of the event");
-		event.removePlayerUnavailableTimeslot(new Player("Unknown Player"), timeslots.get(6));
+		event.removePlayerUnavailableAtTimeslot(new Player("Unknown Player"), timeslots.get(6));
 	}
 	
 	@Test
 	public void removeUnavailablePlayerNonexistingTimeslotTest() {
 		expectedEx.expect(IllegalArgumentException.class);
 		expectedEx.expectMessage("does not exist in the list of timeslots of the event");
-		event.removePlayerUnavailableTimeslot(players.get(5), new AbstractTimeslot(3));
+		event.removePlayerUnavailableAtTimeslot(players.get(5), new AbstractTimeslot(3));
 	}
 	
 	@Test
 	public void hasUnavailablePlayersTest() {
 		assertFalse(event.hasUnavailablePlayers());
 		
-		event.addUnavailablePlayer(players.get(3), timeslots.get(5));
+		event.addUnavailablePlayerAtTimeslot(players.get(3), timeslots.get(5));
 		
 		assertTrue(event.hasUnavailablePlayers());
 		
-		event.removePlayerUnavailableTimeslot(players.get(3), timeslots.get(5));
+		event.removePlayerUnavailableAtTimeslot(players.get(3), timeslots.get(5));
 		
 		assertFalse(event.hasUnavailablePlayers());
 	}
@@ -935,18 +935,16 @@ public class TestEvent {
 		assertTrue(event.hasFixedMatchups());
 		assertEquals(1, event.getFixedMatchups().size());
 		
-		event.addFixedPlayersMatchup(players.get(3), players.get(4));
+		event.addFixedMatchup(players.get(3), players.get(4));
 		
 		assertEquals(2, event.getFixedMatchups().size());
 	}
 	
 	@Test
 	public void addFixedMatchupNullPlayersTest() {
-		Player[] matchupPlayers = null;
-		
 		expectedEx.expect(IllegalArgumentException.class);
 		expectedEx.expectMessage("players cannot be null");
-		event.addFixedPlayersMatchup(matchupPlayers);
+		event.addFixedMatchup((Player[])null);
 	}
 	
 	@Test
@@ -955,7 +953,7 @@ public class TestEvent {
 		
 		expectedEx.expect(IllegalArgumentException.class);
 		expectedEx.expectMessage("same matchup cannot be added more than once");
-		event.addFixedPlayersMatchup(players.get(2), players.get(6));
+		event.addFixedMatchup(players.get(2), players.get(6));
 	}
 	
 	@Test
@@ -974,7 +972,7 @@ public class TestEvent {
 		event.addTeamPlayers(players.get(1), players.get(4));
 		
 		List<Team> teams = event.getTeams();
-		event.addFixedTeamsMatchup(new HashSet<Team>(Arrays.asList(teams.get(0), teams.get(1))));
+		event.addFixedMatchupBetweenTeams(new HashSet<Team>(Arrays.asList(teams.get(0), teams.get(1))));
 		
 		assertTrue(event.hasFixedMatchups());
 		assertEquals(1, event.getFixedMatchups().size());
@@ -985,7 +983,7 @@ public class TestEvent {
 	public void addFixedTeamsMatchupNullTest() {
 		expectedEx.expect(IllegalArgumentException.class);
 		expectedEx.expectMessage("matchup cannot be null");
-		event.addFixedTeamsMatchup(null);
+		event.addFixedMatchupBetweenTeams(null);
 	}
 	
 	@Test
@@ -996,7 +994,7 @@ public class TestEvent {
 		
 		expectedEx.expect(IllegalArgumentException.class);
 		expectedEx.expectMessage("does not exist in the list of teams of this event");
-		event.addFixedTeamsMatchup(new HashSet<Team>(Arrays.asList(teams.get(0), teams.get(1))));
+		event.addFixedMatchupBetweenTeams(new HashSet<Team>(Arrays.asList(teams.get(0), teams.get(1))));
 	}
 	
 	@Test
@@ -1022,7 +1020,7 @@ public class TestEvent {
 		event.addTeamPlayers(players.get(1), players.get(4));
 		
 		List<Team> teams = event.getTeams();
-		event.addFixedTeamsMatchup(new HashSet<Team>(Arrays.asList(teams.get(0), teams.get(1))));
+		event.addFixedMatchupBetweenTeams(new HashSet<Team>(Arrays.asList(teams.get(0), teams.get(1))));
 		
 		assertTrue(event.hasFixedMatchups());
 		
@@ -1042,7 +1040,7 @@ public class TestEvent {
 	public void hasFixedMatchupsTest() {
 		assertFalse(event.hasFixedMatchups());
 		
-		event.addFixedPlayersMatchup(players.get(3), players.get(7));
+		event.addFixedMatchup(players.get(3), players.get(7));
 		
 		assertTrue(event.hasFixedMatchups());
 	}
@@ -1322,10 +1320,10 @@ public class TestEvent {
 	public void addUnavailableLocalizationTest() {
 		assertFalse(event.hasUnavailableLocalizations());
 		
-		event.addUnavailableLocalization(localizations.get(1), timeslots.get(3));
-		event.addUnavailableLocalization(localizations.get(1), timeslots.get(4));
-		event.addUnavailableLocalization(localizations.get(1), timeslots.get(5));
-		event.addUnavailableLocalization(localizations.get(1), timeslots.get(6));
+		event.addUnavailableLocalizationAtTimeslot(localizations.get(1), timeslots.get(3));
+		event.addUnavailableLocalizationAtTimeslot(localizations.get(1), timeslots.get(4));
+		event.addUnavailableLocalizationAtTimeslot(localizations.get(1), timeslots.get(5));
+		event.addUnavailableLocalizationAtTimeslot(localizations.get(1), timeslots.get(6));
 		
 		assertTrue(event.hasUnavailableLocalizations());
 		assertEquals(1, event.getUnavailableLocalizations().size());
@@ -1336,39 +1334,39 @@ public class TestEvent {
 	public void addUnavailableLocalizationNullLocalizationTest() {
 		expectedEx.expect(IllegalArgumentException.class);
 		expectedEx.expectMessage("parameters cannot be null");
-		event.addUnavailableLocalization(null, timeslots.get(2));
+		event.addUnavailableLocalizationAtTimeslot(null, timeslots.get(2));
 	}
 	
 	@Test
 	public void addUnavailableLocalizationNullTimeslotTest() {
 		expectedEx.expect(IllegalArgumentException.class);
 		expectedEx.expectMessage("parameters cannot be null");
-		event.addUnavailableLocalization(localizations.get(0), null);
+		event.addUnavailableLocalizationAtTimeslot(localizations.get(0), null);
 	}
 	
 	@Test
 	public void addUnavailableLocalizationNonexistingLocalizationTest() {
 		expectedEx.expect(IllegalArgumentException.class);
 		expectedEx.expectMessage("does not exist in this event");
-		event.addUnavailableLocalization(new Localization("Unknown Localization"), timeslots.get(2));
+		event.addUnavailableLocalizationAtTimeslot(new Localization("Unknown Localization"), timeslots.get(2));
 	}
 	
 	@Test
 	public void addUnavailableLocalizationNonexistingTimeslotTest() {
 		expectedEx.expect(IllegalArgumentException.class);
 		expectedEx.expectMessage("does not exist in this event");
-		event.addUnavailableLocalization(localizations.get(0), new AbstractTimeslot(6));
+		event.addUnavailableLocalizationAtTimeslot(localizations.get(0), new AbstractTimeslot(6));
 	}
 	
 	@Test
 	public void addUnavailableLocalizationAlreadyExistingTest() {
-		event.addUnavailableLocalization(localizations.get(0), timeslots.get(2));
-		event.addUnavailableLocalization(localizations.get(0), timeslots.get(3));
-		event.addUnavailableLocalization(localizations.get(0), timeslots.get(4));
+		event.addUnavailableLocalizationAtTimeslot(localizations.get(0), timeslots.get(2));
+		event.addUnavailableLocalizationAtTimeslot(localizations.get(0), timeslots.get(3));
+		event.addUnavailableLocalizationAtTimeslot(localizations.get(0), timeslots.get(4));
 		
 		expectedEx.expect(IllegalArgumentException.class);
 		expectedEx.expectMessage("already exists in the set un unavailable timeslots for the localization");
-		event.addUnavailableLocalization(localizations.get(0), timeslots.get(4));
+		event.addUnavailableLocalizationAtTimeslot(localizations.get(0), timeslots.get(4));
 	}
 	
 	@Test
@@ -1402,9 +1400,9 @@ public class TestEvent {
 	
 	@Test
 	public void removeUnavailableLocalizationTest() {
-		event.addUnavailableLocalization(localizations.get(0), timeslots.get(2));
-		event.addUnavailableLocalization(localizations.get(0), timeslots.get(3));
-		event.addUnavailableLocalization(localizations.get(0), timeslots.get(4));
+		event.addUnavailableLocalizationAtTimeslot(localizations.get(0), timeslots.get(2));
+		event.addUnavailableLocalizationAtTimeslot(localizations.get(0), timeslots.get(3));
+		event.addUnavailableLocalizationAtTimeslot(localizations.get(0), timeslots.get(4));
 		
 		assertEquals(3, event.getUnavailableLocalizations().get(localizations.get(0)).size());
 		
@@ -1429,10 +1427,10 @@ public class TestEvent {
 	
 	@Test
 	public void removeUnavailableLocalizationTimeslotTest() {
-		event.addUnavailableLocalization(localizations.get(1), timeslots.get(0));
-		event.addUnavailableLocalization(localizations.get(1), timeslots.get(1));
-		event.addUnavailableLocalization(localizations.get(1), timeslots.get(2));
-		event.addUnavailableLocalization(localizations.get(1), timeslots.get(3));
+		event.addUnavailableLocalizationAtTimeslot(localizations.get(1), timeslots.get(0));
+		event.addUnavailableLocalizationAtTimeslot(localizations.get(1), timeslots.get(1));
+		event.addUnavailableLocalizationAtTimeslot(localizations.get(1), timeslots.get(2));
+		event.addUnavailableLocalizationAtTimeslot(localizations.get(1), timeslots.get(3));
 		
 		assertEquals(4, event.getUnavailableLocalizations().get(localizations.get(1)).size());
 		
@@ -1484,9 +1482,9 @@ public class TestEvent {
 	public void hasUnavailableLocalizationsTest() {
 		assertFalse(event.hasUnavailableLocalizations());
 		
-		event.addUnavailableLocalization(localizations.get(1), timeslots.get(1));
-		event.addUnavailableLocalization(localizations.get(1), timeslots.get(2));
-		event.addUnavailableLocalization(localizations.get(1), timeslots.get(3));
+		event.addUnavailableLocalizationAtTimeslot(localizations.get(1), timeslots.get(1));
+		event.addUnavailableLocalizationAtTimeslot(localizations.get(1), timeslots.get(2));
+		event.addUnavailableLocalizationAtTimeslot(localizations.get(1), timeslots.get(3));
 		
 		assertTrue(event.hasUnavailableLocalizations());
 	}
@@ -1981,10 +1979,10 @@ public class TestEvent {
 	
 	@Test
 	public void isPlayerUnavailableTest() {
-		event.addUnavailablePlayer(players.get(3), timeslots.get(0));
-		event.addUnavailablePlayer(players.get(3), timeslots.get(1));
-		event.addUnavailablePlayer(players.get(3), timeslots.get(2));
-		event.addUnavailablePlayer(players.get(7), timeslots.get(7));
+		event.addUnavailablePlayerAtTimeslot(players.get(3), timeslots.get(0));
+		event.addUnavailablePlayerAtTimeslot(players.get(3), timeslots.get(1));
+		event.addUnavailablePlayerAtTimeslot(players.get(3), timeslots.get(2));
+		event.addUnavailablePlayerAtTimeslot(players.get(7), timeslots.get(7));
 		
 		assertTrue(event.isPlayerUnavailable(players.get(3), timeslots.get(1)));
 		assertTrue(event.isPlayerUnavailable(players.get(3), timeslots.get(2)));
@@ -1995,9 +1993,9 @@ public class TestEvent {
 	
 	@Test
 	public void isLocalizationUnavailableTest() {
-		event.addUnavailableLocalization(localizations.get(0), timeslots.get(0));
-		event.addUnavailableLocalization(localizations.get(0), timeslots.get(1));
-		event.addUnavailableLocalization(localizations.get(0), timeslots.get(2));
+		event.addUnavailableLocalizationAtTimeslot(localizations.get(0), timeslots.get(0));
+		event.addUnavailableLocalizationAtTimeslot(localizations.get(0), timeslots.get(1));
+		event.addUnavailableLocalizationAtTimeslot(localizations.get(0), timeslots.get(2));
 		
 		assertTrue(event.isLocalizationUnavailable(localizations.get(0), timeslots.get(0)));
 		assertTrue(event.isLocalizationUnavailable(localizations.get(0), timeslots.get(1)));

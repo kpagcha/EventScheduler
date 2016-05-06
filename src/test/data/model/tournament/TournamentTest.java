@@ -4,6 +4,7 @@ import static org.junit.Assert.*;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -69,7 +70,7 @@ public class TournamentTest {
 			timeslots
 		);
 		
-		Tournament tournament = new Tournament("Tournament", new HashSet<Event>(Arrays.asList(primaryEvent, secondaryEvent)));
+		Tournament tournament = new Tournament("Tournament", new ArrayList<Event>(Arrays.asList(primaryEvent, secondaryEvent)));
 		
 		assertEquals("Tournament", tournament.getName());
 		assertEquals(2, tournament.getEvents().size());
@@ -143,23 +144,21 @@ public class TournamentTest {
 	public void constructorNullEventsTest() {
 		expectedEx.expect(IllegalArgumentException.class);
 		expectedEx.expectMessage("parameters cannot be null");
-		new Tournament("Tournament", (Set<Event>)null);
+		new Tournament("Tournament", (List<Event>)null);
 	}
 	
 	@Test
 	public void constructorEmtpyEventsTest() {
-		Set<Event> events = new HashSet<Event>();
 		expectedEx.expect(IllegalArgumentException.class);
 		expectedEx.expectMessage("list of categories cannot be empty");
-		new Tournament("Tournament", events);
+		new Tournament("Tournament", new ArrayList<Event>());
 	}
 	
 	@Test
 	public void constructorNullEventTest() {
-		Set<Event> events = new HashSet<Event>(Arrays.asList((Event)null));
 		expectedEx.expect(IllegalArgumentException.class);
 		expectedEx.expectMessage("category cannot be null");
-		new Tournament("Tournament", events);
+		new Tournament("Tournament", new ArrayList<Event>(Arrays.asList((Event)null)));
 	}
 	
 	@Test
@@ -225,7 +224,7 @@ public class TournamentTest {
 			timeslots
 		);
 		
-		Tournament tournament = new Tournament("Tournament", new HashSet<Event>(Arrays.asList(primaryEvent, secondaryEvent)));
+		Tournament tournament = new Tournament("Tournament", new ArrayList<Event>(Arrays.asList(primaryEvent, secondaryEvent)));
 			
 		assertEquals(
 			tournament.getEvents().get(0).getNumberOfMatches() + tournament.getEvents().get(1).getNumberOfMatches(),
@@ -366,7 +365,7 @@ public class TournamentTest {
 		
 		Player player2 = players.get(2);
 		Timeslot timeslot7 = timeslots.get(7);
-		t.addPlayerUnavailableTimeslot(player2, timeslot7);
+		t.addUnavailablePlayerAtTimeslot(player2, timeslot7);
 		
 		assertTrue(e1.hasUnavailablePlayers());
 		assertTrue(e1.getUnavailablePlayers().get(player2).contains(timeslot7));
@@ -376,7 +375,7 @@ public class TournamentTest {
 		Player player8 = players.get(8);
 		Timeslot timeslot10 = timeslots.get(10);
 		Timeslot timeslot12 = timeslots.get(12);
-		t.addPlayerUnavailableTimeslots(player8, new HashSet<Timeslot>(Arrays.asList(timeslot10, timeslot12)));
+		t.addUnavailablePlayerAtTimeslots(player8, new HashSet<Timeslot>(Arrays.asList(timeslot10, timeslot12)));
 		
 		assertEquals(1, e1.getUnavailablePlayers().size());
 		assertEquals(2, e2.getUnavailablePlayers().size());
@@ -387,54 +386,54 @@ public class TournamentTest {
 		assertTrue(e3.getUnavailablePlayers().get(player8).contains(timeslot12));
 		
 		try {
-			t.addPlayerUnavailableTimeslot(null, timeslots.get(1));
+			t.addUnavailablePlayerAtTimeslot(null, timeslots.get(1));
 			fail("IllegalArgumentException expected");
 		} catch (IllegalArgumentException e) {
 			assertEquals("The parameters cannot be null", e.getMessage());
 		}
 		
 		try {
-			t.addPlayerUnavailableTimeslot(players.get(3), null);
+			t.addUnavailablePlayerAtTimeslot(players.get(3), null);
 			fail("IllegalArgumentException expected");
 		} catch (IllegalArgumentException e) {
 			assertEquals("The parameters cannot be null", e.getMessage());
 		}
 		
 		try {
-			t.addPlayerUnavailableTimeslots(null, new HashSet<Timeslot>(Arrays.asList(timeslots.get(1))));
+			t.addUnavailablePlayerAtTimeslots(null, new HashSet<Timeslot>(Arrays.asList(timeslots.get(1))));
 			fail("IllegalArgumentException expected");
 		} catch (IllegalArgumentException e) {
 			assertEquals("The parameters cannot be null", e.getMessage());
 		}
 		
 		try {
-			t.addPlayerUnavailableTimeslots(players.get(15), null);
+			t.addUnavailablePlayerAtTimeslots(players.get(15), null);
 			fail("IllegalArgumentException expected");
 		} catch (IllegalArgumentException e) {
 			assertEquals("The parameters cannot be null", e.getMessage());
 		}
 		
-		t.addPlayerUnavailableTimeslot(player2, timeslot7);
+		t.addUnavailablePlayerAtTimeslot(player2, timeslot7);
 		assertEquals(1, e1.getUnavailablePlayers().get(player2).size());
 		
-		t.removePlayerUnavailableTimeslot(player2, timeslots.get(3));
+		t.removeUnavailablePlayerAtTimeslot(player2, timeslots.get(3));
 		assertEquals(1, e1.getUnavailablePlayers().get(player2).size());
 		
-		t.removePlayerUnavailableTimeslot(players.get(1), timeslot7);
+		t.removeUnavailablePlayerAtTimeslot(players.get(1), timeslot7);
 		assertEquals(1, e1.getUnavailablePlayers().get(player2).size());
 		
-		t.removePlayerUnavailableTimeslot(player2, timeslot7);
+		t.removeUnavailablePlayerAtTimeslot(player2, timeslot7);
 		assertNull(e1.getUnavailablePlayers().get(player2));
 		
 		try {
-			t.removePlayerUnavailableTimeslot(null, timeslots.get(3));
+			t.removeUnavailablePlayerAtTimeslot(null, timeslots.get(3));
 			fail("IllegalArgumentException expected");
 		} catch (IllegalArgumentException e) {
 			assertEquals("The parameters cannot be null", e.getMessage());
 		}
 		
 		try {
-			t.removePlayerUnavailableTimeslot(players.get(3), null);
+			t.removeUnavailablePlayerAtTimeslot(players.get(3), null);
 			fail("IllegalArgumentException expected");
 		} catch (IllegalArgumentException e) {
 			assertEquals("The parameters cannot be null", e.getMessage());
@@ -529,17 +528,17 @@ public class TournamentTest {
 		assertFalse(t.getEvents().get(1).hasUnavailableLocalizations());
 		assertFalse(t.getEvents().get(2).hasUnavailableLocalizations());
 		
-		t.addUnavailableLocalization(localizations.get(6), timeslots.get(13));
+		t.addUnavailableLocalizationAtTimeslot(localizations.get(6), timeslots.get(13));
 		
 		assertFalse(e1.hasUnavailableLocalizations());
 		assertTrue(e2.hasUnavailableLocalizations());
 		assertTrue(e3.hasUnavailableLocalizations());
 		
 		assertEquals(1, e2.getUnavailableLocalizations().get(localizations.get(6)).size());
-		t.addUnavailableLocalization(localizations.get(6), timeslots.get(13));
+		t.addUnavailableLocalizationAtTimeslot(localizations.get(6), timeslots.get(13));
 		assertEquals(1, e2.getUnavailableLocalizations().get(localizations.get(6)).size());
 		
-		t.addUnavailableLocalization(localizations.get(3), new HashSet<Timeslot>(Arrays.asList(timeslots.get(8), timeslots.get(11))));
+		t.addUnavailableLocalizationAtTimeslots(localizations.get(3), new HashSet<Timeslot>(Arrays.asList(timeslots.get(8), timeslots.get(11))));
 		
 		assertTrue(e1.hasUnavailableLocalizations());
 		assertEquals(1, e1.getUnavailableLocalizations().size());
@@ -549,40 +548,40 @@ public class TournamentTest {
 		assertFalse(e3.hasUnavailableLocalizations());
 		assertEquals(1, e2.getUnavailableLocalizations().size());
 		
-		t.removeUnavailableLocalizationTimeslot(localizations.get(3), timeslots.get(8));
+		t.removeUnavailableLocalizationAtTimeslot(localizations.get(3), timeslots.get(8));
 		assertFalse(e1.hasUnavailableLocalizations());
 		assertEquals(1, e2.getUnavailableLocalizations().size());
 		
-		t.removeUnavailableLocalizationTimeslot(localizations.get(0), timeslots.get(0));
+		t.removeUnavailableLocalizationAtTimeslot(localizations.get(0), timeslots.get(0));
 		assertEquals(1, e2.getUnavailableLocalizations().size());
-		t.removeUnavailableLocalizationTimeslot(localizations.get(0), timeslots.get(8));
+		t.removeUnavailableLocalizationAtTimeslot(localizations.get(0), timeslots.get(8));
 		assertEquals(1, e2.getUnavailableLocalizations().size());
-		t.removeUnavailableLocalizationTimeslot(localizations.get(3), timeslots.get(3));
+		t.removeUnavailableLocalizationAtTimeslot(localizations.get(3), timeslots.get(3));
 		assertEquals(1, e2.getUnavailableLocalizations().size());
 		
 		try {
-			t.addUnavailableLocalization(null, timeslots.get(0));
+			t.addUnavailableLocalizationAtTimeslot(null, timeslots.get(0));
 			fail("IllegalArgumentException expected");
 		} catch (IllegalArgumentException e) {
 			assertEquals("The parameters cannot be null", e.getMessage());
 		}
 		
 		try {
-			t.addUnavailableLocalization(localizations.get(4), (Timeslot)null);
+			t.addUnavailableLocalizationAtTimeslot(localizations.get(4), (Timeslot)null);
 			fail("IllegalArgumentException expected");
 		} catch (IllegalArgumentException e) {
 			assertEquals("The parameters cannot be null", e.getMessage());
 		}
 		
 		try {
-			t.addUnavailableLocalization(null, new HashSet<Timeslot>(Arrays.asList(timeslots.get(8), timeslots.get(11))));
+			t.addUnavailableLocalizationAtTimeslots(null, new HashSet<Timeslot>(Arrays.asList(timeslots.get(8), timeslots.get(11))));
 			fail("IllegalArgumentException expected");
 		} catch (IllegalArgumentException e) {
 			assertEquals("The parameters cannot be null", e.getMessage());
 		}
 		
 		try {
-			t.addUnavailableLocalization(localizations.get(4), (Set<Timeslot>)null);
+			t.addUnavailableLocalizationAtTimeslots(localizations.get(4), (Set<Timeslot>)null);
 			fail("IllegalArgumentException expected");
 		} catch (IllegalArgumentException e) {
 			assertEquals("The parameters cannot be null", e.getMessage());
@@ -596,14 +595,14 @@ public class TournamentTest {
 		}
 		
 		try {
-			t.removeUnavailableLocalizationTimeslot(null, timeslots.get(3));
+			t.removeUnavailableLocalizationAtTimeslot(null, timeslots.get(3));
 			fail("IllegalArgumentException expected");
 		} catch (IllegalArgumentException e) {
 			assertEquals("The parameters cannot be null", e.getMessage());
 		}
 		
 		try {
-			t.removeUnavailableLocalizationTimeslot(localizations.get(4), null);
+			t.removeUnavailableLocalizationAtTimeslot(localizations.get(4), null);
 			fail("IllegalArgumentException expected");
 		} catch (IllegalArgumentException e) {
 			assertEquals("The parameters cannot be null", e.getMessage());
