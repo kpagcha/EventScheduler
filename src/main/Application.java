@@ -7,6 +7,7 @@ import data.model.schedule.data.Match;
 import data.model.tournament.Tournament;
 import data.model.tournament.event.entity.Player;
 import data.validation.validable.ValidationException;
+import solver.TournamentSolver.SearchStrategy;
 import utils.TournamentUtils;
 
 public class Application {
@@ -44,8 +45,21 @@ public class Application {
 		System.out.println("3 minDom_LB");
 		System.out.print("Choose Search Strategy: ");
 		int searchStrategyOption = sc.nextInt();
+		
+		SearchStrategy searchStrategy = null;
+		switch (searchStrategyOption) {
+		case 1:
+			searchStrategy = SearchStrategy.DOMOVERWDEG;
+			break;
+		case 2:
+			searchStrategy = SearchStrategy.MINDOM_UB;
+			break;
+		case 3:
+			searchStrategy = SearchStrategy.MINDOM_LB;
+			break;
+		}
 
-		t.getSolver().setSearchStrategy(searchStrategyOption);
+		t.getSolver().setSearchStrategy(searchStrategy);
 		
 		
 		final Tournament tournament = t;

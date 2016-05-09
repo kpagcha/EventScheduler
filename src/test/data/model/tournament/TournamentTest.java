@@ -32,6 +32,7 @@ import data.model.tournament.event.entity.timeslot.AbstractTimeslot;
 import data.model.tournament.event.entity.timeslot.Timeslot;
 import data.validation.validable.ValidationException;
 import data.validation.validator.tournament.TournamentValidator;
+import solver.TournamentSolver.SearchStrategy;
 import utils.TournamentUtils;
 
 public class TournamentTest {
@@ -264,7 +265,7 @@ public class TournamentTest {
 		    
 		    assertThat(out.toString(), StringContains.containsString("Empty schedule"));
 		      
-		    tournament.getSolver().setSearchStrategy(2);
+		    tournament.getSolver().setSearchStrategy(SearchStrategy.MINDOM_UB);
 			assertTrue(tournament.solve());
 			
 			TournamentSchedule tournamentSchedule = tournament.getSchedule();

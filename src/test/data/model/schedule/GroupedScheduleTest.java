@@ -20,6 +20,7 @@ import data.model.tournament.event.entity.Localization;
 import data.model.tournament.event.entity.Player;
 import data.model.tournament.event.entity.timeslot.Timeslot;
 import data.validation.validable.ValidationException;
+import solver.TournamentSolver.SearchStrategy;
 import utils.TournamentUtils;
 
 public class GroupedScheduleTest {
@@ -59,7 +60,7 @@ public class GroupedScheduleTest {
 		tournament.addUnavailablePlayerAtTimeslot(sPlayers.get(0), timeslots.get(7));
 		doubles.addUnavailableLocalizationAtTimeslot(localizations.get(1), timeslots.get(4));
 		
-		tournament.getSolver().setSearchStrategy(2);
+		tournament.getSolver().setSearchStrategy(SearchStrategy.MINDOM_UB);
 		
 		tournament.solve();
 		

@@ -95,18 +95,9 @@ public class TournamentUtils {
 			1, 2, 4
 		);
 		
-		System.out.println(singles.getTimeslots());
-		System.out.println(doubles.getTimeslots() + "\n");
-		
 		Tournament tournament = new Tournament("Tennis Tournament", singles, doubles);
 		
-		int[][] tIndices = tournament.getSolver().getTimeslotsIndices();
-		for (int i = 0; i < timeslots.size(); i++) {
-			for (int j = 0; j < tournament.getEvents().size(); j++) {
-				System.out.print(tIndices[i][j] + " ");
-			}
-			System.out.println();
-		}
+		tournament.addBreak(timeslots.get(5));
 		
 		return tournament;
 	}
