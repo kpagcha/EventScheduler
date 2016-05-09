@@ -48,10 +48,10 @@ public class ScheduleTest {
 		singles.addFixedMatchup(sPlayers.get(0), sPlayers.get(7));
 		
 		List<Player> dPlayers = doubles.getPlayers();
-		doubles.addTeamPlayers(dPlayers.get(0), dPlayers.get(5));
-		doubles.addTeamPlayers(dPlayers.get(7), dPlayers.get(2));
-		doubles.addTeamPlayers(dPlayers.get(4), dPlayers.get(1));
-		doubles.addTeamPlayers(dPlayers.get(3), dPlayers.get(6));
+		doubles.addTeam(dPlayers.get(0), dPlayers.get(5));
+		doubles.addTeam(dPlayers.get(7), dPlayers.get(2));
+		doubles.addTeam(dPlayers.get(4), dPlayers.get(1));
+		doubles.addTeam(dPlayers.get(3), dPlayers.get(6));
 		
 		tournament = new Tournament("Tennis Tournament", singles, doubles);
 		
@@ -205,6 +205,9 @@ public class ScheduleTest {
 		
 		matches = schedule.getMatchesByTimeslot(timeslots.get(7));
 		assertEquals(2, matches.size());
+		
+		matches = schedule.getMatchesByTimeslots(new ArrayList<Timeslot>(Arrays.asList(timeslots.get(4), timeslots.get(7))));
+		assertEquals(4, matches.size());
 		
 		matches = schedule.getMatchesByTimeslotRange(timeslots.get(1), timeslots.get(2));
 		assertEquals(1, matches.size());

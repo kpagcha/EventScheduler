@@ -166,7 +166,7 @@ public class EventSchedule extends Schedule {
 								if (!teamsInMatch.contains(team))
 									teamsInMatch.add(team);
 							}
-
+							
 							match.setTeams(teamsInMatch);
 						}
 					}

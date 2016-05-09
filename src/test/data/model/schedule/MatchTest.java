@@ -143,10 +143,10 @@ public class MatchTest {
 	}
 	
 	@Test
-	public void setTeamsLessThanTwoTest() {
+	public void setTeamEmtpyTest() {
 		expectedEx.expect(IllegalArgumentException.class);
-		expectedEx.expectMessage("List of teams cannot have less the two teams");
-		match.setTeams(new ArrayList<Team>(Arrays.asList(new Team(players.get(0), players.get(1)))));
+		expectedEx.expectMessage("List of teams cannot be empty");
+		match.setTeams(new ArrayList<Team>(Arrays.asList()));
 	}
 	
 	@Test
@@ -215,6 +215,93 @@ public class MatchTest {
 	public void getTeamsTest() {
 		expectedEx.expect(UnsupportedOperationException.class);
 		match.getTeams().add(new Team(players.get(0), players.get(1)));
+	}
+	
+	@Test
+	public void duringTest() {
+		start = new DefiniteTimeslot(LocalTime.of(10, 0), Duration.ofHours(1), 1);
+		end = new DefiniteTimeslot(LocalTime.of(14, 0), Duration.ofHours(1), 1);
+		// La hora del partido es 10:00 - 14:00 (4 timeslots)
+		match = new Match(players, localization, start, end, 4);
+		
+		// Dentro del rango del partido
+		assertTrue(match.during(new DefiniteTimeslot(LocalTime.of(13, 0), Duration.ofHours(1), 1)));
+		
+		// Dentro del rango del partido; mismo timeslot de comienzo
+		assertTrue(match.during(new DefiniteTimeslot(LocalTime.of(10, 0), Duration.ofHours(1), 1)));
+		
+		// Dentro del rango del partido; mismo timeslot de fin
+		assertTrue(match.during(new DefiniteTimeslot(LocalTime.of(14, 0), Duration.ofHours(1), 1)));
+		
+		// Fuera del rango
+		assertFalse(match.during(new DefiniteTimeslot(LocalTime.of(9, 0), Duration.ofHours(1), 1)));
+		
+		// Fuera del rango
+		assertFalse(match.during(new DefiniteTimeslot(LocalTime.of(15, 0), Duration.ofHours(1), 1)));
+		
+		// Mismo rango
+		assertTrue(match.during(start, end));
+		assertTrue(match.during(end, start));
+
+		// Rango incluido en el partido
+		Timeslot t1 = new DefiniteTimeslot(LocalTime.of(11, 0), Duration.ofHours(1), 1);
+		Timeslot t2 = new DefiniteTimeslot(LocalTime.of(13, 0), Duration.ofHours(1), 1);
+		assertTrue(match.during(t1, t2));
+		assertTrue(match.during(t2, t1));
+		
+		// Rango incluido en el partido; mismo timeslot de comienzo
+		t1 = new DefiniteTimeslot(LocalTime.of(10, 0), Duration.ofHours(1), 1);
+		t2 = new DefiniteTimeslot(LocalTime.of(13, 0), Duration.ofHours(1), 1);
+		assertTrue(match.during(t1, t2));
+		assertTrue(match.during(t2, t1));
+		
+		// Rango incluido en el partido; mismo timeslot de fin
+		t1 = new DefiniteTimeslot(LocalTime.of(12, 0), Duration.ofHours(1), 1);
+		t2 = new DefiniteTimeslot(LocalTime.of(14, 0), Duration.ofHours(1), 1);
+		assertTrue(match.during(t1, t2));
+		assertTrue(match.during(t2, t1));
+		
+		// Partido incluido en el rango
+		t1 = new DefiniteTimeslot(LocalTime.of(9, 0), Duration.ofHours(1), 1);
+		t2 = new DefiniteTimeslot(LocalTime.of(16, 0), Duration.ofHours(1), 1);
+		assertTrue(match.during(t1, t2));
+		assertTrue(match.during(t2, t1));
+		
+		// Partido incluido en el rango por el comienzo
+		t1 = new DefiniteTimeslot(LocalTime.of(9, 0), Duration.ofHours(1), 1);
+		t2 = new DefiniteTimeslot(LocalTime.of(12, 0), Duration.ofHours(1), 1);
+		assertTrue(match.during(t1, t2));
+		assertTrue(match.during(t2, t1));
+		
+		// Partido incluido en el rango por el final
+		t1 = new DefiniteTimeslot(LocalTime.of(13, 0), Duration.ofHours(1), 1);
+		t2 = new DefiniteTimeslot(LocalTime.of(17, 0), Duration.ofHours(1), 1);
+		assertTrue(match.during(t1, t2));
+		assertTrue(match.during(t2, t1));
+		
+		// Partido incluido en el rango; mismo timeslot de comienzo
+		t1 = new DefiniteTimeslot(LocalTime.of(10, 0), Duration.ofHours(1), 1);
+		t2 = new DefiniteTimeslot(LocalTime.of(15, 0), Duration.ofHours(1), 1);
+		assertTrue(match.during(t1, t2));
+		assertTrue(match.during(t2, t1));
+		
+		// Partido incluido en el rango; mismo timeslot de fin
+		t1 = new DefiniteTimeslot(LocalTime.of(9, 0), Duration.ofHours(1), 1);
+		t2 = new DefiniteTimeslot(LocalTime.of(14, 0), Duration.ofHours(1), 1);
+		assertTrue(match.during(t1, t2));
+		assertTrue(match.during(t2, t1));
+		
+		// Partido no incluido en el rango
+		t1 = new DefiniteTimeslot(LocalTime.of(6, 0), Duration.ofHours(1), 1);
+		t2 = new DefiniteTimeslot(LocalTime.of(8, 0), Duration.ofHours(1), 1);
+		assertFalse(match.during(t1, t2));
+		assertFalse(match.during(t2, t1));
+		
+		// Partido no incluido en el rango
+		t1 = new DefiniteTimeslot(LocalTime.of(15, 0), Duration.ofHours(1), 1);
+		t2 = new DefiniteTimeslot(LocalTime.of(18, 0), Duration.ofHours(1), 1);
+		assertFalse(match.during(t1, t2));
+		assertFalse(match.during(t2, t1));
 	}
 	
 	@Test

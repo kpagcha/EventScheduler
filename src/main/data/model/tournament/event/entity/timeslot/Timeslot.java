@@ -14,14 +14,24 @@ package data.model.tournament.event.entity.timeslot;
  */
 public interface Timeslot extends Comparable<Timeslot> {
 	/**
-	 * Obtiene el orden cronológico del timeslot como un int.
+	 * Obtiene el orden cronológico del <i>timeslot<i> como un entero.
 	 * 
 	 * @return el valor del orden cronológico
 	 */
 	public int getChronologicalOrder();
+
+	/**
+	 * Comprueba si el <i>timeslot<i> se encuentra entre otros dos, extremos incluidos
+	 * 
+	 * @param t1 un extremo del rango de <i>timeslots</i>
+	 * @param t2 el otro extremo del rango
+	 * @return <code>true</code> si se encuentra en el rango; <code>false</code> si no se encuentra en el rango
+	 * o si alguno de los argumentos es <code>null</code> o si ambos lo son
+	 */
+	public boolean within(Timeslot t1, Timeslot t2);
 	
 	/**
-	 * Compara dos timeslots
+	 * Compara dos <i>timeslots<i>
 	 * 
 	 * @param t1 primer hora a comparar
 	 * @param t2 segunda hora a comparar

@@ -44,6 +44,8 @@ public class MatchupModeConstraint extends EventConstraint {
 			nMatches = 1;
 		else if (matchupMode == MatchupMode.ALL_EQUAL)
 			nMatches = nMatchesPerPlayer;
+		else
+			return;
 		
 		for (List<Integer> combination : combinations) {
 			// Todos los posibles enfrentamientos en cada pista a cada hora

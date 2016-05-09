@@ -4,6 +4,8 @@ import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -28,7 +30,6 @@ public class GroupedScheduleTest {
 	private Tournament tournament;
 	private Event single;
 	private List<Match> singleMatches;
-	private List<Match> tournamentMatches;
 	
 	@Before
 	public void setUp() throws ValidationException {
@@ -48,10 +49,10 @@ public class GroupedScheduleTest {
 		singles.addFixedMatchup(sPlayers.get(0), sPlayers.get(7));
 		
 		List<Player> dPlayers = doubles.getPlayers();
-		doubles.addTeamPlayers(dPlayers.get(0), dPlayers.get(5));
-		doubles.addTeamPlayers(dPlayers.get(7), dPlayers.get(2));
-		doubles.addTeamPlayers(dPlayers.get(4), dPlayers.get(1));
-		doubles.addTeamPlayers(dPlayers.get(3), dPlayers.get(6));
+		doubles.addTeam(dPlayers.get(0), dPlayers.get(5));
+		doubles.addTeam(dPlayers.get(7), dPlayers.get(2));
+		doubles.addTeam(dPlayers.get(4), dPlayers.get(1));
+		doubles.addTeam(dPlayers.get(3), dPlayers.get(6));
 		
 		tournament = new Tournament("Tennis Tournament", singles, doubles);
 		
@@ -66,11 +67,10 @@ public class GroupedScheduleTest {
 		
 		single = tournament.getEvents().get(0);
 		singleMatches = tournament.getCurrentSchedules().get(single).getMatches();
-		tournamentMatches = tournament.getSchedule().getMatches();
 	}
 
 	@Test
-	public void constructorEventGroupedSchedule() {
+	public void constructorEventGroupedScheduleTest() {
 		GroupedSchedule schedule = new GroupedSchedule(single, singleMatches);
 		
 		List<GroupedScheduleValue> vals = 
@@ -108,8 +108,8 @@ public class GroupedScheduleTest {
 	}
 	
 	@Test
-	public void constructorTournamentGroupedSchedule() {
-		GroupedSchedule schedule = new GroupedSchedule(tournament, tournamentMatches);
+	public void constructorTournamentGroupedScheduleTest() throws ValidationException {
+		GroupedSchedule schedule = new GroupedSchedule(tournament);
 		
 		List<GroupedScheduleValue> vals = 
 			Stream.of(schedule.getScheduleValues()).flatMap(v -> Arrays.stream(v)).collect(Collectors.toList());
@@ -125,38 +125,65 @@ public class GroupedScheduleTest {
 		assertTrue(vals.stream().filter(v -> v.isUnavailable()).count() <= nUnavailableTimeslots);
 		
 		try {
-			new GroupedSchedule((Tournament)null, tournamentMatches);
+			new GroupedSchedule(null);
 			fail("IllegalArgumentException expected");
 		} catch (IllegalArgumentException e) {
-			assertEquals("The parameters cannot be null", e.getMessage());
-		}
-		
-		try {
-			new GroupedSchedule(tournament, null);
-			fail("IllegalArgumentException expected");
-		} catch (IllegalArgumentException e) {
-			assertEquals("The parameters cannot be null", e.getMessage());
-		}
-		
-		try {
-			tournamentMatches.remove(tournamentMatches.size() - 1);
-			new GroupedSchedule(tournament, tournamentMatches);
-			fail("IllegalArgumentException expected");
-		} catch (IllegalArgumentException e) {
-			assertThat(e.getMessage(), StringContains.containsString("equal to the expected number of matches for the tournament"));
+			assertEquals("Tournament cannot be null", e.getMessage());
 		}
 	}
 	
 	@Test
+	public void constructorTournamentGroupedScheduleSingleTournamentTest() throws ValidationException {
+		Event event = new Event(
+			"Event",
+			TournamentUtils.buildGenericPlayers(8, "Player"),
+			TournamentUtils.buildGenericLocalizations(3, "Court"),
+			TournamentUtils.buildAbstractTimeslots(6)
+		);
+		List<Localization> localizations = event.getLocalizations();
+		List<Timeslot> timeslots = event.getTimeslots();
+		event.addUnavailableLocalizationAtTimeslots(
+			localizations.get(0),
+			new HashSet<Timeslot>(Arrays.asList(timeslots.get(0), timeslots.get(1), timeslots.get(2), timeslots.get(3)))
+		);
+		event.addUnavailableLocalizationAtTimeslots(
+			localizations.get(1),
+			new HashSet<Timeslot>(Arrays.asList(timeslots.get(4), timeslots.get(5)))
+		);
+		event.addUnavailableLocalizationAtTimeslots(
+			localizations.get(2),
+			new HashSet<Timeslot>(Arrays.asList(timeslots.get(2), timeslots.get(3)))
+		);
+		
+		tournament = new Tournament("Tournament", event);
+		
+		try {
+			new GroupedSchedule(tournament);
+			fail("IllegalStateException expected for not calculated schedules");
+		} catch (IllegalStateException e) {
+			assertEquals("Tournament schedule not calculated", e.getMessage());
+		}
+		
+		tournament.solve();
+		
+		GroupedSchedule schedule = new GroupedSchedule(tournament);
+		
+		assertEquals(
+			tournament.getEvents().get(0).getUnavailableLocalizations().values().stream().flatMap(Collection::stream).count(),
+			Stream.of(schedule.getScheduleValues()).flatMap(row -> Arrays.stream(row)).filter(v -> v.isUnavailable()).count()
+		);
+	}
+	
+	@Test
 	public void getTotalTimeslotsTest() {
-		GroupedSchedule schedule = new GroupedSchedule(tournament, tournamentMatches);
+		GroupedSchedule schedule = new GroupedSchedule(tournament);
 		
 		assertEquals(tournament.getAllLocalizations().size() * tournament.getAllTimeslots().size(), schedule.getTotalTimeslots());
 	}
 	
 	@Test
 	public void getAvailableTimeslotsTest() {
-		GroupedSchedule schedule = new GroupedSchedule(tournament, tournamentMatches);
+		GroupedSchedule schedule = new GroupedSchedule(tournament);
 		List<GroupedScheduleValue> vals = 
 				Stream.of(schedule.getScheduleValues()).flatMap(v -> Arrays.stream(v)).collect(Collectors.toList());
 		
@@ -169,7 +196,7 @@ public class GroupedScheduleTest {
 	
 	@Test
 	public void getOccupationTest() {
-		GroupedSchedule schedule = new GroupedSchedule(tournament, tournamentMatches);
+		GroupedSchedule schedule = new GroupedSchedule(tournament);
 		List<GroupedScheduleValue> vals = 
 				Stream.of(schedule.getScheduleValues()).flatMap(v -> Arrays.stream(v)).collect(Collectors.toList());
 		
@@ -181,7 +208,7 @@ public class GroupedScheduleTest {
 	
 	@Test
 	public void toStringTest() {
-		GroupedSchedule schedule = new GroupedSchedule(tournament, tournamentMatches);
+		GroupedSchedule schedule = new GroupedSchedule(tournament);
 		String scheduleStr = schedule.toString();
 		
 		assertThat(scheduleStr, StringContains.containsString("5,6"));

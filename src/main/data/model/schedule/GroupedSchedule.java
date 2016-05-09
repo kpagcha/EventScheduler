@@ -129,20 +129,21 @@ public class GroupedSchedule {
 	 * 
 	 * @throws IllegalArgumentException si los parámetos son <code>null</code> o si el tamaño de la lista de
 	 * partidos no se corresponde por el esperado por el torneo
+	 * @throws IllegalStateException si los horarios del torneo aún no han sido calculados, o ya se han calculado
+	 * todos, es decir, que el horario sea <code>null</code>
 	 */
-	public GroupedSchedule(Tournament tournament, List<Match> matches) {
-		if (tournament == null || matches == null)
-			throw new IllegalArgumentException("The parameters cannot be null");
+	public GroupedSchedule(Tournament tournament) {
+		if (tournament == null)
+			throw new IllegalArgumentException("Tournament cannot be null");
 		
-		if (matches.size() != tournament.getNumberOfMatches())
-			throw new IllegalArgumentException("The size of the list of matches (" + matches.size() + ") should be " +
-				"equal to the expected number of matches for the tournament (" + tournament.getNumberOfMatches() + ")");
+		if (tournament.getSchedule() == null)
+			throw new IllegalStateException("Tournament schedule not calculated");
 		
 		name = tournament.getName();
 		players = tournament.getAllPlayers();
 		localizations = tournament.getAllLocalizations();
 		timeslots = tournament.getAllTimeslots();
-		this.matches = matches;
+		this.matches = tournament.getSchedule().getMatches();
 		
 		groupedSchedule = new GroupedScheduleValue[localizations.size()][timeslots.size()];
 		
@@ -163,7 +164,7 @@ public class GroupedSchedule {
 			if (event.hasBreaks()) {
 				List<Timeslot> eventBreaks = event.getBreaks();
 				
-				// Se marcan las pistas a las horas de break como limitadas
+				// Al principio se marcan las pistas a las horas de break como limitadas
 				for (Timeslot timeslot : eventBreaks) {
 					int t = timeslots.indexOf(timeslot);
 					for (int c = 0; c < nLocalization; c++)
@@ -175,18 +176,24 @@ public class GroupedSchedule {
 			if (event.hasUnavailableLocalizations()) {
 				Map<Localization, Set<Timeslot>> eventUnavailableLocalizations = event.getUnavailableLocalizations();
 				
-				// Se marcan las pistas a las horas no disponibles como limitadas
+				// Al principio se marcan las pistas a las horas no disponibles como limitadas
 				for (Localization localization : eventUnavailableLocalizations.keySet()) {
 					int c = localizations.indexOf(localization);
 					Set<Timeslot> unavailableLocalizationTimeslots = eventUnavailableLocalizations.get(localization);
 					
+					// Si solamente hay un evento se marca directamente como no disponible porque el bucle que se encuentra
+					// más adelante solamente funciona para un torneo con más de una categoría
 					for (Timeslot timeslot : unavailableLocalizationTimeslots)
-						groupedSchedule[c][timeslots.indexOf(timeslot)] = new GroupedScheduleValue(GroupedScheduleValue.LIMITED);
+						if (events.size() > 1)
+							groupedSchedule[c][timeslots.indexOf(timeslot)] = new GroupedScheduleValue(GroupedScheduleValue.LIMITED);
+						else
+							groupedSchedule[c][timeslots.indexOf(timeslot)] = new GroupedScheduleValue(GroupedScheduleValue.UNAVAILABLE);
 				}
 				unavailableLocalizations.put(event, eventUnavailableLocalizations);
 			}
 		}
 		
+		// Sobreescribe con no disponibles las marcadas anteriormente como limitadas, si lo son para todas las categorías
 		for (int t = 0; t < nTimeslots; t++) {
 			Timeslot timeslot = timeslots.get(t);
 			
@@ -207,7 +214,8 @@ public class GroupedSchedule {
 			}
 		}
 		
-		// Si todos los eventos tienen la pista no disponible a la misma hora se marca como no disponible
+		// Si todos los eventos tienen la pista no disponible a la misma hora se marca como no disponible, sobreescribiendo
+		// las marcadas como limitadas anteriormente, si se da el caso
 		for (int i = 0; i < events.size() - 1; i++) {
 			Event thisEvent = events.get(i);
 			
@@ -309,6 +317,15 @@ public class GroupedSchedule {
 			}
 		}
 		return occupation;
+	}
+	
+	/**
+	 * Devuelve el ratio de ocupación de localizaciones de juego disponibles
+	 * 
+	 * @return un decimal entre 0 y 1
+	 */
+	public double getOccupationRatio() {
+		return getOccupation() / (double)getAvailableTimeslots();
 	}
 	
 	public String toString() {

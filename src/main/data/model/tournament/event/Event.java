@@ -527,7 +527,7 @@ public class Event implements Validable {
 	 * @param teamPlayers jugadores que compondrán el nuevo equipo a añadir y pertenecientes a este evento
 	 * @throws IllegalArgumentException si no se cumplen las precondiciones
 	 */
-	public void addTeamPlayers(Player... teamPlayers) {
+	public void addTeam(Player... teamPlayers) {
 		if (teamPlayers == null)
 			throw new IllegalArgumentException("Players cannot be null");
 		

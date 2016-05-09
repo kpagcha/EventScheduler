@@ -13,6 +13,8 @@ import data.model.tournament.event.entity.LocalizationTest;
 import data.model.tournament.event.entity.PlayerTest;
 import data.model.tournament.event.entity.TeamTest;
 import data.model.tournament.event.entity.TimeslotTest;
+import data.validation.ValidationTest;
+import solver.TournamentSolverTest;
 
 @RunWith(Suite.class)
 @SuiteClasses({
@@ -25,7 +27,9 @@ import data.model.tournament.event.entity.TimeslotTest;
 	TournamentTest.class,
 	ScheduleTest.class,
 	MatchTest.class,
-	GroupedScheduleTest.class
+	GroupedScheduleTest.class,
+	ValidationTest.class,
+	TournamentSolverTest.class
 })
 public class TestSuite {
 	// clase vacía, solamente se usa para las anotaciones de arriba

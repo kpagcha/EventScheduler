@@ -5,6 +5,7 @@ import static org.junit.Assert.*;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.List;
 
 import org.junit.Test;
 
@@ -12,6 +13,7 @@ import data.model.tournament.event.entity.timeslot.AbstractTimeslot;
 import data.model.tournament.event.entity.timeslot.DefiniteTimeslot;
 import data.model.tournament.event.entity.timeslot.Timeslot;
 import data.model.tournament.event.entity.timeslot.UndefiniteTimeslot;
+import utils.TournamentUtils;
 
 public class TimeslotTest {
 
@@ -117,5 +119,21 @@ public class TimeslotTest {
 		assertEquals(1, Timeslot.compare(new AbstractTimeslot(3), null));
 		assertEquals(-1, Timeslot.compare(null, new AbstractTimeslot(3)));
 		assertEquals(0, Timeslot.compare(null, null));
+	}
+	
+	@Test
+	public void withinTest() {
+		List<Timeslot> timeslots = TournamentUtils.buildDefiniteLocalTimeTimeslots(10);
+		assertTrue(timeslots.get(3).within(timeslots.get(1), timeslots.get(5)));
+		assertTrue(timeslots.get(7).within(timeslots.get(7), timeslots.get(9)));
+		assertTrue(timeslots.get(1).within(timeslots.get(1), timeslots.get(0)));
+		assertFalse(timeslots.get(2).within(timeslots.get(3), timeslots.get(5)));
+		assertFalse(timeslots.get(0).within(timeslots.get(5), timeslots.get(3)));
+		assertFalse(timeslots.get(8).within(timeslots.get(2), timeslots.get(6)));
+		assertFalse(timeslots.get(9).within(timeslots.get(6), timeslots.get(8)));
+		assertTrue(timeslots.get(3).within(timeslots.get(3), timeslots.get(3)));
+		assertFalse(timeslots.get(4).within(timeslots.get(3), timeslots.get(3)));
+		assertFalse(timeslots.get(5).within(timeslots.get(4), null));
+		assertFalse(timeslots.get(5).within(null, timeslots.get(6)));
 	}
 }

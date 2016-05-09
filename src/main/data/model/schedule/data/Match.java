@@ -112,7 +112,7 @@ public class Match {
 	 * Establece el conjunto de equipos que se enfrentan en este partido
 	 * 
 	 * @param teams una lista de equipos que cumple las precondiciones especificadas
-	 * @throws IllegalArgumentException si <code>teams</code> es <code>null</code>, si tiene menos de 2 elementos, si contiene
+	 * @throws IllegalArgumentException si <code>teams</code> es <code>null</code>, si tiene está vacío, si contiene
 	 * un equipo <code>null</code>, si el número de jugadores de cada equipo no es el mismo o si no todos los jugadores de cada
 	 * equipo están contenidos en la lista de jugadores del partido
 	 */
@@ -120,8 +120,8 @@ public class Match {
 		if (teams == null)
 			throw new IllegalArgumentException("Teams cannot be null");
 		
-		if (teams.size() < 2)
-			throw new IllegalArgumentException("List of teams cannot have less the two teams");
+		if (teams.isEmpty())
+			throw new IllegalArgumentException("List of teams cannot be empty");
 		
 		if (teams.contains(null))
 			throw new IllegalArgumentException("Teams cannot contain a null team");
@@ -151,6 +151,36 @@ public class Match {
 	
 	public List<Team> getTeams() {
 		return Collections.unmodifiableList(teams);
+	}
+	
+	/**
+	 * Comprueba si el transcurso de un partido sucede, parcial o totalmente, durante el rango indicado
+	 * 
+	 * @param t1 un extremo del rango
+	 * @param t2 el otro extremo
+	 * @return <code>true</code> si el partido o parte del mismo se juega dentro del rango, <code>false</code> si no
+	 */
+	public boolean during(Timeslot t1, Timeslot t2) {
+		Timeslot start, end;
+		if (t1.compareTo(t2) >= 0) {
+			start = t1;
+			end = t2;
+		} else {
+			start = t2;
+			end = t1;
+		}
+		
+		return !(startTimeslot.compareTo(end) < 0 || endTimeslot.compareTo(start) > 0);
+	}
+	
+	/**
+	 * Comprueba si el transcurso de un partido sucede durante el <i>timeslot</i>
+	 * 
+	 * @param t <i>timeslot</i> no <code>null</code>
+	 * @return <code>true</code> si el partido o parte del mismo se juega durante el <i>timeslot</i>, <code>false</code> si no
+	 */
+	public boolean during(Timeslot t) {
+		return t.within(startTimeslot, endTimeslot);
 	}
 
 	public String toString() {

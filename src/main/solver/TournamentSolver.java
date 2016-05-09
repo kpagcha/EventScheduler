@@ -13,7 +13,6 @@ import org.chocosolver.solver.Solver;
 import org.chocosolver.solver.constraints.Constraint;
 import org.chocosolver.solver.search.loop.monitors.SearchMonitorFactory;
 import org.chocosolver.solver.search.strategy.IntStrategyFactory;
-import org.chocosolver.solver.trace.Chatterbox;
 import org.chocosolver.solver.variables.IntVar;
 import org.chocosolver.solver.variables.VariableFactory;
 import org.chocosolver.util.ESat;
@@ -155,6 +154,8 @@ public class TournamentSolver {
 	 */
 	private boolean lastSolutionFound = false;
 	
+	private long foundSolutionsCount = 0;
+	
 	/**
 	 * Estrategia de búsqueda empleada en la resolución del problema
 	 */
@@ -167,9 +168,9 @@ public class TournamentSolver {
 	private boolean fillTimeslotsFirst = true;
 	
 	/**
-	 * Tiempo máximo de resolución. 0 significa sin límite
+	 * Tiempo máximo de resolución en milisegundos. 0 significa sin límite
 	 */
-	private int resolutionTimeLimit = 0;
+	private long resolutionTimeLimit = 0;
 	
 	/**
 	 * Bandera que indica la parada del proceso de resolución
@@ -193,6 +194,8 @@ public class TournamentSolver {
 	 */
 	public TournamentSolver(Tournament tournament) {
 		this.tournament = tournament;
+		
+		LOGGER.setLevel(Level.WARNING);
 
 		List<Event> events = tournament.getEvents();
 		List<Player> allPlayers = tournament.getAllPlayers();
@@ -304,6 +307,10 @@ public class TournamentSolver {
 		searchStrategy = strategy;
 	}
 	
+	public SearchStrategy getSearchStrategy() {
+		return searchStrategy;
+	}
+	
 	public void setFillTimeslotsFirst(boolean fillFirst) {
 		fillTimeslotsFirst = fillFirst;
 	}
@@ -312,11 +319,24 @@ public class TournamentSolver {
 		return fillTimeslotsFirst;
 	}
 	
-	public void setResolutionTimeLimit(int limit) {
+	public long getFoundSolutionsCount() {
+		return foundSolutionsCount;
+	}
+	
+	/**
+	 * Establece el tiempo máximo de resolución del problema en milisegundos.
+	 * <p>
+	 * El valor de 0 es el valor por defecto e indica que no hay límite.
+	 * 
+	 * @param limit número mayor o igual que 0
+	 */
+	public void setResolutionTimeLimit(long limit) {
+		if (limit < 0)
+			throw new IllegalArgumentException("Resolution time limit cannot be less than zero");
 		resolutionTimeLimit = limit;
 	}
 	
-	public int getResolutionTimeLimit() {
+	public long getResolutionTimeLimit() {
 		return resolutionTimeLimit;
 	}
 	
@@ -462,7 +482,8 @@ public class TournamentSolver {
 	}
 	
 	/**
-	 * Fuerza a que los jugadores indicados jueguen sus partidos en las localizaciones indicadas
+	 * Fuerza a que los jugadores indicados jueguen sus partidos en las localizaciones indicadas, marcando todas las demás
+	 * con 0
 	 */
 	private void markPlayersNotInLocalizations() {
 		List<Event> events = tournament.getEvents();
@@ -500,7 +521,8 @@ public class TournamentSolver {
 	}
 	
 	/**
-	 * Fuerza a que los jugadores indicados jueguen sus partidos en los timeslots indicados
+	 * Fuerza a que los jugadores indicados jueguen sus partidos en los timeslots indicados, marcando todos los
+	 * demás con 0
 	 */
 	private void markPlayersNotAtTimeslots() {
 		List<Event> events = tournament.getEvents();
@@ -543,17 +565,19 @@ public class TournamentSolver {
 		// Marcar los breaks con 0
 		for (int e = 0; e < events.size(); e++) {
 			Event event = events.get(e);
-			int nPlayers = event.getPlayers().size();
-			int nLocalizations = event.getLocalizations().size();
-			int nTimeslots = event.getTimeslots().size();
-			
-			for (int t = 0; t < nTimeslots; t++) {
-				// Si el timeslot_t es un break, entonces en él no se puede jugar y se marca como 0
-				if (event.isBreak(event.getTimeslots().get(t))) {
-					for (int p = 0; p < nPlayers; p++) {
-						for (int c = 0; c < nLocalizations; c++) {
-							x[e][p][c][t] = VariableFactory.fixed(0, solver);
-							g[e][p][c][t] = VariableFactory.fixed(0, solver);
+			if (event.hasBreaks()) {
+				int nPlayers = event.getPlayers().size();
+				int nLocalizations = event.getLocalizations().size();
+				int nTimeslots = event.getTimeslots().size();
+				
+				for (int t = 0; t < nTimeslots; t++) {
+					// Si el timeslot_t es un break, entonces en él no se puede jugar y se marca como 0
+					if (event.isBreak(event.getTimeslots().get(t))) {
+						for (int p = 0; p < nPlayers; p++) {
+							for (int c = 0; c < nLocalizations; c++) {
+								x[e][p][c][t] = VariableFactory.fixed(0, solver);
+								g[e][p][c][t] = VariableFactory.fixed(0, solver);
+							}
 						}
 					}
 				}
@@ -723,8 +747,6 @@ public class TournamentSolver {
 		else
 			resolutionData = new ResolutionData(solver, tournament, getSearchStrategyName(), false);
 		
-		Chatterbox.printStatistics(solver);
-		
 		if (!solutionFound) {
 			if (solver.isFeasible() == ESat.FALSE)
 				LOGGER.log(Level.INFO, "Problem infeasible.");
@@ -757,7 +779,7 @@ public class TournamentSolver {
 			schedules = null;
 		
 		else if (solver.isFeasible() != ESat.TRUE) {
-			LOGGER.log(Level.INFO, "Solution not found.");
+			LOGGER.log(Level.INFO, "No schedules available; solution was not found.");
 			schedules = null;
 			
 		} else if (schedules == null) {   // Se ha encontrado la primera solución
@@ -770,6 +792,7 @@ public class TournamentSolver {
 				buildSchedules();
 			}
 			else {
+				LOGGER.log(Level.INFO, "All possible schedules have already been found.");
 				lastSolutionFound = true;
 				schedules = null;
 			}
@@ -786,6 +809,7 @@ public class TournamentSolver {
 			Event event = events.get(e);
 			schedules.put(event, new EventSchedule(event, solutionMatrixToInt(event, x[e])));
 		}
+		foundSolutionsCount++;
 	}
 	
 	/**

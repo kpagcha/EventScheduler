@@ -41,7 +41,7 @@ public class TournamentUtils {
 		event.setMatchupMode(MatchupMode.ALL_DIFFERENT);
 		
 		for (int i = 0; i < players.size(); i += 2)
-			event.addTeamPlayers(players.get(i), players.get(i + 1));
+			event.addTeam(players.get(i), players.get(i + 1));
 		
 		Tournament tournament = new Tournament("Tournament", event);
 		
@@ -311,8 +311,8 @@ public class TournamentUtils {
 		Timeslot[] timeslots = new Timeslot[nTimeslots];
 		int order = 0;
 		for (int i = 0; i < nTimeslots; i++) {
+			if (i % 7 == 0 && i != 0) order++;
 			timeslots[i] = new DefiniteTimeslot(DayOfWeek.of(i % 7 + 1), Duration.ofHours(1), order);
-			if (i % 7 + 1 == 0) order++;
 		}
 		return new ArrayList<Timeslot>(Arrays.asList(timeslots));
 	}

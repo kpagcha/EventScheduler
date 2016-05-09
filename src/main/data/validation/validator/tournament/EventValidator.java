@@ -690,17 +690,6 @@ public class EventValidator implements Validator<Event> {
 	 * @return si la validación es satisfactoria <code>true</code>, de lo contrario, se devuelve <code>false</code>
 	 */
 	private boolean validatePlayersAtTimeslots(Event event) {
-		/*
-		 * <h2>Jugadores en horas fijas</h2>
-		 * <ul>
-		 * <li>Lista no <code>null</code>
-		 * <li>Ningún jugador puede ser <code>null</code>
-		 * <li>La lista de horas fijas no puede ser <code>null</code>
-		 * <li>Ninguna hora fija asignada a un jugador puede ser <code>null</code>
-		 * <li>Todos los jugadores deben pertenecer a la lista de jugadores del evento
-		 * <li>Todas las horas deben pertenecer a la lista de <i>timeslots</i> del evento
-		 * </ul>
-		 */
 		Map<Player, Set<Timeslot>> playersAtTimeslots = event.getPlayersAtTimeslots();
 		
 		if (playersAtTimeslots == null) {
@@ -730,7 +719,7 @@ public class EventValidator implements Validator<Event> {
 					if (timeslot == null) {
 						isValid = false;
 						messages.add("Timeslot cannot be null");
-					} else if (!event.getLocalizations().contains(timeslot)) {
+					} else if (!event.getTimeslots().contains(timeslot)) {
 						isValid = false;
 						messages.add(String.format("All timeslots must exist in the list of timeslots of the event; timeslots (%s) does not", 
 								timeslot));

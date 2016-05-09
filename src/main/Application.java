@@ -117,7 +117,7 @@ public class Application {
 							System.out.println();
 						}
 						
-						GroupedSchedule groupedSchedule = new GroupedSchedule(tournament, tournament.getSchedule().getMatches());
+						GroupedSchedule groupedSchedule = new GroupedSchedule(tournament);
 						System.out.println("Combined schedule grouped by courts");
 						System.out.println(groupedSchedule);
 						

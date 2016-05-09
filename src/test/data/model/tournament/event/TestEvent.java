@@ -503,9 +503,9 @@ public class TestEvent {
 	@Test
 	public void addTeamTest() {
 		event.setPlayersPerMatch(4);
-		event.addTeamPlayers(players.get(0), players.get(1));
-		event.addTeamPlayers(players.get(2), players.get(3));
-		event.addTeamPlayers(players.get(4), players.get(5));
+		event.addTeam(players.get(0), players.get(1));
+		event.addTeam(players.get(2), players.get(3));
+		event.addTeam(players.get(4), players.get(5));
 		
 		assertTrue(event.hasTeams());
 		assertEquals(3, event.getTeams().size());
@@ -520,14 +520,14 @@ public class TestEvent {
 		Player[] teamPlayers = null;
 		expectedEx.expect(IllegalArgumentException.class);
 		expectedEx.expectMessage("Players cannot be null");
-		event.addTeamPlayers(teamPlayers);
+		event.addTeam(teamPlayers);
 	}
 	
 	@Test
 	public void addTeamNullPlayersTest() {
 		expectedEx.expect(IllegalArgumentException.class);
-		expectedEx.expectMessage("Team cannot be null");
-		event.addTeam(null);
+		expectedEx.expectMessage("Players cannot be null");
+		event.addTeam((Player[])null);
 	}
 	
 	@Test
@@ -547,29 +547,29 @@ public class TestEvent {
 	@Test
 	public void addTeamSameNumberOfPlayersTest() {
 		event.setPlayersPerMatch(4);
-		event.addTeamPlayers(players.get(0), players.get(3));
+		event.addTeam(players.get(0), players.get(3));
 		
 		expectedEx.expect(IllegalArgumentException.class);
 		expectedEx.expectMessage("must be the same");
-		event.addTeamPlayers(players.get(2), players.get(4), players.get(6), players.get(7));
+		event.addTeam(players.get(2), players.get(4), players.get(6), players.get(7));
 	}
 	
 	@Test
 	public void addTeamPlayerOnlyInOneTeamTest() {
 		event.setPlayersPerMatch(4);
-		event.addTeamPlayers(players.get(0), players.get(3));
+		event.addTeam(players.get(0), players.get(3));
 		
 		expectedEx.expect(IllegalArgumentException.class);
 		expectedEx.expectMessage("can only be present in one team");
-		event.addTeamPlayers(players.get(2), players.get(3));
+		event.addTeam(players.get(2), players.get(3));
 	}
 	
 	@Test
 	public void removeTeamTest() {
-		event.addTeamPlayers(players.get(0), players.get(1));
-		event.addTeamPlayers(players.get(2), players.get(3));
-		event.addTeamPlayers(players.get(4), players.get(5));
-		event.addTeamPlayers(players.get(6), players.get(7));
+		event.addTeam(players.get(0), players.get(1));
+		event.addTeam(players.get(2), players.get(3));
+		event.addTeam(players.get(4), players.get(5));
+		event.addTeam(players.get(6), players.get(7));
 		
 		Team team = event.getTeams().get(3);
 		
@@ -581,7 +581,7 @@ public class TestEvent {
 	
 	@Test
 	public void removeNonexistingTeamTest() {
-		event.addTeamPlayers(players.get(0), players.get(1));
+		event.addTeam(players.get(0), players.get(1));
 		
 		Team team = new Team(players.get(3), players.get(6));
 		
@@ -594,7 +594,7 @@ public class TestEvent {
 	public void hasTeamsTest() {
 		assertFalse(event.hasTeams());
 		
-		event.addTeamPlayers(players.get(0), players.get(1));
+		event.addTeam(players.get(0), players.get(1));
 		
 		assertTrue(event.hasTeams());
 		
@@ -968,8 +968,8 @@ public class TestEvent {
 	@Test
 	public void addFixedTeamsMatchupTest() {
 		event.setPlayersPerMatch(4);
-		event.addTeamPlayers(players.get(3), players.get(5));
-		event.addTeamPlayers(players.get(1), players.get(4));
+		event.addTeam(players.get(3), players.get(5));
+		event.addTeam(players.get(1), players.get(4));
 		
 		List<Team> teams = event.getTeams();
 		event.addFixedMatchupBetweenTeams(new HashSet<Team>(Arrays.asList(teams.get(0), teams.get(1))));
@@ -1016,8 +1016,8 @@ public class TestEvent {
 	@Test
 	public void removeFixedTeamsMatchupTest() {
 		event.setPlayersPerMatch(4);
-		event.addTeamPlayers(players.get(3), players.get(5));
-		event.addTeamPlayers(players.get(1), players.get(4));
+		event.addTeam(players.get(3), players.get(5));
+		event.addTeam(players.get(1), players.get(4));
 		
 		List<Team> teams = event.getTeams();
 		event.addFixedMatchupBetweenTeams(new HashSet<Team>(Arrays.asList(teams.get(0), teams.get(1))));
@@ -1047,8 +1047,8 @@ public class TestEvent {
 	
 	@Test
 	public void getFixedMatchupsTest() {
-		event.addTeamPlayers(players.get(3), players.get(5));
-		event.addTeamPlayers(players.get(1), players.get(4));
+		event.addTeam(players.get(3), players.get(5));
+		event.addTeam(players.get(1), players.get(4));
 		
 		expectedEx.expect(UnsupportedOperationException.class);
 		event.getFixedMatchups().remove(1);
@@ -1966,8 +1966,8 @@ public class TestEvent {
 	@Test
 	public void getTeamByPlayerTest() {
 		event.setPlayersPerMatch(4);
-		event.addTeamPlayers(players.get(0), players.get(1));
-		event.addTeamPlayers(players.get(2), players.get(3));
+		event.addTeam(players.get(0), players.get(1));
+		event.addTeam(players.get(2), players.get(3));
 		
 		assertEquals(event.getTeams().get(0), event.getTeamByPlayer(players.get(1)));
 		assertEquals(event.getTeams().get(0), event.getTeamByPlayer(players.get(0)));

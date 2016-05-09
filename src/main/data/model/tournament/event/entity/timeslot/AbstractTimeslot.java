@@ -39,6 +39,25 @@ public class AbstractTimeslot extends Entity implements Timeslot {
 		return chronologicalOrder;
 	}
 	
+	public boolean within(Timeslot t1, Timeslot t2) {
+		if (t1 == null || t2 == null)
+			return false;
+		
+		if (t1.compareTo(t2) == 0 && compareTo(t1) == 0)
+			return true;
+		
+		Timeslot start, end;
+		if (t1.compareTo(t2) >= 0) {
+			start = t1;
+			end = t2;
+		} else {
+			start = t2;
+			end = t1;
+		}
+		
+		return compareTo(start) <= 0 && compareTo(end) >= 0;
+	}
+	
 	public int compareTo(Timeslot o) {
 		if (o == null)
 			return 1;
