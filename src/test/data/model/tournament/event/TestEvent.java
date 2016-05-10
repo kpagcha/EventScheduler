@@ -370,7 +370,7 @@ public class TestEvent {
 		event.setPlayersPerMatch(4);
 		assertEquals(4, event.getPlayersPerMatch());
 		assertFalse(event.hasTeams());
-		assertFalse(event.hasFixedMatchups());
+		assertFalse(event.hasPredefinedMatchups());
 	}
 	
 	@Test
@@ -841,27 +841,27 @@ public class TestEvent {
 	
 	@Test
 	public void setFixedMatchupsTest() {
-		assertFalse(event.hasFixedMatchups());
+		assertFalse(event.hasPredefinedMatchups());
 		
 		List<Set<Player>> fixedMatchups = new ArrayList<Set<Player>>();
 		fixedMatchups.add(new HashSet<Player>(Arrays.asList(players.get(0), players.get(1))));
 		fixedMatchups.add(new HashSet<Player>(Arrays.asList(players.get(4), players.get(7))));
 		fixedMatchups.add(new HashSet<Player>(Arrays.asList(players.get(6), players.get(3))));
 		
-		event.setFixedMatchups(fixedMatchups);
+		event.setPredefinedMatchups(fixedMatchups);
 		
-		assertTrue(event.hasFixedMatchups());
-		assertEquals(3, event.getFixedMatchups().size());
-		assertTrue(event.getFixedMatchups().get(0).contains(players.get(1)));
-		for (Set<Player> matchup : event.getFixedMatchups())
+		assertTrue(event.hasPredefinedMatchups());
+		assertEquals(3, event.getPredefinedMatchups().size());
+		assertTrue(event.getPredefinedMatchups().get(0).contains(players.get(1)));
+		for (Set<Player> matchup : event.getPredefinedMatchups())
 			assertEquals(2, matchup.size());
 	}
 	
 	@Test
 	public void setFixedMatchupsNullTest() {
 		expectedEx.expect(IllegalArgumentException.class);
-		expectedEx.expectMessage("fixed matchups cannot be null");
-		event.setFixedMatchups(null);
+		expectedEx.expectMessage("predefined matchups cannot be null");
+		event.setPredefinedMatchups(null);
 	}
 	
 	@Test
@@ -873,7 +873,7 @@ public class TestEvent {
 		
 		expectedEx.expect(IllegalArgumentException.class);
 		expectedEx.expectMessage("matchup cannot be repeated");
-		event.setFixedMatchups(fixedMatchups);
+		event.setPredefinedMatchups(fixedMatchups);
 	}
 	
 	@Test
@@ -883,7 +883,7 @@ public class TestEvent {
 		
 		expectedEx.expect(IllegalArgumentException.class);
 		expectedEx.expectMessage("matchup cannot be null");
-		event.setFixedMatchups(fixedMatchups);
+		event.setPredefinedMatchups(fixedMatchups);
 	}
 	
 	@Test
@@ -893,7 +893,7 @@ public class TestEvent {
 		
 		expectedEx.expect(IllegalArgumentException.class);
 		expectedEx.expectMessage("player cannot be null");
-		event.setFixedMatchups(fixedMatchups);
+		event.setPredefinedMatchups(fixedMatchups);
 	}
 	
 	@Test
@@ -903,7 +903,7 @@ public class TestEvent {
 		
 		expectedEx.expect(IllegalArgumentException.class);
 		expectedEx.expectMessage("players must exist in the list of players of the event");
-		event.setFixedMatchups(fixedMatchups);
+		event.setPredefinedMatchups(fixedMatchups);
 	}
 	
 	@Test
@@ -914,7 +914,7 @@ public class TestEvent {
 		
 		expectedEx.expect(IllegalArgumentException.class);
 		expectedEx.expectMessage("number of players per match specified by this event");
-		event.setFixedMatchups(fixedMatchups);
+		event.setPredefinedMatchups(fixedMatchups);
 	}
 	
 	@Test
@@ -925,44 +925,44 @@ public class TestEvent {
 		
 		expectedEx.expect(IllegalArgumentException.class);
 		expectedEx.expectMessage("cannot be present in more than the number of matches per player");
-		event.setFixedMatchups(fixedMatchups);
+		event.setPredefinedMatchups(fixedMatchups);
 	}
 	
 	@Test
 	public void addFixedMatchupTest() {
-		event.addFixedMatchup(new HashSet<Player>(Arrays.asList(players.get(2), players.get(6))));
+		event.addMatchup(new HashSet<Player>(Arrays.asList(players.get(2), players.get(6))));
 		
-		assertTrue(event.hasFixedMatchups());
-		assertEquals(1, event.getFixedMatchups().size());
+		assertTrue(event.hasPredefinedMatchups());
+		assertEquals(1, event.getPredefinedMatchups().size());
 		
-		event.addFixedMatchup(players.get(3), players.get(4));
+		event.addMatchup(players.get(3), players.get(4));
 		
-		assertEquals(2, event.getFixedMatchups().size());
+		assertEquals(2, event.getPredefinedMatchups().size());
 	}
 	
 	@Test
 	public void addFixedMatchupNullPlayersTest() {
 		expectedEx.expect(IllegalArgumentException.class);
 		expectedEx.expectMessage("players cannot be null");
-		event.addFixedMatchup((Player[])null);
+		event.addMatchup((Player[])null);
 	}
 	
 	@Test
 	public void addFixedMatchupExistingMatchupTest() {
-		event.addFixedMatchup(new HashSet<Player>(Arrays.asList(players.get(2), players.get(6))));
+		event.addMatchup(new HashSet<Player>(Arrays.asList(players.get(2), players.get(6))));
 		
 		expectedEx.expect(IllegalArgumentException.class);
 		expectedEx.expectMessage("same matchup cannot be added more than once");
-		event.addFixedMatchup(players.get(2), players.get(6));
+		event.addMatchup(players.get(2), players.get(6));
 	}
 	
 	@Test
 	public void addFixedMatchupExceededMatchupsTest() {
-		event.addFixedMatchup(new HashSet<Player>(Arrays.asList(players.get(2), players.get(6))));
+		event.addMatchup(new HashSet<Player>(Arrays.asList(players.get(2), players.get(6))));
 		
 		expectedEx.expect(IllegalArgumentException.class);
 		expectedEx.expectMessage("cannot be present in more than the number of matches per player");
-		event.addFixedMatchup(new HashSet<Player>(Arrays.asList(players.get(2), players.get(3))));
+		event.addMatchup(new HashSet<Player>(Arrays.asList(players.get(2), players.get(3))));
 	}
 	
 	@Test
@@ -972,18 +972,18 @@ public class TestEvent {
 		event.addTeam(players.get(1), players.get(4));
 		
 		List<Team> teams = event.getTeams();
-		event.addFixedMatchupBetweenTeams(new HashSet<Team>(Arrays.asList(teams.get(0), teams.get(1))));
+		event.addMatchupBetweenTeams(new HashSet<Team>(Arrays.asList(teams.get(0), teams.get(1))));
 		
-		assertTrue(event.hasFixedMatchups());
-		assertEquals(1, event.getFixedMatchups().size());
-		assertEquals(4, event.getFixedMatchups().get(0).size());
+		assertTrue(event.hasPredefinedMatchups());
+		assertEquals(1, event.getPredefinedMatchups().size());
+		assertEquals(4, event.getPredefinedMatchups().get(0).size());
 	}
 	
 	@Test
 	public void addFixedTeamsMatchupNullTest() {
 		expectedEx.expect(IllegalArgumentException.class);
 		expectedEx.expectMessage("matchup cannot be null");
-		event.addFixedMatchupBetweenTeams(null);
+		event.addMatchupBetweenTeams(null);
 	}
 	
 	@Test
@@ -994,23 +994,23 @@ public class TestEvent {
 		
 		expectedEx.expect(IllegalArgumentException.class);
 		expectedEx.expectMessage("does not exist in the list of teams of this event");
-		event.addFixedMatchupBetweenTeams(new HashSet<Team>(Arrays.asList(teams.get(0), teams.get(1))));
+		event.addMatchupBetweenTeams(new HashSet<Team>(Arrays.asList(teams.get(0), teams.get(1))));
 	}
 	
 	@Test
 	public void removeFixedMatchupTest() {
-		event.addFixedMatchup(new HashSet<Player>(Arrays.asList(players.get(2), players.get(6))));
-		event.addFixedMatchup(new HashSet<Player>(Arrays.asList(players.get(0), players.get(3))));
+		event.addMatchup(new HashSet<Player>(Arrays.asList(players.get(2), players.get(6))));
+		event.addMatchup(new HashSet<Player>(Arrays.asList(players.get(0), players.get(3))));
 		
-		assertTrue(event.hasFixedMatchups());
+		assertTrue(event.hasPredefinedMatchups());
 		
-		event.removeFixedMatchup(event.getFixedMatchups().get(0));
+		event.removeMatchup(event.getPredefinedMatchups().get(0));
 		
-		assertEquals(1, event.getFixedMatchups().size());
+		assertEquals(1, event.getPredefinedMatchups().size());
 		
-		event.removeFixedMatchup(event.getFixedMatchups().get(0));
+		event.removeMatchup(event.getPredefinedMatchups().get(0));
 		
-		assertFalse(event.hasFixedMatchups());
+		assertFalse(event.hasPredefinedMatchups());
 	}
 	
 	@Test
@@ -1020,29 +1020,29 @@ public class TestEvent {
 		event.addTeam(players.get(1), players.get(4));
 		
 		List<Team> teams = event.getTeams();
-		event.addFixedMatchupBetweenTeams(new HashSet<Team>(Arrays.asList(teams.get(0), teams.get(1))));
+		event.addMatchupBetweenTeams(new HashSet<Team>(Arrays.asList(teams.get(0), teams.get(1))));
 		
-		assertTrue(event.hasFixedMatchups());
+		assertTrue(event.hasPredefinedMatchups());
 		
-		event.removeFixedTeamsMatchup(new HashSet<Team>(Arrays.asList(event.getTeams().get(0), event.getTeams().get(1))));
+		event.removeTeamsMatchup(new HashSet<Team>(Arrays.asList(event.getTeams().get(0), event.getTeams().get(1))));
 		
-		assertFalse(event.hasFixedMatchups());
+		assertFalse(event.hasPredefinedMatchups());
 	}
 	
 	@Test
 	public void removeFixedTeamsMatchupNullTest() {
 		expectedEx.expect(IllegalArgumentException.class);
 		expectedEx.expectMessage("matchup cannot be null");
-		event.removeFixedTeamsMatchup(null);
+		event.removeTeamsMatchup(null);
 	}
 	
 	@Test
 	public void hasFixedMatchupsTest() {
-		assertFalse(event.hasFixedMatchups());
+		assertFalse(event.hasPredefinedMatchups());
 		
-		event.addFixedMatchup(players.get(3), players.get(7));
+		event.addMatchup(players.get(3), players.get(7));
 		
-		assertTrue(event.hasFixedMatchups());
+		assertTrue(event.hasPredefinedMatchups());
 	}
 	
 	@Test
@@ -1051,7 +1051,7 @@ public class TestEvent {
 		event.addTeam(players.get(1), players.get(4));
 		
 		expectedEx.expect(UnsupportedOperationException.class);
-		event.getFixedMatchups().remove(1);
+		event.getPredefinedMatchups().remove(1);
 	}
 	
 	@Test
@@ -1801,6 +1801,17 @@ public class TestEvent {
 		expectedEx.expect(IllegalArgumentException.class);
 		expectedEx.expectMessage("already assigned to the player");
 		event.addPlayerAtTimeslot(players.get(4), timeslots.get(7));
+	}
+	
+	@Test
+	public void addPlayerAtStartTimeslotTest() {
+		event.addPlayerAtStartTimeslot(players.get(2), timeslots.get(4));
+		
+		assertEquals(2, event.getPlayersAtTimeslots().get(players.get(2)).size());
+		
+		event.addPlayerAtStartTimeslot(players.get(6), timeslots.get(7));
+		
+		assertEquals(1, event.getPlayersAtTimeslots().get(players.get(6)).size());
 	}
 	
 	@Test

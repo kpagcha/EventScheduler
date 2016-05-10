@@ -374,8 +374,8 @@ public class TournamentSolver {
 		
 		// Añadir a los emparejamientos predefinidos, jugadores en pista y jugadores en horas a las colecciones correspondientes
 		for (Event event : events) {
-			if (event.hasFixedMatchups())
-				predefinedMatchups.put(event, event.getFixedMatchups());
+			if (event.hasPredefinedMatchups())
+				predefinedMatchups.put(event, event.getPredefinedMatchups());
 			
 			if (event.hasPlayersInLocalizations())
 				playersInLocalizations.put(event, event.getPlayersInLocalizations());
@@ -775,7 +775,7 @@ public class TournamentSolver {
 	 */
 	public Map<Event, EventSchedule> getSolvedSchedules() {
 		// Cuando se llega a la última solución, si se vuelve a llamar a este método se "limpian" los horarios
-		if (lastSolutionFound && schedules != null)
+		if (lastSolutionFound)
 			schedules = null;
 		
 		else if (solver.isFeasible() != ESat.TRUE) {

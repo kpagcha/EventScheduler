@@ -305,6 +305,79 @@ public class MatchTest {
 	}
 	
 	@Test
+	public void withinTest() {
+		start = new DefiniteTimeslot(LocalTime.of(10, 0), Duration.ofHours(1), 1);
+		end = new DefiniteTimeslot(LocalTime.of(14, 0), Duration.ofHours(1), 1);
+		// La hora del partido es 10:00 - 14:00 (4 timeslots)
+		match = new Match(players, localization, start, end, 4);
+		
+		// Mismo rango
+		assertTrue(match.within(start, end));
+		assertTrue(match.within(end, start));
+		
+		// Dentro del rango, holgado
+		Timeslot t1 = new DefiniteTimeslot(LocalTime.of(9, 0), Duration.ofHours(1), 1);
+		Timeslot t2 = new DefiniteTimeslot(LocalTime.of(15, 0), Duration.ofHours(1), 1);
+		assertTrue(match.within(t1, t2));
+		
+		// Dentro del rango, mismo comienzo
+		t1 = new DefiniteTimeslot(LocalTime.of(10, 0), Duration.ofHours(1), 1);
+		t2 = new DefiniteTimeslot(LocalTime.of(15, 0), Duration.ofHours(1), 1);
+		assertTrue(match.within(t1, t2));
+		
+		// Dentro del rango, mismo final
+		t1 = new DefiniteTimeslot(LocalTime.of(6, 0), Duration.ofHours(1), 1);
+		t2 = new DefiniteTimeslot(LocalTime.of(14, 0), Duration.ofHours(1), 1);
+		assertTrue(match.within(t1, t2));	
+		
+		// "Fuera" del rango (rango incluido en el partido)
+		t1 = new DefiniteTimeslot(LocalTime.of(11, 0), Duration.ofHours(1), 1);
+		t2 = new DefiniteTimeslot(LocalTime.of(13, 0), Duration.ofHours(1), 1);
+		assertFalse(match.within(t1, t2));
+		assertFalse(match.within(t2, t1));
+		
+		// "Fuera" del rango (rango incluido en el partido); mismo comienzo
+		t1 = new DefiniteTimeslot(LocalTime.of(10, 0), Duration.ofHours(1), 1);
+		t2 = new DefiniteTimeslot(LocalTime.of(13, 0), Duration.ofHours(1), 1);
+		assertFalse(match.within(t1, t2));
+		
+		// "Fuera" del rango (rango incluido en el partido); mismo final
+		t1 = new DefiniteTimeslot(LocalTime.of(12, 0), Duration.ofHours(1), 1);
+		t2 = new DefiniteTimeslot(LocalTime.of(14, 0), Duration.ofHours(1), 1);
+		assertFalse(match.within(t1, t2));
+		
+		// Fuera del rango por la izquierda
+		t1 = new DefiniteTimeslot(LocalTime.of(7, 0), Duration.ofHours(1), 1);
+		t2 = new DefiniteTimeslot(LocalTime.of(9, 0), Duration.ofHours(1), 1);
+		assertFalse(match.within(t1, t2));
+		
+		// Fuera del rango por la izquierda con timeslot coincidente (fin rango = comienzo partido) 
+		t1 = new DefiniteTimeslot(LocalTime.of(7, 0), Duration.ofHours(1), 1);
+		t2 = new DefiniteTimeslot(LocalTime.of(10, 0), Duration.ofHours(1), 1);
+		assertFalse(match.within(t1, t2));
+		
+		// Fuera del rango por la izquierda con solapamiento (parte final del rango se superpone con el parte del comienzo del partido) 
+		t1 = new DefiniteTimeslot(LocalTime.of(7, 0), Duration.ofHours(1), 1);
+		t2 = new DefiniteTimeslot(LocalTime.of(12, 0), Duration.ofHours(1), 1);
+		assertFalse(match.within(t1, t2));
+		
+		// Fuera del rango por la derecha
+		t1 = new DefiniteTimeslot(LocalTime.of(15, 0), Duration.ofHours(1), 1);
+		t2 = new DefiniteTimeslot(LocalTime.of(19, 0), Duration.ofHours(1), 1);
+		assertFalse(match.within(t1, t2));
+		
+		// Fuera del rango por la derecha con timeslot coincidente (fin timeslot = comienzo partido) 
+		t1 = new DefiniteTimeslot(LocalTime.of(14, 0), Duration.ofHours(1), 1);
+		t2 = new DefiniteTimeslot(LocalTime.of(17, 0), Duration.ofHours(1), 1);
+		assertFalse(match.within(t1, t2));
+		
+		// Fuera del rango por la izquierda con solapamiento (del comienzo del rango se superpone con parte del final del partido) 
+		t1 = new DefiniteTimeslot(LocalTime.of(13, 0), Duration.ofHours(1), 1);
+		t2 = new DefiniteTimeslot(LocalTime.of(17, 0), Duration.ofHours(1), 1);
+		assertFalse(match.within(t1, t2));
+	}
+	
+	@Test
 	public void toStringTest() {
 		assertEquals("At 15:00 (PT1H) [1] in Court 1: Player 1 vs Player 2", match.toString());
 		

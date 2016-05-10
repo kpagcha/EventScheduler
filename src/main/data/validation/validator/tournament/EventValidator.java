@@ -503,7 +503,7 @@ public class EventValidator implements Validator<Event> {
 	 * @return si la validación es satisfactoria <code>true</code>, de lo contrario, se devuelve <code>false</code>
 	 */
 	private boolean validateFixedMatchups(Event event) {
-		List<Set<Player>> matchups = event.getFixedMatchups();
+		List<Set<Player>> matchups = event.getPredefinedMatchups();
 		
 		if (matchups == null) {
 			messages.add("List of fixed matchups cannot be null");

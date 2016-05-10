@@ -8,6 +8,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.junit.Test;
@@ -22,6 +23,7 @@ import data.model.tournament.event.entity.Localization;
 import data.model.tournament.event.entity.Player;
 import data.model.tournament.event.entity.timeslot.Timeslot;
 import data.validation.validable.ValidationException;
+import solver.TournamentSolver.MatchupMode;
 import solver.TournamentSolver.SearchStrategy;
 import utils.TournamentUtils;
 
@@ -98,10 +100,58 @@ public class TournamentSolverTest {
 		
 		assertEquals(
 			tournament.getNumberOfOccupiedTimeslots(),
-			Stream.of(schedule.getScheduleValues()).flatMap(row -> Arrays.stream(row)).filter(v -> v.isOccupied()).count()
+			Stream.of(schedule.getScheduleValues()).flatMap(v -> Arrays.stream(v)).filter(v -> v.isOccupied()).count()
 		);
 		
 		assertEquals(100, new Double(new GroupedSchedule(tournament).getOccupationRatio() * 100).intValue());
+	}
+	
+	@Test
+	public void basicTournamentWithOneSolutionCastTest() throws ValidationException {
+		Event event = new Event(
+			"Event",
+			TournamentUtils.buildGenericPlayers(2, "Player"),
+			TournamentUtils.buildGenericLocalizations(1, "Court"),
+			TournamentUtils.buildDefiniteDayOfWeekTimeslots(2)
+		);
+		tournament = new Tournament("Tournament", event);
+		tournament.getSolver().setSearchStrategy(SearchStrategy.MINDOM_UB);
+		
+		assertTrue(tournament.solve());
+		assertNotNull(tournament.getSchedule());
+		assertEquals(1, tournament.getSolver().getFoundSolutionsCount());
+		
+		assertFalse(tournament.nextSchedules());
+		assertNull(tournament.getSchedule());
+		assertEquals(1, tournament.getSolver().getFoundSolutionsCount());
+	}
+	
+	@Test
+	public void basicTournamentWithFewSolutionsCaseTest() throws ValidationException {
+		Event event = new Event(
+			"Event",
+			TournamentUtils.buildGenericPlayers(2, "Player"),
+			TournamentUtils.buildGenericLocalizations(1, "Court"),
+			TournamentUtils.buildDefiniteDayOfWeekTimeslots(6)
+		);
+		tournament = new Tournament("Tournament", event);
+		tournament.getSolver().setSearchStrategy(SearchStrategy.MINDOM_UB);
+		
+		assertTrue(tournament.solve());
+		assertNotNull(tournament.getSchedule());
+		assertEquals(1, tournament.getSolver().getFoundSolutionsCount());
+		
+		tournament.printCurrentSchedules();
+		
+		assertTrue(tournament.nextSchedules());
+		assertNotNull(tournament.getSchedule());
+		assertEquals(2, tournament.getSolver().getFoundSolutionsCount());
+		
+		while (tournament.nextSchedules());
+		
+		assertFalse(tournament.nextSchedules());
+		assertNull(tournament.getSchedule());
+		assertEquals(5, tournament.getSolver().getFoundSolutionsCount());
 	}
 	
 	@Test
@@ -334,33 +384,221 @@ public class TournamentSolverTest {
 	}
 	
 	@Test
-	public void basicTournamentPredefinedMatchupsCaseTest() {
+	public void basicTournamentPredefinedMatchupsCaseTest() throws ValidationException {
+		Player djokovic = new Player("Djokovic");
+		Player robert = new Player("Robert");
+		Player mahut = new Player("Mahut");
+		Player belucci = new Player("Belucci");
+		Player raonic = new Player("Raonic");
+		Player kyrgios = new Player("Kyrgios");
+		Player kohlschreiber = new Player("Kohlschreiber");
+		Player nadal = new Player("Nadal");
+		Player federer = new Player("Federer");
+		Player zverev = new Player("Zverev");
 		
+		List<Player> players = new ArrayList<>(
+			Arrays.asList(djokovic, robert, mahut, belucci, raonic, kyrgios, kohlschreiber, nadal, federer, zverev)
+		);
+		Event event = new Event(
+			"Event",
+			players,
+			TournamentUtils.buildGenericLocalizations(1, "Court"),
+			TournamentUtils.buildAbstractTimeslots(15),
+			1, 3, 2
+		);
+		event.addMatchup(djokovic, robert);
+		event.addMatchup(mahut, belucci);
+		event.addMatchup(raonic, kyrgios);
+		event.addMatchup(kohlschreiber, nadal);
+		event.addMatchup(federer, zverev);
+		
+		tournament = new Tournament("Tournament", event);
+		
+		assertTrue(tournament.solve());
+		
+		TournamentSchedule schedule = tournament.getSchedule();
+		
+		assertTrue(schedule.getMatchesByPlayer(djokovic).get(0).getPlayers().contains(robert));
+		assertTrue(schedule.getMatchesByPlayer(mahut).get(0).getPlayers().contains(belucci));
+		assertTrue(schedule.getMatchesByPlayer(raonic).get(0).getPlayers().contains(kyrgios));
+		assertTrue(schedule.getMatchesByPlayer(kohlschreiber).get(0).getPlayers().contains(nadal));
+		assertTrue(schedule.getMatchesByPlayer(federer).get(0).getPlayers().contains(zverev));
+		
+		GroupedSchedule groupedSchedule = new GroupedSchedule(tournament);
+		assertEquals(100, new Double(groupedSchedule.getOccupationRatio() * 100).intValue());
+		assertEquals(tournament.getNumberOfOccupiedTimeslots(), 2 * groupedSchedule.getOccupation());
 	}
 	
 	@Test
-	public void basicTournamentAssignedLocalizationsToPlayersCaseTest() {
+	public void basicTournamentAssignedLocalizationsToPlayersCaseTest() throws ValidationException {
+		Event event = new Event(
+			"Event",
+			TournamentUtils.buildGenericPlayers(12, "Pl"),
+			TournamentUtils.buildGenericLocalizations(5, "Court"),
+			TournamentUtils.buildUndefiniteTimeslots(4)
+		);
+		List<Player> players = event.getPlayers();
+		List<Localization> localizations = event.getLocalizations();
+		event.addPlayerInLocalization(players.get(0), localizations.get(0));
+		event.addPlayerInLocalization(players.get(0), localizations.get(1));
+		event.addPlayerInLocalization(players.get(2), localizations.get(4));
+		event.addPlayerInLocalization(players.get(6), localizations.get(3));
+		event.addPlayerInLocalization(players.get(6), localizations.get(4));
+		event.addPlayerInLocalization(players.get(7), localizations.get(4));
+		event.addPlayerInLocalization(players.get(10), localizations.get(2));
+		event.addPlayerInLocalization(players.get(11), localizations.get(2));
 		
+		tournament = new Tournament("Tournament", event);
+		
+		assertTrue(tournament.solve());
+		
+		tournament.printCurrentSchedules();
+		
+		TournamentSchedule schedule = tournament.getSchedule();
+		
+		Localization localization = schedule.getMatchesByPlayer(players.get(0)).get(0).getLocalization();
+		assertTrue(localization.equals(localizations.get(0)) || localization.equals(localizations.get(1)));
+		
+		localization = schedule.getMatchesByPlayer(players.get(6)).get(0).getLocalization();
+		assertTrue(localization.equals(localizations.get(3)) || localization.equals(localizations.get(4)));
+		
+		assertTrue(
+			schedule.getMatchesByLocalization(localizations.get(4)).stream()
+				.map(m -> m.getPlayers())
+				.flatMap(l -> l.stream())
+				.collect(Collectors.toList())
+				.containsAll(new ArrayList<Player>(Arrays.asList(players.get(2), players.get(7))))
+		);
+		
+		assertTrue(
+			schedule.getMatchesByLocalization(localizations.get(2)).stream()
+				.map(m -> m.getPlayers())
+				.flatMap(l -> l.stream())
+				.collect(Collectors.toList())
+				.containsAll(new ArrayList<Player>(Arrays.asList(players.get(10), players.get(11))))
+		);
 	}
 	
 	@Test
-	public void basicTournamentAssignedTimeslotsToPlayersCaseTest() {
+	public void basicTournamentAssignedTimeslotsToPlayersCaseTest() throws ValidationException {
+		Event event = new Event(
+			"Event",
+			TournamentUtils.buildGenericPlayers(8, "Player"),
+			TournamentUtils.buildGenericLocalizations(1, "Court"),
+			TournamentUtils.buildUndefiniteTimeslots(10)
+		);
+		List<Player> players = event.getPlayers();
+		List<Timeslot> timeslots = event.getTimeslots();
+		event.addPlayerAtStartTimeslot(players.get(3), timeslots.get(0));
+		event.addPlayerAtStartTimeslot(players.get(2), timeslots.get(0));
+		event.addPlayerAtStartTimeslot(players.get(0), timeslots.get(8));
+		event.addPlayerAtTimeslots(players.get(6), new HashSet<Timeslot>(
+			Arrays.asList(timeslots.get(2), timeslots.get(3), timeslots.get(4), timeslots.get(5)))
+		);
 		
+		tournament = new Tournament("Tournament", event);
+		
+		assertTrue(tournament.solve());
+		
+		TournamentSchedule schedule = tournament.getSchedule();
+		
+		assertTrue(schedule.getMatchesByPlayers(
+			new ArrayList<Player>(Arrays.asList(players.get(2), players.get(3)))).get(0).getStartTimeslot().equals(timeslots.get(0))
+		);
+		assertTrue(schedule.getMatchesByPlayer(players.get(0)).get(0).getStartTimeslot().equals(timeslots.get(8)));
+		assertTrue(schedule.getMatchesByPlayer(players.get(6)).get(0).within(timeslots.get(2), timeslots.get(5)));
 	}
 	
 	@Test
-	public void basicTournamentAllDifferentCaseTest() {
+	public void basicTournamentAllDifferentCaseTest() throws ValidationException {
+		Event event = new Event(
+			"Event",
+			TournamentUtils.buildGenericPlayers(8, "Player"),
+			TournamentUtils.buildGenericLocalizations(1, "Court"),
+			TournamentUtils.buildUndefiniteTimeslots(12),
+			3, 1, 2
+		);
+		event.setMatchupMode(MatchupMode.ALL_DIFFERENT);
 		
+		tournament = new Tournament("Tournament", event);
+		
+		assertTrue(tournament.solve());
+		
+		TournamentSchedule schedule = tournament.getSchedule();
+		
+		List<Player> players = tournament.getAllPlayers();
+		for (Player player : players)
+			assertEquals(3, schedule.getMatchesByPlayer(player).size());
+			
+		List<Match> matches = schedule.getMatches();
+		for (int i = 0; i < matches.size() - 1; i++)
+			for (int j = i + 1; j < matches.size(); j++)
+				assertFalse(matches.get(i).getPlayers().equals(matches.get(j).getPlayers()));
 	}
 	
 	@Test
-	public void basicTournamentAllEqualCaseTest() {
+	public void basicTournamentAllEqualCaseTest() throws ValidationException {
+		Event event = new Event(
+			"Event",
+			TournamentUtils.buildGenericPlayers(8, "Player"),
+			TournamentUtils.buildGenericLocalizations(1, "Court"),
+			TournamentUtils.buildUndefiniteTimeslots(12),
+			3, 1, 2
+		);
+		event.setMatchupMode(MatchupMode.ALL_EQUAL);
 		
+		tournament = new Tournament("Tournament", event);
+		
+		assertTrue(tournament.solve());
+		
+		TournamentSchedule schedule = tournament.getSchedule();
+		
+		List<Player> players = tournament.getAllPlayers();
+		for (Player player : players)
+			assertEquals(3, schedule.getMatchesByPlayer(player).size());
+			
+		List<Match> matches = schedule.getMatches();
+		for (int i = 0; i < matches.size(); i++) {
+			int count = 0;
+			for (int j = 0; j < matches.size(); j++)
+				if (matches.get(i).getPlayers().equals(matches.get(j).getPlayers()))
+					count ++;
+			assertEquals(3, count);
+		}
 	}
 	
 	@Test
-	public void basicTournamentAnyCaseTest() {
+	public void basicTournamentAnyCaseTest() throws ValidationException {
+		Event event = new Event(
+			"Event",
+			TournamentUtils.buildGenericPlayers(8, "Player"),
+			TournamentUtils.buildGenericLocalizations(2, "Court"),
+			TournamentUtils.buildUndefiniteTimeslots(12),
+			3, 1, 2
+		);
+		event.setMatchupMode(MatchupMode.ANY);
 		
+		tournament = new Tournament("Tournament", event);
+		
+		assertTrue(tournament.solve());
+		
+		tournament.printCurrentSchedules();
+		
+		TournamentSchedule schedule = tournament.getSchedule();
+		
+		List<Player> players = tournament.getAllPlayers();
+		for (Player player : players)
+			assertEquals(3, schedule.getMatchesByPlayer(player).size());
+			
+		List<Match> matches = schedule.getMatches();
+		for (int i = 0; i < matches.size(); i++) {
+			int count = 0;
+			for (int j = 0; j < matches.size(); j++)
+				if (matches.get(i).getPlayers().equals(matches.get(j).getPlayers()))
+					count ++;
+			System.out.println(count);
+			assertTrue(count >= 1 && count <= 3);
+		}
 	}
 	
 	@Test
@@ -399,6 +637,11 @@ public class TournamentSolverTest {
 		}
 		
 		assertEquals(100, new Double(new GroupedSchedule(tournament).getOccupationRatio() * 100).intValue());
+	}
+	
+	@Test
+	public void basicMultiTournamentWithFewSolutionsCaseTest() {
+		
 	}
 	
 	@Test

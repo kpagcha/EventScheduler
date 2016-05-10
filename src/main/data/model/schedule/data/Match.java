@@ -174,6 +174,29 @@ public class Match {
 	}
 	
 	/**
+	 * Comprueba si el transcurso de un partido sucede dentro el rango indicado, es decir, el comienzo del
+	 * partido es igual o posterior al extremo mayor y el fin del partido es igual o anterior al extremo menor.
+	 * <p>
+	 * Los extremos también se consideran parte del rango.
+	 * 
+	 * @param t1 un extremo del rango
+	 * @param t2 el otro extremo
+	 * @return <code>true</code> si el partidose juega dentro del rango, <code>false</code> si no
+	 */
+	public boolean within(Timeslot t1, Timeslot t2) {
+		Timeslot start, end;
+		if (t1.compareTo(t2) >= 0) {
+			start = t1;
+			end = t2;
+		} else {
+			start = t2;
+			end = t1;
+		}
+		
+		return startTimeslot.compareTo(start) <= 0 && endTimeslot.compareTo(end) >= 0;
+	}
+	
+	/**
 	 * Comprueba si el transcurso de un partido sucede durante el <i>timeslot</i>
 	 * 
 	 * @param t <i>timeslot</i> no <code>null</code>

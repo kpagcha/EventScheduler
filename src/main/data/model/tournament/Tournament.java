@@ -164,11 +164,11 @@ public class Tournament implements Validable {
 	
 	/**
 	 * Actualiza el valor de los horarios con la nueva solución combinada. Si se ha llegado
-	 * a la última solución se establece el valor de los horarios a <code>null</code>. 
+	 * a la última solución y se llama a este método se establece el valor de los horarios a <code>null</code>. 
 	 * 
 	 * Además, se recalcula el horario combinado, o se le asigna <code>null</code> si no hay más soluciones.
 	 * 
-	 * @return true si se han actualizado los horarios con una nueva solución, y false si
+	 * @return true si se han actualizado los horarios con una nueva solución, y false si ya
 	 * se ha alcanzado la última solución
 	 */
 	public boolean nextSchedules() {

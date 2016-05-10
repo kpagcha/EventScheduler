@@ -66,8 +66,6 @@ public class ValidationTest {
 				System.out.println(err);
 			fail("Unexpected ValidationException thrown");
 		}
-		
-		
 	}
 	
 	@Test

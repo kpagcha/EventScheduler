@@ -188,27 +188,27 @@ public class TournamentUtils {
 		
 		
 		// Enfrentamientos alevín masculino
-		alevinM.addFixedMatchup(findPlayerByName("vazquez", pAlevinM), findPlayerByName("parrado", pAlevinM));
-		alevinM.addFixedMatchup(findPlayerByName("oliva", pAlevinM), findPlayerByName("castilla", pAlevinM));
-		alevinM.addFixedMatchup(findPlayerByName("ramirez", pAlevinM), findPlayerByName("barbera", pAlevinM));
+		alevinM.addMatchup(findPlayerByName("vazquez", pAlevinM), findPlayerByName("parrado", pAlevinM));
+		alevinM.addMatchup(findPlayerByName("oliva", pAlevinM), findPlayerByName("castilla", pAlevinM));
+		alevinM.addMatchup(findPlayerByName("ramirez", pAlevinM), findPlayerByName("barbera", pAlevinM));
 		//alevinM.addFixedMatchup(findPlayerByName("herrera", pAlevinM), findPlayerByName("real", pAlevinM));
-		alevinM.addFixedMatchup(findPlayerByName("bocanegra", pAlevinM), findPlayerByName("davila", pAlevinM));
-		alevinM.addFixedMatchup(findPlayerByName("boloix", pAlevinM), findPlayerByName("galera", pAlevinM));
-		alevinM.addFixedMatchup(findPlayerByName("miguel", pAlevinM), findPlayerByName("moreno", pAlevinM));
-		alevinM.addFixedMatchup(findPlayerByName("rizo", pAlevinM), findPlayerByName("portales", pAlevinM));
+		alevinM.addMatchup(findPlayerByName("bocanegra", pAlevinM), findPlayerByName("davila", pAlevinM));
+		alevinM.addMatchup(findPlayerByName("boloix", pAlevinM), findPlayerByName("galera", pAlevinM));
+		alevinM.addMatchup(findPlayerByName("miguel", pAlevinM), findPlayerByName("moreno", pAlevinM));
+		alevinM.addMatchup(findPlayerByName("rizo", pAlevinM), findPlayerByName("portales", pAlevinM));
 		
 		// Enfrentamientos infantil femenino
-		infantilF.addFixedMatchup(findPlayerByName("garcia", pInfantilF), findPlayerByName("villanueva", pInfantilF));
+		infantilF.addMatchup(findPlayerByName("garcia", pInfantilF), findPlayerByName("villanueva", pInfantilF));
 		
 		// Enfrentamientos Veterano
-		veterano.addFixedMatchup(findPlayerByName("fernandez", pVeterano), findPlayerByName("piedrola", pVeterano));
-		veterano.addFixedMatchup(findPlayerByName("devos", pVeterano), findPlayerByName("caneda", pVeterano));
-		veterano.addFixedMatchup(findPlayerByName("funke", pVeterano), findPlayerByName("rivas", pVeterano));
-		veterano.addFixedMatchup(findPlayerByName("moreno", pVeterano), findPlayerByName("arrieta", pVeterano));
-		veterano.addFixedMatchup(findPlayerByName("iglesias", pVeterano), findPlayerByName("maestre", pVeterano));
-		veterano.addFixedMatchup(findPlayerByName("pardal", pVeterano), findPlayerByName("romero", pVeterano));
-		veterano.addFixedMatchup(findPlayerByName("real", pVeterano), findPlayerByName("perez", pVeterano));
-		veterano.addFixedMatchup(findPlayerByName("romera", pVeterano), findPlayerByName("de miguel", pVeterano));
+		veterano.addMatchup(findPlayerByName("fernandez", pVeterano), findPlayerByName("piedrola", pVeterano));
+		veterano.addMatchup(findPlayerByName("devos", pVeterano), findPlayerByName("caneda", pVeterano));
+		veterano.addMatchup(findPlayerByName("funke", pVeterano), findPlayerByName("rivas", pVeterano));
+		veterano.addMatchup(findPlayerByName("moreno", pVeterano), findPlayerByName("arrieta", pVeterano));
+		veterano.addMatchup(findPlayerByName("iglesias", pVeterano), findPlayerByName("maestre", pVeterano));
+		veterano.addMatchup(findPlayerByName("pardal", pVeterano), findPlayerByName("romero", pVeterano));
+		veterano.addMatchup(findPlayerByName("real", pVeterano), findPlayerByName("perez", pVeterano));
+		veterano.addMatchup(findPlayerByName("romera", pVeterano), findPlayerByName("de miguel", pVeterano));
 		
 		
 		// Pista 1

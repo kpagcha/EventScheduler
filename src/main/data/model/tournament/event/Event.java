@@ -100,7 +100,7 @@ public class Event implements Validable {
 	/**
 	 * Emparejamientos fijos predefinidos. Es obligatorio que los jugadores que forman cada lista compongan enfrentamiento/s
 	 */
-	private List<Set<Player>> fixedMatchups = new ArrayList<Set<Player>>();
+	private List<Set<Player>> predefinedMatchups = new ArrayList<Set<Player>>();
 	
 	/**
 	 * Diccionario de jugadores para cada cual los enfrentamientos de los que forme parte han de tener lugar
@@ -401,7 +401,7 @@ public class Event implements Validable {
 		this.nPlayersPerMatch = nPlayersPerMatch;
 		
 		teams.clear();
-		fixedMatchups.clear();
+		predefinedMatchups.clear();
 		
 		if (nPlayersPerMatch == 1)
 			matchupMode = MatchupMode.ANY;
@@ -713,7 +713,7 @@ public class Event implements Validable {
 	/**
 	 * Asigna la lista de enfrentamientos fijos entre jugadores del evento
 	 * 
-	 * @param fixedMatchups una lista de múltiples enfrentamientos no repetidos entre jugadores del evento
+	 * @param matchups una lista de múltiples enfrentamientos no repetidos entre jugadores del evento
 	 * @throws IllegalArgumentException si no se cumplea alguna de las precondiciones:
 	 * <ul>
 	 * <li>Lista no nula
@@ -723,36 +723,36 @@ public class Event implements Validable {
 	 * <li>Un jugador no puede formar parte de un número de enfrentamientos predefinidos mayor que el número de partidos por jugador
 	 * </ul>
 	 */
-	public void setFixedMatchups(List<Set<Player>> fixedMatchups) {
-		checkFixedMatchupsPreconditions(fixedMatchups);
+	public void setPredefinedMatchups(List<Set<Player>> matchups) {
+		checkPredefinedMatchupsPreconditions(matchups);
 		
-		this.fixedMatchups = fixedMatchups;
+		this.predefinedMatchups = matchups;
 	}
 	
 	/**
 	 * Comprueba las precondiciones de la lista de emparejamientos fijos
 	 * 
-	 * @param fixedMatchups lista de emparejamientos fijos sujeta a las precondiciones definidas en {@link #setFixedMatchups(List)}
+	 * @param matchups lista de emparejamientos fijos sujeta a las precondiciones definidas en {@link #setPredefinedMatchups(List)}
 	 * @throws IllegalArgumentException si no se cumple alguna de las precondiciones
 	 */
-	private void checkFixedMatchupsPreconditions(List<Set<Player>> fixedMatchups) {
-		if (fixedMatchups == null)
-			throw new IllegalArgumentException("List of fixed matchups cannot be null");
+	private void checkPredefinedMatchupsPreconditions(List<Set<Player>> matchups) {
+		if (matchups == null)
+			throw new IllegalArgumentException("List of predefined matchups cannot be null");
 		
-		for (Set<Player> matchup : fixedMatchups)
-			checkFixedMatchupPreconditions(matchup);
+		for (Set<Player> matchup : matchups)
+			checkPredefinedMatchupPreconditions(matchup);
 		
-		for (int i = 0; i < fixedMatchups.size() - 1; i++)
-			for (int j = i + 1; j < fixedMatchups.size(); j++)
-				if (fixedMatchups.get(i).equals(fixedMatchups.get(j)))
-					throw new IllegalArgumentException("The matchup cannot be repeated (" + fixedMatchups.get(i) + ")");
+		for (int i = 0; i < matchups.size() - 1; i++)
+			for (int j = i + 1; j < matchups.size(); j++)
+				if (matchups.get(i).equals(matchups.get(j)))
+					throw new IllegalArgumentException("The matchup cannot be repeated (" + matchups.get(i) + ")");
 		
-		for (Set<Player> matchup : fixedMatchups) {
+		for (Set<Player> matchup : matchups) {
 			for (Player player : matchup) {
-				long count = fixedMatchups.stream().filter(m -> m.contains(player)).count();
+				long count = matchups.stream().filter(m -> m.contains(player)).count();
 				if (count > nMatchesPerPlayer)
 					throw new IllegalArgumentException(String.format(
-						"Player (%s) cannot be present in more than the number of matches per player (%d) fixed matchups", 
+						"Player (%s) cannot be present in more than the number of matches per player (%d) predefined matchups", 
 						player, nMatchesPerPlayer)
 					);
 			}
@@ -762,10 +762,10 @@ public class Event implements Validable {
 	/**
 	 * Comprueba las precondiciones de un emparejamiento fijo
 	 * 
-	 * @param matchup emparejamiento fijos sujeto a las precondiciones definidas en {@link #setFixedMatchups(List)}
+	 * @param matchup emparejamiento fijos sujeto a las precondiciones definidas en {@link #setPredefinedMatchups(List)}
 	 * @throws IllegalArgumentException si no se cumple alguna de las precondiciones
 	 */
-	private void checkFixedMatchupPreconditions(Set<Player> matchup) {
+	private void checkPredefinedMatchupPreconditions(Set<Player> matchup) {
 		if (matchup == null)
 			throw new IllegalArgumentException("A matchup cannot be null");
 		
@@ -778,14 +778,14 @@ public class Event implements Validable {
 		if (matchup.size() != nPlayersPerMatch)
 			throw new IllegalArgumentException("The number of players in the matchup (" + matchup.size() + ") is not the number of players per match specified by this event (" + nPlayersPerMatch + ")");
 	
-		if (fixedMatchups.contains(matchup))
+		if (predefinedMatchups.contains(matchup))
 			throw new IllegalArgumentException("The same matchup cannot be added more than once (" + matchup + ")");
 		
 		for (Player player : matchup) {
-			long count = fixedMatchups.stream().filter(m -> m.contains(player)).count();
+			long count = predefinedMatchups.stream().filter(m -> m.contains(player)).count();
 			if (count >= nMatchesPerPlayer)
 				throw new IllegalArgumentException(String.format(
-					"Player (%s) cannot be present in more than the number of matches per player (%d) fixed matchups", 
+					"Player (%s) cannot be present in more than the number of matches per player (%d) predefined matchups", 
 					player, nMatchesPerPlayer)
 				);
 		}
@@ -796,34 +796,34 @@ public class Event implements Validable {
 	 * 
 	 * @return la lista no modificable de emparejamientos fijos del evento
 	 */
-	public List<Set<Player>> getFixedMatchups() {
-		return Collections.unmodifiableList(fixedMatchups);
+	public List<Set<Player>> getPredefinedMatchups() {
+		return Collections.unmodifiableList(predefinedMatchups);
 	}
 	
 	/**
 	 * Añade un enfrentamiento fijo entre jugadores
 	 * 
-	 * @param matchup conjunto de jugadores que cumplen las reglas de un enfrentamiento, ver precondiciones en {@link #setFixedMatchups(List)}
+	 * @param matchup conjunto de jugadores que cumplen las reglas de un enfrentamiento, ver precondiciones en {@link #setPredefinedMatchups(List)}
 	 * @throws IllegalArgumentException si no se cumple alguna de las precondiciones
 	 */
-	public void addFixedMatchup(Set<Player> matchup) {
-		checkFixedMatchupPreconditions(matchup);
+	public void addMatchup(Set<Player> matchup) {
+		checkPredefinedMatchupPreconditions(matchup);
 				
-		fixedMatchups.add(matchup);
+		predefinedMatchups.add(matchup);
 	}
 	
 	/**
 	 * Añade un enfrentamiento fijo entre jugadores.
 	 * 
 	 * @param players conjunto de jugadores entre los cuales habrá de darse un enfrentamiento,
-	 * cumplen las reglas de un enfrentamiento, ver precondiciones en {@link #setFixedMatchups(List)}
+	 * cumplen las reglas de un enfrentamiento, ver precondiciones en {@link #setPredefinedMatchups(List)}
 	 * @throws IllegalArgumentException si no se cumple alguna de las precondiciones
 	 */
-	public void addFixedMatchup(Player... players) {
+	public void addMatchup(Player... players) {
 		if (players == null)
 			throw new IllegalArgumentException("The players cannot be null");
 		
-		addFixedMatchup(new HashSet<Player>(Arrays.asList(players)));
+		addMatchup(new HashSet<Player>(Arrays.asList(players)));
 	}
 	
 	/**
@@ -832,7 +832,7 @@ public class Event implements Validable {
 	 * @param matchup conjunto de equipos existentes en el torneo entre los cuales habrá de darse un enfrentamiento
 	 * @throws IllegalArgumentException si no se cumple alguna de las precondiciones
 	 */
-	public void addFixedMatchupBetweenTeams(Set<Team> matchup) {
+	public void addMatchupBetweenTeams(Set<Team> matchup) {
 		if (matchup == null)
 			throw new IllegalArgumentException("The matchup cannot be null");
 		
@@ -844,7 +844,7 @@ public class Event implements Validable {
 		for (Team team : matchup)
 			playersInMatchup.addAll(team.getPlayers());
 		
-		addFixedMatchup(playersInMatchup);
+		addMatchup(playersInMatchup);
 	}
 	
 	/**
@@ -852,8 +852,8 @@ public class Event implements Validable {
 	 * 
 	 * @param matchup un conjunto de jugadores a eliminar de la lista, si existe
 	 */
-	public void removeFixedMatchup(Set<Player> matchup) {
-		fixedMatchups.remove(matchup);
+	public void removeMatchup(Set<Player> matchup) {
+		predefinedMatchups.remove(matchup);
 	}
 	
 	/**
@@ -861,7 +861,7 @@ public class Event implements Validable {
 	 * 
 	 * @param matchup un conjunto de equipos cuyo enfrentamiento se eliminará de la lista, si existe
 	 */
-	public void removeFixedTeamsMatchup(Set<Team> matchup) {
+	public void removeTeamsMatchup(Set<Team> matchup) {
 		if (matchup == null)
 			throw new IllegalArgumentException("The matchup cannot be null");
 		
@@ -869,7 +869,7 @@ public class Event implements Validable {
 		for (Team team : matchup)
 			playersInMatchup.addAll(team.getPlayers());
 		
-		fixedMatchups.remove(playersInMatchup);
+		predefinedMatchups.remove(playersInMatchup);
 	}
 	
 	/**
@@ -877,8 +877,8 @@ public class Event implements Validable {
 	 * 
 	 * @return true si sobre el evento se han definido enfrentamientos fijos predefinidos, y false si no
 	 */
-	public boolean hasFixedMatchups() {
-		return !fixedMatchups.isEmpty();
+	public boolean hasPredefinedMatchups() {
+		return !predefinedMatchups.isEmpty();
 	}
 	
 	/**
@@ -1302,6 +1302,41 @@ public class Event implements Validable {
 	}
 	
 	/**
+	 * Asigna al jugador una serie de <i>timeslots</i> donde su(s) partido(s) han de transcurrir, comenzando
+	 * en el <i>timeslot</i> indicando por el argumento e incluyendo los siguientes <i>timeslots</>, tantos
+	 * como duración tenga cada partido en este evento. 
+	 * <p>
+	 * Si el <i>timeslot</i> de comienzo corresponde al final del dominio de <i>timeslots</i> del evento, es
+	 * decir, el rango superaría al número de <i>timeslots</i> disponibles, se asginarán al jugador tantos
+	 * <i>timeslots</i> del rango como sean posibles.
+	 * 
+	 * @param player jugador perteneciente al conjunto de jugadores del evento
+	 * @param timeslot timeslot perteneciente al conjunto del evento que indica el inicio del rango donde el
+	 * jugador debe jugar
+	 */
+	public void addPlayerAtStartTimeslot(Player player, Timeslot timeslot) {
+		checkPlayerAtTimeslotPreconditions(player, timeslot);
+		
+		Set<Timeslot> newTimeslots = new HashSet<Timeslot>();
+		newTimeslots.add(timeslot);
+		
+		int startIndex = timeslots.indexOf(timeslot);
+		int endIndex = startIndex + nTimeslotsPerMatch > timeslots.size() ? timeslots.size() : startIndex + nTimeslotsPerMatch;
+		for (int i = startIndex; i < endIndex; i++) {
+			Timeslot t = timeslots.get(i);
+			checkPlayerAtTimeslotPreconditions(player, t);
+			
+			newTimeslots.add(t);
+		}
+		
+		Set<Timeslot> playerTimeslots = playersAtTimeslots.get(player);
+		if (playerTimeslots == null)
+			playersAtTimeslots.put(player, newTimeslots);
+		else
+			playerTimeslots.addAll(newTimeslots);
+	}
+	
+	/**
 	 * Asigna al jugador los timeslots explícitos donde ha de jugar
 	 * 
 	 * @param player jugador perteneciente al conjunto de jugadores del evento
@@ -1449,7 +1484,7 @@ public class Event implements Validable {
 	 * @return número de horas ocupadas, mayor que 0
 	 */
 	public int getNumberOfOccupiedTimeslots() {
-		return  players.size() * nMatchesPerPlayer * nTimeslotsPerMatch;
+		return players.size() * nMatchesPerPlayer * nTimeslotsPerMatch;
 	}
 	
 	public String toString() {
