@@ -71,23 +71,6 @@ public class Application {
 		int maxSolutions = 1; // 0 -> todas las soluciones
 		int foundSolutions = 0;
 		
-		/*Thread thread = new Thread(new Runnable() {
-			@Override
-			public void run() {
-				System.out.print("Stop resolution process? (Y/N): ");
-				String answer = sc.next();
-				if (answer.equalsIgnoreCase("y")) {
-					tournament.getSolver().stopResolutionProcess();
-				}
-			}
-		});
-		try {
-			thread.start();
-			thread.join();
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}*/
-		
 		boolean solutionFound = false;
 		try {
 			solutionFound = tournament.solve();

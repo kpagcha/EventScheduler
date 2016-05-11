@@ -27,6 +27,10 @@ import solver.TournamentSolver.MatchupMode;
 import solver.TournamentSolver.SearchStrategy;
 import utils.TournamentUtils;
 
+/**
+ * Tests de la clase {@link TournamentSolver}
+ *
+ */
 public class TournamentSolverTest {
 	
 	private Tournament tournament;
@@ -104,6 +108,25 @@ public class TournamentSolverTest {
 		);
 		
 		assertEquals(100, new Double(new GroupedSchedule(tournament).getOccupationRatio() * 100).intValue());
+		
+		tournament.getSolver().setResolutionTimeLimit(1);
+		assertFalse(tournament.solve());
+		
+		tournament.getSolver().setResolutionTimeLimit(0);
+		Thread thread = new Thread(new Runnable() {
+			@Override
+			public void run() {
+				tournament.getSolver().stopResolutionProcess();
+			}
+		});
+		try {
+			thread.start();
+			thread.join();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		
+		assertFalse(tournament.solve());
 	}
 	
 	@Test
@@ -141,8 +164,6 @@ public class TournamentSolverTest {
 		assertNotNull(tournament.getSchedule());
 		assertEquals(1, tournament.getSolver().getFoundSolutionsCount());
 		
-		tournament.printCurrentSchedules();
-		
 		assertTrue(tournament.nextSchedules());
 		assertNotNull(tournament.getSchedule());
 		assertEquals(2, tournament.getSolver().getFoundSolutionsCount());
@@ -154,6 +175,11 @@ public class TournamentSolverTest {
 		assertEquals(5, tournament.getSolver().getFoundSolutionsCount());
 	}
 	
+	@Test
+	public void basicTournamentWithOnePlayerMatchesCaseTest() throws ValidationException {
+		fail("TO DO");
+	}
+ 	
 	@Test
 	public void basicTournamentInfeasibleCaseTest() throws ValidationException {
 		Event event = new Event(
@@ -452,8 +478,6 @@ public class TournamentSolverTest {
 		
 		assertTrue(tournament.solve());
 		
-		tournament.printCurrentSchedules();
-		
 		TournamentSchedule schedule = tournament.getSchedule();
 		
 		Localization localization = schedule.getMatchesByPlayer(players.get(0)).get(0).getLocalization();
@@ -582,8 +606,6 @@ public class TournamentSolverTest {
 		
 		assertTrue(tournament.solve());
 		
-		tournament.printCurrentSchedules();
-		
 		TournamentSchedule schedule = tournament.getSchedule();
 		
 		List<Player> players = tournament.getAllPlayers();
@@ -596,7 +618,6 @@ public class TournamentSolverTest {
 			for (int j = 0; j < matches.size(); j++)
 				if (matches.get(i).getPlayers().equals(matches.get(j).getPlayers()))
 					count ++;
-			System.out.println(count);
 			assertTrue(count >= 1 && count <= 3);
 		}
 	}
@@ -640,22 +661,39 @@ public class TournamentSolverTest {
 	}
 	
 	@Test
-	public void basicMultiTournamentWithFewSolutionsCaseTest() {
+	public void basicMultiTournamentWithFewSolutionsCaseTest() throws ValidationException {
+		List<Localization> courts = TournamentUtils.buildGenericLocalizations(1, "Court");
+		List<Timeslot> timeslots = TournamentUtils.buildDefiniteLocalTimeTimeslots(4);
 		
+		Event cat1 = new Event("Category 1", TournamentUtils.buildGenericPlayers(2, "PCat1"), courts, timeslots);
+		Event cat2 = new Event("Category 2", TournamentUtils.buildGenericPlayers(2, "PCat2"), courts, timeslots);
+		
+		Tournament tournament = new Tournament("Tournament", cat1, cat2);
+		tournament.getSolver().setSearchStrategy(SearchStrategy.MINDOM_UB);
+		
+		assertTrue(tournament.solve());
+		assertEquals(1, tournament.getSolver().getFoundSolutionsCount());
+		
+		while (tournament.nextSchedules());
+		assertEquals(2, tournament.getSolver().getFoundSolutionsCount());
+		
+		tournament.nextSchedules();
+		assertNull(tournament.getCurrentSchedules());
+		assertNull(tournament.getSchedule());
 	}
 	
 	@Test
 	public void basicMultiTournamentPartiallySharedPlayersCaseTest() {
-		
+		fail("TO DO");
 	}
 	
 	@Test
 	public void basicMultiTournamentPartiallySharedLocalizationsCasteTest() {
-		
+		fail("TO DO");
 	}
 	
 	@Test
 	public void basicMultiTournamentPartiallySharedTimeslotsCasteTest() {
-		
+		fail("TO DO");
 	}
 }

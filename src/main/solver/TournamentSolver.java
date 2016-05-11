@@ -834,7 +834,6 @@ public class TournamentSolver {
 					matrix[p][c][t] = x[p][c][t].getValue();
 			}
 		}
-		
 		return matrix;
 	}
 }

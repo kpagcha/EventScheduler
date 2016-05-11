@@ -28,7 +28,7 @@ public class LocalizationOccupationConstraint extends EventConstraint {
 		for (int c = 0; c < nLocalizations; c++) {
 			for (int t = 0; t < nTimeslots; t++) {
 				// Si la hora_t es un break, no hace falta tenerla en cuenta
-				if (e.isBreak(timeslots.get(t))) {
+				if (!e.isBreak(timeslots.get(t))) {
 					// Las "participaciones" de todos los jugadores en la pista_c a la hora_t
 					IntVar[] playerSum = new IntVar[nPlayers];
 					for (int p = 0; p < nPlayers; p++)
