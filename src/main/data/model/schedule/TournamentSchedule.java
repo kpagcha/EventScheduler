@@ -10,6 +10,7 @@ import data.model.schedule.data.Match;
 import data.model.schedule.data.ScheduleValue;
 import data.model.tournament.Tournament;
 import data.model.tournament.event.Event;
+import data.model.tournament.event.entity.Localization;
 import data.model.tournament.event.entity.Player;
 import data.model.tournament.event.entity.timeslot.Timeslot;
 
@@ -61,6 +62,8 @@ public class TournamentSchedule extends Schedule {
 			int nPlayers = event.getPlayers().size();
 			int nTimeslots = event.getTimeslots().size();
 			
+			List<Localization> eventLocalizations = event.getLocalizations();
+			
 			for (int p = 0; p < nPlayers; p++) {
 				for (int t = 0; t < nTimeslots; t++) {
 					Player player = event.getPlayers().get(p);
@@ -72,9 +75,12 @@ public class TournamentSchedule extends Schedule {
 					// Si no hay ya una pista marcada sobre la hora_t para el jugador_p (esto evita sobreescribir valores
 					// de pistas ya escritos sobre el horario)
 					if (!schedule[playerIndex][timeslotIndex].isOccupied()) {
-						if (eventSchedule[p][t].isOccupied())
-							schedule[playerIndex][timeslotIndex] = eventSchedule[p][t];
-						else if (!schedule[playerIndex][timeslotIndex].isLimited())
+						if (eventSchedule[p][t].isOccupied()) {
+							schedule[playerIndex][timeslotIndex] = new ScheduleValue(
+								ScheduleValue.OCCUPIED,
+								localizations.indexOf(eventLocalizations.get(eventSchedule[p][t].getLocalization()))
+							);
+						} else if (!schedule[playerIndex][timeslotIndex].isLimited())
 							schedule[playerIndex][timeslotIndex] = eventSchedule[p][t];
 					}		
 				}

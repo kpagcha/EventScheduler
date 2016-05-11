@@ -82,7 +82,7 @@ public class TournamentSolverTest {
 	}
 	
 	@Test
-	public void basicTournamentCaseTest() throws ValidationException {
+	public void basicTournamentCaseTest() throws ValidationException, InterruptedException {
 		Event event = new Event(
 			"Event",
 			TournamentUtils.buildGenericPlayers(8, "Player"),
@@ -113,18 +113,10 @@ public class TournamentSolverTest {
 		assertFalse(tournament.solve());
 		
 		tournament.getSolver().setResolutionTimeLimit(0);
-		Thread thread = new Thread(new Runnable() {
-			@Override
-			public void run() {
-				tournament.getSolver().stopResolutionProcess();
-			}
-		});
-		try {
-			thread.start();
-			thread.join();
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
+		
+		Thread thread = new Thread(() -> tournament.getSolver().stopResolutionProcess());
+		thread.start();
+		thread.join();
 		
 		assertFalse(tournament.solve());
 	}
@@ -663,10 +655,13 @@ public class TournamentSolverTest {
 	@Test
 	public void basicMultiTournamentWithFewSolutionsCaseTest() throws ValidationException {
 		List<Localization> courts = TournamentUtils.buildGenericLocalizations(1, "Court");
+		List<Localization> extraCourts = new ArrayList<>();
+		extraCourts.add(courts.get(0));
+		extraCourts.add(new Localization("Court 2"));
 		List<Timeslot> timeslots = TournamentUtils.buildDefiniteLocalTimeTimeslots(4);
 		
 		Event cat1 = new Event("Category 1", TournamentUtils.buildGenericPlayers(2, "PCat1"), courts, timeslots);
-		Event cat2 = new Event("Category 2", TournamentUtils.buildGenericPlayers(2, "PCat2"), courts, timeslots);
+		Event cat2 = new Event("Category 2", TournamentUtils.buildGenericPlayers(2, "PCat2"), extraCourts, timeslots);
 		
 		Tournament tournament = new Tournament("Tournament", cat1, cat2);
 		tournament.getSolver().setSearchStrategy(SearchStrategy.MINDOM_UB);
@@ -675,25 +670,98 @@ public class TournamentSolverTest {
 		assertEquals(1, tournament.getSolver().getFoundSolutionsCount());
 		
 		while (tournament.nextSchedules());
-		assertEquals(2, tournament.getSolver().getFoundSolutionsCount());
+		assertEquals(11, tournament.getSolver().getFoundSolutionsCount());
 		
-		tournament.nextSchedules();
+		assertFalse(tournament.nextSchedules());
 		assertNull(tournament.getCurrentSchedules());
 		assertNull(tournament.getSchedule());
 	}
 	
 	@Test
-	public void basicMultiTournamentPartiallySharedPlayersCaseTest() {
-		fail("TO DO");
+	public void basicMultiTournamentSharedPlayersCaseTest() throws ValidationException {
+		List<Player> players = TournamentUtils.buildGenericPlayers(8, "Player");
+		List<Localization> courts = TournamentUtils.buildGenericLocalizations(2, "Court");
+		List<Timeslot> timeslots = TournamentUtils.buildDefiniteDayOfWeekTimeslots(10);
+		
+		Event cat1 = new Event("Category 1", players, courts, timeslots, 1, 1, 2);
+		Event cat2 = new Event("Category 2", players, courts, timeslots, 1, 1, 2);
+		Event cat3 = new Event("Category 3", players, courts, timeslots, 1, 2, 2);
+		
+		Tournament tournament = new Tournament("Tournament", cat1, cat2, cat3);
+		tournament.getSolver().setSearchStrategy(SearchStrategy.MINDOM_UB);
+		
+		assertTrue(tournament.solve());
+		
+		List<Event> events = tournament.getEvents();
+		Map<Event, EventSchedule> schedules = tournament.getCurrentSchedules();
+		for (Player player : players) {
+			for (Event event : events) {
+				List<Match> playerMatches = schedules.get(event).getMatchesByPlayer(player);
+				Match playerMatch = playerMatches.get(0);
+				
+				assertEquals(1, playerMatches.size());
+				
+				for (Event otherEvent : events) {
+					if (otherEvent != event) {
+						List<Match> playerOtherMatches = schedules.get(otherEvent).getMatchesByPlayer(player);
+						assertEquals(1, playerOtherMatches.size());
+						
+						assertFalse(playerOtherMatches.get(0).during(playerMatch.getStartTimeslot(), playerMatch.getEndTimeslot()));
+					}
+				}
+			}
+		}
 	}
 	
 	@Test
-	public void basicMultiTournamentPartiallySharedLocalizationsCasteTest() {
-		fail("TO DO");
+	public void basicMultiTournamentPartiallySharedPlayersCaseTest() throws ValidationException {
+		List<Player> players = TournamentUtils.buildGenericPlayers(8, "Pl");
+		List<Localization> courts = TournamentUtils.buildGenericLocalizations(1, "Court");
+		List<Timeslot> timeslots = TournamentUtils.buildDefiniteDayOfWeekTimeslots(6);
+		
+		Event cat1 = new Event("Category 1", players.subList(0, 6), courts, timeslots, 1, 1, 2);
+		Event cat2 = new Event("Category 2", players.subList(2, 8), courts, timeslots, 1, 1, 2);
+		
+		Tournament tournament = new Tournament("Tournament", cat1, cat2);
+		tournament.getSolver().setSearchStrategy(SearchStrategy.MINDOM_UB);
+		
+		assertTrue(tournament.solve());
+		
+		TournamentSchedule schedule = tournament.getSchedule();
+		
+		for (int i : new int[]{ 0, 1, 6, 7 })
+			assertEquals(1, schedule.getMatchesByPlayer(players.get(i)).size());
+		
+		for (int i = 2; i < 6; i++)
+			assertEquals(2, schedule.getMatchesByPlayer(players.get(i)).size());
 	}
 	
 	@Test
-	public void basicMultiTournamentPartiallySharedTimeslotsCasteTest() {
+	public void basicMultiTournamentPartiallySharedLocalizationsCasteTest() throws ValidationException {
+		List<Player> players = TournamentUtils.buildGenericPlayers(8, "Pl");
+		List<Localization> courts = TournamentUtils.buildGenericLocalizations(3, "Court");
+		List<Timeslot> timeslots = TournamentUtils.buildDefiniteDayOfWeekTimeslots(3);
+		
+		Event cat1 = new Event("Category 1", players, courts.subList(0, 2), timeslots, 1, 1, 2);
+		Event cat2 = new Event("Category 2", players, courts.subList(1, 3), timeslots, 1, 1, 2);
+		
+		Tournament tournament = new Tournament("Tournament", cat1, cat2);
+		tournament.getSolver().setSearchStrategy(SearchStrategy.MINDOM_UB);
+		
+		cat2.addPlayerInLocalization(players.get(0), courts.get(2));
+		
+		assertTrue(tournament.solve());
+		
+		Map<Event, EventSchedule> schedules = tournament.getCurrentSchedules();
+		
+		assertTrue(schedules.get(cat1).getMatchesByLocalization(courts.get(2)).isEmpty());
+		assertTrue(schedules.get(cat2).getMatchesByLocalization(courts.get(0)).isEmpty());
+		assertFalse(schedules.get(cat1).getMatchesByLocalization(courts.get(1)).isEmpty());
+		assertFalse(schedules.get(cat2).getMatchesByLocalization(courts.get(1)).isEmpty());
+	}
+	
+	@Test
+	public void basicMultiTournamentPartiallySharedTimeslotsCasteTest() throws ValidationException {
 		fail("TO DO");
 	}
 }
