@@ -91,7 +91,7 @@ public abstract class Schedule {
 	 *            jugador del que se quieren obtener los partidos
 	 * @return lista de partidos
 	 */
-	public List<Match> getMatchesByPlayer(Player player) {
+	public List<Match> filterMatchesByPlayer(Player player) {
 		return matches.stream().filter(m -> m.getPlayers().contains(player)).collect(Collectors.toList());
 	}
 
@@ -102,7 +102,7 @@ public abstract class Schedule {
 	 *            jugadores de los que se quieren obtener los partidos
 	 * @return lista de partidos
 	 */
-	public List<Match> getMatchesByPlayers(List<Player> players) {
+	public List<Match> filterMatchesByPlayers(List<Player> players) {
 		return matches.stream().filter(m -> m.getPlayers().containsAll(players)).collect(Collectors.toList());
 	}
 
@@ -115,7 +115,7 @@ public abstract class Schedule {
 	 *            partidos
 	 * @return lista de partidos
 	 */
-	public List<Match> getMatchesByLocalization(Localization localization) {
+	public List<Match> filterMatchesByLocalization(Localization localization) {
 		return matches.stream().filter(m -> m.getLocalization().equals(localization)).collect(Collectors.toList());
 	}
 
@@ -127,7 +127,7 @@ public abstract class Schedule {
 	 *            partidos
 	 * @return lista de partidos
 	 */
-	public List<Match> getMatchesByStartTimeslot(Timeslot timeslot) {
+	public List<Match> filterMatchesByStartTimeslot(Timeslot timeslot) {
 		List<Match> timeslotMatches = new ArrayList<Match>();
 		for (Match match : matches)
 			if (match.getStartTimeslot().equals(timeslot))
@@ -144,7 +144,7 @@ public abstract class Schedule {
 	 *            partidos
 	 * @return lista de partidos
 	 */
-	public List<Match> getMatchesByEndTimeslot(Timeslot timeslot) {
+	public List<Match> filterMatchesByEndTimeslot(Timeslot timeslot) {
 		List<Match> timeslotMatches = new ArrayList<Match>();
 		for (Match match : matches)
 			if (match.getEndTimeslot().equals(timeslot))
@@ -163,7 +163,7 @@ public abstract class Schedule {
 	 *            timeslot final
 	 * @return lista de partidos
 	 */
-	public List<Match> getMatchesByTimeslotRange(Timeslot start, Timeslot end) {
+	public List<Match> filterMatchesInTimeslotRange(Timeslot start, Timeslot end) {
 		List<Match> timeslotMatches = new ArrayList<Match>();
 		for (Match match : matches)
 			if (match.getStartTimeslot().equals(start) && match.getEndTimeslot().equals(end))
@@ -180,7 +180,7 @@ public abstract class Schedule {
 	 *            sobre alguna de ellas. No <code>null</code>
 	 * @return lista de partidos
 	 */
-	public List<Match> getMatchesByTimeslot(Timeslot timeslot) {
+	public List<Match> filterMatchesDuringTimeslot(Timeslot timeslot) {
 		List<Match> timeslotMatches = new ArrayList<Match>();
 		for (Match match : matches)
 			if (timeslot.compareTo(match.getStartTimeslot()) <= 0 && timeslot.compareTo(match.getEndTimeslot()) >= 0)
@@ -196,15 +196,42 @@ public abstract class Schedule {
 	 * @param timeslot
 	 *            hora para la que se quieren buscar partidos que discurren
 	 *            sobre ella. No <code>null</code>
-	 * @return lista de partidos, <code>null</code> si la lista de partidos aún
-	 *         no ha sido calculada
+	 * @return lista de partidos
 	 */
-	public List<Match> getMatchesByTimeslots(List<Timeslot> timeslots) {
+	public List<Match> filterMatchesDuringTimeslots(List<Timeslot> timeslots) {
 		List<Match> timeslotsMatches = new ArrayList<Match>();
 		for (Timeslot timeslot : timeslots)
-			timeslotsMatches.addAll(getMatchesByTimeslot(timeslot));
+			timeslotsMatches.addAll(filterMatchesDuringTimeslot(timeslot));
 
 		return timeslotsMatches;
+	}
+	
+	/**
+	 * Devuelve el conjunto de partidos cuyo transcurso discurre durante
+	 * el rango de timeslots indicado. Si <code>start</code> es mayor que <code>end</end>,
+	 * se invierten los extremos de forma que estén en orden.
+	 * 
+	 * @param start
+	 *            timeslot de comienzo
+	 * @param end
+	 *            timeslot final
+	 * @return lista de partidos
+	 */
+	public List<Match> filterMatchesDuringTimeslotRange(Timeslot start, Timeslot end) {
+		Timeslot startTimeslot, endTimeslot;
+		if (start.compareTo(end) >= 0) {
+			startTimeslot = start;
+			endTimeslot = end;
+		} else {
+			startTimeslot = end;
+			endTimeslot = end;
+		}
+		
+		List<Timeslot> timeslotRange = new ArrayList<Timeslot>();
+		for (int i = timeslots.indexOf(startTimeslot); i < timeslots.indexOf(endTimeslot); i++)
+			timeslotRange.add(timeslots.get(i));
+		
+		return filterMatchesDuringTimeslots(timeslotRange);
 	}
 
 	public String toString() {

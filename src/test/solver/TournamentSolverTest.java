@@ -98,9 +98,9 @@ public class TournamentSolverTest {
 		
 		TournamentSchedule schedule = tournament.getSchedule();
 		for (Player player : tournament.getAllPlayers())
-			assertEquals(1, schedule.getMatchesByPlayer(player).size());
+			assertEquals(1, schedule.filterMatchesByPlayer(player).size());
 		
-		assertEquals(4, schedule.getMatchesByLocalization(tournament.getAllLocalizations().get(0)).size());
+		assertEquals(4, schedule.filterMatchesByLocalization(tournament.getAllLocalizations().get(0)).size());
 		
 		assertEquals(
 			tournament.getNumberOfOccupiedTimeslots(),
@@ -226,7 +226,7 @@ public class TournamentSolverTest {
 		
 		TournamentSchedule schedule = tournament.getSchedule();
 		for (Player player : tournament.getAllPlayers())
-			assertEquals(2, schedule.getMatchesByPlayer(player).size());
+			assertEquals(2, schedule.filterMatchesByPlayer(player).size());
 
 		assertEquals(80, new Double(new GroupedSchedule(tournament).getOccupationRatio() * 100).intValue());
 	}
@@ -264,8 +264,8 @@ public class TournamentSolverTest {
 		assertTrue(tournament.solve());
 		
 		TournamentSchedule schedule = tournament.getSchedule();
-		assertTrue(schedule.getMatchesByTimeslot(tournament.getAllTimeslots().get(2)).isEmpty());
-		assertTrue(schedule.getMatchesByTimeslot(tournament.getAllTimeslots().get(5)).isEmpty());
+		assertTrue(schedule.filterMatchesDuringTimeslot(tournament.getAllTimeslots().get(2)).isEmpty());
+		assertTrue(schedule.filterMatchesDuringTimeslot(tournament.getAllTimeslots().get(5)).isEmpty());
 	}
 	
 	@Test
@@ -291,10 +291,10 @@ public class TournamentSolverTest {
 		for (Match match : schedule.getMatches())
 			assertEquals(2, match.getTeams().size());
 		
-		assertEquals(1, schedule.getMatchesByPlayers(new ArrayList<Player>(Arrays.asList(players.get(0), players.get(3)))).size());
-		assertEquals(1, schedule.getMatchesByPlayers(new ArrayList<Player>(Arrays.asList(players.get(6), players.get(7)))).size());
-		assertEquals(1, schedule.getMatchesByPlayers(new ArrayList<Player>(Arrays.asList(players.get(4), players.get(1)))).size());
-		assertEquals(1, schedule.getMatchesByPlayers(new ArrayList<Player>(Arrays.asList(players.get(2), players.get(5)))).size());
+		assertEquals(1, schedule.filterMatchesByPlayers(new ArrayList<Player>(Arrays.asList(players.get(0), players.get(3)))).size());
+		assertEquals(1, schedule.filterMatchesByPlayers(new ArrayList<Player>(Arrays.asList(players.get(6), players.get(7)))).size());
+		assertEquals(1, schedule.filterMatchesByPlayers(new ArrayList<Player>(Arrays.asList(players.get(4), players.get(1)))).size());
+		assertEquals(1, schedule.filterMatchesByPlayers(new ArrayList<Player>(Arrays.asList(players.get(2), players.get(5)))).size());
 	}
 	
 	@Test
@@ -341,22 +341,22 @@ public class TournamentSolverTest {
 		
 		TournamentSchedule schedule = tournament.getSchedule();
 		
-		for (Match match : schedule.getMatchesByPlayer(players.get(0))) {
+		for (Match match : schedule.filterMatchesByPlayer(players.get(0))) {
 			assertFalse(match.getStartTimeslot().within(timeslots.get(0), timeslots.get(3)));
 			assertFalse(match.getEndTimeslot().within(timeslots.get(0), timeslots.get(3)));
 		}
 		
-		for (Match match : schedule.getMatchesByPlayer(players.get(1))) {
+		for (Match match : schedule.filterMatchesByPlayer(players.get(1))) {
 			assertFalse(match.getStartTimeslot().within(timeslots.get(5), timeslots.get(6)));
 			assertFalse(match.getEndTimeslot().within(timeslots.get(5), timeslots.get(6)));
 		}
 		
-		for (Match match : schedule.getMatchesByPlayer(players.get(4))) {
+		for (Match match : schedule.filterMatchesByPlayer(players.get(4))) {
 			assertFalse(match.getStartTimeslot().within(timeslots.get(4), timeslots.get(6)));
 			assertFalse(match.getEndTimeslot().within(timeslots.get(4), timeslots.get(6)));
 		}
 		
-		for (Match match : schedule.getMatchesByPlayer(players.get(5))) {
+		for (Match match : schedule.filterMatchesByPlayer(players.get(5))) {
 			assertFalse(match.getStartTimeslot().within(timeslots.get(5), timeslots.get(8)));
 			assertFalse(match.getEndTimeslot().within(timeslots.get(5), timeslots.get(8)));
 		}
@@ -391,13 +391,13 @@ public class TournamentSolverTest {
 		
 		TournamentSchedule schedule = tournament.getSchedule();
 		
-		for (Match match : schedule.getMatchesByLocalization(localizations.get(0)))
+		for (Match match : schedule.filterMatchesByLocalization(localizations.get(0)))
 			assertFalse(match.during(timeslots.get(0), timeslots.get(3)));
 		
-		for (Match match : schedule.getMatchesByLocalization(localizations.get(1)))
+		for (Match match : schedule.filterMatchesByLocalization(localizations.get(1)))
 			assertFalse(match.during(timeslots.get(4), timeslots.get(5)));
 		
-		for (Match match : schedule.getMatchesByLocalization(localizations.get(2)))
+		for (Match match : schedule.filterMatchesByLocalization(localizations.get(2)))
 			assertFalse(match.during(timeslots.get(2), timeslots.get(3)));
 	}
 	
@@ -436,11 +436,11 @@ public class TournamentSolverTest {
 		
 		TournamentSchedule schedule = tournament.getSchedule();
 		
-		assertTrue(schedule.getMatchesByPlayer(djokovic).get(0).getPlayers().contains(robert));
-		assertTrue(schedule.getMatchesByPlayer(mahut).get(0).getPlayers().contains(belucci));
-		assertTrue(schedule.getMatchesByPlayer(raonic).get(0).getPlayers().contains(kyrgios));
-		assertTrue(schedule.getMatchesByPlayer(kohlschreiber).get(0).getPlayers().contains(nadal));
-		assertTrue(schedule.getMatchesByPlayer(federer).get(0).getPlayers().contains(zverev));
+		assertTrue(schedule.filterMatchesByPlayer(djokovic).get(0).getPlayers().contains(robert));
+		assertTrue(schedule.filterMatchesByPlayer(mahut).get(0).getPlayers().contains(belucci));
+		assertTrue(schedule.filterMatchesByPlayer(raonic).get(0).getPlayers().contains(kyrgios));
+		assertTrue(schedule.filterMatchesByPlayer(kohlschreiber).get(0).getPlayers().contains(nadal));
+		assertTrue(schedule.filterMatchesByPlayer(federer).get(0).getPlayers().contains(zverev));
 		
 		GroupedSchedule groupedSchedule = new GroupedSchedule(tournament);
 		assertEquals(100, new Double(groupedSchedule.getOccupationRatio() * 100).intValue());
@@ -472,14 +472,14 @@ public class TournamentSolverTest {
 		
 		TournamentSchedule schedule = tournament.getSchedule();
 		
-		Localization localization = schedule.getMatchesByPlayer(players.get(0)).get(0).getLocalization();
+		Localization localization = schedule.filterMatchesByPlayer(players.get(0)).get(0).getLocalization();
 		assertTrue(localization.equals(localizations.get(0)) || localization.equals(localizations.get(1)));
 		
-		localization = schedule.getMatchesByPlayer(players.get(6)).get(0).getLocalization();
+		localization = schedule.filterMatchesByPlayer(players.get(6)).get(0).getLocalization();
 		assertTrue(localization.equals(localizations.get(3)) || localization.equals(localizations.get(4)));
 		
 		assertTrue(
-			schedule.getMatchesByLocalization(localizations.get(4)).stream()
+			schedule.filterMatchesByLocalization(localizations.get(4)).stream()
 				.map(m -> m.getPlayers())
 				.flatMap(l -> l.stream())
 				.collect(Collectors.toList())
@@ -487,7 +487,7 @@ public class TournamentSolverTest {
 		);
 		
 		assertTrue(
-			schedule.getMatchesByLocalization(localizations.get(2)).stream()
+			schedule.filterMatchesByLocalization(localizations.get(2)).stream()
 				.map(m -> m.getPlayers())
 				.flatMap(l -> l.stream())
 				.collect(Collectors.toList())
@@ -518,11 +518,11 @@ public class TournamentSolverTest {
 		
 		TournamentSchedule schedule = tournament.getSchedule();
 		
-		assertTrue(schedule.getMatchesByPlayers(
+		assertTrue(schedule.filterMatchesByPlayers(
 			new ArrayList<Player>(Arrays.asList(players.get(2), players.get(3)))).get(0).getStartTimeslot().equals(timeslots.get(0))
 		);
-		assertTrue(schedule.getMatchesByPlayer(players.get(0)).get(0).getStartTimeslot().equals(timeslots.get(8)));
-		assertTrue(schedule.getMatchesByPlayer(players.get(6)).get(0).within(timeslots.get(2), timeslots.get(5)));
+		assertTrue(schedule.filterMatchesByPlayer(players.get(0)).get(0).getStartTimeslot().equals(timeslots.get(8)));
+		assertTrue(schedule.filterMatchesByPlayer(players.get(6)).get(0).within(timeslots.get(2), timeslots.get(5)));
 	}
 	
 	@Test
@@ -544,7 +544,7 @@ public class TournamentSolverTest {
 		
 		List<Player> players = tournament.getAllPlayers();
 		for (Player player : players)
-			assertEquals(3, schedule.getMatchesByPlayer(player).size());
+			assertEquals(3, schedule.filterMatchesByPlayer(player).size());
 			
 		List<Match> matches = schedule.getMatches();
 		for (int i = 0; i < matches.size() - 1; i++)
@@ -571,7 +571,7 @@ public class TournamentSolverTest {
 		
 		List<Player> players = tournament.getAllPlayers();
 		for (Player player : players)
-			assertEquals(3, schedule.getMatchesByPlayer(player).size());
+			assertEquals(3, schedule.filterMatchesByPlayer(player).size());
 			
 		List<Match> matches = schedule.getMatches();
 		for (int i = 0; i < matches.size(); i++) {
@@ -602,7 +602,7 @@ public class TournamentSolverTest {
 		
 		List<Player> players = tournament.getAllPlayers();
 		for (Player player : players)
-			assertEquals(3, schedule.getMatchesByPlayer(player).size());
+			assertEquals(3, schedule.filterMatchesByPlayer(player).size());
 			
 		List<Match> matches = schedule.getMatches();
 		for (int i = 0; i < matches.size(); i++) {
@@ -637,12 +637,12 @@ public class TournamentSolverTest {
 		assertEquals(4, schedules.get(cat2).getMatches().size());
 		assertEquals(4, schedules.get(cat3).getMatches().size());
 		
-		assertEquals(4, schedules.get(cat1).getMatchesByLocalization(courts.get(0)).size());
-		assertTrue(schedules.get(cat3).getMatchesByLocalization(courts.get(0)).isEmpty());
+		assertEquals(4, schedules.get(cat1).filterMatchesByLocalization(courts.get(0)).size());
+		assertTrue(schedules.get(cat3).filterMatchesByLocalization(courts.get(0)).isEmpty());
 		
 		TournamentSchedule schedule = tournament.getSchedule();
 		for (int i = 0; i < timeslots.size(); i += 2) {
-			List<Match> matches = schedule.getMatchesByStartTimeslot(timeslots.get(i));
+			List<Match> matches = schedule.filterMatchesByStartTimeslot(timeslots.get(i));
 			assertEquals(3, matches.size());
 			for (int j = 0; j < matches.size() - 1; j++)
 				for (int k = j + 1; k < matches.size(); k++)
@@ -696,14 +696,14 @@ public class TournamentSolverTest {
 		Map<Event, EventSchedule> schedules = tournament.getCurrentSchedules();
 		for (Player player : players) {
 			for (Event event : events) {
-				List<Match> playerMatches = schedules.get(event).getMatchesByPlayer(player);
+				List<Match> playerMatches = schedules.get(event).filterMatchesByPlayer(player);
 				Match playerMatch = playerMatches.get(0);
 				
 				assertEquals(1, playerMatches.size());
 				
 				for (Event otherEvent : events) {
 					if (otherEvent != event) {
-						List<Match> playerOtherMatches = schedules.get(otherEvent).getMatchesByPlayer(player);
+						List<Match> playerOtherMatches = schedules.get(otherEvent).filterMatchesByPlayer(player);
 						assertEquals(1, playerOtherMatches.size());
 						
 						assertFalse(playerOtherMatches.get(0).during(playerMatch.getStartTimeslot(), playerMatch.getEndTimeslot()));
@@ -730,15 +730,15 @@ public class TournamentSolverTest {
 		TournamentSchedule schedule = tournament.getSchedule();
 		
 		for (int i : new int[]{ 0, 1, 6, 7 })
-			assertEquals(1, schedule.getMatchesByPlayer(players.get(i)).size());
+			assertEquals(1, schedule.filterMatchesByPlayer(players.get(i)).size());
 		
 		for (int i = 2; i < 6; i++)
-			assertEquals(2, schedule.getMatchesByPlayer(players.get(i)).size());
+			assertEquals(2, schedule.filterMatchesByPlayer(players.get(i)).size());
 	}
 	
 	@Test
 	public void basicMultiTournamentPartiallySharedLocalizationsCasteTest() throws ValidationException {
-		List<Player> players = TournamentUtils.buildGenericPlayers(8, "Pl");
+		List<Player> players = TournamentUtils.buildGenericPlayers(8, "Player");
 		List<Localization> courts = TournamentUtils.buildGenericLocalizations(3, "Court");
 		List<Timeslot> timeslots = TournamentUtils.buildDefiniteDayOfWeekTimeslots(3);
 		
@@ -748,20 +748,70 @@ public class TournamentSolverTest {
 		Tournament tournament = new Tournament("Tournament", cat1, cat2);
 		tournament.getSolver().setSearchStrategy(SearchStrategy.MINDOM_UB);
 		
-		cat2.addPlayerInLocalization(players.get(0), courts.get(2));
-		
 		assertTrue(tournament.solve());
 		
 		Map<Event, EventSchedule> schedules = tournament.getCurrentSchedules();
 		
-		assertTrue(schedules.get(cat1).getMatchesByLocalization(courts.get(2)).isEmpty());
-		assertTrue(schedules.get(cat2).getMatchesByLocalization(courts.get(0)).isEmpty());
-		assertFalse(schedules.get(cat1).getMatchesByLocalization(courts.get(1)).isEmpty());
-		assertFalse(schedules.get(cat2).getMatchesByLocalization(courts.get(1)).isEmpty());
+		assertTrue(schedules.get(cat1).filterMatchesByLocalization(courts.get(2)).isEmpty());
+		assertTrue(schedules.get(cat2).filterMatchesByLocalization(courts.get(0)).isEmpty());
+		assertFalse(schedules.get(cat1).filterMatchesByLocalization(courts.get(1)).isEmpty());
+		assertFalse(schedules.get(cat2).filterMatchesByLocalization(courts.get(1)).isEmpty());
 	}
 	
 	@Test
-	public void basicMultiTournamentPartiallySharedTimeslotsCasteTest() throws ValidationException {
-		fail("TO DO");
+	public void basicMultiTournamentPartiallySharedTimeslotsCaseTest() throws ValidationException {
+		List<Player> players = TournamentUtils.buildGenericPlayers(8, "Player");
+		List<Localization> courts = TournamentUtils.buildGenericLocalizations(3, "Court");
+		List<Timeslot> timeslots = TournamentUtils.buildDefiniteDayOfWeekTimeslots(7);
+		
+		Event cat1 = new Event("Category 1", players, courts, timeslots.subList(0, 4), 1, 1, 2);
+		Event cat2 = new Event("Category 2", players, courts, timeslots.subList(2, 7), 1, 1, 2);
+		Event cat3 = new Event("Category 3", players, courts, timeslots.subList(5, 7), 1, 1, 2);
+		
+		Tournament tournament = new Tournament("Tournament", cat1, cat2, cat3);
+		tournament.getSolver().setSearchStrategy(SearchStrategy.MINDOM_UB);
+		
+		assertTrue(tournament.solve());
+		
+		Map<Event, EventSchedule> schedules = tournament.getCurrentSchedules();
+		assertTrue(schedules.get(cat1).filterMatchesDuringTimeslotRange(timeslots.get(4), timeslots.get(6)).isEmpty());
+		
+		fail("NOT COMPLETED");
+	}
+	
+	@Test
+	public void basicMultiTournamentPartiallySharedTimeslotsAndDifferentPlayersCaseTest() throws ValidationException {
+		List<Localization> courts = TournamentUtils.buildGenericLocalizations(3, "Court");
+		List<Timeslot> timeslots = TournamentUtils.buildDefiniteDayOfWeekTimeslots(7);
+		
+		Event cat1 = new Event(
+			"Category 1",
+			TournamentUtils.buildGenericPlayers(8, "PCat1"),
+			courts,
+			timeslots.subList(0, 4),
+			1, 1, 2
+		);
+		Event cat2 = new Event(
+			"Category 2",
+			TournamentUtils.buildGenericPlayers(8, "PCat2"),
+			courts,
+			timeslots.subList(2, 7),
+			1, 1, 2
+		);
+		Event cat3 = new Event(
+			"Category 3",
+			TournamentUtils.buildGenericPlayers(8, "PCat3"),
+			courts,
+			timeslots.subList(5, 7),
+			1, 1, 2
+		);
+		
+		Tournament tournament = new Tournament("Tournament", cat1, cat2, cat3);
+		tournament.getSolver().setSearchStrategy(SearchStrategy.MINDOM_UB);
+		
+		assertTrue(tournament.solve());
+		
+		tournament.printCurrentSchedules();
+		System.out.println(tournament.getSchedule());
 	}
 }

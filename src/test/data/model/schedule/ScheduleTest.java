@@ -176,51 +176,51 @@ public class ScheduleTest {
 		Map<Event, EventSchedule> schedules = tournament.getCurrentSchedules();
 		TournamentSchedule schedule = tournament.getSchedule();
 		
-		List<Match> matches = schedules.get(events.get(0)).getMatchesByPlayer(sPlayers.get(3));
+		List<Match> matches = schedules.get(events.get(0)).filterMatchesByPlayer(sPlayers.get(3));
 		assertEquals(1, matches.size());
 		
-		matches = schedule.getMatchesByPlayers(new ArrayList<Player>(Arrays.asList(sPlayers.get(4), sPlayers.get(6), dPlayers.get(1))));
+		matches = schedule.filterMatchesByPlayers(new ArrayList<Player>(Arrays.asList(sPlayers.get(4), sPlayers.get(6), dPlayers.get(1))));
 		assertEquals(0, matches.size());
 		
-		matches = schedule.getMatchesByPlayers(new ArrayList<Player>(Arrays.asList(dPlayers.get(7), dPlayers.get(2))));
+		matches = schedule.filterMatchesByPlayers(new ArrayList<Player>(Arrays.asList(dPlayers.get(7), dPlayers.get(2))));
 		assertEquals(1, matches.size());
 		
-		matches = schedule.getMatchesByLocalization(tournament.getAllLocalizations().get(0));
+		matches = schedule.filterMatchesByLocalization(tournament.getAllLocalizations().get(0));
 		assertEquals(3, matches.size());
 		
-		matches = schedules.get(events.get(1)).getMatchesByLocalization(tournament.getAllLocalizations().get(1));
+		matches = schedules.get(events.get(1)).filterMatchesByLocalization(tournament.getAllLocalizations().get(1));
 		assertEquals(2, matches.size());
 		
-		matches = schedule.getMatchesByStartTimeslot(timeslots.get(0));
+		matches = schedule.filterMatchesByStartTimeslot(timeslots.get(0));
 		assertEquals(1, matches.size());
 		
-		matches = schedule.getMatchesByStartTimeslot(timeslots.get(2));
+		matches = schedule.filterMatchesByStartTimeslot(timeslots.get(2));
 		assertEquals(0, matches.size());
 		
-		matches = schedule.getMatchesByEndTimeslot(timeslots.get(1));
+		matches = schedule.filterMatchesByEndTimeslot(timeslots.get(1));
 		assertEquals(1, matches.size());
 		
-		matches = schedule.getMatchesByTimeslot(timeslots.get(4));
+		matches = schedule.filterMatchesDuringTimeslot(timeslots.get(4));
 		assertEquals(2, matches.size());
 		
-		matches = schedule.getMatchesByTimeslot(timeslots.get(7));
+		matches = schedule.filterMatchesDuringTimeslot(timeslots.get(7));
 		assertEquals(2, matches.size());
 		
-		matches = schedule.getMatchesByTimeslots(new ArrayList<Timeslot>(Arrays.asList(timeslots.get(4), timeslots.get(7))));
+		matches = schedule.filterMatchesDuringTimeslots(new ArrayList<Timeslot>(Arrays.asList(timeslots.get(4), timeslots.get(7))));
 		assertEquals(4, matches.size());
 		
-		matches = schedule.getMatchesByTimeslotRange(timeslots.get(1), timeslots.get(2));
+		matches = schedule.filterMatchesInTimeslotRange(timeslots.get(1), timeslots.get(2));
 		assertEquals(1, matches.size());
 		
-		assertEquals(0, schedule.getMatchesByPlayer(new Player("New Player")).size());
-		assertEquals(0, schedule.getMatchesByLocalization(new Localization("New Localization")).size());
-		assertEquals(0, schedule.getMatchesByPlayers(new ArrayList<Player>(Arrays.asList(sPlayers.get(0), sPlayers.get(1)))).size());
-		assertEquals(0, schedule.getMatchesByStartTimeslot(timeslots.get(2)).size());
-		assertEquals(0, schedule.getMatchesByEndTimeslot(timeslots.get(3)).size());
-		assertEquals(0, schedule.getMatchesByTimeslot(timeslots.get(5)).size());
-		assertEquals(0, schedule.getMatchesByTimeslotRange(timeslots.get(4), timeslots.get(5)).size());
-		assertEquals(0, schedule.getMatchesByTimeslotRange(timeslots.get(1), timeslots.get(3)).size());
-		assertEquals(0, schedule.getMatchesByTimeslotRange(timeslots.get(0), timeslots.get(2)).size());
+		assertEquals(0, schedule.filterMatchesByPlayer(new Player("New Player")).size());
+		assertEquals(0, schedule.filterMatchesByLocalization(new Localization("New Localization")).size());
+		assertEquals(0, schedule.filterMatchesByPlayers(new ArrayList<Player>(Arrays.asList(sPlayers.get(0), sPlayers.get(1)))).size());
+		assertEquals(0, schedule.filterMatchesByStartTimeslot(timeslots.get(2)).size());
+		assertEquals(0, schedule.filterMatchesByEndTimeslot(timeslots.get(3)).size());
+		assertEquals(0, schedule.filterMatchesDuringTimeslot(timeslots.get(5)).size());
+		assertEquals(0, schedule.filterMatchesInTimeslotRange(timeslots.get(4), timeslots.get(5)).size());
+		assertEquals(0, schedule.filterMatchesInTimeslotRange(timeslots.get(1), timeslots.get(3)).size());
+		assertEquals(0, schedule.filterMatchesInTimeslotRange(timeslots.get(0), timeslots.get(2)).size());
 	}
 	
 	@Test

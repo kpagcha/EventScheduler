@@ -118,7 +118,7 @@ public class Application {
 						if (printMatchesByPlayer) {
 							for (Player player : tournament.getAllPlayers()) {
 								System.out.println(player + " matches:");
-								for (Match match : combinedSchedule.getMatchesByPlayer(player))
+								for (Match match : combinedSchedule.filterMatchesByPlayer(player))
 									System.out.println(match);
 								System.out.println();
 							}
