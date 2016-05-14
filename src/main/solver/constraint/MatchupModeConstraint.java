@@ -31,8 +31,8 @@ public class MatchupModeConstraint extends EventConstraint {
 		int nMatchesPerPlayer = event.getMatchesPerPlayer();
 		
 		List<List<Integer>> combinations = getCombinations(
-				IntStream.range(0, nPlayers).toArray(),
-				nPlayersPerMatch
+			IntStream.range(0, nPlayers).toArray(),
+			nPlayersPerMatch
 		);
 		
 		// Define cuántas veces un partido debe ocurrir dependiendo del modo de emparejamiento. En el modo "todos diferentes"
@@ -66,7 +66,7 @@ public class MatchupModeConstraint extends EventConstraint {
 				}
 			}
 			// Que el partido o una vez, o el número de veces que deba ocurrir según el modo de emparejamiento
-			solver.post(IntConstraintFactory.sum(possibleMatchups, VariableFactory.enumerated("AllDiff", new int[]{ 0, nMatches }, solver)));
+			solver.post(IntConstraintFactory.sum(possibleMatchups, VariableFactory.enumerated("NMatchups", new int[]{ 0, nMatches }, solver)));
 		}
 	}
 	

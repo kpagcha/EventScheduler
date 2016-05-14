@@ -364,6 +364,10 @@ public class TournamentSolver {
 	 */
 	private void createSolver() {
 		solver = new Solver("Tournament Solver");
+		foundSolutionsCount = 0;
+		lastSolutionFound = false;
+		schedules = null;
+		resolutionData = null;
 	}
 	
 	/**
@@ -753,7 +757,6 @@ public class TournamentSolver {
 			else if (solver.isFeasible() == ESat.UNDEFINED)
 				LOGGER.log(Level.INFO, "A solution has not been found within given limits.");
 		}
-		
 		return solutionFound;
 	}
 	

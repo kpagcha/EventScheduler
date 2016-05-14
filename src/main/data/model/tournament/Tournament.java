@@ -487,7 +487,9 @@ public class Tournament implements Validable {
 		if (currentSchedules == null)
 			sb.append("Empty schedule.\n");
 		else {
-			for (EventSchedule schedule : currentSchedules.values()) {
+			for (Event event : events) {
+				EventSchedule schedule = currentSchedules.get(event);
+				
 				sb.append(schedule.toString());
 				
 				sb.append("\n");

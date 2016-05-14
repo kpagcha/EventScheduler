@@ -1,7 +1,9 @@
 package data.model.schedule;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import data.model.schedule.data.Match;
@@ -154,16 +156,21 @@ public abstract class Schedule {
 	}
 
 	/**
-	 * Devuelve el conjunto de partidos que empiezan en el timeslot inicial y
-	 * terminan en el final
+	 * Devuelve el conjunto de partidos que empiezan en el timeslot inicial y terminan en el final.
+	 * <p>
+	 * Si alguno de los <i>timeslots</i> que definine el rango, o ambos, no pertenecen al dominio de horas de juego
+	 * del horario, se devolverá <code>null</code>
 	 * 
 	 * @param start
 	 *            timeslot de comienzo
 	 * @param end
 	 *            timeslot final
-	 * @return lista de partidos
+	 * @return lista de partidos, o <code>null</code> si alguno de los <i>timeslots</i> no pertenece al dominio
 	 */
 	public List<Match> filterMatchesInTimeslotRange(Timeslot start, Timeslot end) {
+		if (!(timeslots.contains(start) && timeslots.contains(end)))
+			return null;
+		
 		List<Match> timeslotMatches = new ArrayList<Match>();
 		for (Match match : matches)
 			if (match.getStartTimeslot().equals(start) && match.getEndTimeslot().equals(end))
@@ -199,25 +206,32 @@ public abstract class Schedule {
 	 * @return lista de partidos
 	 */
 	public List<Match> filterMatchesDuringTimeslots(List<Timeslot> timeslots) {
-		List<Match> timeslotsMatches = new ArrayList<Match>();
+		Set<Match> timeslotsMatches = new HashSet<>();
 		for (Timeslot timeslot : timeslots)
 			timeslotsMatches.addAll(filterMatchesDuringTimeslot(timeslot));
 
-		return timeslotsMatches;
+		return new ArrayList<Match>(timeslotsMatches);
 	}
 	
 	/**
-	 * Devuelve el conjunto de partidos cuyo transcurso discurre durante
-	 * el rango de timeslots indicado. Si <code>start</code> es mayor que <code>end</end>,
-	 * se invierten los extremos de forma que estén en orden.
+	 * Devuelve el conjunto de partidos cuyo transcurso discurre durante el rango de <i>timeslots</i> indicado,
+	 * ambos <i>timeslots</i> incluidos.
+	 * <p>
+	 * Si alguno de los <i>timeslots</i> que definine el rango, o ambos, no pertenecen al dominio de horas de juego
+	 * del horario, se devolverá <code>null</code>
+	 * <p>
+	 * Si <code>start</code> es mayor que <code>end</end>, se invierten los extremos de forma que estén en orden.
 	 * 
 	 * @param start
 	 *            timeslot de comienzo
 	 * @param end
 	 *            timeslot final
-	 * @return lista de partidos
+	 * @return lista de partidos, o <code>null</code> si alguno de los <i>timeslots</i> no pertenece al dominio
 	 */
 	public List<Match> filterMatchesDuringTimeslotRange(Timeslot start, Timeslot end) {
+		if (!(timeslots.contains(start) && timeslots.contains(end)))
+			return null;
+		
 		Timeslot startTimeslot, endTimeslot;
 		if (start.compareTo(end) >= 0) {
 			startTimeslot = start;
@@ -228,7 +242,7 @@ public abstract class Schedule {
 		}
 		
 		List<Timeslot> timeslotRange = new ArrayList<Timeslot>();
-		for (int i = timeslots.indexOf(startTimeslot); i < timeslots.indexOf(endTimeslot); i++)
+		for (int i = timeslots.indexOf(startTimeslot); i <= timeslots.indexOf(endTimeslot); i++)
 			timeslotRange.add(timeslots.get(i));
 		
 		return filterMatchesDuringTimeslots(timeslotRange);

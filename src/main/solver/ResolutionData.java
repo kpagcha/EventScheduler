@@ -156,10 +156,6 @@ public class ResolutionData {
 		return tournament;
 	}
 	
-	public void setResolutionProcessCompleted(boolean completed) {
-		resolutionProcessCompleted = completed;
-	}
-
 	public String getSolverName() {
 		return solverName;
 	}
@@ -262,8 +258,6 @@ public class ResolutionData {
 				jsonStr = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(this);
 			else
 				jsonStr = mapper.writeValueAsString(this);
-			
-			return jsonStr;
 		} catch (JsonProcessingException e) {
 			e.printStackTrace();
 		}

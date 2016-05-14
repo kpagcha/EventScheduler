@@ -26,6 +26,10 @@ import data.validation.validable.ValidationException;
 import solver.TournamentSolver.SearchStrategy;
 import utils.TournamentUtils;
 
+/**
+ * Tests de las clases {@link Schedule}, {@link EventSchedule} y {@link TournamentSchedule}.
+ *
+ */
 public class ScheduleTest {
 	
 	private Tournament tournament;
@@ -166,7 +170,7 @@ public class ScheduleTest {
 	}
 	
 	@Test
-	public void getMatchesByTest() throws ValidationException {
+	public void filterMatchesByTest() throws ValidationException {
 		tournament.solve();
 		
 		List<Event> events = tournament.getEvents();
@@ -208,6 +212,9 @@ public class ScheduleTest {
 		
 		matches = schedule.filterMatchesDuringTimeslots(new ArrayList<Timeslot>(Arrays.asList(timeslots.get(4), timeslots.get(7))));
 		assertEquals(4, matches.size());
+		
+		matches = schedule.filterMatchesDuringTimeslotRange(timeslots.get(3), timeslots.get(4));
+		assertEquals(2, matches.size());
 		
 		matches = schedule.filterMatchesInTimeslotRange(timeslots.get(1), timeslots.get(2));
 		assertEquals(1, matches.size());
