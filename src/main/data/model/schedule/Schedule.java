@@ -6,14 +6,15 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import data.model.schedule.value.ScheduleValue;
+import data.model.schedule.value.AbstractScheduleValue;
+import data.model.schedule.value.PlayerScheduleValue;
 import data.model.tournament.event.domain.Localization;
 import data.model.tournament.event.domain.Player;
 import data.model.tournament.event.domain.timeslot.Timeslot;
 
 /**
  * Representa un horario mediante una matriz bidimensional de
- * {@link ScheduleValue} que dota de significado a cada elemento.
+ * {@link PlayerScheduleValue} que dota de significado a cada elemento.
  * <p>
  * La primera dimensión de la matriz (filas) corresponde a los jugadores y la
  * segunda dimensión (columnas) corresponde con las horas de juego
@@ -25,29 +26,14 @@ import data.model.tournament.event.domain.timeslot.Timeslot;
 public abstract class Schedule {
 
 	/**
-	 * Representación del horario con la ayuda de la clase {@link ScheduleValue}
+	 * Representación del horario con la ayuda de la clase {@link PlayerScheduleValue}
 	 */
-	protected ScheduleValue[][] schedule;
+	protected AbstractScheduleValue[][] schedule;
 
 	/**
 	 * Lista de partidos que se dan en el horario
 	 */
 	protected List<Match> matches;
-
-	/**
-	 * Número de jugadores
-	 */
-	protected int nPlayers;
-
-	/**
-	 * Número de pistas
-	 */
-	protected int nLocalizations;
-
-	/**
-	 * Número de timeslots
-	 */
-	protected int nTimeslots;
 
 	/**
 	 * Lista de jugadores
@@ -74,7 +60,7 @@ public abstract class Schedule {
 	 * 
 	 * @return matriz bidimensional que representa el horario
 	 */
-	public ScheduleValue[][] getScheduleValues() {
+	public AbstractScheduleValue[][] getScheduleValues() {
 		return schedule;
 	}
 
@@ -252,17 +238,17 @@ public abstract class Schedule {
 
 		sb.append(String.format("\n\n%8s", " "));
 
-		for (int t = 0; t < nTimeslots; t++)
+		for (int t = 0; t < timeslots.size(); t++)
 			sb.append(String.format("%4s", "t" + t));
 		sb.append("\n");
 
-		for (int p = 0; p < nPlayers; p++) {
+		for (int p = 0; p < players.size(); p++) {
 			String playerStr = players.get(p).toString();
 			if (playerStr.length() > 8)
 				playerStr = playerStr.substring(0, 8);
 
 			sb.append(String.format("%8s", playerStr));
-			for (int t = 0; t < nTimeslots; t++)
+			for (int t = 0; t < timeslots.size(); t++)
 				sb.append(String.format("%4s", schedule[p][t]));
 			sb.append("\n");
 		}

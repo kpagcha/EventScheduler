@@ -17,7 +17,7 @@ import org.hamcrest.core.StringContains;
 import org.junit.Test;
 
 import data.model.schedule.EventSchedule;
-import data.model.schedule.GroupedSchedule;
+import data.model.schedule.LocalizationSchedule;
 import data.model.schedule.Match;
 import data.model.schedule.TournamentSchedule;
 import data.model.tournament.Tournament;
@@ -107,7 +107,7 @@ public class TournamentSolverTest {
 			Stream.of(schedule.getScheduleValues()).flatMap(v -> Arrays.stream(v)).filter(v -> v.isOccupied()).count()
 		);
 		
-		assertEquals(100, new Double(new GroupedSchedule(tournament).getOccupationRatio() * 100).intValue());
+		assertEquals(100, new Double(new LocalizationSchedule(tournament).getOccupationRatio() * 100).intValue());
 		
 		tournament.getSolver().setResolutionTimeLimit(400);
 		tournament.getSolver().setResolutionTimeLimit(0);
@@ -201,7 +201,7 @@ public class TournamentSolverTest {
 		for (Match match : matches)
 			assertEquals(4, match.getPlayers().size());
 		
-		assertEquals(100, new Double(new GroupedSchedule(tournament).getOccupationRatio() * 100).intValue());
+		assertEquals(100, new Double(new LocalizationSchedule(tournament).getOccupationRatio() * 100).intValue());
 	}
 	
 	@Test
@@ -224,7 +224,7 @@ public class TournamentSolverTest {
 		for (Match match : matches)
 			assertEquals(1, match.getPlayers().size());
 		
-		assertEquals(100, new Double(new GroupedSchedule(tournament).getOccupationRatio() * 100).intValue());
+		assertEquals(100, new Double(new LocalizationSchedule(tournament).getOccupationRatio() * 100).intValue());
 	}
 	
 	@Test
@@ -244,7 +244,7 @@ public class TournamentSolverTest {
 		for (Player player : tournament.getAllPlayers())
 			assertEquals(2, schedule.filterMatchesByPlayer(player).size());
 
-		assertEquals(80, new Double(new GroupedSchedule(tournament).getOccupationRatio() * 100).intValue());
+		assertEquals(80, new Double(new LocalizationSchedule(tournament).getOccupationRatio() * 100).intValue());
 	}
 	
 	@Test
@@ -458,7 +458,7 @@ public class TournamentSolverTest {
 		assertTrue(schedule.filterMatchesByPlayer(kohlschreiber).get(0).getPlayers().contains(nadal));
 		assertTrue(schedule.filterMatchesByPlayer(federer).get(0).getPlayers().contains(zverev));
 		
-		GroupedSchedule groupedSchedule = new GroupedSchedule(tournament);
+		LocalizationSchedule groupedSchedule = new LocalizationSchedule(tournament);
 		assertEquals(100, new Double(groupedSchedule.getOccupationRatio() * 100).intValue());
 		assertEquals(tournament.getNumberOfOccupiedTimeslots(), 2 * groupedSchedule.getOccupation());
 	}
@@ -847,7 +847,7 @@ public class TournamentSolverTest {
 					assertNotEquals(matches.get(j).getLocalization(), matches.get(k).getLocalization());
 		}
 		
-		assertEquals(100, new Double(new GroupedSchedule(tournament).getOccupationRatio() * 100).intValue());
+		assertEquals(100, new Double(new LocalizationSchedule(tournament).getOccupationRatio() * 100).intValue());
 	}
 	
 	@Test

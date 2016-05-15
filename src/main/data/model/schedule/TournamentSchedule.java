@@ -6,7 +6,9 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
-import data.model.schedule.value.ScheduleValue;
+import data.model.schedule.value.AbstractScheduleValue;
+import data.model.schedule.value.PlayerScheduleValue;
+import data.model.schedule.value.PlayerScheduleValueOccupied;
 import data.model.tournament.Tournament;
 import data.model.tournament.event.Event;
 import data.model.tournament.event.domain.Localization;
@@ -45,18 +47,14 @@ public class TournamentSchedule extends Schedule {
 		localizations = tournament.getAllLocalizations();
 		timeslots = tournament.getAllTimeslots();
 		
-		nPlayers = players.size();
-		nLocalizations = localizations.size();
-		nTimeslots = timeslots.size();
+		schedule = new PlayerScheduleValue[players.size()][timeslots.size()];
 		
-		schedule = new ScheduleValue[nPlayers][nTimeslots];
-		
-		for (int p = 0; p < nPlayers; p++)
-			for (int t = 0; t < nTimeslots; t++)
-				schedule[p][t] = new ScheduleValue(ScheduleValue.NOT_IN_DOMAIN);
+		for (int p = 0; p < players.size(); p++)
+			for (int t = 0; t < timeslots.size(); t++)
+				schedule[p][t] = new PlayerScheduleValue(PlayerScheduleValue.NOT_IN_DOMAIN);
 		
 		for (Event event : tournament.getEvents()) {
-			ScheduleValue[][] eventSchedule = schedules.get(event).getScheduleValues();
+			AbstractScheduleValue[][] eventSchedule = schedules.get(event).getScheduleValues();
 			
 			int nPlayers = event.getPlayers().size();
 			int nTimeslots = event.getTimeslots().size();
@@ -75,10 +73,9 @@ public class TournamentSchedule extends Schedule {
 					// de pistas ya escritos sobre el horario)
 					if (!schedule[playerIndex][timeslotIndex].isOccupied()) {
 						if (eventSchedule[p][t].isOccupied()) {
-							schedule[playerIndex][timeslotIndex] = new ScheduleValue(
-								ScheduleValue.OCCUPIED,
-								localizations.indexOf(eventLocalizations.get(eventSchedule[p][t].getLocalization()))
-							);
+							schedule[playerIndex][timeslotIndex] = new PlayerScheduleValueOccupied(localizations.indexOf(
+								eventLocalizations.get(((PlayerScheduleValueOccupied)eventSchedule[p][t]).getLocalization())
+							));
 						} else if (!schedule[playerIndex][timeslotIndex].isLimited())
 							schedule[playerIndex][timeslotIndex] = eventSchedule[p][t];
 					}		

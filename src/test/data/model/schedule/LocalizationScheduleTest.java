@@ -14,7 +14,10 @@ import org.hamcrest.core.StringContains;
 import org.junit.Before;
 import org.junit.Test;
 
-import data.model.schedule.value.GroupedScheduleValue;
+import data.model.schedule.value.AbstractScheduleValue;
+import data.model.schedule.value.LocalizationScheduleValue;
+import data.model.schedule.value.LocalizationScheduleValueOccupied;
+import data.model.schedule.value.ScheduleValue;
 import data.model.tournament.Tournament;
 import data.model.tournament.event.Event;
 import data.model.tournament.event.domain.Localization;
@@ -24,7 +27,7 @@ import data.validation.validable.ValidationException;
 import solver.TournamentSolver.SearchStrategy;
 import utils.TournamentUtils;
 
-public class GroupedScheduleTest {
+public class LocalizationScheduleTest {
 	
 	private Tournament tournament;
 	private Event single;
@@ -69,10 +72,10 @@ public class GroupedScheduleTest {
 	}
 
 	@Test
-	public void constructorEventGroupedScheduleTest() {
-		GroupedSchedule schedule = new GroupedSchedule(single, singleMatches);
+	public void constructorEventLocalizationScheduleTest() {
+		LocalizationSchedule schedule = new LocalizationSchedule(single, singleMatches);
 		
-		List<GroupedScheduleValue> vals = 
+		List<AbstractScheduleValue> vals = 
 			Stream.of(schedule.getScheduleValues()).flatMap(v -> Arrays.stream(v)).collect(Collectors.toList());
 		
 		assertEquals(single.getNumberOfMatches(), vals.stream().filter(v -> v.isOccupied()).count());
@@ -84,14 +87,14 @@ public class GroupedScheduleTest {
 		assertTrue(vals.stream().filter(v -> v.isUnavailable()).count() <= nUnavailableTimeslots);
 		
 		try {
-			new GroupedSchedule((Event)null, singleMatches);
+			new LocalizationSchedule((Event)null, singleMatches);
 			fail("IllegalArgumentException expected");
 		} catch (IllegalArgumentException e) {
 			assertEquals("The parameters cannot be null", e.getMessage());
 		}
 		
 		try {
-			new GroupedSchedule(single, null);
+			new LocalizationSchedule(single, null);
 			fail("IllegalArgumentException expected");
 		} catch (IllegalArgumentException e) {
 			assertEquals("The parameters cannot be null", e.getMessage());
@@ -99,7 +102,7 @@ public class GroupedScheduleTest {
 		
 		try {
 			singleMatches.remove(singleMatches.size() - 1);
-			new GroupedSchedule(single, singleMatches);
+			new LocalizationSchedule(single, singleMatches);
 			fail("IllegalArgumentException expected");
 		} catch (IllegalArgumentException e) {
 			assertThat(e.getMessage(), StringContains.containsString("equal to the expected number of matches for the event"));
@@ -107,10 +110,10 @@ public class GroupedScheduleTest {
 	}
 	
 	@Test
-	public void constructorTournamentGroupedScheduleTest() throws ValidationException {
-		GroupedSchedule schedule = new GroupedSchedule(tournament);
+	public void constructorTournamentLocalizationScheduleTest() throws ValidationException {
+		LocalizationSchedule schedule = new LocalizationSchedule(tournament);
 		
-		List<GroupedScheduleValue> vals = 
+		List<AbstractScheduleValue> vals = 
 			Stream.of(schedule.getScheduleValues()).flatMap(v -> Arrays.stream(v)).collect(Collectors.toList());
 		
 		assertEquals(tournament.getNumberOfMatches(), vals.stream().filter(v -> v.isOccupied()).count());
@@ -124,7 +127,7 @@ public class GroupedScheduleTest {
 		assertTrue(vals.stream().filter(v -> v.isUnavailable()).count() <= nUnavailableTimeslots);
 		
 		try {
-			new GroupedSchedule(null);
+			new LocalizationSchedule(null);
 			fail("IllegalArgumentException expected");
 		} catch (IllegalArgumentException e) {
 			assertEquals("Tournament cannot be null", e.getMessage());
@@ -132,7 +135,7 @@ public class GroupedScheduleTest {
 	}
 	
 	@Test
-	public void constructorTournamentGroupedScheduleSingleTournamentTest() throws ValidationException {
+	public void constructorTournamentLocalizationScheduleSingleTournamentTest() throws ValidationException {
 		Event event = new Event(
 			"Event",
 			TournamentUtils.buildGenericPlayers(8, "Player"),
@@ -157,7 +160,7 @@ public class GroupedScheduleTest {
 		tournament = new Tournament("Tournament", event);
 		
 		try {
-			new GroupedSchedule(tournament);
+			new LocalizationSchedule(tournament);
 			fail("IllegalStateException expected for not calculated schedules");
 		} catch (IllegalStateException e) {
 			assertEquals("Tournament schedule not calculated", e.getMessage());
@@ -165,7 +168,7 @@ public class GroupedScheduleTest {
 		
 		tournament.solve();
 		
-		GroupedSchedule schedule = new GroupedSchedule(tournament);
+		LocalizationSchedule schedule = new LocalizationSchedule(tournament);
 		
 		assertEquals(
 			tournament.getEvents().get(0).getUnavailableLocalizations().values().stream().flatMap(Collection::stream).count(),
@@ -175,15 +178,15 @@ public class GroupedScheduleTest {
 	
 	@Test
 	public void getTotalTimeslotsTest() {
-		GroupedSchedule schedule = new GroupedSchedule(tournament);
+		LocalizationSchedule schedule = new LocalizationSchedule(tournament);
 		
 		assertEquals(tournament.getAllLocalizations().size() * tournament.getAllTimeslots().size(), schedule.getTotalTimeslots());
 	}
 	
 	@Test
 	public void getAvailableTimeslotsTest() {
-		GroupedSchedule schedule = new GroupedSchedule(tournament);
-		List<GroupedScheduleValue> vals = 
+		LocalizationSchedule schedule = new LocalizationSchedule(tournament);
+		List<AbstractScheduleValue> vals = 
 				Stream.of(schedule.getScheduleValues()).flatMap(v -> Arrays.stream(v)).collect(Collectors.toList());
 		
 		assertEquals(
@@ -195,8 +198,8 @@ public class GroupedScheduleTest {
 	
 	@Test
 	public void getOccupationTest() {
-		GroupedSchedule schedule = new GroupedSchedule(tournament);
-		List<GroupedScheduleValue> vals = 
+		LocalizationSchedule schedule = new LocalizationSchedule(tournament);
+		List<AbstractScheduleValue> vals = 
 				Stream.of(schedule.getScheduleValues()).flatMap(v -> Arrays.stream(v)).collect(Collectors.toList());
 		
 		assertEquals(
@@ -207,7 +210,7 @@ public class GroupedScheduleTest {
 	
 	@Test
 	public void toStringTest() {
-		GroupedSchedule schedule = new GroupedSchedule(tournament);
+		LocalizationSchedule schedule = new LocalizationSchedule(tournament);
 		String scheduleStr = schedule.toString();
 		
 		assertThat(scheduleStr, StringContains.containsString("5,6"));
@@ -216,76 +219,49 @@ public class GroupedScheduleTest {
 	}
 	
 	@Test
-	public void groupedScheduleValueTest() {
-		GroupedScheduleValue v = new GroupedScheduleValue(GroupedScheduleValue.FREE);
+	public void localizationScheduleValueTest() {
+		LocalizationScheduleValue v = new LocalizationScheduleValue(LocalizationScheduleValue.FREE);
 		assertTrue(v.isFree());
 		
-		v = new GroupedScheduleValue(GroupedScheduleValue.LIMITED);
+		v = new LocalizationScheduleValue(LocalizationScheduleValue.LIMITED);
 		assertTrue(v.isLimited());
 		
-		v = new GroupedScheduleValue(GroupedScheduleValue.UNAVAILABLE);
+		v = new LocalizationScheduleValue(LocalizationScheduleValue.UNAVAILABLE);
 		assertTrue(v.isUnavailable());
 		
-		v = new GroupedScheduleValue(GroupedScheduleValue.CONTINUATION);
+		v = new LocalizationScheduleValue(LocalizationScheduleValue.CONTINUATION);
 		assertTrue(v.isContinuation());
 		
-		v = new GroupedScheduleValue(GroupedScheduleValue.OCCUPIED, new ArrayList<Integer>(Arrays.asList(3, 4)));
+		v = new LocalizationScheduleValueOccupied(new ArrayList<Integer>(Arrays.asList(3, 4)));
 		assertTrue(v.isOccupied());
+		assertTrue(((LocalizationScheduleValueOccupied)v).getPlayers().containsAll(new ArrayList<Integer>(Arrays.asList(3, 4))));
 		
 		try {
-			new GroupedScheduleValue(GroupedScheduleValue.LIMITED + 50);
-			fail("Expected IllegalArgumentException");
+			new LocalizationScheduleValue(new ScheduleValue("UNKNOWN"));
+			fail("IllegalArgumentException expected");
 		} catch (IllegalArgumentException e) {
-			assertThat(e.getMessage(), StringContains.containsString("Illegal value"));
+			assertEquals(e.getMessage(), "Illegal value");
 		}
 		
 		try {
-			new GroupedScheduleValue(GroupedScheduleValue.OCCUPIED);
-			fail("Expected IllegalStateException");
-		} catch (IllegalStateException e) {
-			assertEquals("A match must be specified if the schedule value is OCCUPIED", e.getMessage());
-		}
-		
-		try {
-			new GroupedScheduleValue(GroupedScheduleValue.LIMITED + 50, new ArrayList<Integer>(Arrays.asList(3, 4)));
-			fail("Expected IllegalArgumentException");
+			new LocalizationScheduleValueOccupied(null);
+			fail("IllegalArgumentException expected");
 		} catch (IllegalArgumentException e) {
-			assertThat(e.getMessage(), StringContains.containsString("Illegal value"));
+			assertEquals(e.getMessage(), "Players indices cannot be null");
 		}
 		
 		try {
-			new GroupedScheduleValue(GroupedScheduleValue.CONTINUATION, new ArrayList<Integer>(Arrays.asList(3, 4)));
-			fail("Expected IllegalStateException");
-		} catch (IllegalStateException e) {
-			assertEquals("Only schedule values of OCCUPIED can specify a match taking place", e.getMessage());
-		}
-		
-		try {
-			new GroupedScheduleValue(GroupedScheduleValue.OCCUPIED, null);
-			fail("Expected IllegalArgumentException");
+			new LocalizationScheduleValueOccupied(new ArrayList<Integer>(Arrays.asList(5, null, 6)));
+			fail("IllegalArgumentException expected");
 		} catch (IllegalArgumentException e) {
-			assertEquals("Indices cannot be null", e.getMessage());
+			assertEquals(e.getMessage(), "Player index cannot be null");
 		}
 		
 		try {
-			new GroupedScheduleValue(GroupedScheduleValue.OCCUPIED, new ArrayList<Integer>());
-			fail("Expected IllegalArgumentException");
+			new LocalizationScheduleValueOccupied(new ArrayList<Integer>(Arrays.asList(5, 5, 6)));
+			fail("IllegalArgumentException expected");
 		} catch (IllegalArgumentException e) {
-			assertEquals("Indices cannot be empty", e.getMessage());
-		}
-		
-		try {
-			new GroupedScheduleValue(GroupedScheduleValue.OCCUPIED, new ArrayList<Integer>(Arrays.asList(3, null)));
-			fail("Expected IllegalArgumentException");
-		} catch (IllegalArgumentException e) {
-			assertEquals("Index cannot be null", e.getMessage());
-		}
-		
-		try {
-			new GroupedScheduleValue(GroupedScheduleValue.UNAVAILABLE).getPlayersIndices();
-			fail("Expected IllegalStateException");
-		} catch (IllegalStateException e) {
-			assertEquals("Only schedule values of OCCUPIED can specify a match taking place", e.getMessage());
+			assertThat(e.getMessage(), StringContains.containsString("Player indices cannot be duplicated"));
 		}
 	}
 }

@@ -6,7 +6,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import data.model.schedule.value.GroupedScheduleValue;
+import data.model.schedule.value.LocalizationScheduleValue;
+import data.model.schedule.value.LocalizationScheduleValueOccupied;
 import data.model.tournament.Tournament;
 import data.model.tournament.event.Event;
 import data.model.tournament.event.domain.Localization;
@@ -15,15 +16,10 @@ import data.model.tournament.event.domain.timeslot.Timeslot;
 
 /**
  * Representa un horario agrupado por localizaciones de juego y horas de juego mediante una matriz
- * bidimensional de {@link GroupedScheduleValue}.
+ * bidimensional de {@link LocalizationScheduleValue}.
  *
  */
-public class GroupedSchedule {
-	/**
-	 * Horario agrupado
-	 */
-	private final GroupedScheduleValue[][] groupedSchedule;
-	
+public class LocalizationSchedule extends Schedule {
 	/**
 	 * Nombre del torneo o evento al que se refiere
 	 */
@@ -69,7 +65,7 @@ public class GroupedSchedule {
 	 * @throws IllegalArgumentException si los parámetos son <code>null</code> o si el tamaño de la lista de
 	 * partidos no se corresponde por el esperado por el evento
 	 */
-	public GroupedSchedule(Event event, List<Match> matches) {
+	public LocalizationSchedule(Event event, List<Match> matches) {
 		if (event == null || matches == null)
 			throw new IllegalArgumentException("The parameters cannot be null");
 		
@@ -83,24 +79,24 @@ public class GroupedSchedule {
 		timeslots = event.getTimeslots();
 		this.matches = matches;
 		
-		groupedSchedule = new GroupedScheduleValue[localizations.size()][timeslots.size()];
+		schedule = new LocalizationScheduleValue[localizations.size()][timeslots.size()];
 		
 		List<Timeslot> breaks = event.getBreaks();
 		Map<Localization, Set<Timeslot>> unavailableLocalizations = event.getUnavailableLocalizations();
 		
 		for (int i = 0; i < localizations.size(); i++)
 			for (int j = 0; j < timeslots.size(); j++)
-				groupedSchedule[i][j] = new GroupedScheduleValue(GroupedScheduleValue.FREE);
+				schedule[i][j] = new LocalizationScheduleValue(LocalizationScheduleValue.FREE);
 		
 		for (Timeslot breakTimeslot : breaks)
 			for (int i = 0; i < localizations.size(); i++)
-				groupedSchedule[i][timeslots.indexOf(breakTimeslot)] = new GroupedScheduleValue(GroupedScheduleValue.UNAVAILABLE);
+				schedule[i][timeslots.indexOf(breakTimeslot)] = new LocalizationScheduleValue(LocalizationScheduleValue.UNAVAILABLE);
 		
 		for (Localization localization : unavailableLocalizations.keySet()) {
 			Set<Timeslot> localizationTimeslots = unavailableLocalizations.get(localization);
 			int c = localizations.indexOf(localization);
 			for (Timeslot timeslot : localizationTimeslots)
-				groupedSchedule[c][timeslots.indexOf(timeslot)] = new GroupedScheduleValue(GroupedScheduleValue.UNAVAILABLE);
+				schedule[c][timeslots.indexOf(timeslot)] = new LocalizationScheduleValue(LocalizationScheduleValue.UNAVAILABLE);
 		}
 		
 		int matchDuration = event.getTimeslotsPerMatch();
@@ -113,11 +109,11 @@ public class GroupedSchedule {
 			for (Player player : matchPlayers)
 				playersIndices.add(players.indexOf(player));
 				
-			groupedSchedule[c][t] = new GroupedScheduleValue(GroupedScheduleValue.OCCUPIED, playersIndices);
+			schedule[c][t] = new LocalizationScheduleValueOccupied(playersIndices);
 			 
 			if (matchDuration > 1)
 				for (int i = 1; i < matchDuration; i++)
-					groupedSchedule[c][i + t] = new GroupedScheduleValue(GroupedScheduleValue.CONTINUATION);
+					schedule[c][i + t] = new LocalizationScheduleValue(LocalizationScheduleValue.CONTINUATION);
 		}
 	}
 	
@@ -131,7 +127,7 @@ public class GroupedSchedule {
 	 * @throws IllegalStateException si los horarios del torneo aún no han sido calculados, o ya se han calculado
 	 * todos, es decir, que el horario sea <code>null</code>
 	 */
-	public GroupedSchedule(Tournament tournament) {
+	public LocalizationSchedule(Tournament tournament) {
 		if (tournament == null)
 			throw new IllegalArgumentException("Tournament cannot be null");
 		
@@ -144,7 +140,7 @@ public class GroupedSchedule {
 		timeslots = tournament.getAllTimeslots();
 		this.matches = tournament.getSchedule().getMatches();
 		
-		groupedSchedule = new GroupedScheduleValue[localizations.size()][timeslots.size()];
+		schedule = new LocalizationScheduleValue[localizations.size()][timeslots.size()];
 		
 		int nTimeslots = timeslots.size();
 		int nLocalization = localizations.size();
@@ -152,7 +148,7 @@ public class GroupedSchedule {
 		// Al principio se marca todo el horario como libre
 		for (int i = 0; i < nLocalization; i++)
 			for (int j = 0; j < nTimeslots; j++)
-				groupedSchedule[i][j] = new GroupedScheduleValue(GroupedScheduleValue.FREE);
+				schedule[i][j] = new LocalizationScheduleValue(LocalizationScheduleValue.FREE);
 		
 		List<Event> events = tournament.getEvents();
 		
@@ -167,7 +163,7 @@ public class GroupedSchedule {
 				for (Timeslot timeslot : eventBreaks) {
 					int t = timeslots.indexOf(timeslot);
 					for (int c = 0; c < nLocalization; c++)
-						groupedSchedule[c][t] = new GroupedScheduleValue(GroupedScheduleValue.LIMITED);
+						schedule[c][t] = new LocalizationScheduleValue(LocalizationScheduleValue.LIMITED);
 				}	
 				breaks.put(event, eventBreaks);
 			}
@@ -184,9 +180,9 @@ public class GroupedSchedule {
 					// más adelante solamente funciona para un torneo con más de una categoría
 					for (Timeslot timeslot : unavailableLocalizationTimeslots)
 						if (events.size() > 1)
-							groupedSchedule[c][timeslots.indexOf(timeslot)] = new GroupedScheduleValue(GroupedScheduleValue.LIMITED);
+							schedule[c][timeslots.indexOf(timeslot)] = new LocalizationScheduleValue(LocalizationScheduleValue.LIMITED);
 						else
-							groupedSchedule[c][timeslots.indexOf(timeslot)] = new GroupedScheduleValue(GroupedScheduleValue.UNAVAILABLE);
+							schedule[c][timeslots.indexOf(timeslot)] = new LocalizationScheduleValue(LocalizationScheduleValue.UNAVAILABLE);
 				}
 				unavailableLocalizations.put(event, eventUnavailableLocalizations);
 			}
@@ -209,7 +205,7 @@ public class GroupedSchedule {
 					}
 				}
 				if (all)
-					groupedSchedule[c][t] = new GroupedScheduleValue(GroupedScheduleValue.UNAVAILABLE);
+					schedule[c][t] = new LocalizationScheduleValue(LocalizationScheduleValue.UNAVAILABLE);
 			}
 		}
 		
@@ -242,7 +238,7 @@ public class GroupedSchedule {
 						}
 						
 						if (all)
-							groupedSchedule[c][t] = new GroupedScheduleValue(GroupedScheduleValue.UNAVAILABLE);
+							schedule[c][t] = new LocalizationScheduleValue(LocalizationScheduleValue.UNAVAILABLE);
 					}
 				}
 			}	
@@ -258,17 +254,13 @@ public class GroupedSchedule {
 			for (Player player : matchPlayers)
 				playersIndices.add(players.indexOf(player));
 				
-			groupedSchedule[c][t] = new GroupedScheduleValue(GroupedScheduleValue.OCCUPIED, playersIndices);
+			schedule[c][t] = new LocalizationScheduleValueOccupied(playersIndices);
 			
 			int matchDuration = match.getDuration();
 			if (matchDuration > 1)
 				for (int i = 1; i < matchDuration; i++)
-					groupedSchedule[c][i + t] = new GroupedScheduleValue(GroupedScheduleValue.CONTINUATION);
+					schedule[c][i + t] = new LocalizationScheduleValue(LocalizationScheduleValue.CONTINUATION);
 		}
-	}
-	
-	public GroupedScheduleValue[][] getScheduleValues() {
-		return groupedSchedule;
 	}
 	
 	/**
@@ -290,7 +282,7 @@ public class GroupedSchedule {
 			availableTimeslots = 0;
 			for (int c = 0; c < localizations.size(); c++) {
 				for (int t = 0; t < timeslots.size(); t++) {
-					GroupedScheduleValue val = groupedSchedule[c][t];
+					LocalizationScheduleValue val = (LocalizationScheduleValue)schedule[c][t];
 					if (val.isOccupied() || val.isContinuation() || val.isFree())
 						availableTimeslots++;
 				}
@@ -309,9 +301,10 @@ public class GroupedSchedule {
 			occupation = 0;
 			for (int c = 0; c < localizations.size(); c++) {
 				for (int t = 0; t < timeslots.size(); t++) {
-					GroupedScheduleValue val = groupedSchedule[c][t];
-					if (val.isOccupied() || val.isContinuation())
+					LocalizationScheduleValue val = (LocalizationScheduleValue)schedule[c][t];
+					if (val.isOccupied() || val.isContinuation()) {
 						occupation++;
+					}
 				}
 			}
 		}
@@ -340,8 +333,8 @@ public class GroupedSchedule {
 		}
 		
 		int padding = maxPlayersPerMatch * 2 + 4;
-		int nTimeslots = groupedSchedule[0].length;
-		int nLocalizations = groupedSchedule.length;
+		int nTimeslots = schedule[0].length;
+		int nLocalizations = schedule.length;
 		
 		for (int t = 0; t < nTimeslots; t++)
 			sb.append(String.format("%" + padding + "s", "t" + t));
@@ -350,7 +343,7 @@ public class GroupedSchedule {
 		for (int c = 0; c < nLocalizations; c++) {
 			sb.append(String.format("%8s", localizations.get(c)));
 			for (int t = 0; t < nTimeslots; t++) {
-				sb.append(String.format("%" + padding + "s", groupedSchedule[c][t]));
+				sb.append(String.format("%" + padding + "s", schedule[c][t]));
 			}
 			sb.append("\n");
 		}

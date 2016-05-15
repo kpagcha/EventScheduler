@@ -15,6 +15,9 @@ import org.hamcrest.core.StringContains;
 import org.junit.Before;
 import org.junit.Test;
 
+import data.model.schedule.value.AbstractScheduleValue;
+import data.model.schedule.value.PlayerScheduleValue;
+import data.model.schedule.value.PlayerScheduleValueOccupied;
 import data.model.schedule.value.ScheduleValue;
 import data.model.tournament.Tournament;
 import data.model.tournament.event.Event;
@@ -81,7 +84,8 @@ public class ScheduleTest {
 			assertEquals(event, schedule.getEvent());
 			assertEquals(event.getNumberOfMatches(), matches.size());
 			
-			List<ScheduleValue> vals = Stream.of(schedule.getScheduleValues()).flatMap(v -> Arrays.stream(v)).collect(Collectors.toList());
+			List<AbstractScheduleValue> vals = Stream.of(schedule.getScheduleValues())
+				.flatMap(v -> Arrays.stream(v)).collect(Collectors.toList());
 			
 			assertEquals(
 				event.getNumberOfOccupiedTimeslots(),
@@ -133,7 +137,7 @@ public class ScheduleTest {
 		tournament.solve();
 		TournamentSchedule schedule = tournament.getSchedule();
 		
-		List<ScheduleValue> vals = Stream.of(schedule.getScheduleValues()).flatMap(v -> Arrays.stream(v)).collect(Collectors.toList());
+		List<AbstractScheduleValue> vals = Stream.of(schedule.getScheduleValues()).flatMap(v -> Arrays.stream(v)).collect(Collectors.toList());
 		
 		assertEquals(
 			tournament.getNumberOfOccupiedTimeslots(),
@@ -252,63 +256,34 @@ public class ScheduleTest {
 	
 	@Test
 	public void scheduleValueTest() {
-		ScheduleValue v = new ScheduleValue(ScheduleValue.FREE);
-		assertEquals(v.getValue(), ScheduleValue.FREE);
+		PlayerScheduleValue v = new PlayerScheduleValue(PlayerScheduleValue.FREE);
+		assertEquals(v.getValue(), PlayerScheduleValue.FREE);
 		assertTrue(v.isFree());
 		assertFalse(v.isOccupied());
 		
-		v = new ScheduleValue(ScheduleValue.OCCUPIED, 2);
-		assertEquals(ScheduleValue.OCCUPIED, v.getValue());
-		assertEquals(2, v.getLocalization());
+		v = new PlayerScheduleValueOccupied(2);
+		assertEquals(PlayerScheduleValue.OCCUPIED, v.getValue());
+		assertEquals(2, ((PlayerScheduleValueOccupied)v).getLocalization());
 		assertTrue(v.isOccupied());
 		assertFalse(v.isFree());
 		
-		v = new ScheduleValue(ScheduleValue.UNAVAILABLE);
+		v = new PlayerScheduleValue(PlayerScheduleValue.UNAVAILABLE);
 		assertTrue(v.isUnavailable());
 		
-		v = new ScheduleValue(ScheduleValue.BREAK);
+		v = new PlayerScheduleValue(PlayerScheduleValue.BREAK);
 		assertTrue(v.isBreak());
 		
-		v = new ScheduleValue(ScheduleValue.LIMITED);
+		v = new PlayerScheduleValue(PlayerScheduleValue.LIMITED);
 		assertTrue(v.isLimited());
 		
-		v = new ScheduleValue(ScheduleValue.NOT_IN_DOMAIN);
+		v = new PlayerScheduleValue(PlayerScheduleValue.NOT_IN_DOMAIN);
 		assertTrue(v.isNotInDomain());
 		
 		try {
-			v = new ScheduleValue(ScheduleValue.FREE + 20);
-			fail("IllegalArgumentException expected for invalid schedule value");
-		} catch (IllegalArgumentException e) {
-			assertThat(e.getMessage(), StringContains.containsString("Illegal value"));
-		}
-		
-		try {
-			v = new ScheduleValue(ScheduleValue.OCCUPIED);
+			new PlayerScheduleValue(new ScheduleValue("UNKNOWN"));
 			fail("IllegalArgumentException expected");
 		} catch (IllegalArgumentException e) {
-			assertEquals("A localization must be specified if the schedule value is OCCUPIED", e.getMessage());
-		}
-		
-		try {
-			v = new ScheduleValue(ScheduleValue.OCCUPIED + 20, 5);
-			fail("IllegalArgumentException expected for invalid schedule value");
-		} catch (IllegalArgumentException e) {
-			assertThat(e.getMessage(), StringContains.containsString("Illegal value"));
-		}
-		
-		try {
-			v = new ScheduleValue(ScheduleValue.BREAK, 0);
-			fail("IllegalArgumentException expected for invalid schedule value");
-		} catch (IllegalArgumentException e) {
-			assertEquals("Only schedule values of OCCUPIED can specify a localization", e.getMessage());
-		}
-		
-		try {
-			v = new ScheduleValue(ScheduleValue.FREE);
-			v.getLocalization();
-			fail("IllegalStateException expected for invalid schedule value");
-		} catch (IllegalStateException e) {
-			assertEquals("Only schedule values of OCCUPIED can specify a localization", e.getMessage());
+			assertEquals(e.getMessage(), "Illegal value");
 		}
 	}
 }

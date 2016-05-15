@@ -2,7 +2,7 @@ import java.util.List;
 import java.util.Scanner;
 
 import data.model.schedule.TournamentSchedule;
-import data.model.schedule.GroupedSchedule;
+import data.model.schedule.LocalizationSchedule;
 import data.model.schedule.Match;
 import data.model.tournament.Tournament;
 import data.model.tournament.event.domain.Player;
@@ -100,7 +100,7 @@ public class Application {
 							System.out.println();
 						}
 						
-						GroupedSchedule groupedSchedule = new GroupedSchedule(tournament);
+						LocalizationSchedule groupedSchedule = new LocalizationSchedule(tournament);
 						System.out.println("Combined schedule grouped by courts");
 						System.out.println(groupedSchedule);
 						

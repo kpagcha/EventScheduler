@@ -3,7 +3,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
 
-import data.model.schedule.GroupedScheduleTest;
+import data.model.schedule.LocalizationScheduleTest;
 import data.model.schedule.MatchTest;
 import data.model.schedule.ScheduleTest;
 import data.model.tournament.EntityTest;
@@ -27,7 +27,7 @@ import solver.TournamentSolverTest;
 	TournamentTest.class,
 	ScheduleTest.class,
 	MatchTest.class,
-	GroupedScheduleTest.class,
+	LocalizationScheduleTest.class,
 	ValidationTest.class,
 	TournamentSolverTest.class
 })
