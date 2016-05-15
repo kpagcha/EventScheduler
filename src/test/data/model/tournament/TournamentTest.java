@@ -26,10 +26,10 @@ import org.junit.rules.ExpectedException;
 import data.model.schedule.EventSchedule;
 import data.model.schedule.TournamentSchedule;
 import data.model.tournament.event.Event;
-import data.model.tournament.event.entity.Localization;
-import data.model.tournament.event.entity.Player;
-import data.model.tournament.event.entity.timeslot.AbstractTimeslot;
-import data.model.tournament.event.entity.timeslot.Timeslot;
+import data.model.tournament.event.domain.Localization;
+import data.model.tournament.event.domain.Player;
+import data.model.tournament.event.domain.timeslot.AbstractTimeslot;
+import data.model.tournament.event.domain.timeslot.Timeslot;
 import data.validation.validable.ValidationException;
 import data.validation.validator.tournament.TournamentValidator;
 import solver.TournamentSolver.SearchStrategy;
@@ -78,6 +78,9 @@ public class TournamentTest {
 		assertEquals(24, tournament.getAllPlayers().size());
 		assertEquals(2, tournament.getAllLocalizations().size());
 		assertEquals(10, tournament.getAllTimeslots().size());
+		
+		for (Event event : tournament.getEvents())
+			assertEquals(tournament, event.getTournament());
 		
 		localizations = TournamentUtils.buildGenericLocalizations(3, "Localization");
 		timeslots = TournamentUtils.buildAbstractTimeslots(15);
@@ -439,6 +442,38 @@ public class TournamentTest {
 		} catch (IllegalArgumentException e) {
 			assertEquals("The parameters cannot be null", e.getMessage());
 		}
+		
+		t.addUnavailablePlayerAtTimeslotRange(player2, timeslots.get(3), timeslots.get(6));
+		assertEquals(4, e1.getUnavailablePlayers().get(player2).size());
+		assertEquals(2, e2.getUnavailablePlayers().get(player2).size());
+		assertNull(e3.getUnavailablePlayers().get(player2));
+		
+		Player player9 = players.get(9);
+		t.addUnavailablePlayerAtTimeslotRange(player9, timeslots.get(16), timeslots.get(14));
+		assertNull(e1.getUnavailablePlayers().get(player9));
+		assertEquals(1, e2.getUnavailablePlayers().get(player9).size());
+		assertEquals(3, e3.getUnavailablePlayers().get(player9).size());
+		
+		try {
+			t.addUnavailablePlayerAtTimeslotRange(new Player("Unknown Player"), timeslots.get(9), timeslots.get(13));
+			fail("IllegalArgumentException expected");
+		} catch (IllegalArgumentException e) {
+			assertThat(e.getMessage(), StringContains.containsString("does not exist in the list of players"));
+		}
+		
+		try {
+			t.addUnavailablePlayerAtTimeslotRange(player9, new AbstractTimeslot(2), timeslots.get(13));
+			fail("IllegalArgumentException expected");
+		} catch (IllegalArgumentException e) {
+			assertThat(e.getMessage(), StringContains.containsString("does not exist in the list of timeslots"));
+		}
+
+		try {
+			t.addUnavailablePlayerAtTimeslotRange(players.get(5), timeslots.get(9), new AbstractTimeslot(4));
+			fail("IllegalArgumentException expected");
+		} catch (IllegalArgumentException e) {
+			assertThat(e.getMessage(), StringContains.containsString("does not exist in the list of timeslots"));
+		}
 	}
 	
 	@Test
@@ -560,6 +595,16 @@ public class TournamentTest {
 		t.removeUnavailableLocalizationAtTimeslot(localizations.get(3), timeslots.get(3));
 		assertEquals(1, e2.getUnavailableLocalizations().size());
 		
+		t.addUnavailableLocalizationAtTimeslotRange(localizations.get(3), timeslots.get(2), timeslots.get(6));
+		assertEquals(5, e1.getUnavailableLocalizations().get(localizations.get(3)).size());
+		assertEquals(3, e2.getUnavailableLocalizations().get(localizations.get(3)).size());
+		assertNull(e3.getUnavailableLocalizations().get(localizations.get(3)));
+		
+		t.addUnavailableLocalizationAtTimeslotRange(localizations.get(6), timeslots.get(13), timeslots.get(17));
+		assertNull(e1.getUnavailableLocalizations().get(localizations.get(6)));
+		assertEquals(2, e2.getUnavailableLocalizations().get(localizations.get(6)).size());
+		assertEquals(5, e3.getUnavailableLocalizations().get(localizations.get(6)).size());
+		
 		try {
 			t.addUnavailableLocalizationAtTimeslot(null, timeslots.get(0));
 			fail("IllegalArgumentException expected");
@@ -607,6 +652,27 @@ public class TournamentTest {
 			fail("IllegalArgumentException expected");
 		} catch (IllegalArgumentException e) {
 			assertEquals("The parameters cannot be null", e.getMessage());
+		}
+		
+		try {
+			t.addUnavailableLocalizationAtTimeslotRange(new Localization("Unknown Localization"), timeslots.get(4), timeslots.get(10));
+			fail("IllegalArgumentException expected");
+		} catch (IllegalArgumentException e) {
+			assertThat(e.getMessage(), StringContains.containsString("does not exist in the list of localizations"));
+		}
+		
+		try {
+			t.addUnavailableLocalizationAtTimeslotRange(localizations.get(4), new AbstractTimeslot(3), timeslots.get(10));
+			fail("IllegalArgumentException expected");
+		} catch (IllegalArgumentException e) {
+			assertThat(e.getMessage(), StringContains.containsString("does not exist in the list of timeslots"));
+		}
+		
+		try {
+			t.addUnavailableLocalizationAtTimeslotRange(localizations.get(4), timeslots.get(10), new AbstractTimeslot(3));
+			fail("IllegalArgumentException expected");
+		} catch (IllegalArgumentException e) {
+			assertThat(e.getMessage(), StringContains.containsString("does not exist in the list of timeslots"));
 		}
 	}
 	

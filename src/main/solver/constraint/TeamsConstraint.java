@@ -5,18 +5,17 @@ import java.util.Set;
 
 import org.chocosolver.solver.constraints.IntConstraintFactory;
 
-import data.model.tournament.Tournament;
 import data.model.tournament.event.Event;
-import data.model.tournament.event.entity.Player;
-import data.model.tournament.event.entity.Team;
+import data.model.tournament.event.domain.Player;
+import data.model.tournament.event.domain.Team;
 
 /**
  * Asegura que los jugadores que componen un equipo jueguen en el mismo partido
  */
 public class TeamsConstraint extends EventConstraint {
 
-	public TeamsConstraint(Event e, Tournament tournament) {
-		super(e, tournament);
+	public TeamsConstraint(Event e) {
+		super(e);
 		
 		List<Team> teams = event.getTeams();
 		int nLocalizations = e.getLocalizations().size();

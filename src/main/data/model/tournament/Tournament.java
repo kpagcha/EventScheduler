@@ -12,11 +12,11 @@ import java.util.stream.Collectors;
 
 import data.model.schedule.TournamentSchedule;
 import data.model.schedule.EventSchedule;
-import data.model.schedule.data.Match;
+import data.model.schedule.Match;
 import data.model.tournament.event.Event;
-import data.model.tournament.event.entity.Localization;
-import data.model.tournament.event.entity.Player;
-import data.model.tournament.event.entity.timeslot.Timeslot;
+import data.model.tournament.event.domain.Localization;
+import data.model.tournament.event.domain.Player;
+import data.model.tournament.event.domain.timeslot.Timeslot;
 import data.validation.validable.Validable;
 import data.validation.validable.ValidationException;
 import data.validation.validator.Validator;
@@ -132,6 +132,8 @@ public class Tournament implements Validable {
 			for (Localization localization : event.getLocalizations())
 				if (!allLocalizations.contains(localization))
 					allLocalizations.add(localization);
+		
+		events.forEach(e -> e.setTournament(this));
 		
 		solver = new TournamentSolver(this);
 	}
@@ -311,22 +313,6 @@ public class Tournament implements Validable {
 	}
 	
 	/**
-	 * Añade timeslots no disponibles para el jugador en todas las categorías donde participe. Si el jugador no participa
-	 * en determinadas categorías o si éstas no incluyen en su horas de juego algunas de las horas en el conjunto <code>timeslots</code>,
-	 * se ignoran esos valores para esa categoría en concreto
-	 * 
-	 * @param player cualquier jugador
-	 * @param timeslots cualquier conjunto no nulo de horas en las que el jugador no esté disponible
-	 */
-	public void addUnavailablePlayerAtTimeslots(Player player, Set<Timeslot> timeslots) {
-		if (player == null || timeslots == null)
-			throw new IllegalArgumentException("The parameters cannot be null");
-		
-		for (Timeslot timeslot : timeslots)
-			addUnavailablePlayerAtTimeslot(player, timeslot);
-	}
-	
-	/**
 	 * Añade un timeslot no disponible para el jugador en todas las categorías donde participe. Si el jugador no participa
 	 * en una categoría o si la hora <code>timeslot</code> no pertenece al dominio de juego de la misma, se ignora para esa
 	 * categoría, así como si la hora ya ha sido marcada como no disponible para el jugador
@@ -347,6 +333,61 @@ public class Tournament implements Validable {
 	}
 	
 	/**
+	 * Añade timeslots no disponibles para el jugador en todas las categorías donde participe. Si el jugador no participa
+	 * en determinadas categorías o si éstas no incluyen en su horas de juego algunas de las horas en el conjunto <code>timeslots</code>,
+	 * se ignoran esos valores para esa categoría en concreto
+	 * 
+	 * @param player cualquier jugador
+	 * @param timeslots cualquier conjunto no nulo de horas en las que el jugador no esté disponible
+	 */
+	public void addUnavailablePlayerAtTimeslots(Player player, Set<Timeslot> timeslots) {
+		if (player == null || timeslots == null)
+			throw new IllegalArgumentException("The parameters cannot be null");
+		
+		for (Timeslot timeslot : timeslots)
+			addUnavailablePlayerAtTimeslot(player, timeslot);
+	}
+	
+	/**
+	 * Añade el rango de <i>timeslots</i> no disponibles para el jugador en todas las categorías donde participe. 
+	 * <p>Si el jugador no participa en determinadas categorías o si éstas no incluyen en su horas de juego algunas 
+	 * de las horas en el conjunto <code>timeslots</code>, se ignoran esos valores para esa categoría en concreto
+	 * 
+	 * @param player jugador del torneo
+	 * @param t1 un extremo del rango, perteneciente a las horas del torneo
+	 * @param t2 el otro extremo del rango
+	 * @throws IllegalArgumentException si alguno de los parámetros no existe en el dominio del torneo
+	 */
+	public void addUnavailablePlayerAtTimeslotRange(Player player, Timeslot t1, Timeslot t2) {
+		if (!allPlayers.contains(player))
+			throw new IllegalArgumentException(
+				String.format("Player (%s) does not exist in the list of players of the tournament", player)
+			);
+		
+		if (!allTimeslots.contains(t1))
+			throw new IllegalArgumentException(
+				String.format("Timeslots (%s) does not exist in the list of timeslots of the tournament", t1)
+			);
+		
+		if (!allTimeslots.contains(t2))
+			throw new IllegalArgumentException(
+				String.format("Timeslots (%s) does not exist in the list of timeslots of the tournament", t2)
+			);
+		
+		Timeslot start, end;
+		if (t1.compareTo(t2) >= 0) {
+			start = t1;
+			end = t2;
+		} else {
+			start = t2;
+			end = t1;
+		}
+		
+		for (int t = allTimeslots.indexOf(start); t <= allTimeslots.indexOf(end); t++)
+			addUnavailablePlayerAtTimeslot(player, allTimeslots.get(t));
+	}
+	
+	/**
 	 * Si el jugador no está disponible a la hora <code>timeslot</code>, se elimina de la lista y vuelve a estar disponible a esa hora,
 	 * para todas las categorías. Si el jugador no pertenece a una categoría o la hora no existe en el dominio de ésta, no se
 	 * lleva a cabo ninguna acción para esa categoría, así como si la hora ya ha sido marcada como no disponible para el jugador
@@ -361,6 +402,21 @@ public class Tournament implements Validable {
 		for (Event event : events)
 			if (event.getPlayers().contains(player) && event.getTimeslots().contains(timeslot))
 				event.removePlayerUnavailableAtTimeslot(player, timeslot);
+	}
+	
+	/**
+	 * Añade el timeslot como un break para todas las categorías. Si una categoría no incluye en su dominio el timeslot o si éste
+	 * ya ha sido marcado como break, no se lleva a cabo ninguna acción
+	 * 
+	 * @param timeslotBreak una hora cualquiera
+	 */
+	public void addBreak(Timeslot timeslotBreak) {
+		if (timeslotBreak == null)
+			throw new IllegalArgumentException("Break cannot be null");
+		
+		for (Event event : events)
+			if (event.getTimeslots().contains(timeslotBreak) && !event.isBreak(timeslotBreak))
+				event.addBreak(timeslotBreak);
 	}
 	
 	/**
@@ -381,21 +437,6 @@ public class Tournament implements Validable {
 	}
 	
 	/**
-	 * Añade el timeslot como un break para todas las categorías. Si una categoría no incluye en su dominio el timeslot o si éste
-	 * ya ha sido marcado como break, no se lleva a cabo ninguna acción
-	 * 
-	 * @param timeslotBreak una hora cualquiera
-	 */
-	public void addBreak(Timeslot timeslotBreak) {
-		if (timeslotBreak == null)
-			throw new IllegalArgumentException("Break cannot be null");
-		
-		for (Event event : events)
-			if (event.getTimeslots().contains(timeslotBreak) && !event.isBreak(timeslotBreak))
-				event.addBreak(timeslotBreak);
-	}
-	
-	/**
 	 * Elimina el break para todas las categorías, si existe ese timeslot en el dominio del evento y si ha sido marcado como 
 	 * break, de lo contrario no se hace nada
 	 * 
@@ -411,7 +452,7 @@ public class Tournament implements Validable {
 	}
 	
 	/**
-	 * Invalida una pista a una hora o timeslot para todas las categorías, si la categoría tiene dicha pista
+	 * Invalida una localización a una hora o timeslot para todas las categorías, si la categoría tiene dicha localización
 	 * y dicha hora, de lo contrario no se toma ninguna acción, así como si la hora ya ha sido marcada 
 	 * como no disponible para la localización
 	 * 
@@ -430,7 +471,8 @@ public class Tournament implements Validable {
 	}
 	
 	/**
-	 * Añade una pista no disponible a las horas indicadas para todas las categorías
+	 * Añade una localización no disponible a las horas indicadas para todas las categorías, si incluyen la
+	 * localización y las horas, y si no se han añadido ya
 	 * 
 	 * @param localization una localización de juego que se marca como inválida a las horas especificadas
 	 * @param timeslots el conjunto de horas a las que se marca la pista inválida
@@ -441,6 +483,44 @@ public class Tournament implements Validable {
 		
 		for (Timeslot timeslot : timeslots)
 			addUnavailableLocalizationAtTimeslot(localization, timeslot);
+	}
+	
+	/**
+	 * Añade una pista no disponible en un rango de horas para todas las categorías, si incluyen la
+	 * localización y las horas, y si no se han añadido ya
+	 * 
+	 * @param localization localización de juego del torneo
+	 * @param t1 un extremo del rango de horas, perteneciente al torneo
+	 * @param t2 el otro extremo del rango, perteneciente a las horas del torneo
+	 * @throws IllegalArgumentException si alguno de los parámetros no pertenecen al dominio del torneo
+	 */
+	public void addUnavailableLocalizationAtTimeslotRange(Localization localization, Timeslot t1, Timeslot t2) {
+		if (!allLocalizations.contains(localization))
+			throw new IllegalArgumentException(
+				String.format("Localization (%s) does not exist in the list of localizations of the tournament", localization)
+			);
+		
+		if (!allTimeslots.contains(t1))
+			throw new IllegalArgumentException(
+				String.format("Timeslots (%s) does not exist in the list of timeslots of the tournament", t1)
+			);
+		
+		if (!allTimeslots.contains(t2))
+			throw new IllegalArgumentException(
+				String.format("Timeslots (%s) does not exist in the list of timeslots of the tournament", t2)
+			);
+		
+		Timeslot start, end;
+		if (t1.compareTo(t2) >= 0) {
+			start = t1;
+			end = t2;
+		} else {
+			start = t2;
+			end = t1;
+		}
+		
+		for (int t = allTimeslots.indexOf(start); t <= allTimeslots.indexOf(end); t++)
+			addUnavailableLocalizationAtTimeslot(localization, allTimeslots.get(t));
 	}
 	
 	/**

@@ -6,11 +6,10 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import data.model.schedule.data.Match;
-import data.model.schedule.data.ScheduleValue;
-import data.model.tournament.event.entity.Localization;
-import data.model.tournament.event.entity.Player;
-import data.model.tournament.event.entity.timeslot.Timeslot;
+import data.model.schedule.value.ScheduleValue;
+import data.model.tournament.event.domain.Localization;
+import data.model.tournament.event.domain.Player;
+import data.model.tournament.event.domain.timeslot.Timeslot;
 
 /**
  * Representa un horario mediante una matriz bidimensional de

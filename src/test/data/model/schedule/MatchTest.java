@@ -13,12 +13,11 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import data.model.schedule.data.Match;
-import data.model.tournament.event.entity.Localization;
-import data.model.tournament.event.entity.Player;
-import data.model.tournament.event.entity.Team;
-import data.model.tournament.event.entity.timeslot.DefiniteTimeslot;
-import data.model.tournament.event.entity.timeslot.Timeslot;
+import data.model.tournament.event.domain.Localization;
+import data.model.tournament.event.domain.Player;
+import data.model.tournament.event.domain.Team;
+import data.model.tournament.event.domain.timeslot.DefiniteTimeslot;
+import data.model.tournament.event.domain.timeslot.Timeslot;
 import utils.TournamentUtils;
 
 public class MatchTest {

@@ -6,9 +6,8 @@ import org.chocosolver.solver.constraints.IntConstraintFactory;
 import org.chocosolver.solver.variables.IntVar;
 import org.chocosolver.solver.variables.VariableFactory;
 
-import data.model.tournament.Tournament;
 import data.model.tournament.event.Event;
-import data.model.tournament.event.entity.timeslot.Timeslot;
+import data.model.tournament.event.domain.timeslot.Timeslot;
 
 /**
  * Define la restricción para que solamemente haya dos números posibles de jugadores en una
@@ -16,8 +15,8 @@ import data.model.tournament.event.entity.timeslot.Timeslot;
  */
 public class LocalizationOccupationConstraint extends EventConstraint {
 
-	public LocalizationOccupationConstraint(Event e, Tournament tournament) {
-		super(e, tournament);
+	public LocalizationOccupationConstraint(Event e) {
+		super(e);
 		
 		int nPlayers = e.getPlayers().size();
 		int nLocalizations = e.getLocalizations().size();

@@ -1,4 +1,4 @@
-package data.model.tournament.event.entity;
+package data.model.tournament;
 
 import static org.junit.Assert.*;
 
@@ -9,10 +9,10 @@ import java.util.List;
 
 import org.junit.Test;
 
-import data.model.tournament.event.entity.timeslot.AbstractTimeslot;
-import data.model.tournament.event.entity.timeslot.DefiniteTimeslot;
-import data.model.tournament.event.entity.timeslot.Timeslot;
-import data.model.tournament.event.entity.timeslot.UndefiniteTimeslot;
+import data.model.tournament.event.domain.timeslot.AbstractTimeslot;
+import data.model.tournament.event.domain.timeslot.DefiniteTimeslot;
+import data.model.tournament.event.domain.timeslot.Timeslot;
+import data.model.tournament.event.domain.timeslot.UndefiniteTimeslot;
 import utils.TournamentUtils;
 
 public class TimeslotTest {

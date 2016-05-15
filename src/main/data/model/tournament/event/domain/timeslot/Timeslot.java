@@ -1,4 +1,4 @@
-package data.model.tournament.event.entity.timeslot;
+package data.model.tournament.event.domain.timeslot;
 
 /**
  * Representa una hora de juego en la que discurre un partido o enfrentamiento perteneciente a un evento o

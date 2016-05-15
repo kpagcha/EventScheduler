@@ -1,4 +1,4 @@
-package data.model.schedule.data;
+package data.model.schedule;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -6,10 +6,10 @@ import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 
-import data.model.tournament.event.entity.Localization;
-import data.model.tournament.event.entity.Player;
-import data.model.tournament.event.entity.Team;
-import data.model.tournament.event.entity.timeslot.Timeslot;
+import data.model.tournament.event.domain.Localization;
+import data.model.tournament.event.domain.Player;
+import data.model.tournament.event.domain.Team;
+import data.model.tournament.event.domain.timeslot.Timeslot;
 
 /**
  * Representa un partido o enfrentamiento. Un partido normalmente se compone de dos o más jugadores que se enfrentan

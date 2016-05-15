@@ -11,7 +11,8 @@ import org.chocosolver.solver.variables.VariableFactory;
 
 import data.model.tournament.Tournament;
 import data.model.tournament.event.Event;
-import data.model.tournament.event.entity.timeslot.Timeslot;
+import data.model.tournament.event.domain.Localization;
+import data.model.tournament.event.domain.timeslot.Timeslot;
 
 /**
  * Para todas las categorías del torneo, controla que no se juegue en la misma pista a la misma hora
@@ -32,8 +33,8 @@ public class LocalizationCollisionConstraint extends TournamentConstraint {
 		int nAllTimeslots = timeslots.size();
 		int nCategories = tournament.getEvents().size();
 		
-		int[][] timeslotsIndices = tournamentSolver.getTimeslotsIndices();
-		int[][] courtsIndices = tournamentSolver.getLocalizationsIndices();
+		int[][] timeslotsIndices = getTimeslotsIndices();
+		int[][] courtsIndices = getLocalizationsIndices();
 		
 		List<Event> events = tournament.getEvents();
 		
@@ -119,5 +120,57 @@ public class LocalizationCollisionConstraint extends TournamentConstraint {
 			array[i] = keysArray[i - 1];
 		
 		return array;
+	}
+	
+	/**
+	 * Devuelve los índices de cada timeslot en el array de horas de juego (timeslots) correspondiente a cada categoría 
+	 */
+	private int[][] getTimeslotsIndices() {
+		List<Timeslot> allTimeslots = tournament.getAllTimeslots();
+		List<Event> events = tournament.getEvents();
+		int nCategories = events.size();
+		
+		int [][] timeslotsIndices = new int[allTimeslots.size()][nCategories];
+		for (int i = 0; i < allTimeslots.size(); i++) {
+			for (int e = 0; e < nCategories; e++) {
+				List<Timeslot> eventTimeslots = events.get(e).getTimeslots();
+				Timeslot timeslot = allTimeslots.get(i);
+				
+				for (int j = 0; j < eventTimeslots.size(); j++) {
+					if (timeslot.equals(eventTimeslots.get(j))) {
+						timeslotsIndices[i][e] = j;
+						break;
+					}
+					timeslotsIndices[i][e] = -1;
+				}
+			}
+		}
+		return timeslotsIndices;
+	}
+	
+	/**
+	 * Devuelve los índices de cada pista en el array de localidades de juego (pistas) correspondiente a cada categoría 
+	 */
+	private int[][] getLocalizationsIndices() {
+		List<Localization> allLocalizations = tournament.getAllLocalizations();
+		List<Event> events = tournament.getEvents();
+		int nCategories = events.size();
+		
+		int[][] courtsIndices = new int[allLocalizations.size()][nCategories];
+		for (int i = 0; i < allLocalizations.size(); i++) {
+			for (int e = 0; e < nCategories; e++) {
+				List<Localization> eventCourts = events.get(e).getLocalizations();
+				Localization court = allLocalizations.get(i);
+				
+				for (int j = 0; j < eventCourts.size(); j++) {
+					if (court.equals(eventCourts.get(j))) {
+						courtsIndices[i][e] = j;
+						break;
+					}
+					courtsIndices[i][e] = -1;
+				}
+			}
+		}
+		return courtsIndices;
 	}
 }

@@ -14,13 +14,12 @@ import org.hamcrest.core.StringContains;
 import org.junit.Before;
 import org.junit.Test;
 
-import data.model.schedule.data.GroupedScheduleValue;
-import data.model.schedule.data.Match;
+import data.model.schedule.value.GroupedScheduleValue;
 import data.model.tournament.Tournament;
 import data.model.tournament.event.Event;
-import data.model.tournament.event.entity.Localization;
-import data.model.tournament.event.entity.Player;
-import data.model.tournament.event.entity.timeslot.Timeslot;
+import data.model.tournament.event.domain.Localization;
+import data.model.tournament.event.domain.Player;
+import data.model.tournament.event.domain.timeslot.Timeslot;
 import data.validation.validable.ValidationException;
 import solver.TournamentSolver.SearchStrategy;
 import utils.TournamentUtils;

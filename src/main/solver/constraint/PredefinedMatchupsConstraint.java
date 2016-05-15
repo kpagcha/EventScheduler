@@ -6,9 +6,8 @@ import org.chocosolver.solver.constraints.IntConstraintFactory;
 import org.chocosolver.solver.variables.IntVar;
 import org.chocosolver.solver.variables.VariableFactory;
 
-import data.model.tournament.Tournament;
 import data.model.tournament.event.Event;
-import data.model.tournament.event.entity.Player;
+import data.model.tournament.event.domain.Player;
 import solver.TournamentSolver.MatchupMode;
 
 /**
@@ -18,8 +17,8 @@ import solver.TournamentSolver.MatchupMode;
  */
 public class PredefinedMatchupsConstraint extends EventConstraint {
 
-	public PredefinedMatchupsConstraint(Event event, Tournament tournament) {
-		super(event, tournament);
+	public PredefinedMatchupsConstraint(Event event) {
+		super(event);
 
 		MatchupMode matchupMode = event.getMatchupMode();
 		

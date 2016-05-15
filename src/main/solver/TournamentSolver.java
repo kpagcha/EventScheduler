@@ -21,9 +21,9 @@ import org.chocosolver.util.tools.ArrayUtils;
 import data.model.schedule.EventSchedule;
 import data.model.tournament.Tournament;
 import data.model.tournament.event.Event;
-import data.model.tournament.event.entity.Localization;
-import data.model.tournament.event.entity.Player;
-import data.model.tournament.event.entity.timeslot.Timeslot;
+import data.model.tournament.event.domain.Localization;
+import data.model.tournament.event.domain.Player;
+import data.model.tournament.event.domain.timeslot.Timeslot;
 import solver.constraint.ConstraintBuilder;
 import solver.constraint.LocalizationCollisionConstraint;
 import solver.constraint.LocalizationOccupationConstraint;
@@ -131,25 +131,6 @@ public class TournamentSolver {
 	private Map<Event, EventSchedule> schedules;
 	
 	/**
-	 * Índices de cada jugador en el array de jugadores correspondiente a cada categoría
-	 * p.e. playersIndices[2][1] = 1 significa que el índice del jugador del torneo número 3, en
-	 * la categoría número 2 es 1 (si el jugador no existe en la categoría, el índice es -1)
-	 */
-	private int[][] playersIndices;
-	
-	
-	/**
-	 * Índices de cada timeslot en el array de timeslots correspondiente a cada categoría 
-	 */
-	private int[][] timeslotsIndices;
-	
-	
-	/**
-	 * Índices de cada pista en el array de localidades de juego (pistas) correspondiente a cada categoría 
-	 */
-	private int[][] courtsIndices;
-	
-	/**
 	 * Indica si se ha encontrado la última solución
 	 */
 	private boolean lastSolutionFound = false;
@@ -198,9 +179,6 @@ public class TournamentSolver {
 		LOGGER.setLevel(Level.WARNING);
 
 		List<Event> events = tournament.getEvents();
-		List<Player> allPlayers = tournament.getAllPlayers();
-		List<Localization> allLocalizations = tournament.getAllLocalizations();
-		List<Timeslot> allTimeslots = tournament.getAllTimeslots();
 		
 		int nCategories = events.size();
 
@@ -216,57 +194,9 @@ public class TournamentSolver {
 			x[e] = new IntVar[nPlayers][nLocalizations][nTimeslots];
 			g[e] = new IntVar[nPlayers][nLocalizations][nTimeslots];
 		}
-		
-		playersIndices = new int[allPlayers.size()][nCategories];
-		for (int i = 0; i < allPlayers.size(); i++) {
-			for (int e = 0; e < nCategories; e++) {
-				List<Player> eventPlayers = events.get(e).getPlayers();
-				Player player = allPlayers.get(i);
-				
-				for (int j = 0; j < eventPlayers.size(); j++) {
-					if (player.equals(eventPlayers.get(j))) {
-						playersIndices[i][e] = j;
-						break;
-					}
-					playersIndices[i][e] = -1;
-				}
-			}
-		}
-		
-		timeslotsIndices = new int[allTimeslots.size()][nCategories];
-		for (int i = 0; i < allTimeslots.size(); i++) {
-			for (int e = 0; e < nCategories; e++) {
-				List<Timeslot> eventTimeslots = events.get(e).getTimeslots();
-				Timeslot timeslot = allTimeslots.get(i);
-				
-				for (int j = 0; j < eventTimeslots.size(); j++) {
-					if (timeslot.equals(eventTimeslots.get(j))) {
-						timeslotsIndices[i][e] = j;
-						break;
-					}
-					timeslotsIndices[i][e] = -1;
-				}
-			}
-		}
-		
-		courtsIndices = new int[allLocalizations.size()][nCategories];
-		for (int i = 0; i < allLocalizations.size(); i++) {
-			for (int e = 0; e < nCategories; e++) {
-				List<Localization> eventCourts = events.get(e).getLocalizations();
-				Localization court = allLocalizations.get(i);
-				
-				for (int j = 0; j < eventCourts.size(); j++) {
-					if (court.equals(eventCourts.get(j))) {
-						courtsIndices[i][e] = j;
-						break;
-					}
-					courtsIndices[i][e] = -1;
-				}
-			}
-		}
 	}
 	
-	public Solver getSolver() {
+	public Solver getInternalSolver() {
 		return solver;
 	}
 	
@@ -289,18 +219,6 @@ public class TournamentSolver {
 	 */
 	public Map<Event, List<Set<Player>>> getPredefinedMatchups() {
 		return Collections.unmodifiableMap(predefinedMatchups);
-	}
-	
-	public int[][] getPlayersIndices() {
-		return playersIndices;
-	}
-	
-	public int[][] getLocalizationsIndices() {
-		return courtsIndices;
-	}
-	
-	public int[][] getTimeslotsIndices() {
-		return timeslotsIndices;
 	}
 	
 	public void setSearchStrategy(SearchStrategy strategy) {
@@ -598,7 +516,7 @@ public class TournamentSolver {
 		for (Event event : tournament.getEvents()) {
 			// Restricciones de equipos
 			if (event.hasTeams()) {
-				builder = new ConstraintBuilder(new TeamsConstraint(event, tournament));
+				builder = new ConstraintBuilder(new TeamsConstraint(event));
 				constraints.addAll(builder.getConstraints());
 			}
 			
@@ -606,27 +524,27 @@ public class TournamentSolver {
 			if (event.getMatchesPerPlayer() > 1 && event.getPlayersPerMatch() > 1) {
 				MatchupMode mode = event.getMatchupMode();
 				if (mode == MatchupMode.ALL_DIFFERENT || mode == MatchupMode.ALL_EQUAL) {
-					builder = new ConstraintBuilder(new MatchupModeConstraint(event, tournament));
+					builder = new ConstraintBuilder(new MatchupModeConstraint(event));
 					constraints.addAll(builder.getConstraints());
 				}
 			}
 			
 			// Restricciones de suma de partidos
-			builder = new ConstraintBuilder(new TotalMatchesConstraint(event, tournament));
+			builder = new ConstraintBuilder(new TotalMatchesConstraint(event));
 			constraints.addAll(builder.getConstraints());
 			
 			// Restricciones de emparejamientos predefinidos
 			if (!predefinedMatchups.isEmpty() && predefinedMatchups.containsKey(event)) {
-				builder = new ConstraintBuilder(new PredefinedMatchupsConstraint(event, tournament));
+				builder = new ConstraintBuilder(new PredefinedMatchupsConstraint(event));
 				constraints.addAll(builder.getConstraints());
 			}
 			
 			// Restricciones de número de partidos por jugador
-			builder = new ConstraintBuilder(new MatchesPerPlayerConstraint(event, tournament));
+			builder = new ConstraintBuilder(new MatchesPerPlayerConstraint(event));
 			constraints.addAll(builder.getConstraints());
 			
 			// Restricciones de número de jugadores en la misma pista
-			builder = new ConstraintBuilder(new LocalizationOccupationConstraint(event, tournament));
+			builder = new ConstraintBuilder(new LocalizationOccupationConstraint(event));
 			constraints.addAll(builder.getConstraints());
 		}
 		

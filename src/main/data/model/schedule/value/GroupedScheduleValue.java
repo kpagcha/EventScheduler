@@ -1,4 +1,4 @@
-package data.model.schedule.data;
+package data.model.schedule.value;
 
 import java.util.List;
 

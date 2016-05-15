@@ -9,7 +9,6 @@ import org.chocosolver.solver.constraints.IntConstraintFactory;
 import org.chocosolver.solver.variables.IntVar;
 import org.chocosolver.solver.variables.VariableFactory;
 
-import data.model.tournament.Tournament;
 import data.model.tournament.event.Event;
 import solver.TournamentSolver.MatchupMode;
 
@@ -21,14 +20,14 @@ import solver.TournamentSolver.MatchupMode;
  * si ocurre, ocurra tantas veces como número de partidos por jugador defina el evento.
  */
 public class MatchupModeConstraint extends EventConstraint {
-	public MatchupModeConstraint(Event event, Tournament tournament) {
-		super(event, tournament);
+	public MatchupModeConstraint(Event e) {
+		super(e);
 		
-		int nPlayers = event.getPlayers().size();
-		int nLocalizations = event.getLocalizations().size();
-		int nTimeslots = event.getTimeslots().size();
-		int nPlayersPerMatch = event.getPlayersPerMatch();
-		int nMatchesPerPlayer = event.getMatchesPerPlayer();
+		int nPlayers = e.getPlayers().size();
+		int nLocalizations = e.getLocalizations().size();
+		int nTimeslots = e.getTimeslots().size();
+		int nPlayersPerMatch = e.getPlayersPerMatch();
+		int nMatchesPerPlayer = e.getMatchesPerPlayer();
 		
 		List<List<Integer>> combinations = getCombinations(
 			IntStream.range(0, nPlayers).toArray(),
@@ -39,7 +38,7 @@ public class MatchupModeConstraint extends EventConstraint {
 		// los enfrentamientos no pueden repetirse, luego el máximo de ocurrencias de un enfrentamiento es 1. Mientras que
 		// en el modo "todos iguales", el número de ocurrencias de un mismo enfrentamiento es el número de partidos por jugador
 		int nMatches = 0;
-		MatchupMode matchupMode = event.getMatchupMode();
+		MatchupMode matchupMode = e.getMatchupMode();
 		if (matchupMode == MatchupMode.ALL_DIFFERENT)
 			nMatches = 1;
 		else if (matchupMode == MatchupMode.ALL_EQUAL)

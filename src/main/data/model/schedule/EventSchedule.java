@@ -3,12 +3,11 @@ package data.model.schedule;
 import java.util.ArrayList;
 import java.util.List;
 
-import data.model.schedule.data.Match;
-import data.model.schedule.data.ScheduleValue;
+import data.model.schedule.value.ScheduleValue;
 import data.model.tournament.event.Event;
-import data.model.tournament.event.entity.Player;
-import data.model.tournament.event.entity.Team;
-import data.model.tournament.event.entity.timeslot.Timeslot;
+import data.model.tournament.event.domain.Player;
+import data.model.tournament.event.domain.Team;
+import data.model.tournament.event.domain.timeslot.Timeslot;
 import solver.TournamentSolver;
 
 /**

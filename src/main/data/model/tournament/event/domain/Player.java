@@ -1,4 +1,4 @@
-package data.model.tournament.event.entity;
+package data.model.tournament.event.domain;
 
 /**
  * Representación de un jugador en un evento o categoría de juego en el contexto de un torneo deportivo.

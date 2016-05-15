@@ -1,4 +1,4 @@
-package data.model.schedule.data;
+package data.model.schedule.value;
 
 /**
  * Esta clase representa los valores que pueden tener los elementos de un horario (clase Schedule).

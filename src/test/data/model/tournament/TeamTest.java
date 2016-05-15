@@ -1,4 +1,4 @@
-package data.model.tournament.event.entity;
+package data.model.tournament;
 
 import static org.junit.Assert.*;
 
@@ -8,6 +8,9 @@ import java.util.HashSet;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+
+import data.model.tournament.event.domain.Player;
+import data.model.tournament.event.domain.Team;
 
 /**
  * Tests de la clase {@link Team}.

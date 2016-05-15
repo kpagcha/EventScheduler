@@ -6,10 +6,10 @@ import java.util.Map;
 import java.util.Set;
 
 import data.model.tournament.event.Event;
-import data.model.tournament.event.entity.Localization;
-import data.model.tournament.event.entity.Player;
-import data.model.tournament.event.entity.Team;
-import data.model.tournament.event.entity.timeslot.Timeslot;
+import data.model.tournament.event.domain.Localization;
+import data.model.tournament.event.domain.Player;
+import data.model.tournament.event.domain.Team;
+import data.model.tournament.event.domain.timeslot.Timeslot;
 import data.validation.validator.Validator;
 
 /**

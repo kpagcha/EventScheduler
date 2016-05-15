@@ -1,4 +1,4 @@
-package data.model.tournament.event.entity.timeslot;
+package data.model.tournament.event.domain.timeslot;
 
 import java.time.temporal.TemporalAccessor;
 import java.time.temporal.TemporalAmount;

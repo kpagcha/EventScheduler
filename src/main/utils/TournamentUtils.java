@@ -15,16 +15,17 @@ import java.util.Random;
 import org.apache.commons.lang3.StringUtils;
 
 import data.model.schedule.EventSchedule;
-import data.model.schedule.data.Match;
+import data.model.schedule.Match;
 import data.model.tournament.Tournament;
 import data.model.tournament.event.Event;
-import data.model.tournament.event.entity.Localization;
-import data.model.tournament.event.entity.Player;
-import data.model.tournament.event.entity.timeslot.UndefiniteTimeslot;
+import data.model.tournament.event.domain.Entity;
+import data.model.tournament.event.domain.Localization;
+import data.model.tournament.event.domain.Player;
+import data.model.tournament.event.domain.timeslot.AbstractTimeslot;
+import data.model.tournament.event.domain.timeslot.DefiniteTimeslot;
+import data.model.tournament.event.domain.timeslot.Timeslot;
+import data.model.tournament.event.domain.timeslot.UndefiniteTimeslot;
 import solver.TournamentSolver.MatchupMode;
-import data.model.tournament.event.entity.timeslot.AbstractTimeslot;
-import data.model.tournament.event.entity.timeslot.DefiniteTimeslot;
-import data.model.tournament.event.entity.timeslot.Timeslot;
 
 @SuppressWarnings("unused")
 public class TournamentUtils {
@@ -235,11 +236,10 @@ public class TournamentUtils {
 	}
 	
 	public static Player findPlayerByName(String name, List<Player> players) {
-		Player player = null;
-		for (Player p : players)
-			if (StringUtils.containsIgnoreCase(p.getName(), name))
-				return p;
-		return player;
+		for (Player player : players)
+			if (StringUtils.containsIgnoreCase(player.getName(), name))
+				return player;
+		return null;
 	}
 	
 	/**

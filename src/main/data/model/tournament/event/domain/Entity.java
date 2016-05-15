@@ -1,4 +1,4 @@
-package data.model.tournament.event.entity;
+package data.model.tournament.event.domain;
 
 /**
  * Una entidad abstracta que representa un modelo básico con un nombre.

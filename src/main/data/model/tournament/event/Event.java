@@ -9,10 +9,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import data.model.tournament.event.entity.Localization;
-import data.model.tournament.event.entity.Player;
-import data.model.tournament.event.entity.Team;
-import data.model.tournament.event.entity.timeslot.Timeslot;
+import data.model.tournament.Tournament;
+import data.model.tournament.event.domain.Localization;
+import data.model.tournament.event.domain.Player;
+import data.model.tournament.event.domain.Team;
+import data.model.tournament.event.domain.timeslot.Timeslot;
 import data.validation.validable.Validable;
 import data.validation.validable.ValidationException;
 import data.validation.validator.Validator;
@@ -46,6 +47,11 @@ public class Event implements Validable {
 	 * Nombre del evento o la categoría
 	 */
 	private String name;
+	
+	/**
+	 * Torneo al que pertenece la categoría
+	 */
+	private Tournament tournament;
 	
 	/**
 	 * Jugadores concretos o abstractos (equipos) que participan en el evento
@@ -326,6 +332,14 @@ public class Event implements Validable {
 	
 	public String getName() {
 		return name;
+	}
+	
+	public void setTournament(Tournament tournament) {
+		this.tournament = tournament;
+	}
+	
+	public Tournament getTournament() {
+		return tournament;
 	}
 	
 	/**
@@ -675,6 +689,40 @@ public class Event implements Validable {
 	}
 	
 	/**
+	 * Marca al jugador como no disponible en el rango de horas indicado, extremos incluidos.
+	 * 
+	 * @param player jugador perteneciente al dominio del evento
+	 * @param t1 un extremo del rango de <i>timeslots</i>
+	 * @param t2 el otro extremo
+	 * @throws IllegalArgumentException si alguno de los argumentos son <code>null</code> o no existen en el dominio del evento
+	 */
+	public void addUnavailablePlayerAtTimeslotRange(Player player, Timeslot t1, Timeslot t2) {
+		if (player == null || t1 == null || t2 == null)
+			throw new IllegalArgumentException("The parameters cannot be null");
+		
+		if (!players.contains(player))
+			throw new IllegalArgumentException(String.format("Player (%s) does not exist in the list of players of this event", player));
+		
+		if (!timeslots.contains(t1))
+			throw new IllegalArgumentException(String.format("Timeslot (%s) does not exist in the list of timeslots of this event", t1));
+		
+		if (!timeslots.contains(t2))
+			throw new IllegalArgumentException(String.format("Timeslot (%s) does not exist in the list of timeslots of this event", t2));
+		
+		Timeslot start, end;
+		if (t1.compareTo(t2) >= 0) {
+			start = t1;
+			end = t2;
+		} else {
+			start = t2;
+			end = t1;
+		}
+		
+		for (int t = timeslots.indexOf(start); t <= timeslots.indexOf(end); t++)
+			addUnavailablePlayerAtTimeslot(player, timeslots.get(t));
+	}
+	
+	/**
 	 * Si el jugador no está disponible a la hora timeslot, se elimina de la lista y vuelve a estar disponible a esa hora.
 	 * 
 	 * @param player jugador que pertenece a este evento
@@ -935,6 +983,35 @@ public class Event implements Validable {
 		breaks.add(timeslotBreak);
 	}
 	
+	/**
+	 * Añade <i>breaks</i> en el rango indicado, extremos incluidos.
+	 * 
+	 * @param t1 un extremo del rango
+	 * @param t2 el otro extremo del rango
+	 */
+	public void addBreakRange(Timeslot t1, Timeslot t2) {
+		if (t1 == null || t2 == null)
+			throw new IllegalArgumentException("The parameters cannot be null");
+		
+		if (!timeslots.contains(t1))
+			throw new IllegalArgumentException(String.format("Timeslot (%s) does not exist in the list of timeslots of this event", t1));
+		
+		if (!timeslots.contains(t2))
+			throw new IllegalArgumentException(String.format("Timeslot (%s) does not exist in the list of timeslots of this event", t2));
+		
+		Timeslot start, end;
+		if (t1.compareTo(t2) >= 0) {
+			start = t1;
+			end = t2;
+		} else {
+			start = t2;
+			end = t1;
+		}
+		
+		for (int t = timeslots.indexOf(start); t <= timeslots.indexOf(end); t++)
+			addBreak(timeslots.get(t));
+	}
+	
 
 	/**
 	 * Elimina un break, es decir, la hora se considerará como una hora regular de juego. Si la hora
@@ -1064,6 +1141,42 @@ public class Event implements Validable {
 		
 		for (Timeslot timeslot : timeslots)
 			addUnavailableLocalizationAtTimeslot(localization, timeslot);
+	}
+	
+	/**
+	 * Marca como no disponibles las localizaciones en el rango de horas de juego indicadas, extremos incluidos
+	 * 
+	 * @param localization localización de juego del evento
+	 * @param t1 un extremo del rango de horas
+	 * @param t2 el otro extremo del rango de horas
+	 * @throws IllegalArgumentException si los parámetros son <code>null</code> o no pertenecen al dominio del evento
+	 */
+	public void addUnavailableLocalizationAtTimeslotRange(Localization localization, Timeslot t1, Timeslot t2) {
+		if (localization == null || t1 == null || t2 == null)
+			throw new IllegalArgumentException("The parameters cannot be null");
+		
+		if (!localizations.contains(localization))
+			throw new IllegalArgumentException(String.format(
+				"Localization (%s) does not exist in the list of localizations of this event", localization)
+			);
+		
+		if (!timeslots.contains(t1))
+			throw new IllegalArgumentException(String.format("Timeslot (%s) does not exist in the list of timeslots of this event", t1));
+		
+		if (!timeslots.contains(t2))
+			throw new IllegalArgumentException(String.format("Timeslot (%s) does not exist in the list of timeslots of this event", t2));
+		
+		Timeslot start, end;
+		if (t1.compareTo(t2) >= 0) {
+			start = t1;
+			end = t2;
+		} else {
+			start = t2;
+			end = t1;
+		}
+		
+		for (int t = timeslots.indexOf(start); t <= timeslots.indexOf(end); t++)
+			addUnavailableLocalizationAtTimeslot(localization, timeslots.get(t));
 	}
 	
 	/**
@@ -1352,6 +1465,40 @@ public class Event implements Validable {
 	}
 	
 	/**
+	 * Asigna al jugador un rango de <i>timeslot</i> donde deberá jugar
+	 * 
+	 * @param player un jugador del evento
+	 * @param t1 un extremo del rango de horas
+	 * @param t2 el otro extremo
+	 * @throws IllegalArgumentException si alguno de los parámetros son <code>null</code> o no pertenecen al dominio del evento
+	 */
+	public void addPlayerAtTimeslotRange(Player player, Timeslot t1, Timeslot t2) {
+		if (player == null || t1 == null || t2 == null)
+			throw new IllegalArgumentException("The parameters cannot be null");
+		
+		if (!players.contains(player))
+			throw new IllegalArgumentException(String.format("Player (%s) does not exist in the list of players of this event", player));
+		
+		if (!timeslots.contains(t1))
+			throw new IllegalArgumentException(String.format("Timeslot (%s) does not exist in the list of timeslots of this event", t1));
+		
+		if (!timeslots.contains(t2))
+			throw new IllegalArgumentException(String.format("Timeslot (%s) does not exist in the list of timeslots of this event", t2));
+		
+		Timeslot start, end;
+		if (t1.compareTo(t2) >= 0) {
+			start = t1;
+			end = t2;
+		} else {
+			start = t2;
+			end = t1;
+		}
+		
+		for (int t = timeslots.indexOf(start); t <= timeslots.indexOf(end); t++)
+			addPlayerAtTimeslot(player, timeslots.get(t));
+	}
+	
+	/**
 	 * Asigna a los jugadores los timeslots explícitos donde han de jugar
 	 * 
 	 * @param players jugadores pertenecientes al evento
@@ -1365,6 +1512,8 @@ public class Event implements Validable {
 		for (Player player : players)
 			addPlayerAtTimeslots(player, timeslots);
 	}
+	
+	
 	
 	/**
 	 * Elimina de la configuración que el jugador deba jugar a la hora indicada, si ha sido asignada

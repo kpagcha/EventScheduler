@@ -1,4 +1,4 @@
-package data.model.tournament.event.entity;
+package data.model.tournament.event.domain;
 
 /**
  * Representación de una localización de juego en la que transcurre un partido o un enfrentamiento

@@ -6,13 +6,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import data.model.schedule.data.GroupedScheduleValue;
-import data.model.schedule.data.Match;
+import data.model.schedule.value.GroupedScheduleValue;
 import data.model.tournament.Tournament;
 import data.model.tournament.event.Event;
-import data.model.tournament.event.entity.Localization;
-import data.model.tournament.event.entity.Player;
-import data.model.tournament.event.entity.timeslot.Timeslot;
+import data.model.tournament.event.domain.Localization;
+import data.model.tournament.event.domain.Player;
+import data.model.tournament.event.domain.timeslot.Timeslot;
 
 /**
  * Representa un horario agrupado por localizaciones de juego y horas de juego mediante una matriz

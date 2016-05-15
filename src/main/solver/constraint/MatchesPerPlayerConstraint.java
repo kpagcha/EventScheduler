@@ -7,15 +7,14 @@ import org.chocosolver.solver.constraints.IntConstraintFactory;
 import org.chocosolver.solver.variables.VariableFactory;
 import org.chocosolver.util.tools.ArrayUtils;
 
-import data.model.tournament.Tournament;
 import data.model.tournament.event.Event;
 
 /**
  * Asegurar que el número de partidos que juega cada jugador es el correspondiente al requerido por cada categoría
  */
 public class MatchesPerPlayerConstraint extends EventConstraint {
-	public MatchesPerPlayerConstraint(Event e, Tournament t) {
-		super(e, t);
+	public MatchesPerPlayerConstraint(Event e) {
+		super(e);
 		
 		constraints = new ArrayList<Constraint>();
 		

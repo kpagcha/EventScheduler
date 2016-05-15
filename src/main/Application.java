@@ -3,9 +3,9 @@ import java.util.Scanner;
 
 import data.model.schedule.TournamentSchedule;
 import data.model.schedule.GroupedSchedule;
-import data.model.schedule.data.Match;
+import data.model.schedule.Match;
 import data.model.tournament.Tournament;
-import data.model.tournament.event.entity.Player;
+import data.model.tournament.event.domain.Player;
 import data.validation.validable.ValidationException;
 import solver.TournamentSolver.SearchStrategy;
 import utils.TournamentUtils;

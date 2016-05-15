@@ -4,15 +4,14 @@ import org.chocosolver.solver.constraints.IntConstraintFactory;
 import org.chocosolver.solver.variables.VariableFactory;
 import org.chocosolver.util.tools.ArrayUtils;
 
-import data.model.tournament.Tournament;
 import data.model.tournament.event.Event;
 
 /**
  * Impone que la suma de timeslots utilizados por el evento se corresponda con el número de encuentros esperados
  */
 public class TotalMatchesConstraint extends EventConstraint {
-	public TotalMatchesConstraint(Event event, Tournament tournament) {
-		super(event, tournament);
+	public TotalMatchesConstraint(Event event) {
+		super(event);
 		
 		int eventNumberOfMatches = event.getPlayers().size() * event.getMatchesPerPlayer();
 		

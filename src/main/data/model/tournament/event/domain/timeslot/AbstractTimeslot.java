@@ -1,6 +1,6 @@
-package data.model.tournament.event.entity.timeslot;
+package data.model.tournament.event.domain.timeslot;
 
-import data.model.tournament.event.entity.Entity;
+import data.model.tournament.event.domain.Entity;
 
 /**
  * Representa un timeslot abstracto sin representación temporal, simplemente un hueco en un horario

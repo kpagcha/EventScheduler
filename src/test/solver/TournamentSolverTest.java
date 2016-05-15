@@ -18,13 +18,13 @@ import org.junit.Test;
 
 import data.model.schedule.EventSchedule;
 import data.model.schedule.GroupedSchedule;
+import data.model.schedule.Match;
 import data.model.schedule.TournamentSchedule;
-import data.model.schedule.data.Match;
 import data.model.tournament.Tournament;
 import data.model.tournament.event.Event;
-import data.model.tournament.event.entity.Localization;
-import data.model.tournament.event.entity.Player;
-import data.model.tournament.event.entity.timeslot.Timeslot;
+import data.model.tournament.event.domain.Localization;
+import data.model.tournament.event.domain.Player;
+import data.model.tournament.event.domain.timeslot.Timeslot;
 import data.validation.validable.ValidationException;
 import solver.TournamentSolver.MatchupMode;
 import solver.TournamentSolver.SearchStrategy;
@@ -53,7 +53,7 @@ public class TournamentSolverTest {
 		solver.setFillTimeslotsFirst(true);
 		solver.setResolutionTimeLimit(0);
 		
-		assertNull(solver.getSolver());
+		assertNull(solver.getInternalSolver());
 		assertEquals("Tournament", solver.getTournament().getName());
 		assertTrue(solver.getPredefinedMatchups().isEmpty());
 		
@@ -71,9 +71,6 @@ public class TournamentSolverTest {
 		assertNull(solver.getResolutionData());
 		assertTrue(solver.getFillTimeslotsFirst());
 		
-		assertEquals(8, solver.getPlayersIndices().length);
-		assertEquals(3, solver.getLocalizationsIndices().length);
-		assertEquals(14, solver.getTimeslotsIndices().length);
 		assertEquals(0, solver.getResolutionTimeLimit());
 		
 		try {
@@ -1651,7 +1648,7 @@ public class TournamentSolverTest {
 		ResolutionData data = tournament.getSolver().getResolutionData();
 		assertNotNull(data);
 		
-		assertEquals(tournament.getSolver().getSolver(), data.getSolver());
+		assertEquals(tournament.getSolver().getInternalSolver(), data.getSolver());
 		assertEquals(tournament, data.getTournament());
 		assertEquals("Tournament Solver", data.getSolverName());
 		assertTrue(data.getResolutionProcessCompleted());

@@ -11,7 +11,7 @@ import data.model.tournament.Tournament;
 import solver.TournamentSolver;
 
 public abstract class SolverConstraint implements ISolverConstraint {
-	protected List<Constraint> constraints;
+	protected List<Constraint> constraints = new ArrayList<>();
 	
 	protected TournamentSolver tournamentSolver;
 	protected Solver solver;
@@ -20,11 +20,9 @@ public abstract class SolverConstraint implements ISolverConstraint {
 	
 	public SolverConstraint(Tournament t) {
 		tournamentSolver = t.getSolver();
-        solver = tournamentSolver.getSolver();
+        solver = tournamentSolver.getInternalSolver();
         x = tournamentSolver.getMatchesModel();
         g = tournamentSolver.getMatchesBeginningsModel();
-        
-        constraints = new ArrayList<Constraint>();
 	}
 
     public List<Constraint> getConstraints() {

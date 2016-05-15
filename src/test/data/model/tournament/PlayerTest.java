@@ -1,8 +1,10 @@
-package data.model.tournament.event.entity;
+package data.model.tournament;
 
 import static org.junit.Assert.*;
 
 import org.junit.Test;
+
+import data.model.tournament.event.domain.Player;
 
 /**
  * Tests de la clase {@link Player}.

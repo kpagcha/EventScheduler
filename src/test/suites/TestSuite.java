@@ -6,19 +6,19 @@ import org.junit.runners.Suite.SuiteClasses;
 import data.model.schedule.GroupedScheduleTest;
 import data.model.schedule.MatchTest;
 import data.model.schedule.ScheduleTest;
+import data.model.tournament.EntityTest;
+import data.model.tournament.LocalizationTest;
+import data.model.tournament.PlayerTest;
+import data.model.tournament.TeamTest;
+import data.model.tournament.EventTest;
+import data.model.tournament.TimeslotTest;
 import data.model.tournament.TournamentTest;
-import data.model.tournament.event.TestEvent;
-import data.model.tournament.event.entity.EntityTest;
-import data.model.tournament.event.entity.LocalizationTest;
-import data.model.tournament.event.entity.PlayerTest;
-import data.model.tournament.event.entity.TeamTest;
-import data.model.tournament.event.entity.TimeslotTest;
 import data.validation.ValidationTest;
 import solver.TournamentSolverTest;
 
 @RunWith(Suite.class)
 @SuiteClasses({
-	TestEvent.class,
+	EventTest.class,
 	EntityTest.class,
 	LocalizationTest.class,
 	PlayerTest.class,

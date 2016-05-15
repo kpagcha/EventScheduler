@@ -1,4 +1,4 @@
-package data.model.tournament.event.entity;
+package data.model.tournament.event.domain;
 
 import java.util.Arrays;
 import java.util.HashSet;
