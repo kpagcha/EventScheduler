@@ -307,8 +307,6 @@ public class TournamentTest {
 			out.reset();
 			tournament.printCurrentSchedules();
 			assertThat(out.toString(), StringContains.containsString("Empty schedule"));
-			
-			
 		} catch (ValidationException e) {
 			fail("Unexpected exception thrown; tournament is valid");
 		}
@@ -530,7 +528,7 @@ public class TournamentTest {
 			t.addBreaks(null);
 			fail("IllegalArgumentException expected");
 		} catch (IllegalArgumentException e) {
-			assertEquals("List of breaks cannot be null", e.getMessage());
+			assertEquals("Breaks cannot be null", e.getMessage());
 		}
 		
 		try {

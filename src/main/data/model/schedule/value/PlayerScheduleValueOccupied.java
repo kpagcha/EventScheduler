@@ -36,6 +36,9 @@ public class PlayerScheduleValueOccupied extends PlayerScheduleValue {
 	}
 	
 	public boolean equals(Object o) {
+		if (o == null)
+			return false;
+		
 		return o instanceof PlayerScheduleValueOccupied && ((PlayerScheduleValueOccupied)o).getLocalization() == localization;
 	}
 }

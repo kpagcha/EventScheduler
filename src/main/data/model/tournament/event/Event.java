@@ -189,28 +189,28 @@ public class Event implements Validable {
 	 * @param players lista no vacía de jugadores únicos
 	 * @param localizations lista no vacía de localizaciones de juego no repetidas
 	 * @param timeslots lista de no vacía horas de juego, no null y con más de un elemento
-	 * @param nMatchesPerPlayer número de partidos por jugador, superior a 1
-	 * @param nTimeslotsPerMatch número de timeslots por partido, superior a 1
-	 * @param nPlayersPerMatch número de jugadores por partido, igual o superior a 1 y divisor del tamaño de la lista de jugadores
+	 * @param matchesPerPlayer número de partidos por jugador, superior a 1
+	 * @param timeslotsPerMatch número de timeslots por partido, superior a 1
+	 * @param playersPerMatch número de jugadores por partido, igual o superior a 1 y divisor del tamaño de la lista de jugadores
 	 */
 	public Event(String name, List<Player> players, List<Localization> localizations, List<Timeslot> timeslots,
-			int nMatchesPerPlayer, int nTimeslotsPerMatch, int nPlayersPerMatch)  {
+			int matchesPerPlayer, int timeslotsPerMatch, int playersPerMatch)  {
 		
 		if (name == null)
 			throw new IllegalArgumentException("The name cannot be null");
 		
-		checkPlayersPreconditions(players, nPlayersPerMatch);
+		checkPlayersPreconditions(players, playersPerMatch);
 		checkLocalizationsPreconditions(localizations);
-		checkTimeslotsPreconditions(timeslots, nTimeslotsPerMatch, nMatchesPerPlayer);
+		checkTimeslotsPreconditions(timeslots, timeslotsPerMatch, matchesPerPlayer);
 		
 		this.name = name;
 		this.players = players;
 		this.localizations = localizations;
 		this.timeslots = timeslots;
 		
-		this.nMatchesPerPlayer = nMatchesPerPlayer;
-		this.nTimeslotsPerMatch = nTimeslotsPerMatch;
-		this.nPlayersPerMatch = nPlayersPerMatch;
+		nMatchesPerPlayer = matchesPerPlayer;
+		nTimeslotsPerMatch = timeslotsPerMatch;
+		nPlayersPerMatch = playersPerMatch;
 	}
 	
 	/**
@@ -372,14 +372,14 @@ public class Event implements Validable {
 	/**
 	 * Asigna el número de partidos por jugador
 	 * 
-	 * @param nMatchesPerPlayer número de partidos por jugador, mínimo 1
+	 * @param matchesPerPlayer número de partidos por jugador, mínimo 1
 	 * @throws IllegalArgumentException si no se cumple alguna de las precondiciones de los timeslots (ver {@link #Event(String, List, List, List)})
 	 */
-	public void setMatchesPerPlayer(int nMatchesPerPlayer) {
-		checkTimeslotsPreconditions(timeslots, nTimeslotsPerMatch, nMatchesPerPlayer);
+	public void setMatchesPerPlayer(int matchesPerPlayer) {
+		checkTimeslotsPreconditions(timeslots, nTimeslotsPerMatch, matchesPerPlayer);
 		
-		this.nMatchesPerPlayer = nMatchesPerPlayer;
-		if (nMatchesPerPlayer == 1)
+		nMatchesPerPlayer = matchesPerPlayer;
+		if (matchesPerPlayer == 1)
 			matchupMode = MatchupMode.ANY;
 	}
 	
@@ -390,13 +390,13 @@ public class Event implements Validable {
 	/**
 	 * Asigna la duración de un partido
 	 * 
-	 * @param nTimeslotsPerMatch número de timeslots por partidos, superior a 1
+	 * @param timeslotsPerMatch número de timeslots por partidos, superior a 1
 	 * @throws IllegalArgumentException si falla alguna precondición de timeslots (ver {@link #Event(String, List, List, List)})
 	 */
-	public void setTimeslotsPerMatch(int nTimeslotsPerMatch) {
-		checkTimeslotsPreconditions(timeslots, nTimeslotsPerMatch, nMatchesPerPlayer);
+	public void setTimeslotsPerMatch(int timeslotsPerMatch) {
+		checkTimeslotsPreconditions(timeslots, timeslotsPerMatch, nMatchesPerPlayer);
 		
-		this.nTimeslotsPerMatch = nTimeslotsPerMatch;
+		nTimeslotsPerMatch = timeslotsPerMatch;
 	}
 	
 	public int getTimeslotsPerMatch() {
@@ -406,18 +406,18 @@ public class Event implements Validable {
 	/**
 	 * Asigna el número de jugadores por partido. Limpia la lista de equipos y la lista de emparejamientos fijos
 	 * 
-	 * @param nPlayersPerMatch número de jugadores por partido, superior a 1
+	 * @param playersPerMatch número de jugadores por partido, superior a 1
 	 * @throws IllegalArgumentException si falla alguna de las precondiciones de jugadores (ver {@link #Event(String, List, List, List)})
 	 */
-	public void setPlayersPerMatch(int nPlayersPerMatch) {
-		checkPlayersPreconditions(players, nPlayersPerMatch);
+	public void setPlayersPerMatch(int playersPerMatch) {
+		checkPlayersPreconditions(players, playersPerMatch);
 		
-		this.nPlayersPerMatch = nPlayersPerMatch;
+		nPlayersPerMatch = playersPerMatch;
 		
 		teams.clear();
 		predefinedMatchups.clear();
 		
-		if (nPlayersPerMatch == 1)
+		if (playersPerMatch == 1)
 			matchupMode = MatchupMode.ANY;
 	}
 	
@@ -661,16 +661,11 @@ public class Event implements Validable {
 		if (!timeslots.contains(timeslot))
 			throw new IllegalArgumentException("The timeslot (" + timeslot + ") doest not exist in the list of timeslots of the event");
 		
-		Set<Timeslot> unavailablePlayerTimeslots = unavailablePlayers.get(player);
-		
-		if (unavailablePlayerTimeslots == null) {
-			unavailablePlayers.put(player, new HashSet<Timeslot>(Arrays.asList(timeslot)));
-		} else {
-			if (unavailablePlayerTimeslots.contains(timeslot))
-				throw new IllegalArgumentException("The timeslot (" + timeslot + ") already exists in the set of unvailable timeslots for the player (" + player + ")");
-			
-			unavailablePlayerTimeslots.add(timeslot);
-		}
+		if (!unavailablePlayers.computeIfAbsent(player, t -> new HashSet<Timeslot>()).add(timeslot))
+				throw new IllegalArgumentException(String.format(
+					"Timeslot (%s) already exists in the set of unavailable timeslots for the player (%s)",
+					timeslot, player
+				));
 	}
 	
 	/**
@@ -739,14 +734,8 @@ public class Event implements Validable {
 		if (!timeslots.contains(timeslot))
 			throw new IllegalArgumentException("The timeslot (" + timeslot + ") does not exist in the list of timeslots of the event");
 			
-		Set<Timeslot> unavailablePlayerTimeslots = unavailablePlayers.get(player);
-		
-		if (unavailablePlayerTimeslots != null && unavailablePlayerTimeslots.contains(timeslot)) {
-			unavailablePlayerTimeslots.remove(timeslot);
-			
-			if (unavailablePlayerTimeslots.isEmpty())
-				unavailablePlayers.remove(player);
-		}
+		// Elimina el timeslot asociado al jugador, y si el conjunto queda vacío, se elimina la entrada del diccionario
+		unavailablePlayers.computeIfPresent(player, (p, t) -> t.remove(timeslot) && t.isEmpty() ? null : t); 
 	}
 	
 	/**
@@ -863,7 +852,7 @@ public class Event implements Validable {
 	/**
 	 * Añade un enfrentamiento fijo entre jugadores.
 	 * 
-	 * @param players conjunto de jugadores entre los cuales habrá de darse un enfrentamiento,
+	 * @param players conjunto de jugadores no repetidos entre los cuales habrá de darse un enfrentamiento,
 	 * cumplen las reglas de un enfrentamiento, ver precondiciones en {@link #setPredefinedMatchups(List)}
 	 * @throws IllegalArgumentException si no se cumple alguna de las precondiciones
 	 */
@@ -1117,14 +1106,11 @@ public class Event implements Validable {
 		if (!timeslots.contains(timeslot))
 			throw new IllegalArgumentException("The timeslot (" + timeslot + ") does not exist in this event");
 		
-		Set<Timeslot> unavailableLocalizationTimeslots = unavailableLocalizations.get(localization);
-		if (unavailableLocalizationTimeslots == null) {
-			unavailableLocalizations.put(localization, new HashSet<Timeslot>(Arrays.asList(timeslot)));
-		} else {
-			if (unavailableLocalizationTimeslots.contains(timeslot))
-				throw new IllegalArgumentException("The timeslot (" + timeslot + ") already exists in the set un unavailable timeslots for the localization");
-			unavailableLocalizationTimeslots.add(timeslot);
-		}
+		if (!unavailableLocalizations.computeIfAbsent(localization, t -> new HashSet<Timeslot>()).add(timeslot))
+			throw new IllegalArgumentException(String.format(
+				"The timeslot (%s) already exists in the set un unavailable timeslots for the localization",
+				timeslot
+			));
 	}
 	
 	/**
@@ -1213,13 +1199,7 @@ public class Event implements Validable {
 		if (!timeslots.contains(timeslot))
 			throw new IllegalArgumentException("The timeslot (" + timeslot + ") does not exist in this event");
 		
-		Set<Timeslot> unavailableLocalizationTimeslots = unavailableLocalizations.get(localization);
-		if (unavailableLocalizationTimeslots != null) {
-			unavailableLocalizationTimeslots.remove(timeslot);
-			
-			if (unavailableLocalizationTimeslots.isEmpty())
-				unavailableLocalizations.remove(localization);
-		}
+		unavailableLocalizations.computeIfPresent(localization, (l, t) -> t.remove(timeslot) && t.isEmpty() ? null : t);
 	}
 	
 	/**
@@ -1287,15 +1267,9 @@ public class Event implements Validable {
 		if (!localizations.contains(localization))
 			throw new IllegalArgumentException("The localization (" + localization + ") does not exist in this event");
 		
-		Set<Localization> playerInLocalizations = playersInLocalizations.get(player);
-		if (playerInLocalizations != null && playerInLocalizations.contains(localization))
+		// Si no se ha añadido el elemento quiere decir que ya existía en el set, por lo tanto, se lanza la correspondiente excepción
+		if (!playersInLocalizations.computeIfAbsent(player, l -> new HashSet<Localization>()).add(localization))
 			throw new IllegalArgumentException("The localization (" + localization + ") is already assigned to that player");
-		
-		Set<Localization> playerLocalizations = playersInLocalizations.get(player);
-		if (playerLocalizations == null)
-			playersInLocalizations.put(player, new HashSet<Localization>(Arrays.asList(localization)));
-		else
-			playerLocalizations.add(localization);
 	}
 	
 	/**
@@ -1315,13 +1289,7 @@ public class Event implements Validable {
 		if (!localizations.contains(localization))
 			throw new IllegalArgumentException("The localization (" + localization + ") does not exist in this event");
 		
-		Set<Localization> playerLocalizations = playersInLocalizations.get(player);
-		if (playerLocalizations != null) {
-			playerLocalizations.remove(localization);
-			
-			if (playerLocalizations.isEmpty())
-				playersInLocalizations.remove(player);
-		}
+		playersInLocalizations.computeIfPresent(player, (p, l) -> l.remove(localization) && l.isEmpty() ? null : l);
 	}
 	
 	/**
@@ -1407,11 +1375,7 @@ public class Event implements Validable {
 	public void addPlayerAtTimeslot(Player player, Timeslot timeslot) {
 		checkPlayerAtTimeslotPreconditions(player, timeslot);
 		
-		Set<Timeslot> playerTimeslots = playersAtTimeslots.get(player);
-		if (playerTimeslots == null)
-			playersAtTimeslots.put(player, new HashSet<Timeslot>(Arrays.asList(timeslot)));
-		else
-			playerTimeslots.add(timeslot);	
+		playersAtTimeslots.computeIfAbsent(player, t -> new HashSet<Timeslot>()).add(timeslot);
 	}
 	
 	/**
@@ -1442,11 +1406,7 @@ public class Event implements Validable {
 			newTimeslots.add(t);
 		}
 		
-		Set<Timeslot> playerTimeslots = playersAtTimeslots.get(player);
-		if (playerTimeslots == null)
-			playersAtTimeslots.put(player, newTimeslots);
-		else
-			playerTimeslots.addAll(newTimeslots);
+		playersAtTimeslots.computeIfAbsent(player, t -> new HashSet<Timeslot>()).addAll(newTimeslots);
 	}
 	
 	/**
@@ -1532,13 +1492,7 @@ public class Event implements Validable {
 		if (!timeslots.contains(timeslot))
 			throw new IllegalArgumentException("The timeslot (" + timeslot + ") does not exist in the list of timeslots of this event");
 		
-		Set<Timeslot> playerTimeslots = playersAtTimeslots.get(player);
-		if (playerTimeslots != null) {
-			playerTimeslots.remove(timeslot);
-			
-			if (playerTimeslots.isEmpty())
-				playersAtTimeslots.remove(player);
-		}
+		playersAtTimeslots.computeIfPresent(player, (p, t) -> t.remove(timeslot) && t.isEmpty() ? null : t);
 	}
 	
 	/**
@@ -1592,7 +1546,7 @@ public class Event implements Validable {
 	 * @param player jugador no nulo perteneciente al evento
 	 * @return equipo al que pertenece el jugador, o <code>null</code> si no pertenece a ningún equipo o el jugador no existe en este evento
 	 */
-	public Team getTeamByPlayer(Player player) {
+	public Team filterTeamByPlayer(Player player) {
 		return teams.stream().filter(team -> team.getPlayers().contains(player)).limit(1).findFirst().orElse(null);
 	}
 	

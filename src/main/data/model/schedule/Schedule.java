@@ -115,12 +115,7 @@ public abstract class Schedule {
 	 * @return lista de partidos
 	 */
 	public List<Match> filterMatchesByStartTimeslot(Timeslot timeslot) {
-		List<Match> timeslotMatches = new ArrayList<Match>();
-		for (Match match : matches)
-			if (match.getStartTimeslot().equals(timeslot))
-				timeslotMatches.add(match);
-
-		return timeslotMatches;
+		return matches.stream().filter(m -> m.getStartTimeslot().equals(timeslot)).collect(Collectors.toList());
 	}
 
 	/**
@@ -132,12 +127,7 @@ public abstract class Schedule {
 	 * @return lista de partidos
 	 */
 	public List<Match> filterMatchesByEndTimeslot(Timeslot timeslot) {
-		List<Match> timeslotMatches = new ArrayList<Match>();
-		for (Match match : matches)
-			if (match.getEndTimeslot().equals(timeslot))
-				timeslotMatches.add(match);
-
-		return timeslotMatches;
+		return matches.stream().filter(m -> m.getEndTimeslot().equals(timeslot)).collect(Collectors.toList());
 	}
 
 	/**
@@ -156,12 +146,9 @@ public abstract class Schedule {
 		if (!(timeslots.contains(start) && timeslots.contains(end)))
 			return null;
 		
-		List<Match> timeslotMatches = new ArrayList<Match>();
-		for (Match match : matches)
-			if (match.getStartTimeslot().equals(start) && match.getEndTimeslot().equals(end))
-				timeslotMatches.add(match);
-
-		return timeslotMatches;
+		return matches.stream()
+				.filter(m -> m.getStartTimeslot().equals(start) && m.getEndTimeslot().equals(end))
+				.collect(Collectors.toList());
 	}
 
 	/**
@@ -173,12 +160,9 @@ public abstract class Schedule {
 	 * @return lista de partidos
 	 */
 	public List<Match> filterMatchesDuringTimeslot(Timeslot timeslot) {
-		List<Match> timeslotMatches = new ArrayList<Match>();
-		for (Match match : matches)
-			if (timeslot.compareTo(match.getStartTimeslot()) <= 0 && timeslot.compareTo(match.getEndTimeslot()) >= 0)
-				timeslotMatches.add(match);
-
-		return timeslotMatches;
+		return matches.stream()
+				.filter(m -> timeslot.compareTo(m.getStartTimeslot()) <= 0 && timeslot.compareTo(m.getEndTimeslot()) >= 0)
+				.collect(Collectors.toList());
 	}
 	
 	/**

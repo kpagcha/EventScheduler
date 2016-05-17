@@ -3,8 +3,6 @@ package data.model.tournament;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -98,7 +96,7 @@ public class Tournament implements Validable {
 	 * Construye del torneo con un nombre y el conjunto de categorías que lo componen
 	 * 
 	 * @param name nombre del torneo, cadena no <code>null</code>
-	 * @param categories categorías no repetidas que componen el torneo, debe haber al menos una
+	 * @param categories eventos o categorías no repetidas que componen el torneo, debe haber al menos una
 	 * @throws IllegalArgumentException si alguno de los parámetros es <code>null</code> o si la lista de categorías está vacía
 	 */
 	public Tournament(String name, List<Event> categories) {
@@ -299,17 +297,7 @@ public class Tournament implements Validable {
 	 * de categorías que definen dicho número de jugadores por partido
 	 */
 	public Map<Integer, Set<Event>> groupEventsByNumberOfPlayersPerMatch() {
-		Map<Integer, Set<Event>> eventsByNumberOfPlayersPerMatch = new HashMap<Integer, Set<Event>>();
-		
-		for (Event event : events) {
-			int n = event.getPlayersPerMatch();
-			if (eventsByNumberOfPlayersPerMatch.containsKey(n))
-				eventsByNumberOfPlayersPerMatch.get(n).add(event);
-			else
-				eventsByNumberOfPlayersPerMatch.put(n, new HashSet<Event>(Arrays.asList(new Event[]{ event })));
-		}
-		
-		return eventsByNumberOfPlayersPerMatch;
+		return events.stream().collect(Collectors.groupingBy(Event::getPlayersPerMatch, Collectors.toSet()));
 	}
 	
 	/**
@@ -428,7 +416,7 @@ public class Tournament implements Validable {
 	 */
 	public void addBreaks(Set<Timeslot> timeslotBreaks) {
 		if (timeslotBreaks == null)
-			throw new IllegalArgumentException("List of breaks cannot be null");
+			throw new IllegalArgumentException("Breaks cannot be null");
 		
 		for (Timeslot timeslot : timeslotBreaks)
 			for (Event event : events)

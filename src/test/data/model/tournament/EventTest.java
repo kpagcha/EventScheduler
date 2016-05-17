@@ -749,7 +749,7 @@ public class EventTest {
 		event.addUnavailablePlayerAtTimeslot(players.get(3), timeslots.get(5));
 		
 		expectedEx.expect(IllegalArgumentException.class);
-		expectedEx.expectMessage("already exists in the set of unvailable timeslots for the player");
+		expectedEx.expectMessage("already exists in the set of unavailable timeslots for the player");
 		event.addUnavailablePlayerAtTimeslot(players.get(3), timeslots.get(5));
 	}
 	
@@ -2226,12 +2226,12 @@ public class EventTest {
 		event.addTeam(players.get(0), players.get(1));
 		event.addTeam(players.get(2), players.get(3));
 		
-		assertEquals(event.getTeams().get(0), event.getTeamByPlayer(players.get(1)));
-		assertEquals(event.getTeams().get(0), event.getTeamByPlayer(players.get(0)));
-		assertEquals(event.getTeams().get(1), event.getTeamByPlayer(players.get(3)));
+		assertEquals(event.getTeams().get(0), event.filterTeamByPlayer(players.get(1)));
+		assertEquals(event.getTeams().get(0), event.filterTeamByPlayer(players.get(0)));
+		assertEquals(event.getTeams().get(1), event.filterTeamByPlayer(players.get(3)));
 		
-		assertEquals(null, event.getTeamByPlayer(players.get(4)));
-		assertEquals(null, event.getTeamByPlayer(players.get(7)));
+		assertEquals(null, event.filterTeamByPlayer(players.get(4)));
+		assertEquals(null, event.filterTeamByPlayer(players.get(7)));
 	}
 	
 	@Test

@@ -16,6 +16,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import data.model.schedule.value.AbstractScheduleValue;
+import data.model.schedule.value.LocalizationScheduleValue;
 import data.model.schedule.value.PlayerScheduleValue;
 import data.model.schedule.value.PlayerScheduleValueOccupied;
 import data.model.schedule.value.ScheduleValue;
@@ -29,7 +30,9 @@ import solver.TournamentSolver.SearchStrategy;
 import utils.TournamentUtils;
 
 /**
- * Tests de las clases {@link Schedule}, {@link EventSchedule} y {@link TournamentSchedule}.
+ * Tests de las clases {@link Schedule}, {@link EventSchedule} y {@link TournamentSchedule}. 
+ * <p>
+ * Include además, test de {@link AbstractScheduleValue} y {@linkplain ScheduleValue}.
  *
  */
 public class ScheduleTest {
@@ -255,29 +258,52 @@ public class ScheduleTest {
 	}
 	
 	@Test
-	public void scheduleValueTest() {
+	public void playerScheduleValueTest() {
 		PlayerScheduleValue v = new PlayerScheduleValue(PlayerScheduleValue.FREE);
 		assertEquals(v.getValue(), PlayerScheduleValue.FREE);
 		assertTrue(v.isFree());
 		assertFalse(v.isOccupied());
+		
+		assertFalse(v.equals(null));
 		
 		v = new PlayerScheduleValueOccupied(2);
 		assertEquals(PlayerScheduleValue.OCCUPIED, v.getValue());
 		assertEquals(2, ((PlayerScheduleValueOccupied)v).getLocalization());
 		assertTrue(v.isOccupied());
 		assertFalse(v.isFree());
+		assertFalse(v.isContinuation());
+		assertEquals("2", v.toString());
+		assertTrue(v.equals(new PlayerScheduleValueOccupied(2)));
+		assertFalse(v.equals(new PlayerScheduleValueOccupied(3)));
+		assertFalse(v.equals(new PlayerScheduleValue(PlayerScheduleValue.FREE)));
+		assertFalse(v.equals(null));
 		
 		v = new PlayerScheduleValue(PlayerScheduleValue.UNAVAILABLE);
 		assertTrue(v.isUnavailable());
+		assertEquals("~", v.toString());
+		assertTrue(v.equals(new PlayerScheduleValue(PlayerScheduleValue.UNAVAILABLE)));
 		
 		v = new PlayerScheduleValue(PlayerScheduleValue.BREAK);
 		assertTrue(v.isBreak());
+		assertEquals("*", v.toString());
+		assertTrue(v.equals(new PlayerScheduleValue(PlayerScheduleValue.BREAK)));
 		
 		v = new PlayerScheduleValue(PlayerScheduleValue.LIMITED);
 		assertTrue(v.isLimited());
+		assertEquals("¬", v.toString());
+		assertTrue(v.equals(new PlayerScheduleValue(PlayerScheduleValue.LIMITED)));
 		
 		v = new PlayerScheduleValue(PlayerScheduleValue.NOT_IN_DOMAIN);
 		assertTrue(v.isNotInDomain());
+		assertEquals("x", v.toString());
+		assertTrue(v.equals(new PlayerScheduleValue(PlayerScheduleValue.NOT_IN_DOMAIN)));
+		
+		v = new PlayerScheduleValue(PlayerScheduleValue.FREE);
+		assertTrue(v.isFree());
+		assertEquals("-", v.toString());
+		assertTrue(v.equals(new PlayerScheduleValue(PlayerScheduleValue.FREE)));
+		
+		assertFalse(v.equals(new LocalizationScheduleValue(LocalizationScheduleValue.FREE)));
 		
 		try {
 			new PlayerScheduleValue(new ScheduleValue("UNKNOWN"));
@@ -285,5 +311,40 @@ public class ScheduleTest {
 		} catch (IllegalArgumentException e) {
 			assertEquals(e.getMessage(), "Illegal value");
 		}
+	}
+	
+	@Test
+	public void abstractScheduleValueTest() {
+		AbstractScheduleValue v1 = new PlayerScheduleValue(PlayerScheduleValue.LIMITED);
+		AbstractScheduleValue v2 = new PlayerScheduleValue(PlayerScheduleValue.UNAVAILABLE);
+		AbstractScheduleValue v3 = new PlayerScheduleValue(PlayerScheduleValue.UNAVAILABLE);
+		
+		assertTrue(v1.isLimited());
+		assertTrue(v2.isUnavailable());
+		assertFalse(v1.isUnavailable());
+		assertFalse(v2.isOccupied());
+		assertFalse(v1.isFree());
+		assertFalse(v2.isNotInDomain());
+		assertFalse(v2.isContinuation());
+		assertFalse(v1.isBreak());
+		
+		assertTrue(v2.equals(v3));
+		assertTrue(v3.equals(v2));
+		assertFalse(v2.equals(null));
+		assertFalse(v1.equals(v2));
+		assertFalse(v3.equals(v1));
+	}
+	
+	@Test
+	public void scheduleValueTest() {
+		ScheduleValue v = new ScheduleValue("STATE_1");
+		assertEquals("STATE_1", v.getName());
+		assertTrue(v.is("STATE_1"));
+		assertTrue(v.is("state_1"));
+		assertFalse(v.is("STATE_2"));
+		assertTrue(v.equals(new ScheduleValue("State_1")));
+		assertFalse(v.equals(new ScheduleValue("STATE_2")));
+		assertFalse(v.equals(null));
+		assertFalse(v.equals(new Object()));
 	}
 }

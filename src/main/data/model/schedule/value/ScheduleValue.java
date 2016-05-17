@@ -30,6 +30,8 @@ public class ScheduleValue {
 	}
 	
 	public boolean equals(Object o) {
+		if (o == null)
+			return false;
 		return o instanceof ScheduleValue && ((ScheduleValue)o).getName().equalsIgnoreCase(name);
 	}
 }

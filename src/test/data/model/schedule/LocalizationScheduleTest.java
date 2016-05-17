@@ -17,6 +17,7 @@ import org.junit.Test;
 import data.model.schedule.value.AbstractScheduleValue;
 import data.model.schedule.value.LocalizationScheduleValue;
 import data.model.schedule.value.LocalizationScheduleValueOccupied;
+import data.model.schedule.value.PlayerScheduleValue;
 import data.model.schedule.value.ScheduleValue;
 import data.model.tournament.Tournament;
 import data.model.tournament.event.Event;
@@ -222,19 +223,36 @@ public class LocalizationScheduleTest {
 	public void localizationScheduleValueTest() {
 		LocalizationScheduleValue v = new LocalizationScheduleValue(LocalizationScheduleValue.FREE);
 		assertTrue(v.isFree());
+		assertEquals("-", v.toString());
 		
 		v = new LocalizationScheduleValue(LocalizationScheduleValue.LIMITED);
 		assertTrue(v.isLimited());
+		assertEquals("¬", v.toString());
 		
 		v = new LocalizationScheduleValue(LocalizationScheduleValue.UNAVAILABLE);
 		assertTrue(v.isUnavailable());
+		assertEquals("*", v.toString());
 		
 		v = new LocalizationScheduleValue(LocalizationScheduleValue.CONTINUATION);
 		assertTrue(v.isContinuation());
+		assertEquals("<", v.toString());
 		
 		v = new LocalizationScheduleValueOccupied(new ArrayList<Integer>(Arrays.asList(3, 4)));
 		assertTrue(v.isOccupied());
 		assertTrue(((LocalizationScheduleValueOccupied)v).getPlayers().containsAll(new ArrayList<Integer>(Arrays.asList(3, 4))));
+		assertEquals("3,4", v.toString());
+		
+		v = new LocalizationScheduleValue(LocalizationScheduleValue.LIMITED);
+		assertTrue(v.equals(new LocalizationScheduleValue(LocalizationScheduleValue.LIMITED)));
+		assertFalse(v.equals(new LocalizationScheduleValue(LocalizationScheduleValue.CONTINUATION)));
+		assertFalse(v.equals(null));
+		assertFalse(v.equals(new PlayerScheduleValue(PlayerScheduleValue.LIMITED)));
+		
+		v = new LocalizationScheduleValueOccupied(new ArrayList<Integer>(Arrays.asList(0,2,5,6)));
+		assertTrue(v.equals(new LocalizationScheduleValueOccupied(new ArrayList<Integer>(Arrays.asList(0,2,5,6)))));
+		assertFalse(v.equals(new LocalizationScheduleValueOccupied(new ArrayList<Integer>(Arrays.asList(0,2,5)))));
+		assertFalse(v.equals(new LocalizationScheduleValue(LocalizationScheduleValue.OCCUPIED)));
+		assertFalse(v.equals(null));
 		
 		try {
 			new LocalizationScheduleValue(new ScheduleValue("UNKNOWN"));

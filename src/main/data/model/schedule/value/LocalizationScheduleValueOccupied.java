@@ -50,6 +50,9 @@ public class LocalizationScheduleValueOccupied extends LocalizationScheduleValue
 	}
 	
 	public boolean equals(Object o) {
+		if (o == null)
+			return false;
+		
 		return o instanceof LocalizationScheduleValueOccupied && ((LocalizationScheduleValueOccupied)o).getPlayers().equals(playersIndices);
 	}
 }

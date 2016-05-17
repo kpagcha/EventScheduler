@@ -158,7 +158,7 @@ public class EventSchedule extends Schedule {
 						if (event.hasTeams()) {
 							List<Team> teamsInMatch = new ArrayList<Team>();
 							for (Player player : playersList) {
-								Team team = event.getTeamByPlayer(player);
+								Team team = event.filterTeamByPlayer(player);
 								if (!teamsInMatch.contains(team))
 									teamsInMatch.add(team);
 							}

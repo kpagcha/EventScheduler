@@ -15,10 +15,6 @@ import data.model.schedule.LocalizationSchedule;
  */
 public class LocalizationScheduleValue extends AbstractScheduleValue {
 	
-	protected static final List<ScheduleValue> possibleValues = Collections.unmodifiableList(new ArrayList<>(Arrays.asList(
-		new ScheduleValue("FREE"), new ScheduleValue("UNAVAILABLE"), new ScheduleValue("LIMITED"), new ScheduleValue("CONTINUATION")
-	)));
-	
 	/**
 	 * En la localización comienza un partido a la hora correspondiente en el horario
 	 */
@@ -27,22 +23,29 @@ public class LocalizationScheduleValue extends AbstractScheduleValue {
 	/**
 	 * Localización libre a la hora correspondiente
 	 */
-	public static ScheduleValue FREE = possibleValues.stream().filter(v -> v.is("FREE")).findFirst().orElse(null);
+	public static ScheduleValue FREE = new ScheduleValue("FREE");
 	
 	/**
 	 * Localización no disponible a la hora correspondiente para ninguna categoría
 	 */
-	public static ScheduleValue UNAVAILABLE = possibleValues.stream().filter(v -> v.is("UNAVAILABLE")).findFirst().orElse(null);
+	public static ScheduleValue UNAVAILABLE = new ScheduleValue("UNAVAILABLE");
 	
 	/**
 	 * La disponibilidad de la localización a la hora correspondiente está limitada para una o más categorías, pero no para todas
 	 */
-	public static ScheduleValue LIMITED = possibleValues.stream().filter(v -> v.is("LIMITED")).findFirst().orElse(null);
+	public static ScheduleValue LIMITED = new ScheduleValue("LIMITED");
 	
 	/**
 	 * En la localización discurre la continuación de un partido a la hora correspondiente
 	 */
-	public static ScheduleValue CONTINUATION = possibleValues.stream().filter(v -> v.is("CONTINUATION")).findFirst().orElse(null);
+	public static ScheduleValue CONTINUATION = new ScheduleValue("CONTINUATION");
+	
+	/**
+	 * Posibles valores internos que puede tomar un valor de hueco de horario por localizaciones 
+	 */
+	protected static final List<ScheduleValue> possibleValues = Collections.unmodifiableList(new ArrayList<>(Arrays.asList(
+		OCCUPIED, FREE, UNAVAILABLE, LIMITED, CONTINUATION
+	)));
 
 	/**
 	 * Construye un valor concreto de un horario de localizaciones por <i>timeslots</i>
@@ -59,9 +62,7 @@ public class LocalizationScheduleValue extends AbstractScheduleValue {
 	
 	public String toString() {
 		String strVal = "";
-		if (isOccupied()) {
-			strVal = ((LocalizationScheduleValueOccupied)this).toString();
-		} else if (isFree()) {
+		if (isFree()) {
 			strVal = "-";
 		} else if (isUnavailable()) {
 			strVal = "*";
@@ -74,13 +75,12 @@ public class LocalizationScheduleValue extends AbstractScheduleValue {
 	}
 	
 	public boolean equals(Object o) {
-		if (!(o instanceof PlayerScheduleValue))
+		if (o == null)
 			return false;
 		
-		LocalizationScheduleValue v = (LocalizationScheduleValue)o;
-		if (v.isOccupied())
-			return v.getValue().equals(value);
+		if (!(o instanceof LocalizationScheduleValue))
+			return false;
 		
-		return (((LocalizationScheduleValueOccupied)v)).getPlayers() == ((LocalizationScheduleValueOccupied)this).getPlayers();
+		return ((LocalizationScheduleValue)o).getValue().equals(value);
 	}
 }

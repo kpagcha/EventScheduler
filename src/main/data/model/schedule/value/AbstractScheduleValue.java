@@ -97,6 +97,8 @@ public abstract class AbstractScheduleValue {
 	}
 	
 	public boolean equals(Object o) {
+		if (o == null)
+			return false;
 		return o instanceof AbstractScheduleValue && ((AbstractScheduleValue)o).getValue().equals(value);
 	}
 }
