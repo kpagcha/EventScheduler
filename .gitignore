@@ -1,4 +1,7 @@
+bin/
+target/
+.settings/
 .classpath
 .project
-.settings/
-target/
+.idea
+EventScheduler.iml
