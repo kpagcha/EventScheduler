@@ -26,7 +26,7 @@ public class PredefinedMatchupsConstraint extends EventConstraint {
         int nPlayersPerMatch = event.getPlayersPerMatch();
         int nMatchesPerPlayer = event.getMatchesPerPlayer();
 
-        for (Set<Player> matchup : tournamentSolver.getPredefinedMatchups().get(event)) {
+        for (Set<Player> matchup : event.getPredefinedMatchups()) {
             // Todos los posibles enfrentamientos
             IntVar[] possibleMatchups =
                     VariableFactory.boundedArray("PossibleMatchups", nLocalizations * nTimeslots, 0, 1, solver);

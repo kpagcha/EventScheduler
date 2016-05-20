@@ -48,7 +48,6 @@ public class TournamentSolverTest {
 
         assertNull(solver.getInternalSolver());
         assertEquals("Tournament", solver.getTournament().getName());
-        assertTrue(solver.getPredefinedMatchups().isEmpty());
 
         assertEquals(1, solver.getMatchesModel().length);
         assertEquals(8, solver.getMatchesModel()[0].length);

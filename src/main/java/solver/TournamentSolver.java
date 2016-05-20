@@ -82,25 +82,6 @@ public class TournamentSolver {
     private final Tournament tournament;
 
     /**
-     * Emparejamientos predefinidos
-     */
-    private final Map<Event, List<Set<Player>>> predefinedMatchups = new HashMap<>();
-
-    /**
-     * Por categoría, diccionario de jugadores para cada cual los enfrentamientos de los que forme parte han de tener
-     * lugar
-     * en cualquiera de las localizaciones de la lista de localizaciones de juego vinculada a su entrada
-     */
-    private final Map<Event, Map<Player, Set<Localization>>> playersInLocalizations = new HashMap<>();
-
-    /**
-     * Por categoría, diccionario de jugadores para cada cual los enfrentamientos de los que forme parte han de tener
-     * lugar
-     * en cualquiera de las horas de la lista de timeslots vinculada a su entrada
-     */
-    private final Map<Event, Map<Player, Set<Timeslot>>> playersAtTimeslots = new HashMap<>();
-
-    /**
      * Horario. x_e,p,c,t: horario_categoria,jugador,pista,hora. Dominio [0, 1]
      */
     private final IntVar[][][][] x;
@@ -128,8 +109,8 @@ public class TournamentSolver {
     private SearchStrategy searchStrategy = SearchStrategy.DOMOVERWDEG;
 
     /**
-     * Para las estrategias de búsqueda minDom_UB y minDom_LB indicar si priorizar timeslots (true) o
-     * pistas (false) a la hora de hacer las asignaciones
+     * Para las estrategias de búsqueda minDom_UB y minDom_LB indicar si priorizar timeslots (true) o pistas (false)
+     * a la hora de hacer las asignaciones
      */
     private boolean fillTimeslotsFirst = true;
 
@@ -195,15 +176,6 @@ public class TournamentSolver {
 
     public IntVar[][][][] getMatchesBeginningsModel() {
         return g;
-    }
-
-    /**
-     * Devuelve el diccionario de emparejamientos predefinidos envuelto en un wrapper no modificable
-     *
-     * @return diccionario no modificable de emparejamientos predefinidos
-     */
-    public Map<Event, List<Set<Player>>> getPredefinedMatchups() {
-        return Collections.unmodifiableMap(predefinedMatchups);
     }
 
     public void setSearchStrategy(SearchStrategy strategy) {
@@ -277,31 +249,11 @@ public class TournamentSolver {
      * Inicializa las variables del modelo del problema
      */
     private void buildModel() {
-        List<Event> events = tournament.getEvents();
-
-        // Añadir a los emparejamientos predefinidos, jugadores en pista y jugadores en horas a las colecciones
-        // correspondientes
-        for (Event event : events) {
-            if (event.hasPredefinedMatchups())
-                predefinedMatchups.put(event, event.getPredefinedMatchups());
-
-            if (event.hasPlayersInLocalizations())
-                playersInLocalizations.put(event, event.getPlayersInLocalizations());
-
-            if (event.hasPlayersAtTimeslots())
-                playersAtTimeslots.put(event, event.getPlayersAtTimeslots());
-        }
-
         buildMatrices();
 
         markUnavailableLocalizations();
-
-        if (!playersInLocalizations.isEmpty())
-            markPlayersNotInLocalizations();
-
-        if (!playersAtTimeslots.isEmpty())
-            markPlayersNotAtTimeslots();
-
+        markPlayersNotInLocalizations();
+        markPlayersNotAtTimeslots();
         markBreaks();
 
         setupConstraints();
@@ -396,9 +348,7 @@ public class TournamentSolver {
 
     /**
      * Fuerza a que los jugadores indicados jueguen sus partidos en las localizaciones indicadas, marcando todas las
-     * demás
-     * con 0
-     */
+     * demás con 0 */
     private void markPlayersNotInLocalizations() {
         List<Event> events = tournament.getEvents();
 
@@ -409,8 +359,8 @@ public class TournamentSolver {
             int nLocalizations = event.getLocalizations().size();
             int nTimeslots = event.getTimeslots().size();
 
-            if (playersInLocalizations.containsKey(event)) {
-                Map<Player, Set<Localization>> eventPlayersInLocalizations = playersInLocalizations.get(event);
+            if (event.hasPlayersInLocalizations()) {
+                Map<Player, Set<Localization>> eventPlayersInLocalizations = event.getPlayersInLocalizations();
                 Set<Player> players = eventPlayersInLocalizations.keySet();
 
                 // Para cada jugador al que se le ha indicado una lista de pistas donde jugar, "invalidar" las pistas
@@ -435,8 +385,8 @@ public class TournamentSolver {
     }
 
     /**
-     * Fuerza a que los jugadores indicados jueguen sus partidos en los timeslots indicados, marcando todos los
-     * demás con 0
+     * Fuerza a que los jugadores indicados jueguen sus partidos en los timeslots indicados, marcando todos los demás
+     * con 0
      */
     private void markPlayersNotAtTimeslots() {
         List<Event> events = tournament.getEvents();
@@ -448,8 +398,8 @@ public class TournamentSolver {
             int nLocalizations = event.getLocalizations().size();
             int nTimeslots = event.getTimeslots().size();
 
-            if (playersAtTimeslots.containsKey(event)) {
-                Map<Player, Set<Timeslot>> eventPlayersAtTimeslots = playersAtTimeslots.get(event);
+            if (event.hasPlayersAtTimeslots()) {
+                Map<Player, Set<Timeslot>> eventPlayersAtTimeslots = event.getPlayersAtTimeslots();
                 Set<Player> players = eventPlayersAtTimeslots.keySet();
 
                 for (Player player : players) {
@@ -526,7 +476,7 @@ public class TournamentSolver {
             constraints.addAll(builder.getConstraints());
 
             // Restricciones de emparejamientos predefinidos
-            if (!predefinedMatchups.isEmpty() && predefinedMatchups.containsKey(event)) {
+            if (event.hasPredefinedMatchups()) {
                 builder = new ConstraintBuilder(new PredefinedMatchupsConstraint(event));
                 constraints.addAll(builder.getConstraints());
             }
