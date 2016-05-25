@@ -3,7 +3,6 @@ package solver.constraint;
 import data.model.tournament.Tournament;
 import data.model.tournament.event.Event;
 import org.chocosolver.solver.constraints.IntConstraintFactory;
-import org.chocosolver.solver.variables.BoolVar;
 import org.chocosolver.solver.variables.IntVar;
 import org.chocosolver.solver.variables.VariableFactory;
 
@@ -29,42 +28,32 @@ public class MatchStartMappingConstraint extends TournamentConstraint {
             for (int p = 0; p < nPlayers; p++) {
                 for (int c = 0; c < nLocalizations; c++) {
                     for (int t = 0; t < nTimeslots - nTimeslotsPerMatch; t++) {
-                        if (nTimeslotsPerMatch == 1) {
-                            // Si un partido dura un timeslot la matriz g es idéntica a la matriz x
-                            solver.post(IntConstraintFactory.arithm(g[e][p][c][t], "=", x[e][p][c][t]));
-                        } else {
-                            // Mapear g_e,p,c,t a partir del rango que g_e,p,c,t cubre en x, es decir,
-                            // [x_e,p,c,t, x_e,p,c,t+n] (n es el número de timeslots por partido).
-                            // En términos de operación booleana, a g_t se asignaría el valor [0, 1] a partir
-                            // de la operación "and" aplicada sobre ese rango en x correspondiente a g_t,
-                            // es decir, si todos los x en el rango son 1, entonces efectivamente el
-                            // partido empieza en g_t, luego se marca con 1. Si hay al menos un elemento
-                            // del rango en x que sea 0 quiere decir que ese rango no corresponde a un partido,
-                            // luego en g_t no empieza un partido y se marca como 0
+                        // Mapear g_e,p,c,t a partir del rango que g_e,p,c,t cubre en x, es decir, [x_e,p,c,t,
+                        // x_e,p,c,t+n] (n es el número de timeslots por partido). En términos de operación
+                        // booleana, a g_t se asignaría el valor [0, 1] a partir de la operación "and" aplicada
+                        // sobre ese rango en x correspondiente a g_t, es decir, si todos los x en el rango son
+                        // 1, entonces efectivamente el partido empieza en g_t, luego se marca con 1. Si hay al
+                        // menos un elemento del rango en x que sea 0 quiere decir que ese rango no corresponde a
+                        // un partido, luego en g_t no empieza un partido y se marca como 0
 
-                            IntVar[] matchRange = new IntVar[nTimeslotsPerMatch];
-                            System.arraycopy(x[e][p][c], t, matchRange, 0, nTimeslotsPerMatch);
+                        IntVar[] matchRange = new IntVar[nTimeslotsPerMatch];
+                        System.arraycopy(x[e][p][c], t, matchRange, 0, nTimeslotsPerMatch);
 
-                            BoolVar matchTakesPlace = VariableFactory.bool("MatchTakesPlace", solver);
-                            solver.post(IntConstraintFactory.minimum(matchTakesPlace, matchRange));
-                            solver.post(IntConstraintFactory.arithm(g[e][p][c][t], "=", matchTakesPlace));
-                        }
+                        //BoolVar matchTakesPlace = VariableFactory.bool("MatchTakesPlace", solver);
+                        IntVar matchTakesPlace = VariableFactory.bounded("MatchTakesPlace", 0, 1, solver);
+                        constraints.add(IntConstraintFactory.minimum(matchTakesPlace, matchRange));
+                        constraints.add(IntConstraintFactory.arithm(g[e][p][c][t], "=", matchTakesPlace));
                     }
-                    if (nTimeslotsPerMatch == 1) {
-                        // Si un partido dura un timeslot la matriz g es idéntica a la matriz x
-                        solver.post(IntConstraintFactory.arithm(g[e][p][c][nTimeslots - 1],
+
+                    // Si un partido dura un timeslot, se termina de asignar el valor al último timeslot que no
+                    // entraba en el bucle anterior. Su valor será el mismo que el de la matriz x porque el número de
+                    // timeslots por partido es 1, luego las matrices g y x son iguales.
+                    if (nTimeslotsPerMatch == 1)
+                        constraints.add(IntConstraintFactory.arithm(
+                                g[e][p][c][nTimeslots - 1],
                                 "=",
                                 x[e][p][c][nTimeslots - 1]
                         ));
-                    } else {
-                        // Si un partido dura más de un timeslot se marcan los últimos elementos de la matriz de
-                        // comienzos de partidos (g)
-                        // con 0 para evitar que dé comienzo un partido que salga del rango del dominio de los
-                        // timeslots por causa del
-                        // rango de la duración del propio partido
-                        for (int i = 0; i < nTimeslotsPerMatch - 1; i++)
-                            solver.post(IntConstraintFactory.arithm(g[e][p][c][nTimeslots - i - 1], "=", 0));
-                    }
                 }
             }
         }

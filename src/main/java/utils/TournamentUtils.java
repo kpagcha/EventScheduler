@@ -95,6 +95,14 @@ public class TournamentUtils {
     }
 
     /*
+     * TORNEO 4 para probar el problema de asignación de partido en un timeslot distinto de los asignados a un
+     * jugador por culpa de habilitarlo en la restricción de emparejamiento predefinido
+     */
+    public static Tournament getSampleWithIssue() {
+        return null;
+    }
+
+    /*
      * TORNEO ZARLON 15 ABRIL
      */
     public static Tournament getZarlonTournament() {

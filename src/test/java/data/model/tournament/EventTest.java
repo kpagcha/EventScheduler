@@ -1,6 +1,7 @@
 package data.model.tournament;
 
 import data.model.tournament.event.Event;
+import data.model.tournament.event.Matchup;
 import data.model.tournament.event.domain.Localization;
 import data.model.tournament.event.domain.Player;
 import data.model.tournament.event.domain.Team;
@@ -332,6 +333,13 @@ public class EventTest {
     public void setMatchesPerPlayerTest() {
         event.setMatchesPerPlayer(3);
         assertEquals(3, event.getMatchesPerPlayer());
+
+        event.addMatchup(players.get(0), players.get(1));
+        assertTrue(event.hasPredefinedMatchups());
+
+        event.setMatchesPerPlayer(2);
+        assertEquals(2, event.getMatchesPerPlayer());
+        assertFalse(event.hasPredefinedMatchups());
     }
 
     @Test
@@ -379,6 +387,13 @@ public class EventTest {
     public void setTimeslotsPerMatchTest() {
         event.setTimeslotsPerMatch(4);
         assertEquals(4, event.getTimeslotsPerMatch());
+
+        event.addMatchup(players.get(4), players.get(2));
+        assertTrue(event.hasPredefinedMatchups());
+
+        event.setTimeslotsPerMatch(2);
+        assertEquals(2, event.getTimeslotsPerMatch());
+        assertFalse(event.hasPredefinedMatchups());
     }
 
     @Test
@@ -400,6 +415,16 @@ public class EventTest {
     public void setPlayersPerMatchTest() {
         event.setPlayersPerMatch(4);
         assertEquals(4, event.getPlayersPerMatch());
+        assertFalse(event.hasTeams());
+        assertFalse(event.hasPredefinedMatchups());
+
+        event.addTeam(players.get(0), players.get(1));
+        event.addTeam(players.get(2), players.get(3));
+        event.addMatchup(players.get(0), players.get(1), players.get(3), players.get(2));
+        assertTrue(event.hasTeams());
+        assertTrue(event.hasPredefinedMatchups());
+
+        event.setPlayersPerMatch(2);
         assertFalse(event.hasTeams());
         assertFalse(event.hasPredefinedMatchups());
     }
@@ -632,11 +657,21 @@ public class EventTest {
         assertFalse(event.hasTeams());
 
         event.addTeam(players.get(0), players.get(1));
-
         assertTrue(event.hasTeams());
 
         event.removeTeam(event.getTeams().get(0));
+        assertFalse(event.hasTeams());
+    }
 
+    @Test
+    public void clearTeamsTest() {
+        assertFalse(event.hasTeams());
+
+        event.addTeam(players.get(0), players.get(1));
+        event.addTeam(players.get(2), players.get(3));
+        assertTrue(event.hasTeams());
+
+        event.clearTeams();
         assertFalse(event.hasTeams());
     }
 
@@ -896,11 +931,11 @@ public class EventTest {
         assertTrue(event.hasUnavailablePlayers());
         assertEquals(2, event.getUnavailablePlayers().get(players.get(3)).size());
 
-        event.removePlayerUnavailableAtTimeslot(players.get(3), timeslots.get(5));
+        event.removeUnavailablePlayerAtTimeslot(players.get(3), timeslots.get(5));
 
         assertEquals(1, event.getUnavailablePlayers().get(players.get(3)).size());
 
-        event.removePlayerUnavailableAtTimeslot(players.get(3), timeslots.get(6));
+        event.removeUnavailablePlayerAtTimeslot(players.get(3), timeslots.get(6));
 
         assertFalse(event.hasUnavailablePlayers());
     }
@@ -909,28 +944,41 @@ public class EventTest {
     public void removeUnavailableNullPlayerTest() {
         expectedEx.expect(IllegalArgumentException.class);
         expectedEx.expectMessage("parameters cannot be null");
-        event.removePlayerUnavailableAtTimeslot(null, timeslots.get(3));
+        event.removeUnavailablePlayerAtTimeslot(null, timeslots.get(3));
     }
 
     @Test
     public void removeUnavailablePlayerNullTimeslotsTest() {
         expectedEx.expect(IllegalArgumentException.class);
         expectedEx.expectMessage("parameters cannot be null");
-        event.removePlayerUnavailableAtTimeslot(players.get(2), null);
+        event.removeUnavailablePlayerAtTimeslot(players.get(2), null);
     }
 
     @Test
     public void removeUnavailableNonexistingPlayerTest() {
         expectedEx.expect(IllegalArgumentException.class);
         expectedEx.expectMessage("does not exist in the list of players of the event");
-        event.removePlayerUnavailableAtTimeslot(new Player("Unknown Player"), timeslots.get(6));
+        event.removeUnavailablePlayerAtTimeslot(new Player("Unknown Player"), timeslots.get(6));
     }
 
     @Test
     public void removeUnavailablePlayerNonexistingTimeslotTest() {
         expectedEx.expect(IllegalArgumentException.class);
         expectedEx.expectMessage("does not exist in the list of timeslots of the event");
-        event.removePlayerUnavailableAtTimeslot(players.get(5), new AbstractTimeslot(3));
+        event.removeUnavailablePlayerAtTimeslot(players.get(5), new AbstractTimeslot(3));
+    }
+
+    @Test
+    public void clearUnavailablePlayersTest() {
+        assertFalse(event.hasUnavailablePlayers());
+
+        event.addUnavailablePlayerAtTimeslot(players.get(3), timeslots.get(5));
+        event.addUnavailablePlayerAtTimeslot(players.get(3), timeslots.get(6));
+
+        assertTrue(event.hasUnavailablePlayers());
+
+        event.clearUnavailablePlayers();
+        assertFalse(event.hasUnavailablePlayers());
     }
 
     @Test
@@ -941,224 +989,414 @@ public class EventTest {
 
         assertTrue(event.hasUnavailablePlayers());
 
-        event.removePlayerUnavailableAtTimeslot(players.get(3), timeslots.get(5));
+        event.removeUnavailablePlayerAtTimeslot(players.get(3), timeslots.get(5));
 
         assertFalse(event.hasUnavailablePlayers());
     }
 
     @Test
-    public void setFixedMatchupsTest() {
+    public void setPredefinedMatchupsTest() {
         assertFalse(event.hasPredefinedMatchups());
 
-        List<Set<Player>> fixedMatchups = new ArrayList<>();
-        fixedMatchups.add(new HashSet<>(Arrays.asList(players.get(0), players.get(1))));
-        fixedMatchups.add(new HashSet<>(Arrays.asList(players.get(4), players.get(7))));
-        fixedMatchups.add(new HashSet<>(Arrays.asList(players.get(6), players.get(3))));
+        Set<Matchup> predefinedMatchups = new HashSet<>();
 
-        event.setPredefinedMatchups(fixedMatchups);
+        predefinedMatchups.add(new Matchup(event,
+                new HashSet<>(Arrays.asList(players.get(0), players.get(1))),
+                new HashSet<>(event.getLocalizations()),
+                new HashSet<>(event.getTimeslots()),
+                1
+        ));
+        predefinedMatchups.add(new Matchup(event,
+                new HashSet<>(Arrays.asList(players.get(4), players.get(7))),
+                new HashSet<>(event.getLocalizations()),
+                new HashSet<>(event.getTimeslots()),
+                1
+        ));
+        predefinedMatchups.add(new Matchup(event,
+                new HashSet<>(Arrays.asList(players.get(6), players.get(3))),
+                new HashSet<>(event.getLocalizations()),
+                new HashSet<>(event.getTimeslots()),
+                1
+        ));
+
+        event.setPredefinedMatchups(predefinedMatchups);
 
         assertTrue(event.hasPredefinedMatchups());
         assertEquals(3, event.getPredefinedMatchups().size());
-        assertTrue(event.getPredefinedMatchups().get(0).contains(players.get(1)));
-        for (Set<Player> matchup : event.getPredefinedMatchups())
-            assertEquals(2, matchup.size());
+        assertEquals(1,
+                event.getPredefinedMatchups().stream().filter(m -> m.getPlayers().contains(players.get(1))).count()
+        );
+        for (Matchup matchup : event.getPredefinedMatchups())
+            assertEquals(2, matchup.getPlayers().size());
+
+        Map<Player, Set<Localization>> playersInLocalizations = event.getPlayersInLocalizations();
+        Map<Player, Set<Timeslot>> playersAtTimeslots = event.getPlayersAtTimeslots();
+        int nLocalizations = event.getLocalizations().size();
+        int nTimeslots = event.getTimeslots().size();
+
+        assertEquals(6, playersInLocalizations.size());
+        assertEquals(6, playersAtTimeslots.size());
+        for (int i : new int[]{ 0, 1, 4, 7, 6, 3 }) {
+            Player player = players.get(i);
+            assertEquals(nLocalizations, playersInLocalizations.get(player).size());
+            assertEquals(nTimeslots - 1, playersAtTimeslots.get(player).size());
+        }
+
+        event.clearPredefinedMatchups();
+        event.clearPlayersInLocalizations();
+        event.clearPlayersAtTimeslots();
+        event.setMatchesPerPlayer(2);
+
+        assertFalse(event.hasPredefinedMatchups());
+        assertFalse(event.hasPlayersInLocalizations());
+        assertFalse(event.hasPlayersAtTimeslots());
+
+        event.addPlayerInLocalization(players.get(2), localizations.get(0));
+        event.addPlayerInLocalization(players.get(3), localizations.get(1));
+        event.addPlayerAtTimeslotRange(players.get(4), timeslots.get(3), timeslots.get(6));
+        event.addPlayerAtTimeslotRange(players.get(5), timeslots.get(0), timeslots.get(2));
+        event.addPlayerAtTimeslot(players.get(6), timeslots.get(4));
+        event.addPlayerAtTimeslotRange(players.get(7), timeslots.get(0), timeslots.get(3));
+        event.setPredefinedMatchups(new HashSet<>(Arrays.asList(new Matchup(event,
+                new HashSet<>(Arrays.asList(players.get(0), players.get(1))),
+                new HashSet<>(Arrays.asList(localizations.get(0))),
+                new HashSet<>(Arrays.asList(timeslots.get(3))),
+                1
+        ), new Matchup(event,
+                new HashSet<>(Arrays.asList(players.get(2), players.get(3))),
+                new HashSet<>(Arrays.asList(localizations.get(1))),
+                new HashSet<>(Arrays.asList(timeslots.get(2), timeslots.get(6))),
+                1
+        ), new Matchup(event,
+                new HashSet<>(Arrays.asList(players.get(4), players.get(5))),
+                new HashSet<>(Arrays.asList(localizations.get(0))),
+                new HashSet<>(Arrays.asList(timeslots.get(0))),
+                1
+        ), new Matchup(event,
+                new HashSet<>(Arrays.asList(players.get(6), players.get(7))),
+                new HashSet<>(Arrays.asList(localizations.get(1), localizations.get(0))),
+                new HashSet<>(Arrays.asList(timeslots.get(5))),
+                1
+        ))));
+
+        assertEquals(8, event.getPlayersInLocalizations().size());
+        assertEquals(8, event.getPlayersAtTimeslots().size());
+        assertEquals(4, event.getPredefinedMatchups().size());
+
+        assertEquals(event.getLocalizations().size(), event.getPlayersInLocalizations().get(players.get(0)).size());
+        assertEquals(event.getLocalizations().size(), event.getPlayersInLocalizations().get(players.get(1)).size());
+        assertEquals(2, event.getPlayersInLocalizations().get(players.get(2)).size());
+        assertEquals(1, event.getPlayersInLocalizations().get(players.get(3)).size());
+        assertEquals(event.getLocalizations().size(), event.getPlayersInLocalizations().get(players.get(4)).size());
+        assertEquals(event.getLocalizations().size(), event.getPlayersInLocalizations().get(players.get(5)).size());
+        assertEquals(2, event.getPlayersInLocalizations().get(players.get(6)).size());
+        assertEquals(2, event.getPlayersInLocalizations().get(players.get(7)).size());
+
+        assertEquals(event.getTimeslots().size() - 1, event.getPlayersAtTimeslots().get(players.get(0)).size());
+        assertEquals(event.getTimeslots().size() - 1, event.getPlayersAtTimeslots().get(players.get(1)).size());
+        assertEquals(event.getTimeslots().size() - 1, event.getPlayersAtTimeslots().get(players.get(2)).size());
+        assertEquals(event.getTimeslots().size() - 1, event.getPlayersAtTimeslots().get(players.get(3)).size());
+        assertEquals(5, event.getPlayersAtTimeslots().get(players.get(4)).size());
+        assertEquals(3, event.getPlayersAtTimeslots().get(players.get(5)).size());
+        assertEquals(2, event.getPlayersAtTimeslots().get(players.get(6)).size());
+        assertEquals(5, event.getPlayersAtTimeslots().get(players.get(7)).size());
     }
 
     @Test
-    public void setFixedMatchupsNullTest() {
+    public void setPredefinedMatchupsNullTest() {
         expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("predefined matchups cannot be null");
+        expectedEx.expectMessage("Matchups cannot be null");
         event.setPredefinedMatchups(null);
     }
 
     @Test
-    public void setFixedMatchupsDuplicatedTest() {
-        List<Set<Player>> fixedMatchups = new ArrayList<>();
-        fixedMatchups.add(new HashSet<>(Arrays.asList(players.get(0), players.get(1))));
-        fixedMatchups.add(new HashSet<>(Arrays.asList(players.get(4), players.get(7))));
-        fixedMatchups.add(new HashSet<>(Arrays.asList(players.get(0), players.get(1))));
+    public void setPredefinedMatchupLimitExceededTest() {
+        Set<Matchup> predefinedMatchups = new HashSet<>();
 
+        predefinedMatchups.add(new Matchup(event,
+                new HashSet<>(Arrays.asList(players.get(0), players.get(1))),
+                new HashSet<>(event.getLocalizations()),
+                new HashSet<>(event.getTimeslots()),
+                1
+        ));
+        predefinedMatchups.add(new Matchup(event,
+                new HashSet<>(Arrays.asList(players.get(0), players.get(7))),
+                new HashSet<>(event.getLocalizations()),
+                new HashSet<>(event.getTimeslots()),
+                1
+        ));
+        predefinedMatchups.add(new Matchup(event,
+                new HashSet<>(Arrays.asList(players.get(0), players.get(3))),
+                new HashSet<>(event.getLocalizations()),
+                new HashSet<>(event.getTimeslots()),
+                1
+        ));
         expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("matchup cannot be repeated");
-        event.setPredefinedMatchups(fixedMatchups);
+        expectedEx.expectMessage("Player's (Player 1) number of predefined matchups (3) exceeds the limit (1)");
+        event.setPredefinedMatchups(predefinedMatchups);
     }
 
     @Test
-    public void setFixedMatchupsNullMatchupTest() {
-        List<Set<Player>> fixedMatchups = new ArrayList<>();
-        fixedMatchups.add(null);
+    public void addPredefinedMatchupTest() {
+        Map<Player, Set<Localization>> playersInLocalizations = event.getPlayersInLocalizations();
+        Map<Player, Set<Timeslot>> playersAtTimeslots = event.getPlayersAtTimeslots();
 
-        expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("matchup cannot be null");
-        event.setPredefinedMatchups(fixedMatchups);
-    }
-
-    @Test
-    public void setFixedMatchupsNullPlayerTest() {
-        List<Set<Player>> fixedMatchups = new ArrayList<>();
-        fixedMatchups.add(new HashSet<>(Arrays.asList(players.get(3), null)));
-
-        expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("player cannot be null");
-        event.setPredefinedMatchups(fixedMatchups);
-    }
-
-    @Test
-    public void setFixedMatchupsNonexistingPlayerTest() {
-        List<Set<Player>> fixedMatchups = new ArrayList<>();
-        fixedMatchups.add(new HashSet<>(Arrays.asList(players.get(3), new Player("Unknown Player"))));
-
-        expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("players must exist in the list of players of the event");
-        event.setPredefinedMatchups(fixedMatchups);
-    }
-
-    @Test
-    public void setFixedMatchupsNumberOfPlayersTest() {
-        List<Set<Player>> fixedMatchups = new ArrayList<>();
-        fixedMatchups.add(new HashSet<>(Arrays.asList(players.get(0), players.get(1))));
-        fixedMatchups.add(new HashSet<>(Arrays.asList(players.get(4), players.get(7), players.get(5))));
-
-        expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("number of players per match specified by this event");
-        event.setPredefinedMatchups(fixedMatchups);
-    }
-
-    @Test
-    public void setFixedMatchupsExceededMatchupsTest() {
-        List<Set<Player>> fixedMatchups = new ArrayList<>();
-        fixedMatchups.add(new HashSet<>(Arrays.asList(players.get(0), players.get(1))));
-        fixedMatchups.add(new HashSet<>(Arrays.asList(players.get(0), players.get(2))));
-
-        expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("cannot be present in more than the number of matches per player");
-        event.setPredefinedMatchups(fixedMatchups);
-    }
-
-    @Test
-    public void addFixedMatchupTest() {
-        event.addMatchup(new HashSet<>(Arrays.asList(players.get(2), players.get(6))));
+        event.addMatchup(new Matchup(event,
+                new HashSet<>(Arrays.asList(players.get(2), players.get(6))),
+                new HashSet<>(event.getLocalizations()),
+                new HashSet<>(event.getTimeslots()),
+                1
+        ));
 
         assertTrue(event.hasPredefinedMatchups());
         assertEquals(1, event.getPredefinedMatchups().size());
+        assertEquals(event.getLocalizations().size(), playersInLocalizations.get(players.get(2)).size());
+        assertEquals(event.getTimeslots().subList(0, timeslots.size() - 1).size(),
+                playersAtTimeslots.get(players.get(6)).size()
+        );
 
-        event.addMatchup(players.get(3), players.get(4));
+        event.addMatchup(new Matchup(event,
+                new HashSet<>(Arrays.asList(players.get(1), players.get(3))),
+                new HashSet<>(event.getLocalizations()),
+                new HashSet<>(event.getTimeslots()),
+                1
+        ));
 
         assertEquals(2, event.getPredefinedMatchups().size());
+        assertEquals(event.getLocalizations().size(), playersInLocalizations.get(players.get(1)).size());
+        assertEquals(event.getTimeslots().subList(0, timeslots.size() - 1).size(),
+                playersAtTimeslots.get(players.get(1)).size()
+        );
+
+        event.addPlayerInLocalization(players.get(1), localizations.get(0));
+        event.addPlayerAtTimeslotRange(players.get(1), timeslots.get(2), timeslots.get(7));
+
+        assertEquals(event.getLocalizations().size(), playersInLocalizations.get(players.get(1)).size());
+        assertEquals(event.getTimeslots().subList(0, timeslots.size() - 1).size(),
+                playersAtTimeslots.get(players.get(1)).size()
+        );
+
+
+        event.setMatchesPerPlayer(2);
+        event.setTimeslotsPerMatch(3);
+        event.clearPlayersInLocalizations();
+        event.clearPlayersAtTimeslots();
+
+        assertFalse(event.hasPredefinedMatchups());
+        assertFalse(event.hasPlayersInLocalizations());
+        assertFalse(event.hasPlayersAtTimeslots());
+
+        event.addMatchup(new Matchup(event,
+                new HashSet<>(Arrays.asList(players.get(0), players.get(1))),
+                new HashSet<>(Arrays.asList(localizations.get(0))),
+                new HashSet<>(Arrays.asList(timeslots.get(0), timeslots.get(1))),
+                1
+        ));
+
+        assertTrue(event.hasPredefinedMatchups());
+        assertTrue(event.hasPlayersInLocalizations());
+        assertTrue(event.hasPlayersAtTimeslots());
+
+        assertEquals(2, event.getPlayersInLocalizations().size());
+        assertEquals(event.getLocalizations().size(), event.getPlayersInLocalizations().get(players.get(0)).size());
+        assertEquals(event.getLocalizations().size(), event.getPlayersInLocalizations().get(players.get(1)).size());
+
+        assertEquals(2, event.getPlayersAtTimeslots().size());
+        assertEquals(event.getTimeslots().size() - 2, event.getPlayersAtTimeslots().get(players.get(0)).size());
+        assertEquals(event.getTimeslots().size() - 2, event.getPlayersAtTimeslots().get(players.get(1)).size());
+
+        event.addPlayerInLocalization(players.get(2), localizations.get(0));
+        event.addPlayerInLocalization(players.get(3), localizations.get(1));
+        event.addMatchup(new Matchup(event,
+                new HashSet<>(Arrays.asList(players.get(2), players.get(3))),
+                new HashSet<>(Arrays.asList(localizations.get(0))),
+                new HashSet<>(Arrays.asList(timeslots.get(4))),
+                1
+        ));
+
+        assertEquals(4, event.getPlayersInLocalizations().size());
+        assertEquals(1, event.getPlayersInLocalizations().get(players.get(2)).size());
+        assertEquals(2, event.getPlayersInLocalizations().get(players.get(3)).size());
+
+        assertEquals(4, event.getPlayersAtTimeslots().size());
+        assertEquals(event.getTimeslots().size() - 2, event.getPlayersAtTimeslots().get(players.get(2)).size());
+        assertEquals(event.getTimeslots().size() - 2, event.getPlayersAtTimeslots().get(players.get(3)).size());
+
+        event.addPlayerAtTimeslot(players.get(4), timeslots.get(2));
+        event.addPlayerAtTimeslotRange(players.get(5), timeslots.get(3), timeslots.get(6));
+        event.addMatchup(new Matchup(event,
+                new HashSet<>(Arrays.asList(players.get(4), players.get(5))),
+                new HashSet<>(localizations),
+                new HashSet<>(Arrays.asList(timeslots.get(0))),
+                1
+        ));
+
+        assertEquals(6, event.getPlayersInLocalizations().size());
+        assertEquals(event.getLocalizations().size(), event.getPlayersInLocalizations().get(players.get(4)).size());
+        assertEquals(event.getLocalizations().size(), event.getPlayersInLocalizations().get(players.get(5)).size());
+
+        assertEquals(6, event.getPlayersAtTimeslots().size());
+        assertEquals(2, event.getPlayersAtTimeslots().get(players.get(4)).size());
+        assertEquals(4, event.getPlayersAtTimeslots().get(players.get(5)).size());
+
+        event.addPlayerInLocalization(players.get(6), localizations.get(0));
+        event.addPlayerInLocalization(players.get(7), localizations.get(1));
+        event.addPlayerAtTimeslot(players.get(6), timeslots.get(4));
+        event.addPlayerAtTimeslot(players.get(6), timeslots.get(5));
+        event.addPlayerAtTimeslot(players.get(7), timeslots.get(4));
+
+        event.addMatchup(new Matchup(event,
+                new HashSet<>(Arrays.asList(players.get(6), players.get(7))),
+                new HashSet<>(Arrays.asList(localizations.get(0))),
+                new HashSet<>(Arrays.asList(timeslots.get(3))),
+                1
+        ));
+
+        assertEquals(8, event.getPlayersInLocalizations().size());
+        assertEquals(1, event.getPlayersInLocalizations().get(players.get(6)).size());
+        assertEquals(2, event.getPlayersInLocalizations().get(players.get(7)).size());
+
+        assertEquals(8, event.getPlayersAtTimeslots().size());
+        assertEquals(3, event.getPlayersAtTimeslots().get(players.get(6)).size());
+        assertEquals(2, event.getPlayersAtTimeslots().get(players.get(7)).size());
     }
 
     @Test
-    public void addFixedMatchupNullPlayersTest() {
+    public void addPredefinedMatchupNullMatchupTest() {
         expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("players cannot be null");
-        event.addMatchup((Player[]) null);
+        expectedEx.expectMessage("Matchup cannot be null");
+        event.addMatchup((Matchup) null);
     }
 
     @Test
-    public void addFixedMatchupExistingMatchupTest() {
-        event.addMatchup(new HashSet<>(Arrays.asList(players.get(2), players.get(6))));
-
-        expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("same matchup cannot be added more than once");
-        event.addMatchup(players.get(2), players.get(6));
+    public void addPredefinedMatchupPlayersSetTest() {
+        event.addMatchup(new HashSet<>(Arrays.asList(players.get(2), players.get(4))));
+        Matchup matchup = event.getPredefinedMatchups().iterator().next();
+        assertEquals(event.getLocalizations().size(), matchup.getLocalizations().size());
+        assertEquals(event.getTimeslots().size() - 1, matchup.getTimeslots().size());
+        assertEquals(1, matchup.getOccurences());
     }
 
     @Test
-    public void addFixedMatchupExceededMatchupsTest() {
-        event.addMatchup(new HashSet<>(Arrays.asList(players.get(2), players.get(6))));
-
-        expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("cannot be present in more than the number of matches per player");
-        event.addMatchup(new HashSet<>(Arrays.asList(players.get(2), players.get(3))));
+    public void addPredefinedMatchupPlayersTest() {
+        event.addMatchup(players.get(6), players.get(7));
+        Matchup matchup = event.getPredefinedMatchups().iterator().next();
+        assertEquals(event.getLocalizations().size(), matchup.getLocalizations().size());
+        assertEquals(event.getTimeslots().size() - 1, matchup.getTimeslots().size());
+        assertEquals(1, matchup.getOccurences());
     }
 
     @Test
-    public void addFixedTeamsMatchupTest() {
+    public void addPredefinedTeamsMatchupTest() {
         event.setPlayersPerMatch(4);
-        event.addTeam(players.get(3), players.get(5));
-        event.addTeam(players.get(1), players.get(4));
+        event.addTeam(players.get(4), players.get(2));
+        event.addTeam(players.get(5), players.get(0));
 
-        List<Team> teams = event.getTeams();
-        event.addMatchupBetweenTeams(new HashSet<>(Arrays.asList(teams.get(0), teams.get(1))));
+        event.addTeamMatchup(new HashSet<>(Arrays.asList(event.getTeams().get(0), event.getTeams().get(1))));
+
+        Matchup matchup = event.getPredefinedMatchups().iterator().next();
+        assertEquals(4, matchup.getPlayers().size());
+        assertEquals(event.getLocalizations().size(), matchup.getLocalizations().size());
+        assertEquals(event.getTimeslots().size() - 1, matchup.getTimeslots().size());
+        assertEquals(1, matchup.getOccurences());
+    }
+
+    @Test
+    public void removePredefinedMatchupTest() {
+        event.setMatchesPerPlayer(2);
+
+        Set<Player> players = new HashSet<>(Arrays.asList(this.players.get(0), this.players.get(3)));
+        Matchup matchup1 = new Matchup(event,
+                players,
+                new HashSet<>(event.getLocalizations().subList(0, 1)),
+                new HashSet<>(event.getTimeslots().subList(3, 7)),
+                1
+        );
+        Matchup matchup2 = new Matchup(event,
+                players,
+                new HashSet<>(event.getLocalizations().subList(1, 2)),
+                new HashSet<>(event.getTimeslots().subList(0, 4)),
+                1
+        );
+
+        assertFalse(event.hasPredefinedMatchups());
+
+        event.addMatchup(matchup1);
+        event.addMatchup(matchup2);
+
+        assertEquals(2, event.getPredefinedMatchups().size());
+
+        event.removeMatchup(matchup1);
+        assertEquals(1, event.getPredefinedMatchups().size());
+
+        event.removeMatchup(matchup2);
+        assertEquals(0, event.getPredefinedMatchups().size());
+    }
+
+    @Test
+    public void removePredefinedMatchupPlayersTest() {
+        event.setMatchesPerPlayer(3);
+        Set<Player> players1 = new HashSet<>(Arrays.asList(this.players.get(2), this.players.get(6)));
+        Set<Player> players2 = new HashSet<>(Arrays.asList(this.players.get(0), this.players.get(3)));
+        event.addMatchup(players1);
+        event.addMatchup(players2);
+        event.addMatchup(players2);
 
         assertTrue(event.hasPredefinedMatchups());
-        assertEquals(1, event.getPredefinedMatchups().size());
-        assertEquals(4, event.getPredefinedMatchups().get(0).size());
-    }
 
-    @Test
-    public void addFixedTeamsMatchupNullTest() {
-        expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("matchup cannot be null");
-        event.addMatchupBetweenTeams(null);
-    }
+        event.removeMatchup(players1);
+        assertEquals(2, event.getPredefinedMatchups().size());
 
-    @Test
-    public void addFixedTeamsMatchupNonexistingTeamTest() {
-        List<Team> teams = new ArrayList<>();
-        teams.add(new Team(players.get(3), players.get(4)));
-        teams.add(new Team(players.get(6), players.get(0)));
-
-        expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("does not exist in the list of teams of this event");
-        event.addMatchupBetweenTeams(new HashSet<>(Arrays.asList(teams.get(0), teams.get(1))));
-    }
-
-    @Test
-    public void removeFixedMatchupTest() {
-        event.addMatchup(new HashSet<>(Arrays.asList(players.get(2), players.get(6))));
-        event.addMatchup(new HashSet<>(Arrays.asList(players.get(0), players.get(3))));
-
-        assertTrue(event.hasPredefinedMatchups());
-
-        event.removeMatchup(event.getPredefinedMatchups().get(0));
-
-        assertEquals(1, event.getPredefinedMatchups().size());
-
-        event.removeMatchup(event.getPredefinedMatchups().get(0));
-
+        event.removeMatchup(players2);
         assertFalse(event.hasPredefinedMatchups());
     }
 
     @Test
-    public void removeFixedTeamsMatchupTest() {
+    public void removePredefinedTeamsMatchupTest() {
         event.setPlayersPerMatch(4);
         event.addTeam(players.get(3), players.get(5));
         event.addTeam(players.get(1), players.get(4));
 
         List<Team> teams = event.getTeams();
-        event.addMatchupBetweenTeams(new HashSet<>(Arrays.asList(teams.get(0), teams.get(1))));
+        event.addTeamMatchup(new HashSet<>(Arrays.asList(teams.get(0), teams.get(1))));
 
         assertTrue(event.hasPredefinedMatchups());
 
         event.removeTeamsMatchup(new HashSet<>(Arrays.asList(event.getTeams().get(0), event.getTeams().get(1))));
-
         assertFalse(event.hasPredefinedMatchups());
     }
 
     @Test
-    public void removeFixedTeamsMatchupNullTest() {
-        expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("matchup cannot be null");
-        event.removeTeamsMatchup(null);
+    public void clearPredefinedMatchupsTest() {
+        event.setMatchesPerPlayer(3);
+        Set<Player> players1 = new HashSet<>(Arrays.asList(this.players.get(2), this.players.get(6)));
+        Set<Player> players2 = new HashSet<>(Arrays.asList(this.players.get(0), this.players.get(3)));
+        event.addMatchup(players1);
+        event.addMatchup(players2);
+        event.addMatchup(players2);
+
+        assertTrue(event.hasPredefinedMatchups());
+
+        event.clearPredefinedMatchups();
+        assertFalse(event.hasPredefinedMatchups());
     }
 
     @Test
-    public void hasFixedMatchupsTest() {
+    public void hasPredefinedMatchupsTest() {
         assertFalse(event.hasPredefinedMatchups());
 
-        event.addMatchup(players.get(3), players.get(7));
+        event.addMatchup(new HashSet<>(Arrays.asList(players.get(3), players.get(7))));
 
         assertTrue(event.hasPredefinedMatchups());
     }
 
     @Test
-    public void getFixedMatchupsTest() {
+    public void getPredefinedMatchupsTest() {
         event.addTeam(players.get(3), players.get(5));
         event.addTeam(players.get(1), players.get(4));
 
         expectedEx.expect(UnsupportedOperationException.class);
-        event.getPredefinedMatchups().remove(1);
+        event.getPredefinedMatchups().clear();
     }
 
     @Test
@@ -1357,6 +1595,17 @@ public class EventTest {
         expectedEx.expect(IllegalArgumentException.class);
         expectedEx.expectMessage("does not exist in this event");
         event.isBreak(new AbstractTimeslot(2));
+    }
+
+    @Test
+    public void clearBreaksTest() {
+        event.addBreak(timeslots.get(2));
+        event.addBreak(timeslots.get(3));
+
+        assertTrue(event.hasBreaks());
+
+        event.clearBreaks();
+        assertFalse(event.hasBreaks());
     }
 
     @Test
@@ -1697,6 +1946,19 @@ public class EventTest {
     }
 
     @Test
+    public void clearUnavailableLocalizationsTest() {
+        event.addUnavailableLocalizationAtTimeslot(localizations.get(1), timeslots.get(3));
+        event.addUnavailableLocalizationAtTimeslot(localizations.get(1), timeslots.get(4));
+        event.addUnavailableLocalizationAtTimeslot(localizations.get(1), timeslots.get(5));
+        event.addUnavailableLocalizationAtTimeslot(localizations.get(1), timeslots.get(6));
+
+        assertTrue(event.hasUnavailableLocalizations());
+
+        event.clearUnavailableLocalizations();
+        assertFalse(event.hasUnavailableLocalizations());
+    }
+
+    @Test
     public void hasUnavailableLocalizationsTest() {
         assertFalse(event.hasUnavailableLocalizations());
 
@@ -1822,16 +2084,6 @@ public class EventTest {
     }
 
     @Test
-    public void addPlayerInLocalizationAlreadyExistingTest() {
-        event.addPlayerInLocalization(players.get(3), localizations.get(1));
-        event.addPlayerInLocalization(players.get(4), localizations.get(1));
-
-        expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("already assigned to that player");
-        event.addPlayerInLocalization(players.get(3), localizations.get(1));
-    }
-
-    @Test
     public void removePlayerInLocalizationTest() {
         event.addPlayerInLocalization(players.get(3), localizations.get(1));
         event.addPlayerInLocalization(players.get(3), localizations.get(0));
@@ -1876,6 +2128,17 @@ public class EventTest {
     }
 
     @Test
+    public void clearPlayersInLocalizationsTest() {
+        event.addPlayerInLocalization(players.get(3), localizations.get(1));
+        event.addPlayerInLocalization(players.get(3), localizations.get(0));
+
+        assertTrue(event.hasPlayersInLocalizations());
+
+        event.clearPlayersInLocalizations();
+        assertFalse(event.hasPlayersInLocalizations());
+    }
+
+    @Test
     public void hasPlayersInLocalizationsTest() {
         assertFalse(event.hasPlayersInLocalizations());
 
@@ -1894,16 +2157,31 @@ public class EventTest {
 
         Map<Player, Set<Timeslot>> playersAtTimeslots = new HashMap<>();
         playersAtTimeslots.put(players.get(7),
-                new HashSet<>(Arrays.asList(timeslots.get(0), timeslots.get(1), timeslots.get(2)))
+                new HashSet<>(Arrays.asList(timeslots.get(0),
+                        timeslots.get(1),
+                        timeslots.get(2),
+                        timeslots.get(6),
+                        timeslots.get(7)
+                ))
         );
         playersAtTimeslots.put(players.get(4), new HashSet<>(Arrays.asList(timeslots.get(3))));
-        playersAtTimeslots.put(players.get(3), new HashSet<>(Arrays.asList(timeslots.get(3))));
+        playersAtTimeslots.put(players.get(3), new HashSet<>(Arrays.asList(timeslots.get(3), timeslots.get(5))));
         playersAtTimeslots.put(players.get(0), new HashSet<>(Arrays.asList(timeslots.get(5), timeslots.get(7))));
 
         event.setPlayersAtTimeslots(playersAtTimeslots);
 
         assertTrue(event.hasPlayersAtTimeslots());
-        assertEquals(4, event.getPlayersAtTimeslots().size());
+
+        playersAtTimeslots = event.getPlayersAtTimeslots();
+        assertEquals(4, playersAtTimeslots.size());
+
+        assertEquals(4, playersAtTimeslots.get(players.get(7)).size());
+        assertEquals(1, playersAtTimeslots.get(players.get(4)).size());
+        assertEquals(2, playersAtTimeslots.get(players.get(3)).size());
+        assertEquals(1, playersAtTimeslots.get(players.get(0)).size());
+
+        assertFalse(playersAtTimeslots.get(players.get(7)).contains(timeslots.get(7)));
+        assertFalse(playersAtTimeslots.get(players.get(0)).contains(timeslots.get(7)));
     }
 
     @Test
@@ -1975,6 +2253,8 @@ public class EventTest {
 
     @Test
     public void addPlayerAtTimeslotTest() {
+        event.setTimeslotsPerMatch(3);
+
         event.addPlayerAtTimeslot(players.get(5), timeslots.get(4));
         event.addPlayerAtTimeslot(players.get(5), timeslots.get(5));
         event.addPlayerAtTimeslot(players.get(5), timeslots.get(6));
@@ -1982,7 +2262,9 @@ public class EventTest {
 
         assertTrue(event.hasPlayersAtTimeslots());
         assertEquals(1, event.getPlayersAtTimeslots().size());
-        assertEquals(4, event.getPlayersAtTimeslots().get(players.get(5)).size());
+        assertEquals(2, event.getPlayersAtTimeslots().get(players.get(5)).size());
+        assertFalse(event.getPlayersAtTimeslots().get(players.get(5)).contains(timeslots.get(6)));
+        assertFalse(event.getPlayersAtTimeslots().get(players.get(5)).contains(timeslots.get(7)));
     }
 
     @Test
@@ -2014,33 +2296,14 @@ public class EventTest {
     }
 
     @Test
-    public void addPlayerAtTimeslotAlreadyExistingTest() {
-        event.addPlayerAtTimeslot(players.get(4), timeslots.get(7));
-
-        expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("already assigned to the player");
-        event.addPlayerAtTimeslot(players.get(4), timeslots.get(7));
-    }
-
-    @Test
-    public void addPlayerAtStartTimeslotTest() {
-        event.addPlayerAtStartTimeslot(players.get(2), timeslots.get(4));
-        assertEquals(2, event.getPlayersAtTimeslots().get(players.get(2)).size());
-
-        event.addPlayerAtStartTimeslot(players.get(6), timeslots.get(7));
-        assertEquals(1, event.getPlayersAtTimeslots().get(players.get(6)).size());
-
-        event.addPlayerAtStartTimeslot(players.get(2), timeslots.get(6));
-        assertEquals(4, event.getPlayersAtTimeslots().get(players.get(2)).size());
-    }
-
-    @Test
     public void addPlayerAtTimeslotsTest() {
+        event.setTimeslotsPerMatch(4);
+
         event.addPlayerAtTimeslots(players.get(4),
                 new HashSet<>(Arrays.asList(timeslots.get(3), timeslots.get(4), timeslots.get(5), timeslots.get(6)))
         );
 
-        assertEquals(4, event.getPlayersAtTimeslots().get(players.get(4)).size());
+        assertEquals(2, event.getPlayersAtTimeslots().get(players.get(4)).size());
     }
 
     @Test
@@ -2057,13 +2320,14 @@ public class EventTest {
         for (int t = 0; t <= 4; t++)
             assertTrue(playerTimeslots.contains(timeslots.get(t)));
 
-        event.addPlayerAtTimeslotRange(players.get(6), timeslots.get(6), timeslots.get(3));
+        event.addPlayerAtTimeslotRange(players.get(6), timeslots.get(7), timeslots.get(3));
         assertEquals(2, playersAtTimeslots.size());
 
         playerTimeslots = playersAtTimeslots.get(players.get(6));
         assertEquals(4, playerTimeslots.size());
         for (int t = 3; t <= 6; t++)
             assertTrue(playerTimeslots.contains(timeslots.get(t)));
+        assertFalse(playerTimeslots.contains(timeslots.get(7)));
     }
 
     @Test
@@ -2117,12 +2381,14 @@ public class EventTest {
 
     @Test
     public void addPlayersAtTimeslotsTest() {
+        event.setTimeslotsPerMatch(3);
+
         event.addPlayersAtTimeslots(new HashSet<>(Arrays.asList(players.get(4), players.get(7))),
                 new HashSet<>(Arrays.asList(timeslots.get(0), timeslots.get(1), timeslots.get(5), timeslots.get(6)))
         );
 
         assertEquals(2, event.getPlayersAtTimeslots().size());
-        assertEquals(4, event.getPlayersAtTimeslots().get(players.get(4)).size());
+        assertEquals(3, event.getPlayersAtTimeslots().get(players.get(4)).size());
     }
 
     @Test
@@ -2210,6 +2476,15 @@ public class EventTest {
         expectedEx.expect(IllegalArgumentException.class);
         expectedEx.expectMessage("Timeslots cannot be null");
         event.removePlayerAtTimeslots(players.get(4), null);
+    }
+
+    @Test
+    public void clearPlayersAtTimeslotsTest() {
+        event.addPlayerAtTimeslot(players.get(4), timeslots.get(4));
+        assertTrue(event.hasPlayersAtTimeslots());
+
+        event.clearPlayersAtTimeslots();
+        assertFalse(event.hasPlayersAtTimeslots());
     }
 
     @Test

@@ -7,6 +7,7 @@ import data.model.schedule.TournamentSchedule;
 import data.model.schedule.value.AbstractScheduleValue;
 import data.model.tournament.Tournament;
 import data.model.tournament.event.Event;
+import data.model.tournament.event.Matchup;
 import data.model.tournament.event.domain.Localization;
 import data.model.tournament.event.domain.Player;
 import data.model.tournament.event.domain.timeslot.Timeslot;
@@ -436,17 +437,28 @@ public class TournamentSolverTest {
                 federer,
                 zverev
         ));
-        Event event = new Event("Event",
-                players,
-                TournamentUtils.buildGenericLocalizations(1, "Court"),
-                TournamentUtils.buildAbstractTimeslots(15),
-                1,
-                3,
-                2
-        );
-        event.addMatchup(djokovic, robert);
-        event.addMatchup(mahut, belucci);
-        event.addMatchup(raonic, kyrgios);
+        List<Localization> localizations = TournamentUtils.buildGenericLocalizations(3, "Court");
+        List<Timeslot> timeslots = TournamentUtils.buildAbstractTimeslots(15);
+        Event event = new Event("Event", players, localizations, timeslots, 1, 3, 2);
+
+        event.addMatchup(new Matchup(event,
+                new HashSet<>(Arrays.asList(djokovic, robert)),
+                new HashSet<>(Arrays.asList(localizations.get(0))),
+                new HashSet<>(timeslots.subList(0, 6)),
+                1
+        ));
+        event.addMatchup(new Matchup(event,
+                new HashSet<>(Arrays.asList(mahut, belucci)),
+                new HashSet<>(Arrays.asList(localizations.get(1), localizations.get(2))),
+                new HashSet<>(timeslots.subList(3, 10)),
+                1
+        ));
+        event.addMatchup(new Matchup(event,
+                new HashSet<>(Arrays.asList(raonic, kyrgios)),
+                new HashSet<>(Arrays.asList(localizations.get(1))),
+                new HashSet<>(timeslots.subList(12, 15)),
+                1
+        ));
         event.addMatchup(kohlschreiber, nadal);
         event.addMatchup(federer, zverev);
 
@@ -456,15 +468,172 @@ public class TournamentSolverTest {
 
         TournamentSchedule schedule = tournament.getSchedule();
 
-        assertTrue(schedule.filterMatchesByPlayer(djokovic).get(0).getPlayers().contains(robert));
-        assertTrue(schedule.filterMatchesByPlayer(mahut).get(0).getPlayers().contains(belucci));
-        assertTrue(schedule.filterMatchesByPlayer(raonic).get(0).getPlayers().contains(kyrgios));
+        Match match = schedule.filterMatchesByPlayer(djokovic).get(0);
+        assertTrue(match.getPlayers().contains(robert));
+        assertEquals(match.getLocalization(), localizations.get(0));
+        assertTrue(match.within(timeslots.get(0), timeslots.get(7)));
+
+        match = schedule.filterMatchesByPlayer(mahut).get(0);
+        assertTrue(match.getPlayers().contains(belucci));
+        assertTrue(match.getLocalization().equals(localizations.get(1)) ||
+                match.getLocalization().equals(localizations.get(2)));
+        assertTrue(match.within(timeslots.get(3), timeslots.get(11)));
+
+        match = schedule.filterMatchesByPlayer(raonic).get(0);
+        assertTrue(match.getPlayers().contains(kyrgios));
+        assertEquals(match.getLocalization(), localizations.get(1));
+        assertEquals(timeslots.get(12), match.getStartTimeslot());
+
         assertTrue(schedule.filterMatchesByPlayer(kohlschreiber).get(0).getPlayers().contains(nadal));
         assertTrue(schedule.filterMatchesByPlayer(federer).get(0).getPlayers().contains(zverev));
 
         LocalizationSchedule groupedSchedule = new LocalizationSchedule(tournament);
-        assertEquals(100, new Double(groupedSchedule.getOccupationRatio() * 100).intValue());
         assertEquals(tournament.getNumberOfOccupiedTimeslots(), 2 * groupedSchedule.getOccupation());
+    }
+
+    @Test
+    public void tournamentWithPredefinedMatchupsAndMultipleMatchesPerPlayerCaseTest() throws ValidationException {
+        Player federer = new Player("Federer");
+        Player nadal = new Player("Nadal");
+        Player djokovic = new Player("Djokovic");
+        Player murray = new Player("Murray");
+        Player ferrer = new Player("Ferrer");
+        Player berdych = new Player("Berdych");
+
+        Localization mainCourt = new Localization("Main Court");
+        Localization court1 = new Localization("Court 1");
+        Localization court2 = new Localization("Court 2");
+
+        List<Timeslot> timeslots = TournamentUtils.buildAbstractTimeslots(20);
+
+        Event event = new Event("Event",
+                new ArrayList<>(Arrays.asList(federer, nadal, djokovic, murray, ferrer, berdych)),
+                new ArrayList<>(Arrays.asList(mainCourt, court1, court2)),
+                timeslots,
+                3,
+                3,
+                2
+        );
+        event.setMatchupMode(MatchupMode.CUSTOM);
+
+        event.addMatchup(new Matchup(event,
+                new HashSet<>(Arrays.asList(djokovic, nadal)),
+                new HashSet<>(Arrays.asList(mainCourt)),
+                new HashSet<>(Arrays.asList(timeslots.get(0))),
+                1
+        ));
+
+        event.addMatchup(new Matchup(event,
+                new HashSet<>(Arrays.asList(federer, nadal)),
+                new HashSet<>(Arrays.asList(mainCourt)),
+                new HashSet<>(Arrays.asList(timeslots.get(3), timeslots.get(10))),
+                2
+        ));
+
+        event.addMatchup(new Matchup(event,
+                new HashSet<>(Arrays.asList(ferrer, berdych)),
+                new HashSet<>(Arrays.asList(court1, court2)),
+                new HashSet<>(Arrays.asList(timeslots.get(0), timeslots.get(3), timeslots.get(6))),
+                2
+        ));
+
+        tournament = new Tournament("Tournament", event);
+
+        assertTrue(tournament.solve());
+
+        TournamentSchedule schedule = tournament.getSchedule();
+
+        List<Match> matches = schedule.filterMatchesByPlayer(nadal);
+        assertEquals(3, matches.size());
+        assertEquals(new HashSet<>(Arrays.asList(nadal, federer, djokovic)),
+                matches.stream().map(Match::getPlayers).flatMap(Collection::stream).collect(Collectors.toSet())
+        );
+
+        matches = schedule.filterMatchesByPlayers(new ArrayList<>(Arrays.asList(nadal, djokovic)));
+        assertEquals(1, matches.size());
+        Match match = matches.get(0);
+        assertEquals(new HashSet<>(Arrays.asList(nadal, djokovic)), new HashSet<>(match.getPlayers()));
+        assertEquals(mainCourt, match.getLocalization());
+        assertEquals(timeslots.get(0), match.getStartTimeslot());
+
+        matches = schedule.filterMatchesByPlayers(new ArrayList<>(Arrays.asList(nadal, federer)));
+        assertEquals(2, matches.size());
+        match = matches.get(0);
+        assertEquals(new HashSet<>(Arrays.asList(nadal, federer)), new HashSet<>(match.getPlayers()));
+        assertEquals(mainCourt, match.getLocalization());
+        Timeslot matchStart = null;
+        if (match.getStartTimeslot() == timeslots.get(3))
+            matchStart = timeslots.get(3);
+        else if (match.getStartTimeslot() == timeslots.get(10))
+            matchStart = timeslots.get(10);
+        else
+            fail("Match start timeslot should be 3 or 10");
+        assertEquals(matchStart, match.getStartTimeslot());
+
+        match = matches.get(1);
+        assertEquals(new HashSet<>(Arrays.asList(nadal, federer)), new HashSet<>(match.getPlayers()));
+        assertEquals(mainCourt, match.getLocalization());
+        assertEquals(matchStart == timeslots.get(3) ? timeslots.get(10) : timeslots.get(3), match.getStartTimeslot());
+
+        matches = schedule.filterMatchesByPlayers(new ArrayList<>(Arrays.asList(ferrer, berdych)));
+        assertEquals(2, matches.size());
+        matches.forEach(m -> {
+            assertEquals(new HashSet<>(Arrays.asList(ferrer, berdych)), new HashSet<>(m.getPlayers()));
+            assertTrue(new HashSet<>(Arrays.asList(court1, court2)).contains(m.getLocalization()));
+            assertTrue(new HashSet<>(Arrays.asList(timeslots.get(0),
+                    timeslots.get(3),
+                    timeslots.get(6)
+            )).contains(m.getStartTimeslot()));
+        });
+    }
+
+    @Test
+    public void tournamentWithPredefinedMatchupsAndAssignedTimesotsInfeasibleTest() throws ValidationException {
+        Event event = new Event("Event",
+                TournamentUtils.buildGenericPlayers(8, "Player"),
+                TournamentUtils.buildGenericLocalizations(3, "Court"),
+                TournamentUtils.buildAbstractTimeslots(20),
+                2,
+                2,
+                2
+        );
+        event.setMatchupMode(MatchupMode.CUSTOM);
+
+        Player player = event.getPlayers().get(4);
+        Timeslot timeslot = event.getTimeslots().get(3);
+        event.addPlayerAtTimeslot(player, timeslot);
+        event.addMatchup(new Matchup(event,
+                new HashSet<>(Arrays.asList(player, event.getPlayers().get(2))),
+                new HashSet<>(Arrays.asList(event.getLocalizations().get(1))),
+                new HashSet<>(Arrays.asList(timeslot)),
+                1
+        ));
+
+        tournament = new Tournament("Tournament", event);
+        tournament.getSolver().setSearchStrategy(SearchStrategy.MINDOM_UB);
+
+        assertFalse(tournament.solve());
+    }
+
+    @Test
+    public void tournamentWithPredefinedMatchupsAndAssignedLocalizationInfeasibleTest() throws ValidationException {
+        Event event = new Event("Event",
+                TournamentUtils.buildGenericPlayers(4, "Player"),
+                TournamentUtils.buildGenericLocalizations(2, "Court"),
+                TournamentUtils.buildAbstractTimeslots(2)
+        );
+        event.addMatchup(new Matchup(event,
+                new HashSet<>(Arrays.asList(event.getPlayers().get(0), event.getPlayers().get(1))),
+                new HashSet<>(Arrays.asList(event.getLocalizations().get(0))),
+                new HashSet<>(event.getTimeslots()),
+                1
+        ));
+        event.addPlayerInLocalization(event.getPlayers().get(2), event.getLocalizations().get(0));
+
+        tournament = new Tournament("Tournament", event);
+        tournament.getSolver().setSearchStrategy(SearchStrategy.MINDOM_UB);
+
+        assertFalse(tournament.solve());
     }
 
     @Test
@@ -521,9 +690,9 @@ public class TournamentSolverTest {
         );
         List<Player> players = event.getPlayers();
         List<Timeslot> timeslots = event.getTimeslots();
-        event.addPlayerAtStartTimeslot(players.get(3), timeslots.get(0));
-        event.addPlayerAtStartTimeslot(players.get(2), timeslots.get(0));
-        event.addPlayerAtStartTimeslot(players.get(0), timeslots.get(8));
+        event.addPlayerAtTimeslot(players.get(3), timeslots.get(0));
+        event.addPlayerAtTimeslot(players.get(2), timeslots.get(0));
+        event.addPlayerAtTimeslot(players.get(0), timeslots.get(8));
         event.addPlayerAtTimeslots(players.get(6),
                 new HashSet<>(Arrays.asList(timeslots.get(2), timeslots.get(3), timeslots.get(4), timeslots.get(5)))
         );
@@ -539,7 +708,7 @@ public class TournamentSolverTest {
                 .getStartTimeslot()
                 .equals(timeslots.get(0)));
         assertTrue(schedule.filterMatchesByPlayer(players.get(0)).get(0).getStartTimeslot().equals(timeslots.get(8)));
-        assertTrue(schedule.filterMatchesByPlayer(players.get(6)).get(0).within(timeslots.get(2), timeslots.get(5)));
+        assertTrue(schedule.filterMatchesByPlayer(players.get(6)).get(0).within(timeslots.get(2), timeslots.get(7)));
     }
 
     @Test
@@ -560,6 +729,7 @@ public class TournamentSolverTest {
         assertTrue(tournament.solve());
 
         TournamentSchedule schedule = tournament.getSchedule();
+        System.out.println(schedule);
 
         List<Player> players = tournament.getAllPlayers();
         for (Player player : players)
@@ -601,6 +771,26 @@ public class TournamentSolverTest {
                     count++;
             assertEquals(3, count);
         }
+    }
+
+    @Test
+    public void tournamentWithAllEqualMatchupModeAndPredefinedMatchupInfeasibleCaseTest() throws ValidationException {
+        List<Player> players = TournamentUtils.buildGenericPlayers(4, "Player");
+        Event event = new Event("Event",
+                players,
+                TournamentUtils.buildGenericLocalizations(1, "Court"),
+                TournamentUtils.buildUndefiniteTimeslots(4),
+                2,
+                1,
+                2
+        );
+        event.setMatchupMode(MatchupMode.ALL_EQUAL);
+        event.addMatchup(players.get(0), players.get(1));
+        event.addMatchup(players.get(0), players.get(2));
+
+        tournament = new Tournament("Tournament", event);
+
+        assertFalse(tournament.solve());
     }
 
     @Test
@@ -757,12 +947,12 @@ public class TournamentSolverTest {
         Player player2 = players.get(6);
         Localization court = tournament.getAllLocalizations().get(1);
 
+        event.addPlayerInLocalization(player1, court);
         event.addMatchup(player1, player2);
         event.addUnavailablePlayerAtTimeslots(player1,
                 new HashSet<>(Arrays.asList(timeslots.get(0), timeslots.get(1)))
         );
         event.addUnavailablePlayerAtTimeslots(player2, new HashSet<>(Arrays.asList(timeslots.get(2))));
-        event.addPlayerInLocalization(player1, court);
         event.addUnavailableLocalizationAtTimeslot(court, timeslots.get(3));
         tournament.getSolver().setSearchStrategy(SearchStrategy.MINDOM_UB);
 
@@ -866,8 +1056,9 @@ public class TournamentSolverTest {
         assertTrue(tournament.solve());
         assertEquals(1, tournament.getSolver().getFoundSolutionsCount());
 
-        while (tournament.nextSchedules())
-            ;
+        while (tournament.nextSchedules()) {
+            // bloque vacío
+        }
         assertEquals(11, tournament.getSolver().getFoundSolutionsCount());
 
         assertFalse(tournament.nextSchedules());
@@ -1460,7 +1651,7 @@ public class TournamentSolverTest {
         Tournament tournament = new Tournament("Tournament", cat1, cat2);
         tournament.getSolver().setSearchStrategy(SearchStrategy.MINDOM_UB);
 
-        cat1.addPlayerAtStartTimeslot(players.get(0), timeslots.get(5));
+        cat1.addPlayerAtTimeslot(players.get(0), timeslots.get(5));
         cat1.addPlayerAtTimeslot(players.get(2), timeslots.get(7));
         cat1.addPlayerAtTimeslot(players.get(2), timeslots.get(8));
         cat1.addPlayerAtTimeslots(players.get(6),
@@ -1660,8 +1851,8 @@ public class TournamentSolverTest {
         assertEquals("Tournament Solver", data.getSolverName());
         assertTrue(data.getResolutionProcessCompleted());
         assertTrue(data.getSearchStrategies().contains("minDom_UB"));
-        assertEquals(2229, data.getVariables());
-        assertEquals(2226, data.getConstraints());
+        assertEquals(1845, data.getVariables());
+        assertEquals(1394, data.getConstraints());
         assertFalse(data.isDeafultSearchUsed());
         assertFalse(data.isSearchCompleted());
         assertEquals(1, data.getSolutions());
@@ -1678,13 +1869,13 @@ public class TournamentSolverTest {
 
         System.out.print(data);
         assertThat(out.toString(), StringContains.containsString("Solver [Tournament Solver] features:"));
-        assertThat(out.toString(), StringContains.containsString("Variables: 2.229"));
+        assertThat(out.toString(), StringContains.containsString("Variables: 1.845"));
         assertThat(out.toString(), StringContains.containsString("Search strategy: minDom_UB"));
         assertThat(out.toString(), StringContains.containsString("Nodes: 29"));
 
         out.reset();
         System.out.print(data.toJson());
-        assertThat(out.toString(), StringContains.containsString("\"constraints\":2226"));
+        assertThat(out.toString(), StringContains.containsString("\"constraints\":1394"));
         assertThat(out.toString(),
                 StringContains.containsString("\"solutions\":1,\"resolutionProcessCompleted\":true")
         );

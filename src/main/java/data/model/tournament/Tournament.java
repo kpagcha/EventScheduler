@@ -137,7 +137,7 @@ public class Tournament implements Validable {
     /**
      * Comienza el proceso de resolución para calcular un primer horario.
      *
-     * @return true si se ha encontrado una solución, false si ocurre lo contrario
+     * @return true si se ha encontrado una solución, false si no o si ya no hay más soluciones
      * @throws ValidationException si la validación del torneo falla
      */
     public boolean solve() throws ValidationException {
@@ -378,7 +378,7 @@ public class Tournament implements Validable {
 
         events.stream()
                 .filter(event -> event.getPlayers().contains(player) && event.getTimeslots().contains(timeslot))
-                .forEach(event -> event.removePlayerUnavailableAtTimeslot(player, timeslot));
+                .forEach(event -> event.removeUnavailablePlayerAtTimeslot(player, timeslot));
     }
 
     /**

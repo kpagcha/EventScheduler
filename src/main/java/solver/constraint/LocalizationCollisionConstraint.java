@@ -56,7 +56,8 @@ public class LocalizationCollisionConstraint extends TournamentConstraint {
 
                 // Que la suma de las participaciones sea o 0 (no se juega en la pista_c a la hora_t)
                 // o cualquier valor del conjunto de número de jugadores por partido (cada evento tiene el suyo)
-                solver.post(IntConstraintFactory.sum(playerSum.toArray(new IntVar[playerSum.size()]),
+                constraints.add(IntConstraintFactory.sum(
+                        playerSum.toArray(new IntVar[playerSum.size()]),
                         VariableFactory.enumerated("PossibleNumberOfPlayersPerMatch",
                                 allPossibleNumberOfPlayers,
                                 solver
@@ -98,7 +99,8 @@ public class LocalizationCollisionConstraint extends TournamentConstraint {
 
                     // Que la suma de las participaciones sea o 0 (no se juega en la pista_c a la hora_t)
                     // o el número de jugadores por partido (de este conjunto de categorías con el mismo número)
-                    solver.post(IntConstraintFactory.sum(playerSum.toArray(new IntVar[playerSum.size()]),
+                    constraints.add(IntConstraintFactory.sum(
+                            playerSum.toArray(new IntVar[playerSum.size()]),
                             VariableFactory.enumerated("PossibleNumberOfPlayersPerMatch",
                                     new int[]{ 0, numberOfPlayersPerMatch },
                                     solver

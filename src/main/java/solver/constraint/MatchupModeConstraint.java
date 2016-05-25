@@ -61,11 +61,12 @@ public class MatchupModeConstraint extends EventConstraint {
                     // Cada enfrentamiento será el mínimo entre este enfrentamiento en pista_c a la hora_t. Si hay
                     // enfrentamiento, todos los elementos serán 1 luego el mínimo será 1, indicando enfrentamiento,
                     // mientras que si al menos uno es 0, el mínimo será 0 indicando que no hay enfrentamiento
-                    solver.post(IntConstraintFactory.minimum(possibleMatchups[i++], possibleMatchup));
+                    constraints.add(IntConstraintFactory.minimum(possibleMatchups[i++], possibleMatchup));
                 }
             }
             // Que el partido o una vez, o el número de veces que deba ocurrir según el modo de emparejamiento
-            solver.post(IntConstraintFactory.sum(possibleMatchups,
+            constraints.add(IntConstraintFactory.sum(
+                    possibleMatchups,
                     VariableFactory.enumerated("NMatchups", new int[]{ 0, nMatches }, solver)
             ));
         }

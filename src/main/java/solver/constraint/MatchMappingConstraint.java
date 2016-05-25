@@ -42,8 +42,8 @@ public class MatchMappingConstraint extends TournamentConstraint {
                         // puede ser 0 o 1, es decir, que no empiece ningún partido o que empiece, pero nunca puede ser
                         // mayor puesto que supondría que dos partidos se superpondrían
                         IntVar matchStartSum = VariableFactory.bounded("MatchStartSum", 0, 1, solver);
-                        solver.post(IntConstraintFactory.sum(matchBeginningRange, matchStartSum));
-                        solver.post(IntConstraintFactory.arithm(x[e][p][c][t], "=", matchStartSum));
+                        constraints.add(IntConstraintFactory.sum(matchBeginningRange, matchStartSum));
+                        constraints.add(IntConstraintFactory.arithm(x[e][p][c][t], "=", matchStartSum));
                     }
                 }
             }

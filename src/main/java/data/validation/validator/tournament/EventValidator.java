@@ -1,6 +1,7 @@
 package data.validation.validator.tournament;
 
 import data.model.tournament.event.Event;
+import data.model.tournament.event.Matchup;
 import data.model.tournament.event.domain.Localization;
 import data.model.tournament.event.domain.Player;
 import data.model.tournament.event.domain.Team;
@@ -153,7 +154,7 @@ public class EventValidator implements Validator<Event> {
         boolean isValid = validateName(event) && validatePlayers(event) && validateLocalizations(event) &&
                 validateTimeslots(event) &&
                 validateMatchesPerPlayer(event) && validatePlayersPerMatch(event) && validateMatchDuration(event) &&
-                validateTeams(event) && validateUnavailablePlayers(event) && validateFixedMatchups(event) &&
+                validateTeams(event) && validateUnavailablePlayers(event) && validatePredefinedMatchups(event) &&
                 validateBreaks(event) &&
                 validateUnavailableLocaliztions(event) && validatePlayersInLocalizations(event) &&
                 validatePlayersAtTimeslots(event);
@@ -543,11 +544,11 @@ public class EventValidator implements Validator<Event> {
      * @param event evento no <code>null</code>
      * @return si la validación es satisfactoria <code>true</code>, de lo contrario, se devuelve <code>false</code>
      */
-    private boolean validateFixedMatchups(Event event) {
-        List<Set<Player>> matchups = event.getPredefinedMatchups();
+    private boolean validatePredefinedMatchups(Event event) {
+        Set<Matchup> matchups = event.getPredefinedMatchups();
 
         if (matchups == null) {
-            messages.add("List of fixed matchups cannot be null");
+            messages.add("Matchups cannot be null");
             return false;
         }
 
@@ -558,24 +559,15 @@ public class EventValidator implements Validator<Event> {
             return false;
         }
 
-        for (Set<Player> matchup : matchups) {
-            if (matchup.contains(null)) {
+        for (Matchup matchup : matchups) {
+            if (matchup.getPlayers().contains(null)) {
                 isValid = false;
                 messages.add("Matchup cannot contain a null player");
             }
         }
 
-        for (int i = 0; i < matchups.size() - 1; i++)
-            for (int j = i + 1; j < matchups.size(); j++)
-                if (matchups.get(i) == matchups.get(j)) {
-                    isValid = false;
-                    messages.add(String.format("A matchup cannot be exist multiple times; matchup (%s) is duplicated",
-                            matchups.get(i)
-                    ));
-                }
-
-        for (Set<Player> matchup : matchups) {
-            for (Player player : matchup)
+        for (Matchup matchup : matchups) {
+            for (Player player : matchup.getPlayers())
                 if (!event.getPlayers().contains(player)) {
                     isValid = false;
                     messages.add(String.format(
@@ -584,11 +576,54 @@ public class EventValidator implements Validator<Event> {
                     ));
                 }
 
-            if (matchup.size() != event.getPlayersPerMatch()) {
+            if (matchup.getPlayers().size() != event.getPlayersPerMatch()) {
                 isValid = false;
                 messages.add(String.format("The number of players in this matchup (%d) must be the number of players " +
-                        "per match specified" +
-                        " in the event (%d)", matchup.size(), event.getPlayersPerMatch()));
+                                "per match specified in the event (%d)",
+                        matchup.getPlayers().size(),
+                        event.getPlayersPerMatch()
+                ));
+            }
+
+            for (Localization localization : matchup.getLocalizations())
+                if (!event.getLocalizations().contains(localization)) {
+                    isValid = false;
+                    messages.add(String.format("All localizations must exist in the list of localizations of the " +
+                            "event; localization (%s) does not", localization));
+                }
+
+            if (matchup.getLocalizations().isEmpty()) {
+                isValid = false;
+                messages.add("Matchups localizations cannot be empty, there must be at least one");
+            }
+
+            for (Timeslot timeslot : matchup.getTimeslots())
+                if (!event.getTimeslots().contains(timeslot)) {
+                    isValid = false;
+                    messages.add(String.format("All timeslots must exist in the list of timeslots of the " +
+                            "event; localization (%s) does not", timeslot));
+                }
+
+            if (matchup.getTimeslots().isEmpty()) {
+                isValid = false;
+                messages.add("Matchups timeslots cannot be empty, there must be at least one");
+            }
+
+            for (Player player : matchup.getPlayers()) {
+                long count = event.getPredefinedMatchups()
+                        .stream()
+                        .filter(m -> m.getPlayers().contains(player))
+                        .mapToInt(Matchup::getOccurences)
+                        .sum();
+                if (count > event.getMatchesPerPlayer()) {
+                    isValid = false;
+                    messages.add(String.format(
+                            "The number of predefined matchups defined for a player (%s) cannot be" +
+                                    " greater than the number of matches per match the event specifies (%d)",
+                            count,
+                            event.getMatchesPerPlayer()
+                    ));
+                }
             }
         }
 

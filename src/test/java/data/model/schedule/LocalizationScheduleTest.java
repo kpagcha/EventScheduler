@@ -48,7 +48,7 @@ public class LocalizationScheduleTest {
         );
 
         List<Player> sPlayers = singles.getPlayers();
-        singles.addMatchup(sPlayers.get(0), sPlayers.get(7));
+        singles.addMatchup(new HashSet<>(Arrays.asList(sPlayers.get(0), sPlayers.get(7))));
 
         List<Player> dPlayers = doubles.getPlayers();
         doubles.addTeam(dPlayers.get(0), dPlayers.get(5));

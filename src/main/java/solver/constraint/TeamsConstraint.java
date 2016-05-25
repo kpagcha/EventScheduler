@@ -32,7 +32,8 @@ public class TeamsConstraint extends EventConstraint {
             for (int c = 0; c < nLocalizations; c++)
                 for (int t = 0; t < nTimeslots; t++)
                     for (int p = 0; p < nPlayersInTeam - 1; p++)
-                        solver.post(IntConstraintFactory.arithm(x[eventIndex][pIndex[p]][c][t],
+                        constraints.add(IntConstraintFactory.arithm(
+                                x[eventIndex][pIndex[p]][c][t],
                                 "=",
                                 x[eventIndex][pIndex[p + 1]][c][t]
                         ));

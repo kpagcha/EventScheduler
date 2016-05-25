@@ -44,7 +44,7 @@ public class PlayerNotSimultaneousConstraint extends TournamentConstraint {
                 // Que la suma de las ocupaciones de todas las pistas por parte del
                 // jugador_p a la hora_t sea o 0 (no juega a la hora_t) o 1 (el jugador
                 // juega a la hora_t en una de las pistas en una de las categorías)
-                solver.post(IntConstraintFactory.sum(
+                constraints.add(IntConstraintFactory.sum(
                         courtSum.toArray(new IntVar[courtSum.size()]),
                         VariableFactory.enumerated("PossibleParticipations", new int[]{ 0, 1 }, solver)
                 ));

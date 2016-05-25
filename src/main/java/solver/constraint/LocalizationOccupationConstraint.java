@@ -9,8 +9,9 @@ import org.chocosolver.solver.variables.VariableFactory;
 import java.util.List;
 
 /**
- * Define la restricción para que solamemente haya dos números posibles de jugadores en una
- * pista determinada a una hora en concreto: o 0 (nadie) o el número de jugadores por partido de la categoría
+ * Define la restricción para que solamemente haya dos posibles situaciones en las que haya jugadores en una
+ * localización de juego determinada a una hora en concreto: o 0 (nadie) o el número de jugadores por partido de la
+ * categoría, es decir, que tenga lugar un enfrentamiento o que no.
  */
 public class LocalizationOccupationConstraint extends EventConstraint {
 
@@ -32,10 +33,11 @@ public class LocalizationOccupationConstraint extends EventConstraint {
                     for (int p = 0; p < nPlayers; p++)
                         playerSum[p] = x[eventIndex][p][c][t];
 
-                    // Que la suma de las participaciones de todos los jugadores sea
-                    // igual a 0 o el número de jugadores por partido, es decir, que nadie juegue o que jueguen
-                    // el número de jugadores requeridos por partido
-                    solver.post(IntConstraintFactory.sum(playerSum,
+                    // Que la suma de las participaciones de todos los jugadores sea igual a 0 o el número de
+                    // jugadores por partido, es decir, que nadie juegue o que jueguen el número de jugadores
+                    // requeridos por partido
+                    constraints.add(IntConstraintFactory.sum(
+                            playerSum,
                             VariableFactory.enumerated("Sum", new int[]{ 0, nPlayersPerMatch }, solver)
                     ));
                 }

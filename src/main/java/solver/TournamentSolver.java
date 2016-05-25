@@ -26,7 +26,11 @@ import java.util.logging.Logger;
  */
 public class TournamentSolver {
     /**
-     * Modos de emparejamiento (para categorías con más de un partido por jugador)
+     * Modos de emparejamiento (para categorías con más de un partido por jugador).
+     * <p>
+     * <p>Si un evento define un modo de emparejamiento distinto de CUSTOM, el número de ocurrencias que cada
+     * enfrentamiento predefinido especifique será ignorado y, por tanto, tendrá preferencia el modo de
+     * enfrentamiento.</p>
      */
     public enum MatchupMode {
         /**
@@ -40,10 +44,16 @@ public class TournamentSolver {
         ALL_EQUAL,
 
         /**
-         * Los emparejamientos se pueden dar entre cualquier jugador o equipo disponible. Se pueden repetir
+         * Los emparejamientos se pueden dar entre cualquier jugador o equipo disponible en cualquier número. Se pueden
+         * repetir
          * emparejamientos
          */
-        ANY
+        ANY,
+
+        /**
+         * El número de emparejamientos entre los jugadores será el indicado por el propio enfrentamiento
+         */
+        CUSTOM
     }
 
     /**
@@ -240,7 +250,7 @@ public class TournamentSolver {
     private void createSolver() {
         solver = new Solver("Tournament Solver");
         foundSolutionsCount = 0;
-        lastSolutionFound = false;
+        //lastSolutionFound = false;
         schedules = null;
         resolutionData = null;
     }
@@ -249,8 +259,26 @@ public class TournamentSolver {
      * Inicializa las variables del modelo del problema
      */
     private void buildModel() {
-        buildMatrices();
+        List<Event> events = tournament.getEvents();
+        for (int e = 0; e < events.size(); e++) {
+            Event event = events.get(e);
+            int nPlayers = event.getPlayers().size();
+            int nLocalizations = event.getLocalizations().size();
+            int nTimeslots = event.getTimeslots().size();
+            int nTimeslotsPerMatch = event.getTimeslotsPerMatch();
 
+            for (int p = 0; p < nPlayers; p++)
+                for (int c = 0; c < nLocalizations; c++)
+                    for (int t = 0; t < nTimeslots; t++) {
+                        // Dominio [0, 1]: 0 -> no juega, 1 -> juega
+                        x[e][p][c][t] = VariableFactory.bounded("x" + e + "," + p + "," + c + "," + t, 0, 1, solver);
+
+                        // Dominio [0, 1]: 0 -> el partido no empieza a esa hora, 1 -> el partido empieza a esa hora
+                        g[e][p][c][t] = VariableFactory.bounded("g" + e + "," + p + "," + c + "," + t, 0, 1, solver);
+                    }
+        }
+
+        markUnavailablePlayers();
         markUnavailableLocalizations();
         markPlayersNotInLocalizations();
         markPlayersNotAtTimeslots();
@@ -261,32 +289,42 @@ public class TournamentSolver {
     }
 
     /**
-     * Inicializa las matrices IntVar del problema, teniendo en cuenta la indisponibilidad de los jugadores a ciertas
-     * horas
+     * Marca los jugadores no disponibles en las horas especificadas en las matrices del problema
      */
-    private void buildMatrices() {
+
+    private void markUnavailablePlayers() {
         List<Event> events = tournament.getEvents();
 
+        // Marcar los jugadores no disponibles con 0
         for (int e = 0; e < events.size(); e++) {
             Event event = events.get(e);
-            int nPlayers = event.getPlayers().size();
-            int nLocalizations = event.getLocalizations().size();
-            int nTimeslots = event.getTimeslots().size();
-            int nTimeslotsPerMatch = event.getTimeslotsPerMatch();
 
-            Map<Player, Set<Timeslot>> eventUnavailabilities = event.getUnavailablePlayers();
+            if (event.hasUnavailablePlayers()) {
+                int nTimeslotsPerMatch = event.getTimeslotsPerMatch();
 
-            for (int p = 0; p < nPlayers; p++) {
-                Set<Timeslot> playerUnavailabilities = eventUnavailabilities.get(event.getPlayers().get(p));
-                for (int c = 0; c < nLocalizations; c++) {
-                    for (int t = 0; t < nTimeslots; t++) {
-                        // Si el jugador_p no está disponible a la hora_t se marca con 0
-                        if (playerUnavailabilities != null &&
-                                playerUnavailabilities.contains(event.getTimeslots().get(t))) {
-                            int nRange = nTimeslotsPerMatch;
-                            if (t + 1 < nTimeslotsPerMatch)
-                                nRange -= nTimeslotsPerMatch - t - 1;
+                Map<Player, Set<Timeslot>> unavailablePlayers = event.getUnavailablePlayers();
 
+                for (Player player : unavailablePlayers.keySet()) {
+                    List<Player> players = event.getPlayers();
+                    Set<Timeslot> unavailableTimeslots = unavailablePlayers.get(player);
+
+                    int nLocalizations = event.getLocalizations().size();
+                    int nUnavailableTimeslots = unavailableTimeslots.size();
+
+                    int[] tIndex = new int[nUnavailableTimeslots];
+
+                    int pos = 0;
+                    for (Timeslot timeslot : unavailableTimeslots)
+                        tIndex[pos++] = event.getTimeslots().indexOf(timeslot);
+
+                    int p = players.indexOf(player);
+
+                    for (int t : tIndex) {
+                        int nRange = nTimeslotsPerMatch;
+                        if (t + 1 < nTimeslotsPerMatch)
+                            nRange -= nTimeslotsPerMatch - t - 1;
+
+                        for (int c = 0; c < nLocalizations; c++) {
                             // Si un jugador no está disponible en t, n no podrá empezar un partido en el rango t-n..t
                             // (siendo n la duración o número de timeslots de un partido)
                             for (int i = 0; i < nRange; i++)
@@ -295,15 +333,6 @@ public class TournamentSolver {
                             // Además, se marca con 0 las horas de la matriz de horario/partidos si el jugador no
                             // puede jugar
                             x[e][p][c][t] = VariableFactory.fixed(0, solver);
-
-                        } else {
-                            // Dominio [0, 1]: 0 -> no juega, 1 -> juega
-                            x[e][p][c][t] =
-                                    VariableFactory.bounded("x" + e + "," + p + "," + c + "," + t, 0, 1, solver);
-
-                            // Dominio [0, 1]: 0 -> el partido no empieza a esa hora, 1 -> el partido empieza a esa hora
-                            g[e][p][c][t] =
-                                    VariableFactory.bounded("g" + e + "," + p + "," + c + "," + t, 0, 1, solver);
                         }
                     }
                 }
@@ -312,7 +341,7 @@ public class TournamentSolver {
     }
 
     /**
-     * Marca las localizaciones descartadas en las matrices del problema
+     * Marca las localizaciones no disponibles a las horas especificadas en las matrices del problema.
      */
     private void markUnavailableLocalizations() {
         List<Event> events = tournament.getEvents();
@@ -320,35 +349,39 @@ public class TournamentSolver {
         // Marcar las localizaciones descartadas con 0
         for (int e = 0; e < events.size(); e++) {
             Event event = events.get(e);
-            int nPlayers = event.getPlayers().size();
 
-            Map<Localization, Set<Timeslot>> discardedLocalizations = event.getUnavailableLocalizations();
-            Set<Localization> localizations = discardedLocalizations.keySet();
+            if (event.hasUnavailableLocalizations()) {
+                int nPlayers = event.getPlayers().size();
 
-            for (Localization localization : localizations) {
-                Set<Timeslot> timeslots = discardedLocalizations.get(localization);
-                int nDiscardedTimeslots = timeslots.size();
+                Map<Localization, Set<Timeslot>> unavailableLocalizations = event.getUnavailableLocalizations();
+                Set<Localization> localizations = unavailableLocalizations.keySet();
 
-                int[] tIndex = new int[nDiscardedTimeslots];
+                for (Localization localization : localizations) {
+                    Set<Timeslot> timeslots = unavailableLocalizations.get(localization);
+                    int nUnavailableTimeslots = timeslots.size();
 
-                int i = 0;
-                for (Timeslot timeslot : timeslots)
-                    tIndex[i++] = event.getTimeslots().indexOf(timeslot);
+                    int[] tIndex = new int[nUnavailableTimeslots];
 
-                int c = event.getLocalizations().indexOf(localization);
+                    int i = 0;
+                    for (Timeslot timeslot : timeslots)
+                        tIndex[i++] = event.getTimeslots().indexOf(timeslot);
 
-                for (int p = 0; p < nPlayers; p++)
-                    for (int t = 0; t < nDiscardedTimeslots; t++) {
-                        x[e][p][c][tIndex[t]] = VariableFactory.fixed(0, solver);
-                        g[e][p][c][tIndex[t]] = VariableFactory.fixed(0, solver);
-                    }
+                    int c = event.getLocalizations().indexOf(localization);
+
+                    for (int p = 0; p < nPlayers; p++)
+                        for (int t = 0; t < nUnavailableTimeslots; t++) {
+                            x[e][p][c][tIndex[t]] = VariableFactory.fixed(0, solver);
+                            g[e][p][c][tIndex[t]] = VariableFactory.fixed(0, solver);
+                        }
+                }
             }
         }
     }
 
     /**
      * Fuerza a que los jugadores indicados jueguen sus partidos en las localizaciones indicadas, marcando todas las
-     * demás con 0 */
+     * demás con 0
+     */
     private void markPlayersNotInLocalizations() {
         List<Event> events = tournament.getEvents();
 
@@ -356,10 +389,10 @@ public class TournamentSolver {
         // se marcan con 0 todas las localizaciones del evento que no sean ésas, de este modo invalidándolas
         for (int e = 0; e < events.size(); e++) {
             Event event = events.get(e);
-            int nLocalizations = event.getLocalizations().size();
-            int nTimeslots = event.getTimeslots().size();
 
             if (event.hasPlayersInLocalizations()) {
+                int nLocalizations = event.getLocalizations().size();
+                int nTimeslots = event.getTimeslots().size();
                 Map<Player, Set<Localization>> eventPlayersInLocalizations = event.getPlayersInLocalizations();
                 Set<Player> players = eventPlayersInLocalizations.keySet();
 
@@ -386,7 +419,7 @@ public class TournamentSolver {
 
     /**
      * Fuerza a que los jugadores indicados jueguen sus partidos en los timeslots indicados, marcando todos los demás
-     * con 0
+     * con 0.
      */
     private void markPlayersNotAtTimeslots() {
         List<Event> events = tournament.getEvents();
@@ -395,10 +428,10 @@ public class TournamentSolver {
         // se marcan con 0 todos los timeslots del evento que no esan ésos, de este modo invalidándolos
         for (int e = 0; e < events.size(); e++) {
             Event event = events.get(e);
-            int nLocalizations = event.getLocalizations().size();
-            int nTimeslots = event.getTimeslots().size();
 
             if (event.hasPlayersAtTimeslots()) {
+                int nLocalizations = event.getLocalizations().size();
+                int nTimeslots = event.getTimeslots().size();
                 Map<Player, Set<Timeslot>> eventPlayersAtTimeslots = event.getPlayersAtTimeslots();
                 Set<Player> players = eventPlayersAtTimeslots.keySet();
 
@@ -410,7 +443,6 @@ public class TournamentSolver {
                     for (int t = 0; t < nTimeslots; t++) {
                         if (!assignedTimeslots.contains(event.getTimeslots().get(t))) {
                             for (int c = 0; c < nLocalizations; c++) {
-                                x[e][p][c][t] = VariableFactory.fixed(0, solver);
                                 g[e][p][c][t] = VariableFactory.fixed(0, solver);
                             }
                         }
@@ -491,8 +523,8 @@ public class TournamentSolver {
         }
 
         // Restricciones que mapean los comienzos de los partidos
-        builder = new ConstraintBuilder(new MatchStartMappingConstraint(tournament));
-        constraints.addAll(builder.getConstraints());
+        //builder = new ConstraintBuilder(new MatchStartMappingConstraint(tournament));
+        //constraints.addAll(builder.getConstraints());
 
         // Restricciones que mapean los partidos
         builder = new ConstraintBuilder(new MatchMappingConstraint(tournament));
@@ -605,10 +637,7 @@ public class TournamentSolver {
         solver.addStopCriterion(() -> stop);
 
         boolean solutionFound = solver.findSolution();
-        if (solutionFound)
-            resolutionData = new ResolutionData(solver, tournament, getSearchStrategyName(), true);
-        else
-            resolutionData = new ResolutionData(solver, tournament, getSearchStrategyName(), false);
+        resolutionData = new ResolutionData(solver, tournament, getSearchStrategyName(), solutionFound);
 
         if (!solutionFound) {
             if (solver.isFeasible() == ESat.FALSE)
@@ -637,20 +666,17 @@ public class TournamentSolver {
      */
     public Map<Event, EventSchedule> getSolvedSchedules() {
         // Cuando se llega a la última solución, si se vuelve a llamar a este método se "limpian" los horarios
-        if (lastSolutionFound)
+        if (lastSolutionFound) {
             schedules = null;
-
-        else if (solver.isFeasible() != ESat.TRUE) {
+        } else if (solver.isFeasible() != ESat.TRUE) {
             LOGGER.log(Level.INFO, "No schedules available; solution was not found.");
             schedules = null;
-
         } else if (schedules == null) {   // Se ha encontrado la primera solución
             schedules = new HashMap<>(tournament.getEvents().size());
             buildSchedules();
-
         } else {                          // Se ha encontrado una siguiente solución
             if (solver.nextSolution()) {
-                schedules.clear();
+                this.schedules.clear();
                 buildSchedules();
             } else {
                 LOGGER.log(Level.INFO, "All possible schedules have already been found.");
@@ -695,5 +721,85 @@ public class TournamentSolver {
             }
         }
         return matrix;
+    }
+
+    /**
+     * Devuelve una representación en cadena con la matriz interna de horario que maneja el <i>solver</i>.
+     *
+     * @return cadena con la matrix interna de horario "x"
+     */
+    public String internalMatrixToString() {
+        StringBuilder sb = new StringBuilder("Internal matrix 'x' (complete matches)\n\n");
+
+        for (int e = 0; e < tournament.getEvents().size(); e++) {
+            Event event = tournament.getEvents().get(e);
+            List<Player> players = event.getPlayers();
+            List<Localization> localizations = event.getLocalizations();
+            List<Timeslot> timeslots = event.getTimeslots();
+
+            sb.append(String.format("%s\n\n%8s\n", event.getName(), " "));
+
+            for (int c = 0; c < localizations.size(); c++) {
+                sb.append(String.format("(%d) %s\n", c, localizations.get(c)));
+
+                for (int t = 0; t < timeslots.size(); t++)
+                    sb.append(String.format("%4s", "t" + t));
+                sb.append("\n");
+
+                for (int p = 0; p < players.size(); p++) {
+                    String playerStr = players.get(p).toString();
+                    if (playerStr.length() > 8)
+                        playerStr = playerStr.substring(0, 8);
+
+                    sb.append(String.format("%8s", playerStr));
+                    for (int t = 0; t < timeslots.size(); t++)
+                        sb.append(String.format("%4s", x[e][p][c][t].getValue() == 0 ? "-" : "x"));
+                    sb.append("\n");
+                }
+                sb.append("\n\n");
+            }
+        }
+
+        return sb.toString();
+    }
+
+    /**
+     * Devuelve una representación en cadena con la matriz interna de horario (comienzos de partidos) que maneja el
+     * <i>solver</i>.
+     *
+     * @return cadena con la matrix interna de horario "g"
+     */
+    public String internalMatrixBeginningsToString() {
+        StringBuilder sb = new StringBuilder("Internal matrix 'g' (beginnings of matches)\n\n");
+
+        for (int e = 0; e < tournament.getEvents().size(); e++) {
+            Event event = tournament.getEvents().get(e);
+            List<Player> players = event.getPlayers();
+            List<Localization> localizations = event.getLocalizations();
+            List<Timeslot> timeslots = event.getTimeslots();
+
+            sb.append(String.format("%s\n\n%8s\n", event.getName(), " "));
+
+            for (int c = 0; c < localizations.size(); c++) {
+                sb.append(String.format("(%d) %s\n\n", c, localizations.get(c)));
+
+                for (int t = 0; t < timeslots.size(); t++)
+                    sb.append(String.format("%4s", "t" + t));
+                sb.append("\n");
+
+                for (int p = 0; p < players.size(); p++) {
+                    String playerStr = players.get(p).toString();
+                    if (playerStr.length() > 8)
+                        playerStr = playerStr.substring(0, 8);
+
+                    sb.append(String.format("%8s", playerStr));
+                    for (int t = 0; t < timeslots.size(); t++)
+                        sb.append(String.format("%4s", g[e][p][c][t].getValue() == 0 ? "-" : "x"));
+                    sb.append("\n");
+                }
+            }
+        }
+
+        return sb.toString();
     }
 }
