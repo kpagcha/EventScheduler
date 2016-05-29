@@ -1,5 +1,7 @@
 package data.model.tournament;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import data.model.schedule.EventSchedule;
 import data.model.schedule.Match;
 import data.model.schedule.TournamentSchedule;
@@ -52,6 +54,7 @@ public class Tournament implements Validable {
     /**
      * Categorías que componen el torneo
      */
+    @JsonBackReference
     private final List<Event> events;
 
     /**
@@ -83,6 +86,7 @@ public class Tournament implements Validable {
     /**
      * El solver que obtendrá los horarios de cada categoría el torneo
      */
+    @JsonIgnore
     private final TournamentSolver solver;
 
     /**
@@ -337,14 +341,14 @@ public class Tournament implements Validable {
      */
     public void addUnavailablePlayerAtTimeslotRange(Player player, Timeslot t1, Timeslot t2) {
         if (!allPlayers.contains(player))
-            throw new IllegalArgumentException(String.format("Player (%s) does not exist in the list of players of "
-                    + "the tournament",
+            throw new IllegalArgumentException(String.format(
+                    "Player (%s) does not exist in the list of players of " + "the tournament",
                     player
             ));
 
         if (!allTimeslots.contains(t1))
             throw new IllegalArgumentException(String.format("Timeslots (%s) does not exist in the list of timeslots " +
-                    "" + "of the tournament", t1));
+                    "" + " of the tournament", t1));
 
         if (!allTimeslots.contains(t2))
             throw new IllegalArgumentException(String.format("Timeslots (%s) does not exist in the list of timeslots " +

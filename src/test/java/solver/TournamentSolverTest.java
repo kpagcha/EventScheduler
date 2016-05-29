@@ -537,6 +537,8 @@ public class TournamentSolverTest {
                 2
         ));
 
+        event.addMatchup(berdych, murray);
+
         tournament = new Tournament("Tournament", event);
 
         assertTrue(tournament.solve());

@@ -128,12 +128,9 @@ public abstract class Schedule {
      *
      * @param start timeslot de comienzo
      * @param end   timeslot final
-     * @return lista de partidos, o <code>null</code> si alguno de los <i>timeslots</i> no pertenece al dominio
+     * @return lista de partidos
      */
     public List<Match> filterMatchesInTimeslotRange(Timeslot start, Timeslot end) {
-        if (!(timeslots.contains(start) && timeslots.contains(end)))
-            return null;
-
         return matches.stream()
                 .filter(m -> m.getStartTimeslot().equals(start) && m.getEndTimeslot().equals(end))
                 .collect(Collectors.toList());

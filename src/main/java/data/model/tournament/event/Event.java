@@ -1,5 +1,6 @@
 package data.model.tournament.event;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import data.model.tournament.Tournament;
 import data.model.tournament.event.domain.Localization;
 import data.model.tournament.event.domain.Player;
@@ -47,6 +48,7 @@ public class Event implements Validable {
     /**
      * Torneo al que pertenece la categoría
      */
+    @JsonManagedReference
     private Tournament tournament;
 
     /**
@@ -601,16 +603,11 @@ public class Event implements Validable {
     }
 
     /**
-     * Elimina un equipo de la lista de equipos, si existe
+     * Elimina un equipo de la lista de equipos, si existe. Si no, no habrá modificaciones.
      *
      * @param team un equipo de jugadores
-     * @throws IllegalArgumentException si no se cumplen las precondiciones
      */
     public void removeTeam(Team team) {
-        if (!teams.contains(team))
-            throw new IllegalArgumentException(
-                    "The team (" + team + ") does not exist in the list of teams of this event");
-
         teams.remove(team);
     }
 
@@ -713,12 +710,7 @@ public class Event implements Validable {
             throw new IllegalArgumentException(
                     "The timeslot (" + timeslot + ") doest not exist in the list of timeslots of the event");
 
-        if (!unavailablePlayers.computeIfAbsent(player, t -> new HashSet<>()).add(timeslot))
-            throw new IllegalArgumentException(String.format(
-                    "Timeslot (%s) already exists in the set of unavailable timeslots for the player (%s)",
-                    timeslot,
-                    player
-            ));
+        unavailablePlayers.computeIfAbsent(player, t -> new HashSet<>()).add(timeslot);
     }
 
     /**
@@ -1035,11 +1027,10 @@ public class Event implements Validable {
     }
 
     /**
-     * Asigna la lista de horas que son descansos o breaks
+     * Asigna la lista de horas que son descansos o <i>breaks</i>. Se ignoran elementos repetidos.
      *
      * @param breaks lista no nula de horas existentes en el torneo que serán interpretadas como breaks
-     * @throws IllegalArgumentException si la lista es nula o contiene horas que no existen en este evento o hay
-     *                                  elementos repetidos
+     * @throws IllegalArgumentException si la lista es nula o contiene horas que no existen en este evento
      */
     public void setBreaks(List<Timeslot> breaks) {
         if (breaks == null)
@@ -1056,7 +1047,7 @@ public class Event implements Validable {
         if (!timeslots.containsAll(breaks))
             throw new IllegalArgumentException("All break timeslots must exist in the list of timeslots of this event");
 
-        this.breaks = breaks;
+        this.breaks = new ArrayList<>(new HashSet<>(breaks));
     }
 
     /**
@@ -1070,7 +1061,7 @@ public class Event implements Validable {
 
 
     /**
-     * Añade una hora (timeslot) a la lista de breaks
+     * Añade una hora (timeslot) a la lista de <i>breaks</i>. Si ya existe, no habrá modificaciones.
      *
      * @param timeslotBreak una hora del evento que no exista ya en la lista de breaks
      * @throws IllegalArgumentException si no se cumplen todas las precondiciones
@@ -1081,10 +1072,6 @@ public class Event implements Validable {
 
         if (!timeslots.contains(timeslotBreak))
             throw new IllegalArgumentException("The timeslot (" + timeslotBreak + ") does not exist in this event");
-
-        if (breaks.contains(timeslotBreak))
-            throw new IllegalArgumentException(
-                    "The timeslot (" + timeslotBreak + ") already exists in the list of breaks");
 
         breaks.add(timeslotBreak);
     }
@@ -1130,15 +1117,8 @@ public class Event implements Validable {
      * lista de breaks, no habrá modificaciones.
      *
      * @param timeslotBreak una hora del evento
-     * @throws IllegalArgumentException si no se cumplen las precondiciones
      */
     public void removeBreak(Timeslot timeslotBreak) {
-        if (timeslotBreak == null)
-            throw new IllegalArgumentException("The timeslot break cannot be null");
-
-        if (!timeslots.contains(timeslotBreak))
-            throw new IllegalArgumentException("The timeslot (" + timeslotBreak + ") does not exist in this event");
-
         breaks.remove(timeslotBreak);
     }
 
@@ -1226,10 +1206,10 @@ public class Event implements Validable {
      * Marca como inválida o no disponible una localización de juego a una hora determinada.
      *
      * @param localization localización perteneciente al conjunto de localizaciones del evento
-     * @param timeslot     hora perteneciente al conjunto de horas en las que el evento discurre y no existente en el
-     *                     conjunto de horas
-     *                     no disponibles de la localización
-     * @throws IllegalArgumentException si no se cumplen las precondiciones
+     * @param timeslot     hora perteneciente al conjunto de horas en las que el evento discurre
+     * @throws IllegalArgumentException si alguno de los parámetros es <code>null</code>
+     * @throws IllegalArgumentException si la localización no existe en el evento
+     * @throws IllegalArgumentException si el <i>timeslot</i> no existe en el evento
      */
     public void addUnavailableLocalizationAtTimeslot(Localization localization, Timeslot timeslot) {
         if (localization == null || timeslot == null)
@@ -1241,11 +1221,7 @@ public class Event implements Validable {
         if (!timeslots.contains(timeslot))
             throw new IllegalArgumentException("The timeslot (" + timeslot + ") does not exist in this event");
 
-        if (!unavailableLocalizations.computeIfAbsent(localization, t -> new HashSet<>()).add(timeslot))
-            throw new IllegalArgumentException(String.format(
-                    "The timeslot (%s) already exists in the set un unavailable timeslots for the localization",
-                    timeslot
-            ));
+        unavailableLocalizations.computeIfAbsent(localization, t -> new HashSet<>()).add(timeslot);
     }
 
     /**
@@ -1255,7 +1231,9 @@ public class Event implements Validable {
      * @param timeslots    conjunto de horas pertenecientes al dominio del evento y no existentes en el conjunto de
      *                     horas no
      *                     disponibles de la localización
-     * @throws IllegalArgumentException si no se cumplen las precondiciones
+     * @throws IllegalArgumentException si alguno de los parámetros es <code>null</code>
+     * @throws IllegalArgumentException si se da alguno de los casos ilegales que se describen en
+     *                                  {@link Event#addUnavailableLocalizationAtTimeslot(Localization, Timeslot)}
      */
     public void addUnavailableLocalizationAtTimeslots(Localization localization, Set<Timeslot> timeslots) {
         if (localization == null || timeslots == null)
@@ -1271,7 +1249,9 @@ public class Event implements Validable {
      * @param localization localización de juego del evento
      * @param t1           un extremo del rango de horas
      * @param t2           el otro extremo del rango de horas
-     * @throws IllegalArgumentException si los parámetros son <code>null</code> o no pertenecen al dominio del evento
+     * @throws IllegalArgumentException si los parámetros son <code>null</code>
+     * @throws IllegalArgumentException si se da alguno de los casos ilegales que se describen en
+     *                                  {@link Event#addUnavailableLocalizationAtTimeslot(Localization, Timeslot)}
      */
     public void addUnavailableLocalizationAtTimeslotRange(Localization localization, Timeslot t1, Timeslot t2) {
         if (localization == null || t1 == null || t2 == null)
@@ -1313,15 +1293,8 @@ public class Event implements Validable {
      * localización no estuviese no disponible a ninguna hora, no habrá modificaciones.
      *
      * @param localization localización perteneciente al conjunto de localizaciones del evento
-     * @throws IllegalArgumentException si no se cumplen las precondiciones
      */
     public void removeUnavailableLocalization(Localization localization) {
-        if (localization == null)
-            throw new IllegalArgumentException("The localization cannot be null");
-
-        if (!localizations.contains(localization))
-            throw new IllegalArgumentException("The localization (" + localization + ") does not exist in this event");
-
         unavailableLocalizations.remove(localization);
     }
 
@@ -1368,7 +1341,11 @@ public class Event implements Validable {
      * @param playersInLocalizations diccionario no nulo de jugadores pertenecientes al evento y localizaciones donde
      *                               jugarán,
      *                               existentes en este evento
-     * @throws IllegalArgumentException si no se cumplen las precondiciones
+     * @throws IllegalArgumentException si alguno de los parámetros es <code>null</code>
+     * @throws IllegalArgumentException si alguno de los jugadores es <code>null</code>
+     * @throws IllegalArgumentException si alguno de los jugadores no existe en el evento
+     * @throws IllegalArgumentException si alguna de las localizacioens es <code>null</code>
+     * @throws IllegalArgumentException si alguna de las localizaciones no existe en el evento
      */
     public void setPlayersInLocalizations(Map<Player, Set<Localization>> playersInLocalizations) {
         if (playersInLocalizations == null)
@@ -1410,7 +1387,9 @@ public class Event implements Validable {
      *
      * @param player       jugador perteneciente al conjunto de jugadores del evento
      * @param localization localización perteneciente al conjunto de localizaciones del evento
-     * @throws IllegalArgumentException si no se cumplen las precondiciones
+     * @throws IllegalArgumentException si alguno de los parámetros es <code>null</code>
+     * @throws IllegalArgumentException si alguno de los jugadores no existe en el evento
+     * @throws IllegalArgumentException si alguna de las localizaciones no existe en el evento
      */
     public void addPlayerInLocalization(Player player, Localization localization) {
         if (player == null || localization == null)
@@ -1427,23 +1406,13 @@ public class Event implements Validable {
     }
 
     /**
-     * Elimina de la configuración que el jugador deba jugar en la localización, si existe.
+     * Elimina de la configuración que el jugador deba jugar en la localización, si existe. Si no, no habrá
+     * modificaciones.
      *
      * @param player       jugador perteneciente al conjunto de jugadores del evento
      * @param localization localización perteneciente al conjunto de localizaciones del evento
-     * @throws IllegalArgumentException si no se cumplen las precondiciones
      */
     public void removePlayerInLocalization(Player player, Localization localization) {
-        if (player == null || localization == null)
-            throw new IllegalArgumentException("The parameters cannot be null");
-
-        if (!players.contains(player))
-            throw new IllegalArgumentException("The player (" + player + ") does not exist in the list of players of " +
-                    "this event");
-
-        if (!localizations.contains(localization))
-            throw new IllegalArgumentException("The localization (" + localization + ") does not exist in this event");
-
         playersInLocalizations.computeIfPresent(player, (p, l) -> l.remove(localization) && l.isEmpty() ? null : l);
     }
 
@@ -1624,20 +1593,8 @@ public class Event implements Validable {
      *
      * @param player   jugador perteneciente al conjunto de jugadores del evento
      * @param timeslot hora perteneciente al conjunto de horas en las que el evento discurre
-     * @throws IllegalArgumentException si no se cumplen las precondiciones
      */
     public void removePlayerAtTimeslot(Player player, Timeslot timeslot) {
-        if (player == null || timeslot == null)
-            throw new IllegalArgumentException("The parameters cannot be null");
-
-        if (!players.contains(player))
-            throw new IllegalArgumentException("The player (" + player + ") does not exist in the list of players of " +
-                    "this event");
-
-        if (!timeslots.contains(timeslot))
-            throw new IllegalArgumentException("The timeslot (" + timeslot + ") does not exist in the list of " +
-                    "timeslots of this event");
-
         playersAtTimeslots.computeIfPresent(player, (p, t) -> t.remove(timeslot) && t.isEmpty() ? null : t);
     }
 
@@ -1652,8 +1609,7 @@ public class Event implements Validable {
         if (timeslots == null)
             throw new IllegalArgumentException("Timeslots cannot be null");
 
-        for (Timeslot timeslot : timeslots)
-            removePlayerAtTimeslot(player, timeslot);
+        timeslots.forEach(t -> removePlayerAtTimeslot(player, t));
     }
 
     /**

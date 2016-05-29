@@ -642,17 +642,6 @@ public class EventTest {
     }
 
     @Test
-    public void removeNonexistingTeamTest() {
-        event.addTeam(players.get(0), players.get(1));
-
-        Team team = new Team(players.get(3), players.get(6));
-
-        expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("does not exist in the list of teams of this event");
-        event.removeTeam(team);
-    }
-
-    @Test
     public void hasTeamsTest() {
         assertFalse(event.hasTeams());
 
@@ -811,15 +800,6 @@ public class EventTest {
         event.addUnavailablePlayerAtTimeslot(players.get(3),
                 new DefiniteTimeslot(LocalTime.of(10, 0), Duration.ofHours(2), 1)
         );
-    }
-
-    @Test
-    public void addUnavailablePlayerAlreadyExistingTimeslotTest() {
-        event.addUnavailablePlayerAtTimeslot(players.get(3), timeslots.get(5));
-
-        expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("already exists in the set of unavailable timeslots for the player");
-        event.addUnavailablePlayerAtTimeslot(players.get(3), timeslots.get(5));
     }
 
     @Test
@@ -1491,16 +1471,6 @@ public class EventTest {
     }
 
     @Test
-    public void addBreakExistingBreakTest() {
-        event.addBreak(timeslots.get(2));
-        event.addBreak(timeslots.get(3));
-
-        expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("already exists in the list of breaks");
-        event.addBreak(timeslots.get(3));
-    }
-
-    @Test
     public void addBreakRangeTest() {
         event.addBreakRange(timeslots.get(1), timeslots.get(3));
 
@@ -1553,20 +1523,6 @@ public class EventTest {
         event.removeBreak(timeslots.get(3));
 
         assertEquals(1, event.getBreaks().size());
-    }
-
-    @Test
-    public void removeBreakNullTest() {
-        expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("break cannot be null");
-        event.removeBreak(null);
-    }
-
-    @Test
-    public void removeBreakNonexistingTimeslotTest() {
-        expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("does not exist in this event");
-        event.removeBreak(new DefiniteTimeslot(LocalTime.of(17, 15), Duration.ofMinutes(90), 6));
     }
 
     @Test
@@ -1749,17 +1705,6 @@ public class EventTest {
     }
 
     @Test
-    public void addUnavailableLocalizationAlreadyExistingTest() {
-        event.addUnavailableLocalizationAtTimeslot(localizations.get(0), timeslots.get(2));
-        event.addUnavailableLocalizationAtTimeslot(localizations.get(0), timeslots.get(3));
-        event.addUnavailableLocalizationAtTimeslot(localizations.get(0), timeslots.get(4));
-
-        expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("already exists in the set un unavailable timeslots for the localization");
-        event.addUnavailableLocalizationAtTimeslot(localizations.get(0), timeslots.get(4));
-    }
-
-    @Test
     public void addUnavailableLocalizationAtTimeslotsTest() {
         assertFalse(event.hasUnavailableLocalizations());
 
@@ -1876,20 +1821,6 @@ public class EventTest {
                 timeslots.get(0),
                 new AbstractTimeslot(3)
         );
-    }
-
-    @Test
-    public void removeUnavailableLocalizationNullLocalizationTest() {
-        expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("localization cannot be null");
-        event.removeUnavailableLocalization(null);
-    }
-
-    @Test
-    public void removeUnavailableLocalizationNonexistingLocalizationTest() {
-        expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("does not exist in this event");
-        event.removeUnavailableLocalization(new Localization("Unknown Localization"));
     }
 
     @Test
@@ -2097,34 +2028,6 @@ public class EventTest {
         event.removePlayerInLocalization(players.get(3), localizations.get(1));
 
         assertNull(event.getPlayersInLocalizations().get(players.get(3)));
-    }
-
-    @Test
-    public void removePlayerInLocalizationNullPlayerTest() {
-        expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("cannot be null");
-        event.removePlayerInLocalization(null, localizations.get(1));
-    }
-
-    @Test
-    public void removePlayerInLocalizationNullLocalizationTest() {
-        expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("cannot be null");
-        event.removePlayerInLocalization(players.get(5), null);
-    }
-
-    @Test
-    public void removePlayerInLocalizationNonexistingPlayerTest() {
-        expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("does not exist in the list of players of this event");
-        event.removePlayerInLocalization(new Player("Unknown Player"), localizations.get(1));
-    }
-
-    @Test
-    public void removePlayerInLocalizationNonexistingLocalizationTest() {
-        expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("does not exist in this event");
-        event.removePlayerInLocalization(players.get(5), new Localization("Unknown localization"));
     }
 
     @Test
@@ -2424,34 +2327,6 @@ public class EventTest {
         event.removePlayerAtTimeslot(players.get(4), timeslots.get(5));
 
         assertNull(event.getPlayersAtTimeslots().get(players.get(4)));
-    }
-
-    @Test
-    public void removePlayerAtTimeslotTestNullPlayer() {
-        expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("parameters cannot be null");
-        event.removePlayerAtTimeslot(null, timeslots.get(0));
-    }
-
-    @Test
-    public void removePlayerAtTimeslotTestNullTimeslots() {
-        expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("parameters cannot be null");
-        event.removePlayerAtTimeslot(players.get(3), null);
-    }
-
-    @Test
-    public void removePlayerAtTimeslotTestNonexistingPlayer() {
-        expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("does not exist in the list of players of this event");
-        event.removePlayerAtTimeslot(new Player("Unknown Player"), timeslots.get(0));
-    }
-
-    @Test
-    public void removePlayerAtTimeslotTestNonexistingTimeslots() {
-        expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("does not exist in the list of timeslots of this event");
-        event.removePlayerAtTimeslot(players.get(3), new AbstractTimeslot(0));
     }
 
     @Test

@@ -14,7 +14,7 @@ import utils.TournamentUtilsTest;
 @RunWith(Suite.class)
 @SuiteClasses({ EventTest.class, EntityTest.class, LocalizationTest.class, PlayerTest.class, TeamTest.class,
         TimeslotTest.class, TournamentTest.class, ScheduleTest.class, MatchTest.class, LocalizationScheduleTest.class,
-        ValidationTest.class, TournamentSolverTest.class, TournamentUtilsTest.class
+        ValidationTest.class, TournamentSolverTest.class, TournamentUtilsTest.class, MatchupTest.class
 })
 public class TestSuite {
     // clase vacía, solamente se usa para las anotaciones de arriba
