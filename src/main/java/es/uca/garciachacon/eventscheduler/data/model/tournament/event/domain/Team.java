@@ -1,8 +1,14 @@
 package es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain;
 
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonDeserializer;
+import es.uca.garciachacon.eventscheduler.data.model.tournament.event.Event;
 import es.uca.garciachacon.eventscheduler.solver.TournamentSolver;
 import org.apache.commons.lang3.StringUtils;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -22,6 +28,11 @@ import java.util.Set;
  * categorías.</p>
  */
 public class Team extends Entity {
+    /**
+     * Evento al que pertenece el equipo
+     */
+    private Event event;
+
     /**
      * Conjunto de jugadores que componene el equipo
      */
@@ -81,6 +92,14 @@ public class Team extends Entity {
         return players;
     }
 
+    public Event getEvent() {
+        return event;
+    }
+
+    public void setEvent(Event event) {
+        this.event = event;
+    }
+
     /**
      * Comprueba si este equipo contiene un jugador.
      *
@@ -93,5 +112,12 @@ public class Team extends Entity {
 
     public String toString() {
         return name;
+    }
+}
+
+class TeamDeserializer extends JsonDeserializer<Team> {
+    @Override
+    public Team deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+        return null;
     }
 }

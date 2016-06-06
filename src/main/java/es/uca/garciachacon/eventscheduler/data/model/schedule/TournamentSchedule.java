@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Horario de un torneo formado por la combinación de los horarios de cada categoría que lo compone
@@ -82,22 +83,11 @@ public class TournamentSchedule extends Schedule {
             }
         }
 
-        calculateMatches();
+        matches = tournament.getCurrentSchedules()
+                .values()
+                .stream()
+                .flatMap(l -> l.getMatches().stream())
+                .sorted((m1, m2) -> Timeslot.compare(m1.getStartTimeslot(), m2.getStartTimeslot()))
+                .collect(Collectors.toList());
     }
-
-    /**
-     * Construye los partidos a partir del horario combinado
-     */
-    private void calculateMatches() {
-        matches = new ArrayList<>(tournament.getNumberOfMatches());
-        for (EventSchedule schedule : tournament.getCurrentSchedules().values()) {
-            schedule.calculateMatches();
-            List<Match> eventMatches = schedule.getMatches();
-
-            matches.addAll(eventMatches);
-        }
-
-        Collections.sort(matches, (o1, o2) -> Timeslot.compare(o2.getStartTimeslot(), o1.getStartTimeslot()));
-    }
-
 }

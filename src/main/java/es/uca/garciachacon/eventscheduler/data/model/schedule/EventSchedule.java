@@ -89,7 +89,7 @@ public class EventSchedule extends Schedule {
      * Calcula los partidos que componen el horario basándose en los valores
      * actuales del horario
      */
-    void calculateMatches() {
+    private void calculateMatches() {
         int matchDuration = event.getTimeslotsPerMatch();
 
         // Horario donde solo se marcan los comienzos de partidos
@@ -159,6 +159,7 @@ public class EventSchedule extends Schedule {
                             List<Team> teamsInMatch = new ArrayList<>();
                             for (Player player : playersList) {
                                 Team team = event.filterTeamByPlayer(player);
+                                team.setEvent(event);
                                 if (!teamsInMatch.contains(team))
                                     teamsInMatch.add(team);
                             }
