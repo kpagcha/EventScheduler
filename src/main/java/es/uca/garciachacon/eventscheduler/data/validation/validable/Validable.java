@@ -1,5 +1,6 @@
 package es.uca.garciachacon.eventscheduler.data.validation.validable;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import es.uca.garciachacon.eventscheduler.data.validation.validator.Validator;
 
 import java.util.List;
@@ -29,5 +30,6 @@ public interface Validable {
      *
      * @return una lista de mensajes de error de validación, o una lista vacía si no hay ninguno
      */
+    @JsonIgnore
     List<String> getMessages();
 }

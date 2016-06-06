@@ -1,5 +1,13 @@
 package es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain;
 
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonDeserializer;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+
+import java.io.IOException;
+
 /**
  * Representación de un jugador en un evento o categoría de juego en el contexto de un torneo deportivo. Un jugador
  * es el sujeto que compone un partido o enfrentamiento y puede competir contra otros jugadores.
@@ -11,8 +19,18 @@ package es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain;
  * <p>También puede representar un jugador entendido como entidad que juega, sin mayor detalle ni concreción de las
  * características de la entidad, por ejemplo, un programa o proceso informático.</p>
  */
+@JsonDeserialize(using = PlayerDeserializer.class)
 public class Player extends Entity {
     public Player(String name) {
         super(name);
+    }
+}
+
+class PlayerDeserializer extends JsonDeserializer<Player> {
+    @Override
+    public Player deserialize(JsonParser jp, DeserializationContext ctx) throws IOException {
+        JsonNode node = jp.getCodec().readTree(jp);
+        JsonNode nameNode = node.get("name");
+        return new Player(nameNode.isNull() ? null : nameNode.textValue());
     }
 }

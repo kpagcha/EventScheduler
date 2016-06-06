@@ -138,7 +138,7 @@ public class LocalizationSchedule extends Schedule {
         int nTimeslots = timeslots.size();
         int nLocalization = localizations.size();
 
-        // Al principio se marca todo el horario como libre
+        // Al principio se marca el horario entero como libre
         for (int i = 0; i < nLocalization; i++)
             for (int j = 0; j < nTimeslots; j++)
                 schedule[i][j] = new LocalizationScheduleValue(LocalizationScheduleValue.FREE);

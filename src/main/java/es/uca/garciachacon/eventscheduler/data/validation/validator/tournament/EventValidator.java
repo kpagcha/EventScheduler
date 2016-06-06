@@ -1,5 +1,6 @@
 package es.uca.garciachacon.eventscheduler.data.validation.validator.tournament;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.event.Event;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.event.Matchup;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Localization;

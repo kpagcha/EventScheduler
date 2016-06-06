@@ -1,5 +1,7 @@
 package es.uca.garciachacon.eventscheduler.data.validation.validator;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import java.util.List;
 
 /**

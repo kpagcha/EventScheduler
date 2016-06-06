@@ -278,7 +278,7 @@ public class ResolutionData {
         return jsonStr;
     }
 
-    public class ResolutionDataSerializer extends JsonSerializer<ResolutionData> {
+    class ResolutionDataSerializer extends JsonSerializer<ResolutionData> {
         public void serialize(ResolutionData resolutionData, JsonGenerator jgen, SerializerProvider provider)
                 throws IOException {
             jgen.writeStartObject();
