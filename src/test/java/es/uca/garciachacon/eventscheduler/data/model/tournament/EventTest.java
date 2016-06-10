@@ -474,17 +474,6 @@ public class EventTest {
     }
 
     @Test
-    public void setTeamsLessThanTwoTest() {
-        event.setPlayersPerMatch(4);
-        List<Team> teams = new ArrayList<>();
-        teams.add(new Team(players.get(0), players.get(1)));
-
-        expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("at least two teams");
-        event.setTeams(teams);
-    }
-
-    @Test
     public void setTeamsNullTeamTest() {
         event.setPlayersPerMatch(4);
         List<Team> teams = new ArrayList<>();
@@ -493,6 +482,16 @@ public class EventTest {
 
         expectedEx.expect(IllegalArgumentException.class);
         expectedEx.expectMessage("team cannot be null");
+        event.setTeams(teams);
+    }
+
+    @Test
+    public void setTeamsEmptyTest() {
+        event.setPlayersPerMatch(4);
+        List<Team> teams = new ArrayList<>();
+
+        expectedEx.expect(IllegalArgumentException.class);
+        expectedEx.expectMessage("Teams cannot be empty");
         event.setTeams(teams);
     }
 

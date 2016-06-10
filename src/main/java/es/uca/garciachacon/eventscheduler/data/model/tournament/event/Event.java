@@ -2,13 +2,11 @@ package es.uca.garciachacon.eventscheduler.data.model.tournament.event;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.type.CollectionType;
 import com.fasterxml.jackson.databind.type.TypeFactory;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.Tournament;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Localization;
@@ -470,7 +468,7 @@ public class Event implements Validable {
      * @throws IllegalArgumentException si no se cumplen algunas de las siguientes precondiciones:
      *                                  <ul>
      *                                  <li>La lista de equipos no es nula
-     *                                  <li>La lista de equipos tiene más de 2 elementos
+     *                                  <li>La lista de equipos no está vacía</li>
      *                                  <li>Todos los jugadores pertenecen a este evento
      *                                  <li>Ningún jugador se encuentra repetido en distintos equipos y, por ende, no
      *                                  hay enfrentamientos repetidor
@@ -482,6 +480,7 @@ public class Event implements Validable {
     public void setTeams(List<Team> teams) {
         checkTeamsPreconditions(teams);
 
+        teams.forEach(t -> t.setEvent(this));
         this.teams = teams;
     }
 
@@ -495,8 +494,8 @@ public class Event implements Validable {
         if (teams == null)
             throw new IllegalArgumentException("Teams cannot be null");
 
-        if (teams.size() < 2)
-            throw new IllegalArgumentException("There must be at least two teams");
+        if (teams.isEmpty())
+            throw new IllegalArgumentException("Teams cannot be empty");
 
         int playersPerTeam = teams.get(0).getPlayers().size();
 
@@ -586,6 +585,19 @@ public class Event implements Validable {
     }
 
     /**
+     * Añade un equipo
+     *
+     * @param team equipo no nulo
+     * @throws IllegalArgumentException si no se cumplen las precondiciones
+     */
+    public void addTeam(Team team) {
+        checkTeamPreconditions(team);
+
+        team.setEvent(this);
+        teams.add(team);
+    }
+
+    /**
      * Añade un equipo, si la composición del mismo no es nula, de dos jugadores o más y pertenecientes al evento.
      *
      * @param teamPlayers jugadores que compondrán el nuevo equipo a añadir y pertenecientes a este evento
@@ -595,23 +607,7 @@ public class Event implements Validable {
         if (teamPlayers == null)
             throw new IllegalArgumentException("Players cannot be null");
 
-        Team team = new Team(teamPlayers);
-
-        checkTeamPreconditions(team);
-
-        teams.add(team);
-    }
-
-    /**
-     * Añade un equipo
-     *
-     * @param team equipo no nulo
-     * @throws IllegalArgumentException si no se cumplen las precondiciones
-     */
-    public void addTeam(Team team) {
-        checkTeamPreconditions(team);
-
-        teams.add(team);
+        addTeam(new Team(teamPlayers));
     }
 
     /**
@@ -1751,9 +1747,19 @@ class EventDeserializer extends JsonDeserializer<Event> {
             event.setPlayersPerMatch(Integer.parseInt(playersPerMatchNode.asText()));
 
         JsonNode teamsNode = node.get("teams");
-        if (teamsNode != null)
-            event.setTeams(mapper.reader(TypeFactory.defaultInstance().constructCollectionType(List.class, Team.class))
-                    .readValue(teamsNode));
+        if (teamsNode != null) {
+            List<Team> teams = new ArrayList<>();
+
+            for (JsonNode teamNode : teamsNode) {
+                List<Player> playersInTeam = new ArrayList<>();
+
+                for (JsonNode playerNode : teamNode)
+                    playersInTeam.add(players.get(playerNode.asInt()));
+
+                teams.add(new Team(new HashSet<>(playersInTeam)));
+            }
+            event.setTeams(teams);
+        }
 
         return event;
     }

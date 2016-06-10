@@ -1,4 +1,4 @@
-package es.uca.garciachacon.eventscheduler.restexample;
+package es.uca.garciachacon.eventscheduler.examples.rest;
 
 import java.util.ArrayList;
 import java.util.List;

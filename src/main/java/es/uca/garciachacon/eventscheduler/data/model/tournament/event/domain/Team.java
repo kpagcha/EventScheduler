@@ -1,14 +1,10 @@
 package es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonDeserializer;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.event.Event;
 import es.uca.garciachacon.eventscheduler.solver.TournamentSolver;
 import org.apache.commons.lang3.StringUtils;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -29,8 +25,9 @@ import java.util.Set;
  */
 public class Team extends Entity {
     /**
-     * Evento al que pertenece el equipo
+     * Evento al que pertenece el equipo. Sólo se asigna cuando el equipo es añadido a un evento en particular.
      */
+    @JsonBackReference
     private Event event;
 
     /**
@@ -62,6 +59,17 @@ public class Team extends Entity {
     }
 
     /**
+     * Construye un equipo compuesto por los jugadores indicados. El nombre del equipo será la concatenación por un
+     * guión ("-") de los nombres de los componentes del equipo. Este constructor invoca al constructor
+     * {@link Team#Team(String, Set)}, luego se lanzarán las mismas excepciones si se dan las circunstancias.
+     *
+     * @param players conjunto no nulo de más de dos jugadores
+     */
+    public Team(Set<Player> players) {
+        this(StringUtils.join(players, "-"), players);
+    }
+
+    /**
      * Construye un equipo a partir de un array de jugadores.
      *
      * @param playersArray array no nulo de jugadores únicos
@@ -88,16 +96,30 @@ public class Team extends Entity {
         this.players = players;
     }
 
+    public Event getEvent() { return event; }
+
+    /**
+     * Asocia un evento a este equipo. Este método es usado únicamente en la clase {@link Event}, es decir, la
+     * asociación se gestiona de forma interna.
+     *
+     * @param event un evento no nulo
+     * @throws IllegalArgumentException si el evento es <code>null</code>
+     * @throws IllegalStateException    si ya existe una asociación. Es ilegal invocar a esta función externamente, no
+     *                                  se puede cambiar voluntariamente el evento asociado al equipo; ésta es una
+     *                                  responsabilidad de la clase {@link Event}
+     */
+    public void setEvent(Event event) {
+        if (event == null)
+            throw new IllegalArgumentException("Event cannot be null");
+
+        if (this.event != null)
+            throw new IllegalStateException("Event has already been set");
+
+        this.event = event;
+    }
+
     public Set<Player> getPlayers() {
         return players;
-    }
-
-    public Event getEvent() {
-        return event;
-    }
-
-    public void setEvent(Event event) {
-        this.event = event;
     }
 
     /**
@@ -112,12 +134,5 @@ public class Team extends Entity {
 
     public String toString() {
         return name;
-    }
-}
-
-class TeamDeserializer extends JsonDeserializer<Team> {
-    @Override
-    public Team deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
-        return null;
     }
 }

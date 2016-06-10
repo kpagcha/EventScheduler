@@ -1,4 +1,4 @@
-package es.uca.garciachacon.eventscheduler.restexample;
+package es.uca.garciachacon.eventscheduler.examples.rest;
 
 public class GroceryItem {
     private String name;

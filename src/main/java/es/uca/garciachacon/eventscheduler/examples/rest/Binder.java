@@ -1,4 +1,4 @@
-package es.uca.garciachacon.eventscheduler.restexample;
+package es.uca.garciachacon.eventscheduler.examples.rest;
 
 import es.uca.garciachacon.eventscheduler.rest.dao.ITournamentDao;
 import es.uca.garciachacon.eventscheduler.rest.dao.TournamentDao;

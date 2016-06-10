@@ -1,4 +1,4 @@
-package es.uca.garciachacon.eventscheduler.restexample;
+package es.uca.garciachacon.eventscheduler.rest;
 
 import javax.ws.rs.core.Feature;
 import javax.ws.rs.core.FeatureContext;
