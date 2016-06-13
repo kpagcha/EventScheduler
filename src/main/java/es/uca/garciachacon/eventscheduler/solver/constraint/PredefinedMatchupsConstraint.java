@@ -81,7 +81,7 @@ public class PredefinedMatchupsConstraint extends EventConstraint {
 
                 case CUSTOM:
                     constraints.add(IntConstraintFactory.sum(possibleMatchups,
-                            VariableFactory.fixed(matchup.getOccurences(), solver)
+                            VariableFactory.fixed(matchup.getOccurrences(), solver)
                     ));
             }
         }

@@ -60,7 +60,7 @@ public class MatchupTest {
         assertTrue(localizations.containsAll(matchup.getLocalizations()));
         assertEquals(timeslots.size() - 1, matchup.getTimeslots().size());
         assertTrue(timeslots.containsAll(matchup.getTimeslots()));
-        assertEquals(1, matchup.getOccurences());
+        assertEquals(1, matchup.getOccurrences());
     }
 
     @Test

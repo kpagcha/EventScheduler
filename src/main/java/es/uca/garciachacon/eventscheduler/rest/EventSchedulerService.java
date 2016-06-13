@@ -1,12 +1,13 @@
 package es.uca.garciachacon.eventscheduler.rest;
 
 import es.uca.garciachacon.eventscheduler.data.model.tournament.Tournament;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.event.Event;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Player;
 import es.uca.garciachacon.eventscheduler.rest.dao.ITournamentDao;
 
 import javax.inject.Inject;
-import javax.ws.rs.*;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 @Path("eventscheduler")
@@ -18,18 +19,11 @@ public class EventSchedulerService {
         this.tournamentDao = tournamentDao;
     }
 
+    @Path("tournament")
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Tournament createTournament(Tournament tournament) {
         return tournamentDao.create(tournament) ? tournament : null;
-    }
-
-    @Path("event")
-    @POST
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    public Event createEvent(Event event) {
-        return event;
     }
 }

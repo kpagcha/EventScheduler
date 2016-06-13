@@ -1,6 +1,5 @@
 package es.uca.garciachacon.eventscheduler.data.validation.validator.tournament;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.event.Event;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.event.Matchup;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Localization;
@@ -612,9 +611,7 @@ public class EventValidator implements Validator<Event> {
 
             for (Player player : matchup.getPlayers()) {
                 long count = event.getPredefinedMatchups()
-                        .stream()
-                        .filter(m -> m.getPlayers().contains(player))
-                        .mapToInt(Matchup::getOccurences)
+                        .stream().filter(m -> m.getPlayers().contains(player)).mapToInt(Matchup::getOccurrences)
                         .sum();
                 if (count > event.getMatchesPerPlayer()) {
                     isValid = false;

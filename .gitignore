@@ -1,8 +1,8 @@
 bin/
+out/
 target/
 .settings/
 .classpath
 .project
 .idea
-.out
 EventScheduler.iml

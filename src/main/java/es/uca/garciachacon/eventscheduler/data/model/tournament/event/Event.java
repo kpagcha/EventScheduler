@@ -1,13 +1,6 @@
 package es.uca.garciachacon.eventscheduler.data.model.tournament.event;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.type.TypeFactory;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.Tournament;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Localization;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Player;
@@ -18,9 +11,7 @@ import es.uca.garciachacon.eventscheduler.data.validation.validable.ValidationEx
 import es.uca.garciachacon.eventscheduler.data.validation.validator.Validator;
 import es.uca.garciachacon.eventscheduler.data.validation.validator.tournament.EventValidator;
 import es.uca.garciachacon.eventscheduler.solver.TournamentSolver.MatchupMode;
-import es.uca.garciachacon.eventscheduler.utils.TournamentUtils;
 
-import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -48,7 +39,6 @@ import java.util.stream.Collectors;
  * <li>Modo de enfrentamiento, que especifica el modo como se calcularán los emparejamientos
  * </ul>
  */
-@JsonDeserialize(using = EventDeserializer.class)
 public class Event implements Validable {
     /**
      * Nombre del evento o la categoría
@@ -843,7 +833,7 @@ public class Event implements Validable {
             for (Player player : matchup.getPlayers()) {
                 long count = matchups.stream()
                         .filter(m -> m.getPlayers().contains(player))
-                        .mapToInt(Matchup::getOccurences)
+                        .mapToInt(Matchup::getOccurrences)
                         .sum();
 
                 if (count > nMatchesPerPlayer)
@@ -1711,56 +1701,5 @@ public class Event implements Validable {
 
     public String toString() {
         return name;
-    }
-}
-
-class EventDeserializer extends JsonDeserializer<Event> {
-    @Override
-    public Event deserialize(JsonParser jp, DeserializationContext ctx) throws IOException {
-        JsonNode node = jp.getCodec().readTree(jp);
-        ObjectMapper mapper = new ObjectMapper();
-
-        String name = node.get("name").asText();
-
-        List<Player> players =
-                mapper.reader(TypeFactory.defaultInstance().constructCollectionType(List.class, Player.class))
-                        .readValue(node.path("players"));
-
-        List<Localization> localizations =
-                mapper.reader(TypeFactory.defaultInstance().constructCollectionType(List.class, Localization.class))
-                        .readValue(node.path("localizations"));
-
-        List<Timeslot> timeslots = TournamentUtils.buildAbstractTimeslots(4);
-
-        Event event = new Event(name, players, localizations, timeslots);
-
-        JsonNode matchesPerPlayerNode = node.get("matchesPerPlayer");
-        if (matchesPerPlayerNode != null)
-            event.setMatchesPerPlayer(Integer.parseInt(matchesPerPlayerNode.asText()));
-
-        JsonNode timeslotsPerMatchNode = node.get("timeslotsPerMatch");
-        if (timeslotsPerMatchNode != null)
-            event.setTimeslotsPerMatch(Integer.parseInt(timeslotsPerMatchNode.asText()));
-
-        JsonNode playersPerMatchNode = node.get("playersPerMatch");
-        if (playersPerMatchNode != null)
-            event.setPlayersPerMatch(Integer.parseInt(playersPerMatchNode.asText()));
-
-        JsonNode teamsNode = node.get("teams");
-        if (teamsNode != null) {
-            List<Team> teams = new ArrayList<>();
-
-            for (JsonNode teamNode : teamsNode) {
-                List<Player> playersInTeam = new ArrayList<>();
-
-                for (JsonNode playerNode : teamNode)
-                    playersInTeam.add(players.get(playerNode.asInt()));
-
-                teams.add(new Team(new HashSet<>(playersInTeam)));
-            }
-            event.setTeams(teams);
-        }
-
-        return event;
     }
 }

@@ -1254,7 +1254,7 @@ public class EventTest {
         Matchup matchup = event.getPredefinedMatchups().iterator().next();
         assertEquals(event.getLocalizations().size(), matchup.getLocalizations().size());
         assertEquals(event.getTimeslots().size() - 1, matchup.getTimeslots().size());
-        assertEquals(1, matchup.getOccurences());
+        assertEquals(1, matchup.getOccurrences());
     }
 
     @Test
@@ -1263,7 +1263,7 @@ public class EventTest {
         Matchup matchup = event.getPredefinedMatchups().iterator().next();
         assertEquals(event.getLocalizations().size(), matchup.getLocalizations().size());
         assertEquals(event.getTimeslots().size() - 1, matchup.getTimeslots().size());
-        assertEquals(1, matchup.getOccurences());
+        assertEquals(1, matchup.getOccurrences());
     }
 
     @Test
@@ -1278,7 +1278,7 @@ public class EventTest {
         assertEquals(4, matchup.getPlayers().size());
         assertEquals(event.getLocalizations().size(), matchup.getLocalizations().size());
         assertEquals(event.getTimeslots().size() - 1, matchup.getTimeslots().size());
-        assertEquals(1, matchup.getOccurences());
+        assertEquals(1, matchup.getOccurrences());
     }
 
     @Test
