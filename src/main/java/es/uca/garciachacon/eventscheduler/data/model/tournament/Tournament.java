@@ -623,8 +623,6 @@ class TournamentDeserializer extends JsonDeserializer<Tournament> {
                 List<Localization> localizations = parseLocalizations(allLocalizations, eventNode);
                 List<Timeslot> timeslots = parseTimeslots(allTimeslots, eventNode);
 
-                timeslots = TournamentUtils.buildAbstractTimeslots(4);
-
                 Event event = new Event(eventName, players, localizations, timeslots);
 
                 parseMatchesPerPlayer(eventNode, event);
