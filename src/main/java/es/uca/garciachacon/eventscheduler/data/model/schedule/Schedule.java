@@ -172,7 +172,7 @@ public abstract class Schedule {
      * Si alguno de los <i>timeslots</i> que definine el rango, o ambos, no pertenecen al dominio de horas de juego
      * del horario, se devolverá <code>null</code>
      * <p>
-     * Si <code>start</code> es mayor que <code>end</end>, se invierten los extremos de forma que estén en orden.
+     * Si <code>start</code> es mayor que <code>end</code>, se invierten los extremos de forma que estén en orden.
      *
      * @param start timeslot de comienzo
      * @param end   timeslot final

@@ -14,11 +14,13 @@ import java.util.Optional;
  * prioridad en comparación con otros <i>timeslots</i>. Este entero tiene como objetivo definir su precedencia,
  * igualdad o posterioridad con respecto a otros. El valor que define el orden es inverso al de la relación de
  * comparación de los números enteros, es decir, un <i>timeslot</i> con orden 1 es superior a un timeslot de orden 2:
- * <code>
+ * <pre>
+ * {@code
  * Timeslot t1 = new Timeslot(1);
  * Timeslot t2 = new Timeslot(2);
  * t1.compareTo(t2); // devuelve 1
- * </code>
+ * }
+ * </pre>
  * <p>
  * Sobre un <i>timeslot</i> es posible definir información adicional y opcional: un comienzo de
  * <i>timeslot</i>, por medio de cualquier implementación de la interfaz {@link TemporalAccessor}, y/o una duración
@@ -36,16 +38,17 @@ import java.util.Optional;
  * para el comienzo y duración se elige la implementación que se adecúe a la instancia de la que se precisa. El orden
  * cronológico es obligatorio en todos los casos:
  * <p>
- * <code>
- * Timeslot t1 = new Timeslot(10); // timeslot con orden cronológico de 10
- * Timeslot t2 = new Timeslot(3, Duration.ofHours(1)); // timeslot con una duración de 1 hora
- * Timeslot t3 = new Timeslot(1, Period.ofDays(3));  // timeslot con una duración de 3 días
- * Timeslot t4 = new Timeslot(7, LocalDate.now()));  // timeslot que comienza en la fecha actual
- * Timeslot t5 = new Timeslot(13, LocalTime.of(16, 45)); // timeslot que comienza a las 16:45
- * Timeslot t6 = new Timeslot(9, DayOfWeek.SATURDAY); // tomeslot que comienza el sábado
- * Timeslot t7 = new Timeslot(2, LocalTime.of(10, 0), Duration.ofMinutes(90)); // timeslot que comienza a las 10:00
- * // con una duración de 90 minutos
- * </code>
+ * <pre>
+ * {@code
+ * Timeslot t1 = new Timeslot(10);                        // timeslot con orden cronológico de 10
+ * Timeslot t2 = new Timeslot(3, Duration.ofHours(1));    // timeslot con una duración de 1 hora
+ * Timeslot t3 = new Timeslot(1, Period.ofDays(3));       // timeslot con una duración de 3 días
+ * Timeslot t4 = new Timeslot(7, LocalDate.now()));       // timeslot que comienza en la fecha actual
+ * Timeslot t5 = new Timeslot(13, LocalTime.of(16, 45));  // timeslot que comienza a las 16:45
+ * Timeslot t6 = new Timeslot(9, DayOfWeek.SATURDAY);     // timeslot que comienza el sábado
+ * Timeslot t7 = new Timeslot(2, LocalTime.of(10, 0), Duration.ofMinutes(90)); // comienza a las 10:00 y dura 90 minutos
+ * }
+ * </pre>
  */
 public class Timeslot extends Entity {
     /**

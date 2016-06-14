@@ -1,5 +1,6 @@
 package es.uca.garciachacon.eventscheduler.data.model.tournament;
 
+import es.uca.garciachacon.eventscheduler.data.model.schedule.LocalizationSchedule;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.event.Event;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.event.Matchup;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Localization;
@@ -311,6 +312,19 @@ public class EventTest {
     }
 
     @Test
+    public void setNullTournamentTest() {
+        expectedEx.expect(IllegalArgumentException.class);
+        event.setTournament(null);
+    }
+
+    @Test
+    public void setTournamentTwiceTest() {
+        event.setTournament(new Tournament("Tournament", event));
+        expectedEx.expect(IllegalStateException.class);
+        expectedEx.expectMessage("Tournament has already been set");
+    }
+
+    @Test
     public void getPlayersTest() {
         expectedEx.expect(UnsupportedOperationException.class);
         event.getPlayers().add(new Player("New Player"));
@@ -457,11 +471,44 @@ public class EventTest {
             teams.add(new Team(teamPlayers));
         }
 
+        teams.forEach(t -> assertNull(t.getEvent()));
+
         event.setTeams(teams);
+
+        teams.forEach(t -> assertEquals(event, t.getEvent()));
 
         assertTrue(event.hasTeams());
         assertEquals(16, event.getTeams().size());
         assertTrue(event.getTeams().get(8).contains(players.get(17)));
+    }
+
+    @Test
+    public void addTeamsPartiallyTest() {
+        Event e = new Event("Event",
+                TournamentUtils.buildGenericPlayers(8, "Player"),
+                TournamentUtils.buildGenericLocalizations(1, "Court"),
+                TournamentUtils.buildLocalTimeTimeslots(4),
+                1,
+                2,
+                4
+        );
+
+        //e.addTeam(e.getPlayers().get(0), e.getPlayers().get(1));
+        //e.addTeam(e.getPlayers().get(2), e.getPlayers().get(3));
+
+        Tournament t = new Tournament("Tournament", e);
+        t.getSolver().setSearchStrategy(TournamentSolver.SearchStrategy.MINDOM_UB);
+        try {
+            t.solve();
+        } catch (ValidationException e1) {
+            t.getMessages().forEach(System.out::println);
+        }
+
+        LocalizationSchedule schedule = new LocalizationSchedule(t);
+        System.out.println(schedule);
+        schedule.getMatches().forEach(System.out::println);
+
+        fail("Método con el que se está probando los bugs");
     }
 
     @Test
@@ -1435,9 +1482,6 @@ public class EventTest {
 
     @Test
     public void getBreaksTest() {
-        List<Timeslot> breaks = new ArrayList<>();
-        breaks.add(timeslots.get(4));
-
         expectedEx.expect(UnsupportedOperationException.class);
         event.getBreaks().add(timeslots.get(5));
     }

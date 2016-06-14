@@ -17,31 +17,6 @@ import java.util.stream.Collectors;
  */
 public class LocalizationSchedule extends Schedule {
     /**
-     * Nombre del torneo o evento al que se refiere
-     */
-    private final String name;
-
-    /**
-     * Jugadores
-     */
-    private final List<Player> players;
-
-    /**
-     * Localizaciones de juego
-     */
-    private final List<Localization> localizations;
-
-    /**
-     * Horas de juego
-     */
-    private final List<Timeslot> timeslots;
-
-    /**
-     * Partidos que se juegan en el horario
-     */
-    private final List<Match> matches;
-
-    /**
      * Número de timeslots
      */
     private int occupation = -1;
@@ -55,22 +30,17 @@ public class LocalizationSchedule extends Schedule {
      * Construye el horario agrupado de un evento, teniendo en cuenta los partidos del horario, los breaks y la
      * indisponibilidad de pistas
      *
-     * @param event   evento no nulo
-     * @param matches lista de partidos a partir de los que se construye el horario
+     * @param event evento no nulo
      */
-    public LocalizationSchedule(Event event, List<Match> matches) {
-        if (event == null || matches == null)
-            throw new IllegalArgumentException("The parameters cannot be null");
-
-        if (matches.size() != event.getNumberOfMatches())
-            throw new IllegalArgumentException("The size of the list of matches (" + matches.size() + ") should be " +
-                    "equal to the expected number of matches for the event (" + event.getNumberOfMatches() + ")");
+    public LocalizationSchedule(Event event) {
+        if (event == null)
+            throw new IllegalArgumentException("Event cannot be null");
 
         name = event.getName();
         players = event.getPlayers();
         localizations = event.getLocalizations();
         timeslots = event.getTimeslots();
-        this.matches = matches;
+        matches = event.getTournament().getCurrentSchedules().get(event).getMatches();
 
         schedule = new LocalizationScheduleValue[localizations.size()][timeslots.size()];
 
@@ -131,7 +101,7 @@ public class LocalizationSchedule extends Schedule {
         players = tournament.getAllPlayers();
         localizations = tournament.getAllLocalizations();
         timeslots = tournament.getAllTimeslots();
-        this.matches = tournament.getSchedule().getMatches();
+        matches = tournament.getSchedule().getMatches();
 
         schedule = new LocalizationScheduleValue[localizations.size()][timeslots.size()];
 

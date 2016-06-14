@@ -12,9 +12,8 @@ import java.io.IOException;
  * Representación de una localización de juego en la que transcurre un partido o un enfrentamiento perteneciente a un
  * evento o categoría de juego en el contexto de un torneo deportivo.
  * <p>
- * <p>Es una representación abstracta que engloba
- * ubicaciones como pueden ser pistas, canchas, campos, rings de lucha, rinks, o incluso tableros y localizaciones
- * digitales o informáticas.</p>
+ * Es una representación abstracta que engloba ubicaciones como pueden ser pistas, canchas, campos, rings de lucha,
+ * rinks, o incluso tableros y localizaciones digitales o informáticas.
  */
 @JsonDeserialize(using = LocalizationDeserializer.class)
 public class Localization extends Entity {

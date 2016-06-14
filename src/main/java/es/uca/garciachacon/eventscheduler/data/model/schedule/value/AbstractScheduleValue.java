@@ -87,7 +87,9 @@ public abstract class AbstractScheduleValue {
     }
 
     /**
-     * Devuelve los posibles valores que puede tomar la representación interna del hueco de horario
+     * Devuelve los posibles valores que puede tomar la representación interna del hueco de horario.
+     *
+     * @return lista de posibles valores
      */
     protected abstract List<ScheduleValue> getPossibleValues();
 

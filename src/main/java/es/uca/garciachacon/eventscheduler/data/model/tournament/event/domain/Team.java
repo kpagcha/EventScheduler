@@ -12,16 +12,16 @@ import java.util.Set;
 /**
  * Un equipo es una composición de jugadores, como mínimo dos de ellos.
  * <p>
- * <p>Los jugadores que pertenecen a un mismo equipo toman parte en los mismos enfrentamientos de las categorías en
- * las que participan y se enfrentan, en conjunto, a otros participantes.</p>
+ * Los jugadores que pertenecen a un mismo equipo toman parte en los mismos enfrentamientos de las categorías en
+ * las que participan y se enfrentan, en conjunto, a otros participantes.
  * <p>
- * <p>Se diferencian de la clase {@link Player} en que, mientras esta última define un equipo como una única entidad
- * que juega, esta clase considera los jugadores individuales de los que está compuesto.</p>
+ * Se diferencian de la clase {@link Player} en que, mientras esta última define un equipo como una única entidad
+ * que juega, esta clase considera los jugadores individuales de los que está compuesto.
  * <p>
- * <p>El principal objetivo de esta distinción es permitir a jugadores participar en potencialmente distintas
+ * El principal objetivo de esta distinción es permitir a jugadores participar en potencialmente distintas
  * categorías, tanto siendo parte de equipos como individualmente, de modo que el solucionador del problema,
  * {@link TournamentSolver}, tenga en cuenta la participación del jugador como entidad individual en múltiples
- * categorías.</p>
+ * categorías.
  */
 public class Team extends Entity {
     /**

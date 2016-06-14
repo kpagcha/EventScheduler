@@ -13,7 +13,7 @@ public class LocalizationScheduleValueOccupied extends LocalizationScheduleValue
     protected static final List<ScheduleValue> possibleValues = Collections.singletonList(OCCUPIED);
 
     /**
-     * Índices de los jugadores que se enfrentan en un partido
+     * Indices de los jugadores que se enfrentan en un partido
      */
     private List<Integer> playersIndices;
 

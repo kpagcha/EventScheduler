@@ -57,6 +57,9 @@ public class TournamentTest {
                 timeslots
         );
 
+        assertNull(primaryEvent.getTournament());
+        assertNull(secondaryEvent.getTournament());
+
         Tournament tournament =
                 new Tournament("Tournament", new ArrayList<>(Arrays.asList(primaryEvent, secondaryEvent)));
 
@@ -65,6 +68,9 @@ public class TournamentTest {
         assertEquals(24, tournament.getAllPlayers().size());
         assertEquals(2, tournament.getAllLocalizations().size());
         assertEquals(10, tournament.getAllTimeslots().size());
+
+        assertEquals(tournament, primaryEvent.getTournament());
+        assertEquals(tournament, secondaryEvent.getTournament());
 
         for (Event event : tournament.getEvents())
             assertEquals(tournament, event.getTournament());

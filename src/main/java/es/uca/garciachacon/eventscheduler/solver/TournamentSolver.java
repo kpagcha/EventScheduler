@@ -742,9 +742,9 @@ public class TournamentSolver {
     /**
      * Modos de emparejamiento (para categorías con más de un partido por jugador).
      * <p>
-     * <p>Si un evento define un modo de emparejamiento distinto de CUSTOM, el número de ocurrencias que cada
+     * Si un evento define un modo de emparejamiento distinto de CUSTOM, el número de ocurrencias que cada
      * enfrentamiento predefinido especifique será ignorado y, por tanto, tendrá preferencia el modo de
-     * enfrentamiento.</p>
+     * enfrentamiento.
      */
     public enum MatchupMode {
         /**

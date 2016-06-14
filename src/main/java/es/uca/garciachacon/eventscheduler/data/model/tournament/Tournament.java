@@ -31,29 +31,29 @@ import java.util.stream.Collectors;
 /**
  * Representa un torneo deportivo. Un torneo se compone de, al menos, un evento o categoría, ver {@link Event}.
  * <p>
- * <p>El dominio un torneo en cuanto a jugadores, localizaciones de juego y horas de juego, es la suma de estos
- * elementos no repetidos en cada una de las categorías del torneo.</p>
+ * El dominio un torneo en cuanto a jugadores, localizaciones de juego y horas de juego, es la suma de estos
+ * elementos no repetidos en cada una de las categorías del torneo.
  * <p>
- * <p>A un torneo le corresponde una variable de la clase {@link TournamentSolver} que se encarga del proceso de
+ * A un torneo le corresponde una variable de la clase {@link TournamentSolver} que se encarga del proceso de
  * resolución del problema que se modela gracias a la información que este torneo contiene y, principalmente, sus
  * eventos.
  * <p>
- * <p>Un torneo lleva asociado un conjunto de horarios para cada evento (ver {@link EventSchedule}) y un horario
+ * Un torneo lleva asociado un conjunto de horarios para cada evento (ver {@link EventSchedule}) y un horario
  * combinado de todos estos que representa el horario del torneo en su totalidad (ver {@link TournamentSchedule}).
  * Inicialmente, el valor de estos horarios es asignado, es decir, son <code>null</code>. Los horarios contendrán
  * valores específicos una vez se ejecute el método {@link #solve()} que inicia por primera vez el proceso de
- * resolución, del que es responsable {@link TournamentSolver}.</p>
+ * resolución, del que es responsable {@link TournamentSolver}.
  * <p>
- * <p>Si el proceso de resolución ha sido satisfactorio, los horarios de los eventos y, por ende, el horario del
+ * Si el proceso de resolución ha sido satisfactorio, los horarios de los eventos y, por ende, el horario del
  * torneo combinado, se actualizarán a los valores de la primera solución encontrada. Si no se encuentra ninguna
- * solución, los horarios permanecerán con un valor por defecto <code>null</code> sin asignar.</p>
+ * solución, los horarios permanecerán con un valor por defecto <code>null</code> sin asignar.
  * <p>
- * <p>Los horarios se podrán actualizar al valor de la siguiente solución mediante el método
+ * Los horarios se podrán actualizar al valor de la siguiente solución mediante el método
  * {@link #nextSchedules()}. Es importante notar que este método sobrescribirá el valor actual de los horarios, de
  * forma que si se pretenden guardar los valores previos, se deberá implementar una funcionalidad específica para
  * este propósito. Si la clase que ejecuta la resolución del problema ya no encuentra más soluciones y se vuelve a
  * invocar a {@link #nextSchedules()}, el valor de los horarios se volverán a reiniciar con el valor de
- * <code>null</code>, indicando que no hay más horarios disponibles para este torneo.</p>
+ * <code>null</code>, indicando que no hay más horarios disponibles para este torneo.
  */
 @JsonDeserialize(using = TournamentDeserializer.class)
 public class Tournament implements Validable {
@@ -121,12 +121,13 @@ public class Tournament implements Validable {
         allPlayers = new ArrayList<>();
         allTimeslots = new ArrayList<>();
         allLocalizations = new ArrayList<>();
-        for (Event event : events) {
+
+        events.forEach(event -> {
             event.getPlayers().stream().filter(p -> !allPlayers.contains(p)).forEach(allPlayers::add);
             event.getTimeslots().stream().filter(t -> !allTimeslots.contains(t)).forEach(allTimeslots::add);
             event.getLocalizations().stream().filter(l -> !allLocalizations.contains(l)).forEach(allLocalizations::add);
             event.setTournament(this);
-        }
+        });
 
         solver = new TournamentSolver(this);
     }
@@ -334,7 +335,7 @@ public class Tournament implements Validable {
 
     /**
      * Añade el rango de <i>timeslots</i> no disponibles para el jugador en todas las categorías donde participe.
-     * <p>Si el jugador no participa en determinadas categorías o si éstas no incluyen en su horas de juego algunas
+     * Si el jugador no participa en determinadas categorías o si éstas no incluyen en su horas de juego algunas
      * de las horas en el conjunto <code>timeslots</code>, se ignoran esos valores para esa categoría en concreto.
      *
      * @param player jugador del torneo
@@ -748,7 +749,7 @@ class TournamentDeserializer extends JsonDeserializer<Tournament> {
     }
 
     private void parseUnavailableLocalizations(JsonNode node, List<Localization> localizations,
-            List<Timeslot> timeslots, Event event) {
+                                               List<Timeslot> timeslots, Event event) {
 
         JsonNode unavailableLocalizationsNode = node.get("unavailableLocalizations");
 
@@ -773,7 +774,7 @@ class TournamentDeserializer extends JsonDeserializer<Tournament> {
     }
 
     private void parsePredefinedMatchups(JsonNode node, List<Player> players, List<Localization> localizations,
-            List<Timeslot> timeslots, Event event) {
+                                         List<Timeslot> timeslots, Event event) {
         JsonNode predefinedMatchupsNode = node.get("predefinedMatchups");
         if (predefinedMatchupsNode != null) {
             Set<Matchup> matchups = new HashSet<>();
@@ -801,7 +802,7 @@ class TournamentDeserializer extends JsonDeserializer<Tournament> {
     }
 
     private void parsePlayersInLocalizations(JsonNode node, List<Player> players, List<Localization> localizations,
-            Event event) {
+                                             Event event) {
         JsonNode playersInLocalizationsNode = node.get("playersInLocalizations");
         if (playersInLocalizationsNode != null) {
             Iterator<Map.Entry<String, JsonNode>> nodeIterator = playersInLocalizationsNode.fields();

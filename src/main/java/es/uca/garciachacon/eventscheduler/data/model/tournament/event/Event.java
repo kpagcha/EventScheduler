@@ -53,14 +53,15 @@ public class Event implements Validable {
      */
     private final List<Timeslot> timeslots;
     /**
-     * Nombre del evento o la categoría
-     */
-    private String name;
-    /**
      * Torneo al que pertenece la categoría
      */
     @JsonIgnore
     private Tournament tournament;
+    /**
+     * Nombre del evento o la categoría
+     */
+    private String name;
+
     /**
      * Número de partidos que cada jugador ha de jugar en esta categoría
      */
@@ -350,6 +351,12 @@ public class Event implements Validable {
     }
 
     public void setTournament(Tournament tournament) {
+        if (tournament == null)
+            throw new IllegalArgumentException("Tournament cannot be null");
+
+        if (this.tournament != null)
+            throw new IllegalStateException("Tournament has already been set");
+
         this.tournament = tournament;
     }
 

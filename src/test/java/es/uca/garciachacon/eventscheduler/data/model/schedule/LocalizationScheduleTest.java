@@ -73,7 +73,7 @@ public class LocalizationScheduleTest {
 
     @Test
     public void constructorEventLocalizationScheduleTest() {
-        LocalizationSchedule schedule = new LocalizationSchedule(single, singleMatches);
+        LocalizationSchedule schedule = new LocalizationSchedule(single);
 
         List<AbstractScheduleValue> vals =
                 Stream.of(schedule.getScheduleValues()).flatMap(Arrays::stream).collect(Collectors.toList());
@@ -87,27 +87,10 @@ public class LocalizationScheduleTest {
         assertTrue(vals.stream().filter(AbstractScheduleValue::isUnavailable).count() <= nUnavailableTimeslots);
 
         try {
-            new LocalizationSchedule(null, singleMatches);
+            new LocalizationSchedule((Event) null);
             fail("IllegalArgumentException expected");
         } catch (IllegalArgumentException e) {
-            assertEquals("The parameters cannot be null", e.getMessage());
-        }
-
-        try {
-            new LocalizationSchedule(single, null);
-            fail("IllegalArgumentException expected");
-        } catch (IllegalArgumentException e) {
-            assertEquals("The parameters cannot be null", e.getMessage());
-        }
-
-        try {
-            singleMatches.remove(singleMatches.size() - 1);
-            new LocalizationSchedule(single, singleMatches);
-            fail("IllegalArgumentException expected");
-        } catch (IllegalArgumentException e) {
-            assertThat(e.getMessage(),
-                    StringContains.containsString("equal to the expected number of matches for the event")
-            );
+            assertEquals("Event cannot be null", e.getMessage());
         }
     }
 
@@ -129,7 +112,7 @@ public class LocalizationScheduleTest {
         assertTrue(vals.stream().filter(AbstractScheduleValue::isUnavailable).count() <= nUnavailableTimeslots);
 
         try {
-            new LocalizationSchedule(null);
+            new LocalizationSchedule((Tournament) null);
             fail("IllegalArgumentException expected");
         } catch (IllegalArgumentException e) {
             assertEquals("Tournament cannot be null", e.getMessage());
