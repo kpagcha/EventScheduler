@@ -7,10 +7,8 @@ import es.uca.garciachacon.eventscheduler.data.model.tournament.Tournament;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.event.Event;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Localization;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Player;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.timeslot.Timeslot;
+import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Timeslot;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -87,7 +85,11 @@ public class TournamentSchedule extends Schedule {
                 .values()
                 .stream()
                 .flatMap(l -> l.getMatches().stream())
-                .sorted((m1, m2) -> Timeslot.compare(m1.getStartTimeslot(), m2.getStartTimeslot()))
+                .sorted((m1, m2) -> -m1.getStartTimeslot().compareTo(m2.getStartTimeslot()))
                 .collect(Collectors.toList());
+    }
+
+    public Tournament getTournament() {
+        return tournament;
     }
 }

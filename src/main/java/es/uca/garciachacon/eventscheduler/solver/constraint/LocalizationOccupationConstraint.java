@@ -1,7 +1,7 @@
 package es.uca.garciachacon.eventscheduler.solver.constraint;
 
 import es.uca.garciachacon.eventscheduler.data.model.tournament.event.Event;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.timeslot.Timeslot;
+import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Timeslot;
 import org.chocosolver.solver.constraints.IntConstraintFactory;
 import org.chocosolver.solver.variables.IntVar;
 import org.chocosolver.solver.variables.VariableFactory;

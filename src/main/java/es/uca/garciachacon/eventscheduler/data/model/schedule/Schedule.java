@@ -4,7 +4,7 @@ import es.uca.garciachacon.eventscheduler.data.model.schedule.value.AbstractSche
 import es.uca.garciachacon.eventscheduler.data.model.schedule.value.PlayerScheduleValue;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Localization;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Player;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.timeslot.Timeslot;
+import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Timeslot;
 
 import java.util.ArrayList;
 import java.util.HashSet;

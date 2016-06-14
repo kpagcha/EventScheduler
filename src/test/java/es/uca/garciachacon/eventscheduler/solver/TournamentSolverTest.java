@@ -10,7 +10,7 @@ import es.uca.garciachacon.eventscheduler.data.model.tournament.event.Event;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.event.Matchup;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Localization;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Player;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.timeslot.Timeslot;
+import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Timeslot;
 import es.uca.garciachacon.eventscheduler.data.validation.validable.ValidationException;
 import es.uca.garciachacon.eventscheduler.solver.TournamentSolver.MatchupMode;
 import es.uca.garciachacon.eventscheduler.solver.TournamentSolver.SearchStrategy;
@@ -39,7 +39,7 @@ public class TournamentSolverTest {
         Event event = new Event("Event",
                 TournamentUtils.buildGenericPlayers(8, "Player"),
                 TournamentUtils.buildGenericLocalizations(3, "Court"),
-                TournamentUtils.buildDefiniteDayOfWeekTimeslots(14)
+                TournamentUtils.buildDayOfWeekTimeslots(14)
         );
         tournament = new Tournament("Tournament", event);
 
@@ -80,7 +80,7 @@ public class TournamentSolverTest {
         Event event = new Event("Event",
                 TournamentUtils.buildGenericPlayers(8, "Player"),
                 TournamentUtils.buildGenericLocalizations(1, "Court"),
-                TournamentUtils.buildDefiniteDayOfWeekTimeslots(8)
+                TournamentUtils.buildDayOfWeekTimeslots(8)
         );
         tournament = new Tournament("Tournament", event);
         tournament.getSolver().setSearchStrategy(SearchStrategy.MINDOM_UB);
@@ -119,7 +119,7 @@ public class TournamentSolverTest {
         Event event = new Event("Event",
                 TournamentUtils.buildGenericPlayers(2, "Player"),
                 TournamentUtils.buildGenericLocalizations(1, "Court"),
-                TournamentUtils.buildDefiniteDayOfWeekTimeslots(2)
+                TournamentUtils.buildDayOfWeekTimeslots(2)
         );
         tournament = new Tournament("Tournament", event);
         tournament.getSolver().setSearchStrategy(SearchStrategy.MINDOM_UB);
@@ -138,7 +138,7 @@ public class TournamentSolverTest {
         Event event = new Event("Event",
                 TournamentUtils.buildGenericPlayers(2, "Player"),
                 TournamentUtils.buildGenericLocalizations(1, "Court"),
-                TournamentUtils.buildDefiniteDayOfWeekTimeslots(6)
+                TournamentUtils.buildDayOfWeekTimeslots(6)
         );
         tournament = new Tournament("Tournament", event);
         tournament.getSolver().setSearchStrategy(SearchStrategy.MINDOM_UB);
@@ -165,7 +165,7 @@ public class TournamentSolverTest {
         Event event = new Event("Event",
                 TournamentUtils.buildGenericPlayers(8, "Player"),
                 TournamentUtils.buildGenericLocalizations(1, "Court"),
-                TournamentUtils.buildDefiniteDayOfWeekTimeslots(7)
+                TournamentUtils.buildDayOfWeekTimeslots(7)
         );
         tournament = new Tournament("Tournament", event);
         tournament.getSolver().setSearchStrategy(SearchStrategy.MINDOM_UB);
@@ -180,7 +180,7 @@ public class TournamentSolverTest {
         Event event = new Event("Event",
                 TournamentUtils.buildGenericPlayers(24, "Player"),
                 TournamentUtils.buildGenericLocalizations(2, "Court"),
-                TournamentUtils.buildAbstractTimeslots(6),
+                TournamentUtils.buildSimpleTimeslots(6),
                 1,
                 2,
                 4
@@ -204,7 +204,7 @@ public class TournamentSolverTest {
         Event event = new Event("Event",
                 TournamentUtils.buildGenericPlayers(12, "Pl"),
                 TournamentUtils.buildGenericLocalizations(12, "Court"),
-                TournamentUtils.buildAbstractTimeslots(2),
+                TournamentUtils.buildSimpleTimeslots(2),
                 1,
                 2,
                 1
@@ -228,7 +228,7 @@ public class TournamentSolverTest {
         Event event = new Event("Event",
                 TournamentUtils.buildGenericPlayers(8, "Player"),
                 TournamentUtils.buildGenericLocalizations(2, "Court"),
-                TournamentUtils.buildAbstractTimeslots(10),
+                TournamentUtils.buildSimpleTimeslots(10),
                 2,
                 2,
                 2
@@ -249,7 +249,7 @@ public class TournamentSolverTest {
         Event event = new Event("Event",
                 TournamentUtils.buildGenericPlayers(8, "Player"),
                 TournamentUtils.buildGenericLocalizations(1, "Court"),
-                TournamentUtils.buildAbstractTimeslots(12),
+                TournamentUtils.buildSimpleTimeslots(12),
                 1,
                 3,
                 2
@@ -267,7 +267,7 @@ public class TournamentSolverTest {
         Event event = new Event("Event",
                 TournamentUtils.buildGenericPlayers(8, "Player"),
                 TournamentUtils.buildGenericLocalizations(1, "Court"),
-                TournamentUtils.buildAbstractTimeslots(10)
+                TournamentUtils.buildSimpleTimeslots(10)
         );
         event.addBreak(event.getTimeslots().get(2));
         event.addBreak(event.getTimeslots().get(5));
@@ -286,7 +286,7 @@ public class TournamentSolverTest {
         Event event = new Event("Event",
                 TournamentUtils.buildGenericPlayers(8, "Player"),
                 TournamentUtils.buildGenericLocalizations(1, "Court"),
-                TournamentUtils.buildAbstractTimeslots(4),
+                TournamentUtils.buildSimpleTimeslots(4),
                 1,
                 2,
                 4
@@ -324,7 +324,7 @@ public class TournamentSolverTest {
         Event event = new Event("Event",
                 TournamentUtils.buildGenericPlayers(8, "Player"),
                 TournamentUtils.buildGenericLocalizations(1, "Court"),
-                TournamentUtils.buildAbstractTimeslots(10)
+                TournamentUtils.buildSimpleTimeslots(10)
         );
         List<Player> players = event.getPlayers();
         List<Timeslot> timeslots = event.getTimeslots();
@@ -384,7 +384,7 @@ public class TournamentSolverTest {
         Event event = new Event("Event",
                 TournamentUtils.buildGenericPlayers(8, "Player"),
                 TournamentUtils.buildGenericLocalizations(3, "Court"),
-                TournamentUtils.buildAbstractTimeslots(6)
+                TournamentUtils.buildSimpleTimeslots(6)
         );
         List<Localization> localizations = event.getLocalizations();
         List<Timeslot> timeslots = event.getTimeslots();
@@ -439,7 +439,7 @@ public class TournamentSolverTest {
                 zverev
         ));
         List<Localization> localizations = TournamentUtils.buildGenericLocalizations(3, "Court");
-        List<Timeslot> timeslots = TournamentUtils.buildAbstractTimeslots(15);
+        List<Timeslot> timeslots = TournamentUtils.buildSimpleTimeslots(15);
         Event event = new Event("Event", players, localizations, timeslots, 1, 3, 2);
 
         event.addMatchup(new Matchup(event,
@@ -505,7 +505,7 @@ public class TournamentSolverTest {
         Localization court1 = new Localization("Court 1");
         Localization court2 = new Localization("Court 2");
 
-        List<Timeslot> timeslots = TournamentUtils.buildAbstractTimeslots(20);
+        List<Timeslot> timeslots = TournamentUtils.buildSimpleTimeslots(20);
 
         Event event = new Event("Event",
                 new ArrayList<>(Arrays.asList(federer, nadal, djokovic, murray, ferrer, berdych)),
@@ -598,7 +598,7 @@ public class TournamentSolverTest {
         Event event = new Event("Event",
                 TournamentUtils.buildGenericPlayers(8, "Player"),
                 TournamentUtils.buildGenericLocalizations(3, "Court"),
-                TournamentUtils.buildAbstractTimeslots(20),
+                TournamentUtils.buildSimpleTimeslots(20),
                 2,
                 2,
                 2
@@ -626,7 +626,7 @@ public class TournamentSolverTest {
         Event event = new Event("Event",
                 TournamentUtils.buildGenericPlayers(4, "Player"),
                 TournamentUtils.buildGenericLocalizations(2, "Court"),
-                TournamentUtils.buildAbstractTimeslots(2)
+                TournamentUtils.buildSimpleTimeslots(2)
         );
         event.addMatchup(new Matchup(event,
                 new HashSet<>(Arrays.asList(event.getPlayers().get(0), event.getPlayers().get(1))),
@@ -647,7 +647,7 @@ public class TournamentSolverTest {
         Event event = new Event("Event",
                 TournamentUtils.buildGenericPlayers(12, "Pl"),
                 TournamentUtils.buildGenericLocalizations(5, "Court"),
-                TournamentUtils.buildUndefiniteTimeslots(4)
+                TournamentUtils.buildOneHourTimeslots(4)
         );
         List<Player> players = event.getPlayers();
         List<Localization> localizations = event.getLocalizations();
@@ -692,7 +692,7 @@ public class TournamentSolverTest {
         Event event = new Event("Event",
                 TournamentUtils.buildGenericPlayers(8, "Player"),
                 TournamentUtils.buildGenericLocalizations(1, "Court"),
-                TournamentUtils.buildUndefiniteTimeslots(10)
+                TournamentUtils.buildOneHourTimeslots(10)
         );
         List<Player> players = event.getPlayers();
         List<Timeslot> timeslots = event.getTimeslots();
@@ -722,7 +722,7 @@ public class TournamentSolverTest {
         Event event = new Event("Event",
                 TournamentUtils.buildGenericPlayers(8, "Player"),
                 TournamentUtils.buildGenericLocalizations(1, "Court"),
-                TournamentUtils.buildUndefiniteTimeslots(12),
+                TournamentUtils.buildOneHourTimeslots(12),
                 3,
                 1,
                 2
@@ -752,7 +752,7 @@ public class TournamentSolverTest {
         Event event = new Event("Event",
                 TournamentUtils.buildGenericPlayers(8, "Player"),
                 TournamentUtils.buildGenericLocalizations(1, "Court"),
-                TournamentUtils.buildUndefiniteTimeslots(12),
+                TournamentUtils.buildOneHourTimeslots(12),
                 3,
                 1,
                 2
@@ -785,7 +785,7 @@ public class TournamentSolverTest {
         Event event = new Event("Event",
                 players,
                 TournamentUtils.buildGenericLocalizations(1, "Court"),
-                TournamentUtils.buildUndefiniteTimeslots(4),
+                TournamentUtils.buildOneHourTimeslots(4),
                 2,
                 1,
                 2
@@ -804,7 +804,7 @@ public class TournamentSolverTest {
         Event event = new Event("Event",
                 TournamentUtils.buildGenericPlayers(8, "Player"),
                 TournamentUtils.buildGenericLocalizations(2, "Court"),
-                TournamentUtils.buildUndefiniteTimeslots(12),
+                TournamentUtils.buildOneHourTimeslots(12),
                 3,
                 1,
                 2
@@ -836,7 +836,7 @@ public class TournamentSolverTest {
         tournament = new Tournament("Tournament", new Event("Event",
                 TournamentUtils.buildGenericPlayers(8, "Player"),
                 TournamentUtils.buildGenericLocalizations(1, "Court"),
-                TournamentUtils.buildAbstractTimeslots(4),
+                TournamentUtils.buildSimpleTimeslots(4),
                 1,
                 1,
                 2
@@ -858,7 +858,7 @@ public class TournamentSolverTest {
         tournament = new Tournament("Tournament", new Event("Event",
                 TournamentUtils.buildGenericPlayers(8, "Player"),
                 TournamentUtils.buildGenericLocalizations(2, "Court"),
-                TournamentUtils.buildAbstractTimeslots(4),
+                TournamentUtils.buildSimpleTimeslots(4),
                 1,
                 1,
                 2
@@ -886,7 +886,7 @@ public class TournamentSolverTest {
         tournament = new Tournament("Tournament", new Event("Event",
                 TournamentUtils.buildGenericPlayers(8, "Player"),
                 TournamentUtils.buildGenericLocalizations(1, "Court"),
-                TournamentUtils.buildAbstractTimeslots(5),
+                TournamentUtils.buildSimpleTimeslots(5),
                 1,
                 1,
                 2
@@ -909,7 +909,7 @@ public class TournamentSolverTest {
         tournament = new Tournament("Tournament", new Event("Event",
                 TournamentUtils.buildGenericPlayers(8, "Player"),
                 TournamentUtils.buildGenericLocalizations(1, "Court"),
-                TournamentUtils.buildAbstractTimeslots(4),
+                TournamentUtils.buildSimpleTimeslots(4),
                 1,
                 1,
                 2
@@ -941,7 +941,7 @@ public class TournamentSolverTest {
         tournament = new Tournament("Tournament", new Event("Event",
                 TournamentUtils.buildGenericPlayers(8, "Player"),
                 TournamentUtils.buildGenericLocalizations(2, "Court"),
-                TournamentUtils.buildAbstractTimeslots(4),
+                TournamentUtils.buildSimpleTimeslots(4),
                 1,
                 1,
                 2
@@ -973,7 +973,7 @@ public class TournamentSolverTest {
         tournament = new Tournament("Tournament", new Event("Event",
                 TournamentUtils.buildGenericPlayers(8, "Player"),
                 TournamentUtils.buildGenericLocalizations(2, "Court"),
-                TournamentUtils.buildAbstractTimeslots(4),
+                TournamentUtils.buildSimpleTimeslots(4),
                 1,
                 1,
                 2
@@ -1010,7 +1010,7 @@ public class TournamentSolverTest {
     @Test
     public void multiTournamentCaseTest() throws ValidationException {
         List<Localization> courts = TournamentUtils.buildGenericLocalizations(3, "Court");
-        List<Timeslot> timeslots = TournamentUtils.buildAbstractTimeslots(8);
+        List<Timeslot> timeslots = TournamentUtils.buildSimpleTimeslots(8);
 
         Event cat1 = new Event("Category 1", TournamentUtils.buildGenericPlayers(8, "PCat1"), courts, timeslots);
         Event cat2 = new Event("Category 2", TournamentUtils.buildGenericPlayers(8, "PCat2"), courts, timeslots);
@@ -1051,7 +1051,7 @@ public class TournamentSolverTest {
         List<Localization> extraCourts = new ArrayList<>();
         extraCourts.add(courts.get(0));
         extraCourts.add(new Localization("Court 2"));
-        List<Timeslot> timeslots = TournamentUtils.buildDefiniteLocalTimeTimeslots(4);
+        List<Timeslot> timeslots = TournamentUtils.buildLocalTimeTimeslots(4);
 
         Event cat1 = new Event("Category 1", TournamentUtils.buildGenericPlayers(2, "PCat1"), courts, timeslots);
         Event cat2 = new Event("Category 2", TournamentUtils.buildGenericPlayers(2, "PCat2"), extraCourts, timeslots);
@@ -1074,7 +1074,7 @@ public class TournamentSolverTest {
 
     @Test
     public void multiTournamentWithoutSharedDomainsCaseTest() throws ValidationException {
-        List<Timeslot> timeslots = TournamentUtils.buildDefiniteDayOfWeekTimeslots(14);
+        List<Timeslot> timeslots = TournamentUtils.buildDayOfWeekTimeslots(14);
         Event cat1 = new Event("Category 2",
                 TournamentUtils.buildGenericPlayers(8, "PCat1"),
                 TournamentUtils.buildGenericLocalizations(2, "LCat1"),
@@ -1109,7 +1109,7 @@ public class TournamentSolverTest {
     public void multiTournamentWithSharedPlayersCaseTest() throws ValidationException {
         List<Player> players = TournamentUtils.buildGenericPlayers(8, "Player");
         List<Localization> courts = TournamentUtils.buildGenericLocalizations(2, "Court");
-        List<Timeslot> timeslots = TournamentUtils.buildDefiniteDayOfWeekTimeslots(10);
+        List<Timeslot> timeslots = TournamentUtils.buildDayOfWeekTimeslots(10);
 
         Event cat1 = new Event("Category 1", players, courts, timeslots, 1, 1, 2);
         Event cat2 = new Event("Category 2", players, courts, timeslots, 1, 1, 2);
@@ -1144,7 +1144,7 @@ public class TournamentSolverTest {
     public void multiTournamentWithPartiallySharedPlayersCaseTest() throws ValidationException {
         List<Player> players = TournamentUtils.buildGenericPlayers(8, "Pl");
         List<Localization> courts = TournamentUtils.buildGenericLocalizations(1, "Court");
-        List<Timeslot> timeslots = TournamentUtils.buildDefiniteDayOfWeekTimeslots(6);
+        List<Timeslot> timeslots = TournamentUtils.buildDayOfWeekTimeslots(6);
 
         Event cat1 = new Event("Category 1", players.subList(0, 6), courts, timeslots, 1, 1, 2);
         Event cat2 = new Event("Category 2", players.subList(2, 8), courts, timeslots, 1, 1, 2);
@@ -1167,7 +1167,7 @@ public class TournamentSolverTest {
     public void multiTournamentWithPartiallySharedLocalizationsCasteTest() throws ValidationException {
         List<Player> players = TournamentUtils.buildGenericPlayers(8, "Player");
         List<Localization> courts = TournamentUtils.buildGenericLocalizations(3, "Court");
-        List<Timeslot> timeslots = TournamentUtils.buildDefiniteDayOfWeekTimeslots(3);
+        List<Timeslot> timeslots = TournamentUtils.buildDayOfWeekTimeslots(3);
 
         Event cat1 = new Event("Category 1", players, courts.subList(0, 2), timeslots, 1, 1, 2);
         Event cat2 = new Event("Category 2", players, courts.subList(1, 3), timeslots, 1, 1, 2);
@@ -1189,7 +1189,7 @@ public class TournamentSolverTest {
     public void multiTournamentWithPartiallySharedTimeslotsCaseTest() throws ValidationException {
         List<Player> players = TournamentUtils.buildGenericPlayers(8, "Player");
         List<Localization> courts = TournamentUtils.buildGenericLocalizations(3, "Court");
-        List<Timeslot> timeslots = TournamentUtils.buildDefiniteDayOfWeekTimeslots(7);
+        List<Timeslot> timeslots = TournamentUtils.buildDayOfWeekTimeslots(7);
 
         Event cat1 = new Event("Category 1", players, courts, timeslots.subList(0, 4), 1, 1, 2);
         Event cat2 = new Event("Category 2", players, courts, timeslots.subList(2, 7), 1, 1, 2);
@@ -1222,7 +1222,7 @@ public class TournamentSolverTest {
     public void multiTournamentWithPartiallySharedTimeslotsAndDifferentPlayersCaseTest() throws ValidationException {
         List<Player> players = TournamentUtils.buildGenericPlayers(24, "Pl");
         List<Localization> courts = TournamentUtils.buildGenericLocalizations(3, "Court");
-        List<Timeslot> timeslots = TournamentUtils.buildDefiniteDayOfWeekTimeslots(7);
+        List<Timeslot> timeslots = TournamentUtils.buildDayOfWeekTimeslots(7);
 
         Event cat1 = new Event("Category 1", players.subList(0, 8), courts, timeslots.subList(0, 4), 1, 1, 2);
         Event cat2 = new Event("Category 2", players.subList(8, 16), courts, timeslots.subList(2, 7), 1, 1, 2);
@@ -1254,7 +1254,7 @@ public class TournamentSolverTest {
     public void multiTournamentInfeasibleCaseTest() throws ValidationException {
         List<Player> players = TournamentUtils.buildGenericPlayers(8, "Pl");
         List<Localization> courts = TournamentUtils.buildGenericLocalizations(1, "Court");
-        List<Timeslot> timeslots = TournamentUtils.buildDefiniteDayOfWeekTimeslots(7);
+        List<Timeslot> timeslots = TournamentUtils.buildDayOfWeekTimeslots(7);
 
         Event cat1 = new Event("Category 1", players, courts, timeslots);
         Event cat2 = new Event("Category 2", players, courts, timeslots);
@@ -1274,7 +1274,7 @@ public class TournamentSolverTest {
     public void multiTournamentWithDifferentPlayersPerMatchCaseTest() throws ValidationException {
         List<Player> players = TournamentUtils.buildGenericPlayers(33, "Pl");
         List<Localization> courts = TournamentUtils.buildGenericLocalizations(4, "Court");
-        List<Timeslot> timeslots = TournamentUtils.buildAbstractTimeslots(10);
+        List<Timeslot> timeslots = TournamentUtils.buildSimpleTimeslots(10);
 
         Event cat1 = new Event("Category 1", players.subList(0, 8), courts, timeslots);
         Event cat2 = new Event("Category 2", players.subList(8, 24), courts, timeslots, 1, 2, 4);
@@ -1301,7 +1301,7 @@ public class TournamentSolverTest {
     public void multiTournamentWithDifferentMatchesPerPlayerCaseTest() throws ValidationException {
         List<Player> players = TournamentUtils.buildGenericPlayers(24, "Pl");
         List<Localization> courts = TournamentUtils.buildGenericLocalizations(4, "Court");
-        List<Timeslot> timeslots = TournamentUtils.buildAbstractTimeslots(16);
+        List<Timeslot> timeslots = TournamentUtils.buildSimpleTimeslots(16);
 
         Event cat1 = new Event("Category 1", players.subList(0, 8), courts, timeslots);
         Event cat2 = new Event("Category 2", players.subList(8, 16), courts, timeslots, 2, 2, 2);
@@ -1321,7 +1321,7 @@ public class TournamentSolverTest {
     public void multiTournamentWithDifferentTimeslotsPerMatchCaseTest() throws ValidationException {
         List<Player> players = TournamentUtils.buildGenericPlayers(24, "Pl");
         List<Localization> courts = TournamentUtils.buildGenericLocalizations(4, "Court");
-        List<Timeslot> timeslots = TournamentUtils.buildAbstractTimeslots(16);
+        List<Timeslot> timeslots = TournamentUtils.buildSimpleTimeslots(16);
 
         Event cat1 = new Event("Category 1", players.subList(0, 8), courts, timeslots);
         Event cat2 = new Event("Category 2", players.subList(8, 16), courts, timeslots, 1, 4, 2);
@@ -1347,7 +1347,7 @@ public class TournamentSolverTest {
     @Test
     public void multiTournamentWithSameBreaksCaseTest() throws ValidationException {
         List<Localization> courts = TournamentUtils.buildGenericLocalizations(2, "Court");
-        List<Timeslot> timeslots = TournamentUtils.buildAbstractTimeslots(15);
+        List<Timeslot> timeslots = TournamentUtils.buildSimpleTimeslots(15);
 
         Event cat1 = new Event("Category 1", TournamentUtils.buildGenericPlayers(8, "PCat1"), courts, timeslots);
         Event cat2 = new Event("Category 2", TournamentUtils.buildGenericPlayers(8, "PCat2"), courts, timeslots);
@@ -1375,7 +1375,7 @@ public class TournamentSolverTest {
     @Test
     public void multiTournamentWithDifferentBreaksCaseTest() throws ValidationException {
         List<Localization> courts = TournamentUtils.buildGenericLocalizations(2, "Court");
-        List<Timeslot> timeslots = TournamentUtils.buildAbstractTimeslots(15);
+        List<Timeslot> timeslots = TournamentUtils.buildSimpleTimeslots(15);
 
         Event cat1 = new Event("Category 1", TournamentUtils.buildGenericPlayers(8, "PCat1"), courts, timeslots);
         Event cat2 = new Event("Category 2", TournamentUtils.buildGenericPlayers(8, "PCat2"), courts, timeslots);
@@ -1405,7 +1405,7 @@ public class TournamentSolverTest {
     public void multiTournamentWithUnavailablePlayersCaseTest() throws ValidationException {
         List<Player> players = TournamentUtils.buildGenericPlayers(16, "Pl");
         List<Localization> courts = TournamentUtils.buildGenericLocalizations(2, "Court");
-        List<Timeslot> timeslots = TournamentUtils.buildAbstractTimeslots(15);
+        List<Timeslot> timeslots = TournamentUtils.buildSimpleTimeslots(15);
 
         Event cat1 = new Event("Category 1", players.subList(0, 10), courts, timeslots);
         Event cat2 = new Event("Category 2", players.subList(10, 16), courts, timeslots);
@@ -1469,7 +1469,7 @@ public class TournamentSolverTest {
     public void multiTournamentWithDifferentCategoryPlayerUnavailabilityCaseTest() throws ValidationException {
         List<Player> players = TournamentUtils.buildGenericPlayers(4, "Pl");
         List<Localization> courts = TournamentUtils.buildGenericLocalizations(2, "Court");
-        List<Timeslot> timeslots = TournamentUtils.buildAbstractTimeslots(4);
+        List<Timeslot> timeslots = TournamentUtils.buildSimpleTimeslots(4);
 
         Event cat1 = new Event("Category 1", players, courts, timeslots);
         Event cat2 = new Event("Category 2", players, courts, timeslots);
@@ -1522,7 +1522,7 @@ public class TournamentSolverTest {
     public void multiTournamentWithUnavailableLocalizationCaseTest() throws ValidationException {
         List<Player> players = TournamentUtils.buildGenericPlayers(16, "Pl");
         List<Localization> courts = TournamentUtils.buildGenericLocalizations(5, "Court");
-        List<Timeslot> timeslots = TournamentUtils.buildAbstractTimeslots(10);
+        List<Timeslot> timeslots = TournamentUtils.buildSimpleTimeslots(10);
 
         Event cat1 = new Event("Category 1", players.subList(0, 8), courts, timeslots);
         Event cat2 = new Event("Category 2", players.subList(4, 16), courts, timeslots);
@@ -1565,7 +1565,7 @@ public class TournamentSolverTest {
     public void multiTournamentWithDifferentCategoryLocalizationUnavailabilityCaseTest() throws ValidationException {
         List<Player> players = TournamentUtils.buildGenericPlayers(8, "Pl");
         List<Localization> courts = TournamentUtils.buildGenericLocalizations(2, "Court");
-        List<Timeslot> timeslots = TournamentUtils.buildAbstractTimeslots(10);
+        List<Timeslot> timeslots = TournamentUtils.buildSimpleTimeslots(10);
 
         Event cat1 = new Event("Category 1", players, courts, timeslots);
         Event cat2 = new Event("Category 2", players, courts, timeslots);
@@ -1594,7 +1594,7 @@ public class TournamentSolverTest {
     public void multiTournamentWithPredefinedMatchupsCaseTest() throws ValidationException {
         List<Player> players = TournamentUtils.buildGenericPlayers(8, "Pl");
         List<Localization> courts = TournamentUtils.buildGenericLocalizations(2, "Court");
-        List<Timeslot> timeslots = TournamentUtils.buildAbstractTimeslots(10);
+        List<Timeslot> timeslots = TournamentUtils.buildSimpleTimeslots(10);
 
         Event cat1 = new Event("Category 1", players, courts, timeslots);
         Event cat2 = new Event("Category 2", players, courts, timeslots);
@@ -1619,7 +1619,7 @@ public class TournamentSolverTest {
     public void multiTournamentWithAssignedLocalizationsToPlayersCaseTest() throws ValidationException {
         List<Player> players = TournamentUtils.buildGenericPlayers(8, "Pl");
         List<Localization> courts = TournamentUtils.buildGenericLocalizations(2, "Court");
-        List<Timeslot> timeslots = TournamentUtils.buildAbstractTimeslots(10);
+        List<Timeslot> timeslots = TournamentUtils.buildSimpleTimeslots(10);
 
         Event cat1 = new Event("Category 1", players, courts, timeslots);
         Event cat2 = new Event("Category 2", players, courts, timeslots);
@@ -1667,7 +1667,7 @@ public class TournamentSolverTest {
     public void multiTournamentWithAssignedTimeslotsToPlayersCaseTest() throws ValidationException {
         List<Player> players = TournamentUtils.buildGenericPlayers(8, "Pl");
         List<Localization> courts = TournamentUtils.buildGenericLocalizations(2, "Court");
-        List<Timeslot> timeslots = TournamentUtils.buildAbstractTimeslots(10);
+        List<Timeslot> timeslots = TournamentUtils.buildSimpleTimeslots(10);
 
         Event cat1 = new Event("Category 1", players, courts, timeslots);
         Event cat2 = new Event("Category 2", players, courts, timeslots);
@@ -1714,7 +1714,7 @@ public class TournamentSolverTest {
     public void multiTournamentWithDifferentMatchupModesCaseTest() throws ValidationException {
         List<Player> players = TournamentUtils.buildGenericPlayers(8, "Player");
         List<Localization> courts = TournamentUtils.buildGenericLocalizations(3, "Court");
-        List<Timeslot> timeslots = TournamentUtils.buildAbstractTimeslots(16);
+        List<Timeslot> timeslots = TournamentUtils.buildSimpleTimeslots(16);
 
         Event cat1 = new Event("Category 1", players, courts, timeslots, 3, 1, 2);
         Event cat2 = new Event("Category 2", players, courts, timeslots, 3, 1, 2);
@@ -1765,7 +1765,7 @@ public class TournamentSolverTest {
     public void leagueCaseTest() throws ValidationException {
         List<Player> players = TournamentUtils.buildGenericPlayers(6, "Team");
         List<Localization> courts = TournamentUtils.buildGenericLocalizations(5, "Court");
-        List<Timeslot> timeslots = TournamentUtils.buildDefiniteDayOfWeekTimeslots(5);
+        List<Timeslot> timeslots = TournamentUtils.buildDayOfWeekTimeslots(5);
 
         Event event = new Event("Event", players, courts, timeslots, 5, 1, 2);
         event.setMatchupMode(MatchupMode.ALL_DIFFERENT);
@@ -1790,7 +1790,7 @@ public class TournamentSolverTest {
     @Test
     public void multiLeagueWithSharedLocalizationsAndDifferentPlayersCaseTest() throws ValidationException {
         List<Localization> courts = TournamentUtils.buildGenericLocalizations(10, "Court");
-        List<Timeslot> timeslots = TournamentUtils.buildDefiniteDayOfWeekTimeslots(5);
+        List<Timeslot> timeslots = TournamentUtils.buildDayOfWeekTimeslots(5);
 
         Event cat1 = new Event("Event", TournamentUtils.buildGenericPlayers(6, "PCat1"), courts, timeslots, 5, 1, 2);
         Event cat2 = new Event("Event", TournamentUtils.buildGenericPlayers(6, "PCat2"), courts, timeslots, 5, 1, 2);
@@ -1817,7 +1817,7 @@ public class TournamentSolverTest {
     public void multiLeagueWithSharedLocalizationsAndPartiallySharedPlayersCaseTest() throws ValidationException {
         List<Player> players = TournamentUtils.buildGenericPlayers(12, "Team");
         List<Localization> courts = TournamentUtils.buildGenericLocalizations(3, "Court");
-        List<Timeslot> timeslots = TournamentUtils.buildDefiniteDayOfWeekTimeslots(10);
+        List<Timeslot> timeslots = TournamentUtils.buildDayOfWeekTimeslots(10);
 
         Event cat1 = new Event("Event", players.subList(0, 6), courts, timeslots, 5, 1, 2);
         Event cat2 = new Event("Event", players.subList(4, 10), courts, timeslots, 5, 1, 2);
@@ -1858,7 +1858,7 @@ public class TournamentSolverTest {
         Tournament tournament = new Tournament("Tournament", new Event("Event",
                 TournamentUtils.buildGenericPlayers(32, "Pl"),
                 TournamentUtils.buildGenericLocalizations(2, "Court"),
-                TournamentUtils.buildAbstractTimeslots(8),
+                TournamentUtils.buildSimpleTimeslots(8),
                 1,
                 2,
                 4

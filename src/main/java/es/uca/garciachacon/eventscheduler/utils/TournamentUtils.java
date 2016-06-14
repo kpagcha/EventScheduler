@@ -4,10 +4,7 @@ import es.uca.garciachacon.eventscheduler.data.model.tournament.Tournament;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.event.Event;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Localization;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Player;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.timeslot.AbstractTimeslot;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.timeslot.DefiniteTimeslot;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.timeslot.Timeslot;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.timeslot.UndefiniteTimeslot;
+import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Timeslot;
 import es.uca.garciachacon.eventscheduler.solver.TournamentSolver.MatchupMode;
 import org.apache.commons.lang3.StringUtils;
 
@@ -21,13 +18,11 @@ import java.util.List;
 
 @SuppressWarnings("unused")
 public class TournamentUtils {
-    /*
-     * TORNEO 1
-     */
-    public static Tournament getSampleTournament() {
-        List<Player> players = buildGenericPlayers(16, "Jug");
+
+    public static Tournament getTournamentWithTeamsAndAllDifferentMatchupMode() {
+        List<Player> players = buildGenericPlayers(16, "Pl");
         List<Localization> courts = buildGenericLocalizations(3, "Court");
-        List<Timeslot> timeslots = buildAbstractTimeslots(13);
+        List<Timeslot> timeslots = buildSimpleTimeslots(13);
 
         Event event = new Event("Event", players, courts, timeslots, 3, 2, 4);
 
@@ -39,67 +34,14 @@ public class TournamentUtils {
         return new Tournament("Tournament", event);
     }
 
-    /*
-     * TORNEO 2: ATP
-     */
-    public static Tournament getSampleAtp() {
-        List<Player> players =
-                buildPlayers(new String[]{ "Djokovic", "Murray", "Federer", "Wawrinka", "Nadal", "Nishikori", "Tsonga",
-                        "Berdych"
-                });
-        List<Localization> courts = buildGenericLocalizations(2, "Pista");
-        List<Timeslot> timeslots = buildAbstractTimeslots(13);
-
-        Event event = new Event("Cuadro individual", players, courts, timeslots, 2, 2, 2);
-
-        event.addBreak(timeslots.get(4));
-
-        event.addUnavailableLocalizationAtTimeslots(courts.get(0),
-                new HashSet<>(Arrays.asList(timeslots.get(0),
-                        timeslots.get(1),
-                        timeslots.get(2),
-                        timeslots.get(3),
-                        timeslots.get(4)
-                ))
+    public static Tournament getSimpleTournament() {
+        Event event = new Event("Generic Event",
+                buildGenericPlayers(8, "Player"),
+                buildGenericLocalizations(1, "Court"),
+                buildLocalTimeTimeslots(8)
         );
 
-        event.addUnavailablePlayerAtTimeslots(players.get(0),
-                new HashSet<>(Arrays.asList(timeslots.get(5), timeslots.get(6)))
-        );
-
-        return new Tournament("Torneo ATP", event);
-    }
-
-    /*
-     * TORNEO 3
-     */
-    public static Tournament getSampleWithDifferentDomains() {
-        List<Localization> localizations = TournamentUtils.buildGenericLocalizations(2, "Courts");
-        List<Timeslot> timeslots = TournamentUtils.buildAbstractTimeslots(10);
-
-        Event singles = new Event("Singles", TournamentUtils.buildGenericPlayers(8, "SPl"), localizations, timeslots);
-        Event doubles = new Event("Doubles",
-                TournamentUtils.buildGenericPlayers(8, "DPl"),
-                localizations,
-                timeslots.subList(3, 8),
-                1,
-                2,
-                4
-        );
-
-        Tournament tournament = new Tournament("Tennis Tournament", singles, doubles);
-
-        tournament.addBreak(timeslots.get(5));
-
-        return tournament;
-    }
-
-    /*
-     * TORNEO 4 para probar el problema de asignación de partido en un timeslot distinto de los asignados a un
-     * jugador por culpa de habilitarlo en la restricción de emparejamiento predefinido
-     */
-    public static Tournament getSampleWithIssue() {
-        return null;
+        return new Tournament("Generic Tournament", event);
     }
 
     /*
@@ -111,7 +53,7 @@ public class TournamentUtils {
         int startMinute = 0;
         List<Timeslot> timeslots = new ArrayList<>(nTimeslots);
         for (int t = 0; t < nTimeslots; t++) {
-            timeslots.add(new DefiniteTimeslot(LocalTime.of(startHour, startMinute), Duration.ofMinutes(30), 1));
+            timeslots.add(new Timeslot(1, LocalTime.of(startHour, startMinute), Duration.ofMinutes(30)));
             if (t % 2 != 0) {
                 startHour++;
                 startMinute = 0;
@@ -316,19 +258,19 @@ public class TournamentUtils {
     }
 
     /**
-     * Construye una lista de <i>timeslots</i> abstractos.
+     * Construye una lista de <i>timeslots</i> simples o abstractos (solamente con un orden cronológico).
      * <p>Si el número de horas de juego es menor o igual que 0, se devuelve una lista vacía</p>
      *
      * @param nTimeslots número de horas de juego
      * @return lista de <i>timeslots</i>
      */
-    public static List<Timeslot> buildAbstractTimeslots(int nTimeslots) {
+    public static List<Timeslot> buildSimpleTimeslots(int nTimeslots) {
         if (nTimeslots <= 0)
             return new ArrayList<>();
 
         Timeslot[] timeslots = new Timeslot[nTimeslots];
         for (int i = 0; i < nTimeslots; i++)
-            timeslots[i] = new AbstractTimeslot(i);
+            timeslots[i] = new Timeslot(i);
         return new ArrayList<>(Arrays.asList(timeslots));
     }
 
@@ -339,7 +281,7 @@ public class TournamentUtils {
      * @param nTimeslots número de <i>timeslots</i>
      * @return lista de <i>timeslots</i>
      */
-    public static List<Timeslot> buildDefiniteDayOfWeekTimeslots(int nTimeslots) {
+    public static List<Timeslot> buildDayOfWeekTimeslots(int nTimeslots) {
         if (nTimeslots <= 0)
             return new ArrayList<>();
 
@@ -348,7 +290,7 @@ public class TournamentUtils {
         for (int i = 0; i < nTimeslots; i++) {
             if (i % 7 == 0 && i != 0)
                 order++;
-            timeslots[i] = new DefiniteTimeslot(DayOfWeek.of(i % 7 + 1), Duration.ofHours(1), order);
+            timeslots[i] = new Timeslot(order, DayOfWeek.of(i % 7 + 1), Duration.ofHours(1));
         }
         return new ArrayList<>(Arrays.asList(timeslots));
     }
@@ -360,14 +302,14 @@ public class TournamentUtils {
      * @param nTimeslots número de horas de juego
      * @return lista de <i>timeslots</i>
      */
-    public static List<Timeslot> buildDefiniteLocalTimeTimeslots(int nTimeslots) {
+    public static List<Timeslot> buildLocalTimeTimeslots(int nTimeslots) {
         if (nTimeslots <= 0)
             return new ArrayList<>();
 
         Timeslot[] timeslots = new Timeslot[nTimeslots];
         int order = 0;
         for (int i = 0; i < nTimeslots; i++) {
-            timeslots[i] = new DefiniteTimeslot(LocalTime.of(i % 24, 0), Duration.ofHours(1), order);
+            timeslots[i] = new Timeslot(order, LocalTime.of(i % 24, 0), Duration.ofHours(1));
             if ((i + 1) % 24 == 0)
                 order++;
         }
@@ -381,13 +323,13 @@ public class TournamentUtils {
      * @param nTimeslots número de <i>timeslots</i>
      * @return lista de <i>timeslots</i>
      */
-    public static List<Timeslot> buildUndefiniteTimeslots(int nTimeslots) {
+    public static List<Timeslot> buildOneHourTimeslots(int nTimeslots) {
         if (nTimeslots <= 0)
             return new ArrayList<>();
 
         Timeslot[] timeslots = new Timeslot[nTimeslots];
         for (int i = 0; i < nTimeslots; i++)
-            timeslots[i] = new UndefiniteTimeslot(Duration.ofHours(1), i);
+            timeslots[i] = new Timeslot(i, Duration.ofHours(1));
         return new ArrayList<>(Arrays.asList(timeslots));
     }
 }

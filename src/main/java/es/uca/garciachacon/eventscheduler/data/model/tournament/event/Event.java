@@ -5,7 +5,7 @@ import es.uca.garciachacon.eventscheduler.data.model.tournament.Tournament;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Localization;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Player;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Team;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.timeslot.Timeslot;
+import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Timeslot;
 import es.uca.garciachacon.eventscheduler.data.validation.validable.Validable;
 import es.uca.garciachacon.eventscheduler.data.validation.validable.ValidationException;
 import es.uca.garciachacon.eventscheduler.data.validation.validator.Validator;
@@ -41,31 +41,26 @@ import java.util.stream.Collectors;
  */
 public class Event implements Validable {
     /**
+     * Jugadores concretos o abstractos (equipos) que participan en el evento
+     */
+    private final List<Player> players;
+    /**
+     * Localizaciones o terrenos de juego disponibles para la categoría
+     */
+    private final List<Localization> localizations;
+    /**
+     * Horas en las que tendrá lugar esta categoría (dominio temporal del evento o categoría)
+     */
+    private final List<Timeslot> timeslots;
+    /**
      * Nombre del evento o la categoría
      */
     private String name;
-
     /**
      * Torneo al que pertenece la categoría
      */
     @JsonIgnore
     private Tournament tournament;
-
-    /**
-     * Jugadores concretos o abstractos (equipos) que participan en el evento
-     */
-    private final List<Player> players;
-
-    /**
-     * Localizaciones o terrenos de juego disponibles para la categoría
-     */
-    private final List<Localization> localizations;
-
-    /**
-     * Horas en las que tendrá lugar esta categoría (dominio temporal del evento o categoría)
-     */
-    private final List<Timeslot> timeslots;
-
     /**
      * Número de partidos que cada jugador ha de jugar en esta categoría
      */
@@ -334,6 +329,10 @@ public class Event implements Validable {
             throw new ValidationException(String.format("Validation has failed for this event (%s)", name));
     }
 
+    public String getName() {
+        return name;
+    }
+
     /**
      * Asigna el nombre del torneo. Si es null se lanza IllegalArgumentException
      *
@@ -346,16 +345,12 @@ public class Event implements Validable {
         this.name = name;
     }
 
-    public String getName() {
-        return name;
+    public Tournament getTournament() {
+        return tournament;
     }
 
     public void setTournament(Tournament tournament) {
         this.tournament = tournament;
-    }
-
-    public Tournament getTournament() {
-        return tournament;
     }
 
     /**
@@ -385,6 +380,10 @@ public class Event implements Validable {
         return Collections.unmodifiableList(timeslots);
     }
 
+    public int getMatchesPerPlayer() {
+        return nMatchesPerPlayer;
+    }
+
     /**
      * Asigna el número de partidos por jugador. Además, elimina todos los emparejamientos predefinidos, si hubiese.
      *
@@ -402,8 +401,8 @@ public class Event implements Validable {
             matchupMode = MatchupMode.ANY;
     }
 
-    public int getMatchesPerPlayer() {
-        return nMatchesPerPlayer;
+    public int getTimeslotsPerMatch() {
+        return nTimeslotsPerMatch;
     }
 
     /**
@@ -422,8 +421,8 @@ public class Event implements Validable {
         nTimeslotsPerMatch = timeslotsPerMatch;
     }
 
-    public int getTimeslotsPerMatch() {
-        return nTimeslotsPerMatch;
+    public int getPlayersPerMatch() {
+        return nPlayersPerMatch;
     }
 
     /**
@@ -444,34 +443,6 @@ public class Event implements Validable {
 
         if (playersPerMatch == 1)
             matchupMode = MatchupMode.ANY;
-    }
-
-    public int getPlayersPerMatch() {
-        return nPlayersPerMatch;
-    }
-
-    /**
-     * Asigna la lista de equipos que componen el evento.
-     *
-     * @param teams lista de equipos no nula, con jugadores pertenecientes a este evento, sin jugadores repetidos en
-     *              distintos equipos y todos los equipos del mismo tamaño
-     * @throws IllegalArgumentException si no se cumplen algunas de las siguientes precondiciones:
-     *                                  <ul>
-     *                                  <li>La lista de equipos no es nula
-     *                                  <li>La lista de equipos no está vacía</li>
-     *                                  <li>Todos los jugadores pertenecen a este evento
-     *                                  <li>Ningún jugador se encuentra repetido en distintos equipos y, por ende, no
-     *                                  hay enfrentamientos repetidor
-     *                                  <li>Todos los equipos tienen el mismo número de jugadores
-     *                                  <li>El número total de jugadores que componen todos los equipos debe ser igual
-     *                                  al número de jugadores del evento
-     *                                  </ul>
-     */
-    public void setTeams(List<Team> teams) {
-        checkTeamsPreconditions(teams);
-
-        teams.forEach(t -> t.setEvent(this));
-        this.teams = teams;
     }
 
     /**
@@ -575,6 +546,30 @@ public class Event implements Validable {
     }
 
     /**
+     * Asigna la lista de equipos que componen el evento.
+     *
+     * @param teams lista de equipos no nula, con jugadores pertenecientes a este evento, sin jugadores repetidos en
+     *              distintos equipos y todos los equipos del mismo tamaño
+     * @throws IllegalArgumentException si no se cumplen algunas de las siguientes precondiciones:
+     *                                  <ul>
+     *                                  <li>La lista de equipos no es nula
+     *                                  <li>La lista de equipos no está vacía</li>
+     *                                  <li>Todos los jugadores pertenecen a este evento
+     *                                  <li>Ningún jugador se encuentra repetido en distintos equipos y, por ende, no
+     *                                  hay enfrentamientos repetidor
+     *                                  <li>Todos los equipos tienen el mismo número de jugadores
+     *                                  <li>El número total de jugadores que componen todos los equipos debe ser igual
+     *                                  al número de jugadores del evento
+     *                                  </ul>
+     */
+    public void setTeams(List<Team> teams) {
+        checkTeamsPreconditions(teams);
+
+        teams.forEach(t -> t.setEvent(this));
+        this.teams = teams;
+    }
+
+    /**
      * Añade un equipo
      *
      * @param team equipo no nulo
@@ -624,28 +619,6 @@ public class Event implements Validable {
     }
 
     /**
-     * Asigna el diccionario que define las horas en las que los jugadores no están disponibles. Es opcional, y no
-     * todos los jugadores tienen por qué definir un conjunto de horas en las que no están disponibles.
-     *
-     * @param unavailability un diccionario que define sobre cada jugador un conjunto de horas en las que no está
-     *                       disponible
-     * @throws IllegalArgumentException si no se cumplen las precondiciones:
-     *                                  <ul>
-     *                                  <li>El diccionario no puede ser nulo
-     *                                  <li>Todos los jugadores deben existir en la lista de jugadores del evento
-     *                                  <li>El conjunto de horas no disponibles asociada a un jugador no puede ser
-     *                                  null ni estar vacío
-     *                                  <li>Cada hora del conjunto de horas no disponibles asociada a un jugador debe
-     *                                  existir en el evento
-     *                                  </ul>
-     */
-    public void setUnavailablePlayers(Map<Player, Set<Timeslot>> unavailability) {
-        checkUnavailablePlayersPreconditions(unavailability);
-
-        unavailablePlayers = unavailability;
-    }
-
-    /**
      * Comprueba las precondiciones del diccionario de horas en las que los jugadores no están disponibles
      *
      * @param unavailability diccionario no nulo
@@ -686,6 +659,28 @@ public class Event implements Validable {
      */
     public Map<Player, Set<Timeslot>> getUnavailablePlayers() {
         return Collections.unmodifiableMap(unavailablePlayers);
+    }
+
+    /**
+     * Asigna el diccionario que define las horas en las que los jugadores no están disponibles. Es opcional, y no
+     * todos los jugadores tienen por qué definir un conjunto de horas en las que no están disponibles.
+     *
+     * @param unavailability un diccionario que define sobre cada jugador un conjunto de horas en las que no está
+     *                       disponible
+     * @throws IllegalArgumentException si no se cumplen las precondiciones:
+     *                                  <ul>
+     *                                  <li>El diccionario no puede ser nulo
+     *                                  <li>Todos los jugadores deben existir en la lista de jugadores del evento
+     *                                  <li>El conjunto de horas no disponibles asociada a un jugador no puede ser
+     *                                  null ni estar vacío
+     *                                  <li>Cada hora del conjunto de horas no disponibles asociada a un jugador debe
+     *                                  existir en el evento
+     *                                  </ul>
+     */
+    public void setUnavailablePlayers(Map<Player, Set<Timeslot>> unavailability) {
+        checkUnavailablePlayersPreconditions(unavailability);
+
+        unavailablePlayers = unavailability;
     }
 
     /**
@@ -812,6 +807,15 @@ public class Event implements Validable {
     }
 
     /**
+     * Devuelve la lista de emparejamientos fijos envuelta en un wrapper que la hace no modificable
+     *
+     * @return la lista no modificable de emparejamientos fijos del evento
+     */
+    public Set<Matchup> getPredefinedMatchups() {
+        return Collections.unmodifiableSet(predefinedMatchups);
+    }
+
+    /**
      * Asigna el conjunto de enfrentamientos predefinidos entre jugadores del evento. Además, actualiza las horas de
      * juego asignadas a los jugadores y las localizaciones de juego asginadas a los mismos.
      * <p>
@@ -861,15 +865,6 @@ public class Event implements Validable {
         }
 
         this.predefinedMatchups = matchups;
-    }
-
-    /**
-     * Devuelve la lista de emparejamientos fijos envuelta en un wrapper que la hace no modificable
-     *
-     * @return la lista no modificable de emparejamientos fijos del evento
-     */
-    public Set<Matchup> getPredefinedMatchups() {
-        return Collections.unmodifiableSet(predefinedMatchups);
     }
 
     /**
@@ -1024,6 +1019,15 @@ public class Event implements Validable {
     }
 
     /**
+     * Devuelve la lista no modificable de horas del evento que representan un break o descanso
+     *
+     * @return lista de horas del evento envuelta en un wrapper que la hace no modificable
+     */
+    public List<Timeslot> getBreaks() {
+        return Collections.unmodifiableList(breaks);
+    }
+
+    /**
      * Asigna la lista de horas que son descansos o <i>breaks</i>. Se ignoran elementos repetidos.
      *
      * @param breaks lista no nula de horas existentes en el torneo que serán interpretadas como breaks
@@ -1046,16 +1050,6 @@ public class Event implements Validable {
 
         this.breaks = new ArrayList<>(new HashSet<>(breaks));
     }
-
-    /**
-     * Devuelve la lista no modificable de horas del evento que representan un break o descanso
-     *
-     * @return lista de horas del evento envuelta en un wrapper que la hace no modificable
-     */
-    public List<Timeslot> getBreaks() {
-        return Collections.unmodifiableList(breaks);
-    }
-
 
     /**
      * Añade una hora (timeslot) a la lista de <i>breaks</i>. Si ya existe, no habrá modificaciones.
@@ -1153,6 +1147,15 @@ public class Event implements Validable {
     }
 
     /**
+     * Devuelve el mapa de localizaciones no disponibles a las horas especificadas.
+     *
+     * @return diccionario no modificable
+     */
+    public Map<Localization, Set<Timeslot>> getUnavailableLocalizations() {
+        return Collections.unmodifiableMap(unavailableLocalizations);
+    }
+
+    /**
      * Asigna las horas a las que determinadas localizaciones de juego no están disponibles para que un partido
      * discurra sobre ellas.
      *
@@ -1188,15 +1191,6 @@ public class Event implements Validable {
         }
 
         this.unavailableLocalizations = unavailableLocalizations;
-    }
-
-    /**
-     * Devuelve el mapa de localizaciones no disponibles a las horas especificadas.
-     *
-     * @return diccionario no modificable
-     */
-    public Map<Localization, Set<Timeslot>> getUnavailableLocalizations() {
-        return Collections.unmodifiableMap(unavailableLocalizations);
     }
 
     /**
@@ -1333,6 +1327,16 @@ public class Event implements Validable {
     }
 
     /**
+     * Devuelve el diccionario de jugadores a los que se les ha asignado localizaciones de juego donde sus partidos
+     * deban tener lugar.
+     *
+     * @return diccionario no modificable
+     */
+    public Map<Player, Set<Localization>> getPlayersInLocalizations() {
+        return Collections.unmodifiableMap(playersInLocalizations);
+    }
+
+    /**
      * Asigna las localizaciones de juego donde los partidos de los jugadores indicados han de tener lugar.
      *
      * @param playersInLocalizations diccionario no nulo de jugadores pertenecientes al evento y localizaciones donde
@@ -1367,16 +1371,6 @@ public class Event implements Validable {
         }
 
         this.playersInLocalizations = playersInLocalizations;
-    }
-
-    /**
-     * Devuelve el diccionario de jugadores a los que se les ha asignado localizaciones de juego donde sus partidos
-     * deban tener lugar.
-     *
-     * @return diccionario no modificable
-     */
-    public Map<Player, Set<Localization>> getPlayersInLocalizations() {
-        return Collections.unmodifiableMap(playersInLocalizations);
     }
 
     /**
@@ -1430,6 +1424,15 @@ public class Event implements Validable {
     }
 
     /**
+     * Devuelve el diccionario de jugadores a los que se les ha asignado horas donde sus partidos deban tener lugar.
+     *
+     * @return diccionario no modificable
+     */
+    public Map<Player, Set<Timeslot>> getPlayersAtTimeslots() {
+        return Collections.unmodifiableMap(playersAtTimeslots);
+    }
+
+    /**
      * Define las posibles horas a las que cada jugador (si se incluye en el diccionario) empezará su partido o
      * partidos. Se desecharán <i>timeslots</i> que pretendan indicar un comienzo de partido inválido, es decir, una
      * hora de juego situada al final del evento que produjese un partido fuera de rango del dominio.
@@ -1464,15 +1467,6 @@ public class Event implements Validable {
                         timeslots.size()));
 
         this.playersAtTimeslots = playersAtTimeslots;
-    }
-
-    /**
-     * Devuelve el diccionario de jugadores a los que se les ha asignado horas donde sus partidos deban tener lugar.
-     *
-     * @return diccionario no modificable
-     */
-    public Map<Player, Set<Timeslot>> getPlayersAtTimeslots() {
-        return Collections.unmodifiableMap(playersAtTimeslots);
     }
 
     /**
@@ -1625,6 +1619,10 @@ public class Event implements Validable {
         playersAtTimeslots.clear();
     }
 
+    public MatchupMode getMatchupMode() {
+        return matchupMode;
+    }
+
     /**
      * Asigna el modo de emparejamiento de este evento, sólo si el número de partidos por jugador es superior a uno y
      * el número de jugadores por partido es superior a uno.
@@ -1640,11 +1638,6 @@ public class Event implements Validable {
         else
             this.matchupMode = MatchupMode.ANY;
     }
-
-    public MatchupMode getMatchupMode() {
-        return matchupMode;
-    }
-
 
     /**
      * Devuelve el equipo al que el jugador pertenece, si el jugador existe en el evento y si pertenece a algún equipo.

@@ -16,7 +16,7 @@ import es.uca.garciachacon.eventscheduler.data.model.tournament.event.Matchup;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Localization;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Player;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Team;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.timeslot.Timeslot;
+import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Timeslot;
 import es.uca.garciachacon.eventscheduler.data.validation.validable.Validable;
 import es.uca.garciachacon.eventscheduler.data.validation.validable.ValidationException;
 import es.uca.garciachacon.eventscheduler.data.validation.validator.Validator;
@@ -58,47 +58,39 @@ import java.util.stream.Collectors;
 @JsonDeserialize(using = TournamentDeserializer.class)
 public class Tournament implements Validable {
     /**
-     * Nombre del torneo
-     */
-    private String name;
-
-    /**
      * Categorías que componen el torneo
      */
     private final List<Event> events;
-
     /**
      * Todos los jugadores que participan en el torneo. No se repiten los presentes en múltiples categorías
      */
     private final List<Player> allPlayers;
-
     /**
      * Todos los terrenos de juego en los que se desarrolla en el torneo. No se repiten los presentes en múltiples
      * categorías
      */
     private final List<Localization> allLocalizations;
-
     /**
      * Todos los timeslots en los que discurre el torneo. No se repiten los presentes en múltiples categorías
      */
     private final List<Timeslot> allTimeslots;
-
-    /**
-     * Horarios para cada categoría
-     */
-    private Map<Event, EventSchedule> currentSchedules;
-
-    /**
-     * Horario del torneo que combina los horarios de todas las categorías en uno solo
-     */
-    private TournamentSchedule schedule;
-
     /**
      * El solver que obtendrá los horarios de cada categoría el torneo
      */
     @JsonIgnore
     private final TournamentSolver solver;
-
+    /**
+     * Nombre del torneo
+     */
+    private String name;
+    /**
+     * Horarios para cada categoría
+     */
+    private Map<Event, EventSchedule> currentSchedules;
+    /**
+     * Horario del torneo que combina los horarios de todas las categorías en uno solo
+     */
+    private TournamentSchedule schedule;
     /**
      * Validador del torneo
      */
@@ -202,6 +194,10 @@ public class Tournament implements Validable {
         return schedule;
     }
 
+    public String getName() {
+        return name;
+    }
+
     /**
      * Asigna un nombre no nulo al torneo.
      *
@@ -213,10 +209,6 @@ public class Tournament implements Validable {
             throw new IllegalArgumentException("Name cannot be null");
 
         this.name = name;
-    }
-
-    public String getName() {
-        return name;
     }
 
     /**
@@ -610,7 +602,7 @@ class TournamentDeserializer extends JsonDeserializer<Tournament> {
                 mapper.reader(TypeFactory.defaultInstance().constructCollectionType(List.class, Localization.class))
                         .readValue(node.path("localizations"));
 
-        List<Timeslot> allTimeslots = TournamentUtils.buildAbstractTimeslots(4);
+        List<Timeslot> allTimeslots = TournamentUtils.buildSimpleTimeslots(4);
 
         List<Event> events = new ArrayList<>();
 

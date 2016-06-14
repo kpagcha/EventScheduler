@@ -5,8 +5,7 @@ import es.uca.garciachacon.eventscheduler.data.model.schedule.TournamentSchedule
 import es.uca.garciachacon.eventscheduler.data.model.tournament.event.Event;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Localization;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Player;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.timeslot.AbstractTimeslot;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.timeslot.Timeslot;
+import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Timeslot;
 import es.uca.garciachacon.eventscheduler.data.validation.validable.ValidationException;
 import es.uca.garciachacon.eventscheduler.data.validation.validator.tournament.TournamentValidator;
 import es.uca.garciachacon.eventscheduler.solver.TournamentSolver.SearchStrategy;
@@ -40,14 +39,14 @@ public class TournamentTest {
         tournament = new Tournament("Tournament", new Event("Event",
                 TournamentUtils.buildGenericPlayers(16, "Player"),
                 TournamentUtils.buildGenericLocalizations(2, "Localization"),
-                TournamentUtils.buildAbstractTimeslots(10)
+                TournamentUtils.buildSimpleTimeslots(10)
         ));
     }
 
     @Test
     public void constructorTest() {
         List<Localization> localizations = TournamentUtils.buildGenericLocalizations(2, "Localization");
-        List<Timeslot> timeslots = TournamentUtils.buildAbstractTimeslots(10);
+        List<Timeslot> timeslots = TournamentUtils.buildSimpleTimeslots(10);
 
         Event primaryEvent =
                 new Event("Primary Event", TournamentUtils.buildGenericPlayers(16, "Player"), localizations, timeslots);
@@ -71,7 +70,7 @@ public class TournamentTest {
             assertEquals(tournament, event.getTournament());
 
         localizations = TournamentUtils.buildGenericLocalizations(3, "Localization");
-        timeslots = TournamentUtils.buildAbstractTimeslots(15);
+        timeslots = TournamentUtils.buildSimpleTimeslots(15);
 
         primaryEvent =
                 new Event("Primary Event", TournamentUtils.buildGenericPlayers(32, "Player"), localizations, timeslots);
@@ -118,7 +117,7 @@ public class TournamentTest {
         Event event = new Event("Event",
                 TournamentUtils.buildGenericPlayers(16, "Player"),
                 TournamentUtils.buildGenericLocalizations(2, "Localization"),
-                TournamentUtils.buildAbstractTimeslots(10)
+                TournamentUtils.buildSimpleTimeslots(10)
         );
 
         expectedEx.expect(IllegalArgumentException.class);
@@ -144,7 +143,7 @@ public class TournamentTest {
     public void constructorNullEventTest() {
         expectedEx.expect(IllegalArgumentException.class);
         expectedEx.expectMessage("category cannot be null");
-        new Tournament("Tournament", Collections.singletonList((Event) null));
+        new Tournament("Tournament", Collections.singletonList(null));
     }
 
     @Test
@@ -152,7 +151,7 @@ public class TournamentTest {
         Event event = new Event("Event",
                 TournamentUtils.buildGenericPlayers(16, "Player"),
                 TournamentUtils.buildGenericLocalizations(2, "Localization"),
-                TournamentUtils.buildAbstractTimeslots(10)
+                TournamentUtils.buildSimpleTimeslots(10)
         );
 
         Tournament tournament = new Tournament("Tournament", event);
@@ -187,13 +186,13 @@ public class TournamentTest {
     @Test
     public void getAllTimeslotsTest() {
         expectedEx.expect(UnsupportedOperationException.class);
-        tournament.getAllTimeslots().set(3, new AbstractTimeslot(3));
+        tournament.getAllTimeslots().set(3, new Timeslot(3));
     }
 
     @Test
     public void getNumberOfMatches() {
         List<Localization> localizations = TournamentUtils.buildGenericLocalizations(2, "Localization");
-        List<Timeslot> timeslots = TournamentUtils.buildAbstractTimeslots(10);
+        List<Timeslot> timeslots = TournamentUtils.buildSimpleTimeslots(10);
 
         Event primaryEvent =
                 new Event("Primary Event", TournamentUtils.buildGenericPlayers(16, "Player"), localizations, timeslots);
@@ -229,7 +228,7 @@ public class TournamentTest {
         tournament = new Tournament("Tournament with 2 solutions", new Event("Event",
                 TournamentUtils.buildGenericPlayers(2, "Player"),
                 TournamentUtils.buildGenericLocalizations(1, "Court"),
-                TournamentUtils.buildDefiniteDayOfWeekTimeslots(2),
+                TournamentUtils.buildDayOfWeekTimeslots(2),
                 1,
                 1,
                 2
@@ -257,18 +256,18 @@ public class TournamentTest {
 
             out.reset();
             tournament.printCurrentSchedules();
-            assertThat(out.toString(), StringContains.containsString("At MONDAY"));
+            assertThat(out.toString(), StringContains.containsString("start=MONDAY"));
 
             assertTrue(tournament.nextSchedules());
 
             out.reset();
             tournament.printCurrentSchedules();
-            assertThat(out.toString(), StringContains.containsString("At TUESDAY"));
+            assertThat(out.toString(), StringContains.containsString("start=TUESDAY"));
 
             out.reset();
             tournament.printCurrentSchedules(false);
-            assertThat(out.toString(), not(StringContains.containsString("At MONDAY")));
-            assertThat(out.toString(), not(StringContains.containsString("At TUESDAY")));
+            assertThat(out.toString(), not(StringContains.containsString("start=MONDAY")));
+            assertThat(out.toString(), not(StringContains.containsString("start=MONDAY")));
 
             assertNotEquals(tournamentSchedule, tournament.getSchedule());
             for (Event e : tournament.getCurrentSchedules().keySet())
@@ -293,7 +292,7 @@ public class TournamentTest {
     public void groupEventsByNumberOfPlayersPerMatchTest() {
         List<Player> players = TournamentUtils.buildGenericPlayers(64, "Player");
         List<Localization> localizations = TournamentUtils.buildGenericLocalizations(10, "Court");
-        List<Timeslot> timeslots = TournamentUtils.buildAbstractTimeslots(20);
+        List<Timeslot> timeslots = TournamentUtils.buildSimpleTimeslots(20);
 
         Tournament tournament = new Tournament("Tournament", new Event("E1",
                 new Random().ints(0, players.size())
@@ -353,7 +352,7 @@ public class TournamentTest {
     public void playerUnavailableTimeslotsTest() {
         List<Player> players = TournamentUtils.buildGenericPlayers(16, "Player");
         List<Localization> localizations = TournamentUtils.buildGenericLocalizations(1, "Court");
-        List<Timeslot> timeslots = TournamentUtils.buildAbstractTimeslots(20);
+        List<Timeslot> timeslots = TournamentUtils.buildSimpleTimeslots(20);
 
         Event e1 = new Event("E1", players.subList(0, 4), localizations, timeslots.subList(0, 10));
         Event e2 = new Event("E2", players.subList(2, 10), localizations, timeslots.subList(5, 15));
@@ -456,14 +455,14 @@ public class TournamentTest {
         }
 
         try {
-            t.addUnavailablePlayerAtTimeslotRange(player9, new AbstractTimeslot(2), timeslots.get(13));
+            t.addUnavailablePlayerAtTimeslotRange(player9, new Timeslot(2), timeslots.get(13));
             fail("IllegalArgumentException expected");
         } catch (IllegalArgumentException e) {
             assertThat(e.getMessage(), StringContains.containsString("does not exist in the list of timeslots"));
         }
 
         try {
-            t.addUnavailablePlayerAtTimeslotRange(players.get(5), timeslots.get(9), new AbstractTimeslot(4));
+            t.addUnavailablePlayerAtTimeslotRange(players.get(5), timeslots.get(9), new Timeslot(4));
             fail("IllegalArgumentException expected");
         } catch (IllegalArgumentException e) {
             assertThat(e.getMessage(), StringContains.containsString("does not exist in the list of timeslots"));
@@ -474,7 +473,7 @@ public class TournamentTest {
     public void breaksTest() {
         List<Player> players = TournamentUtils.buildGenericPlayers(16, "Player");
         List<Localization> localizations = TournamentUtils.buildGenericLocalizations(1, "Court");
-        List<Timeslot> timeslots = TournamentUtils.buildAbstractTimeslots(20);
+        List<Timeslot> timeslots = TournamentUtils.buildSimpleTimeslots(20);
 
         Event e1 = new Event("E1", players, localizations, timeslots.subList(0, 10));
         Event e2 = new Event("E2", players, localizations, timeslots.subList(5, 15));
@@ -546,7 +545,7 @@ public class TournamentTest {
     public void unavailableLocalizationTest() {
         List<Player> players = TournamentUtils.buildGenericPlayers(16, "Player");
         List<Localization> localizations = TournamentUtils.buildGenericLocalizations(10, "Court");
-        List<Timeslot> timeslots = TournamentUtils.buildAbstractTimeslots(20);
+        List<Timeslot> timeslots = TournamentUtils.buildSimpleTimeslots(20);
 
         Event e1 = new Event("E1", players, localizations.subList(0, 4), timeslots.subList(0, 10));
         Event e2 = new Event("E2", players, localizations.subList(2, 8), timeslots.subList(5, 15));
@@ -664,7 +663,7 @@ public class TournamentTest {
 
         try {
             t.addUnavailableLocalizationAtTimeslotRange(localizations.get(4),
-                    new AbstractTimeslot(3),
+                    new Timeslot(3),
                     timeslots.get(10)
             );
             fail("IllegalArgumentException expected");
@@ -675,7 +674,7 @@ public class TournamentTest {
         try {
             t.addUnavailableLocalizationAtTimeslotRange(localizations.get(4),
                     timeslots.get(10),
-                    new AbstractTimeslot(3)
+                    new Timeslot(3)
             );
             fail("IllegalArgumentException expected");
         } catch (IllegalArgumentException e) {

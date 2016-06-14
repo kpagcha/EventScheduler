@@ -5,9 +5,7 @@ import es.uca.garciachacon.eventscheduler.data.model.tournament.event.Matchup;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Localization;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Player;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Team;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.timeslot.AbstractTimeslot;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.timeslot.DefiniteTimeslot;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.timeslot.Timeslot;
+import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Timeslot;
 import es.uca.garciachacon.eventscheduler.data.validation.validable.ValidationException;
 import es.uca.garciachacon.eventscheduler.data.validation.validator.tournament.EventValidator;
 import es.uca.garciachacon.eventscheduler.solver.TournamentSolver;
@@ -41,7 +39,7 @@ public class EventTest {
     public void setUp() {
         players = TournamentUtils.buildGenericPlayers(8, "Player");
         localizations = TournamentUtils.buildGenericLocalizations(2, "Court");
-        timeslots = TournamentUtils.buildUndefiniteTimeslots(8);
+        timeslots = TournamentUtils.buildOneHourTimeslots(8);
 
         event = new Event("Event", players, localizations, timeslots, 1, 2, 2);
 
@@ -60,7 +58,7 @@ public class EventTest {
 
             players = TournamentUtils.buildGenericPlayers(24, "Player");
             localizations = TournamentUtils.buildGenericLocalizations(5, "Court");
-            timeslots = TournamentUtils.buildAbstractTimeslots(16);
+            timeslots = TournamentUtils.buildSimpleTimeslots(16);
 
             event = new Event("Event", players, localizations, timeslots, 2, 3, 4);
             assertEquals(24, event.getPlayers().size());
@@ -206,7 +204,7 @@ public class EventTest {
 
     @Test
     public void constructorNotEnoughTimeslotTest() {
-        timeslots = TournamentUtils.buildDefiniteDayOfWeekTimeslots(1);
+        timeslots = TournamentUtils.buildDayOfWeekTimeslots(1);
 
         expectedEx.expect(IllegalArgumentException.class);
         expectedEx.expectMessage(
@@ -742,7 +740,7 @@ public class EventTest {
     @Test
     public void setUnavailablePlayersNonexistingTimeslotTest() {
         Map<Player, Set<Timeslot>> unavailability = new HashMap<>();
-        unavailability.put(players.get(6), new HashSet<>(Arrays.asList(timeslots.get(2), new AbstractTimeslot(1))));
+        unavailability.put(players.get(6), new HashSet<>(Arrays.asList(timeslots.get(2), new Timeslot(1))));
 
         expectedEx.expect(IllegalArgumentException.class);
         expectedEx.expectMessage("does not exist in this event");
@@ -798,7 +796,7 @@ public class EventTest {
         expectedEx.expect(IllegalArgumentException.class);
         expectedEx.expectMessage("doest not exist in the list of timeslots of the event");
         event.addUnavailablePlayerAtTimeslot(players.get(3),
-                new DefiniteTimeslot(LocalTime.of(10, 0), Duration.ofHours(2), 1)
+                new Timeslot(1, LocalTime.of(10, 0), Duration.ofHours(2))
         );
     }
 
@@ -891,14 +889,14 @@ public class EventTest {
     public void addUnavailablePlayerAtTimeslotRangeNonexistingT1Test() {
         expectedEx.expect(IllegalArgumentException.class);
         expectedEx.expectMessage("does not exist in the list of timeslots");
-        event.addUnavailablePlayerAtTimeslotRange(players.get(2), new AbstractTimeslot(3), timeslots.get(4));
+        event.addUnavailablePlayerAtTimeslotRange(players.get(2), new Timeslot(3), timeslots.get(4));
     }
 
     @Test
     public void addUnavailablePlayerAtTimeslotRangeNonexistingT2Test() {
         expectedEx.expect(IllegalArgumentException.class);
         expectedEx.expectMessage("does not exist in the list of timeslots");
-        event.addUnavailablePlayerAtTimeslotRange(players.get(2), timeslots.get(0), new AbstractTimeslot(3));
+        event.addUnavailablePlayerAtTimeslotRange(players.get(2), timeslots.get(0), new Timeslot(3));
     }
 
     @Test
@@ -945,7 +943,7 @@ public class EventTest {
     public void removeUnavailablePlayerNonexistingTimeslotTest() {
         expectedEx.expect(IllegalArgumentException.class);
         expectedEx.expectMessage("does not exist in the list of timeslots of the event");
-        event.removeUnavailablePlayerAtTimeslot(players.get(5), new AbstractTimeslot(3));
+        event.removeUnavailablePlayerAtTimeslot(players.get(5), new Timeslot(3));
     }
 
     @Test
@@ -1428,7 +1426,7 @@ public class EventTest {
     public void setBreaksNonexistingTimeslotTest() {
         List<Timeslot> breaks = new ArrayList<>();
         breaks.add(timeslots.get(1));
-        breaks.add(new AbstractTimeslot(3));
+        breaks.add(new Timeslot(3));
 
         expectedEx.expect(IllegalArgumentException.class);
         expectedEx.expectMessage("break timeslots must exist in the list of timeslots of this event");
@@ -1467,7 +1465,7 @@ public class EventTest {
     public void addBreakNonexistingTimeslotTest() {
         expectedEx.expect(IllegalArgumentException.class);
         expectedEx.expectMessage("does not exist in this event");
-        event.addBreak(new DefiniteTimeslot(LocalTime.of(21, 0), Duration.ofHours(3), 6));
+        event.addBreak(new Timeslot(6, LocalTime.of(21, 0), Duration.ofHours(3)));
     }
 
     @Test
@@ -1503,14 +1501,14 @@ public class EventTest {
     public void addBreakRangeNonexistingT1Test() {
         expectedEx.expect(IllegalArgumentException.class);
         expectedEx.expectMessage("does not exist in the list of timeslots of this event");
-        event.addBreakRange(new AbstractTimeslot(10), timeslots.get(2));
+        event.addBreakRange(new Timeslot(10), timeslots.get(2));
     }
 
     @Test
     public void addBreakRangeNonexistingT2Test() {
         expectedEx.expect(IllegalArgumentException.class);
         expectedEx.expectMessage("does not exist in the list of timeslots of this event");
-        event.addBreakRange(timeslots.get(2), new AbstractTimeslot(1));
+        event.addBreakRange(timeslots.get(2), new Timeslot(1));
     }
 
     @Test
@@ -1550,7 +1548,7 @@ public class EventTest {
     public void isBreakNonexistingTimeslotTest() {
         expectedEx.expect(IllegalArgumentException.class);
         expectedEx.expectMessage("does not exist in this event");
-        event.isBreak(new AbstractTimeslot(2));
+        event.isBreak(new Timeslot(2));
     }
 
     @Test
@@ -1648,7 +1646,7 @@ public class EventTest {
     public void setUnavailableLocalizationsNonexistingTimeslotTest() {
         Map<Localization, Set<Timeslot>> unavailableLocalizations = new HashMap<>();
         unavailableLocalizations.put(localizations.get(1),
-                new HashSet<>(Arrays.asList(timeslots.get(5), new AbstractTimeslot(4)))
+                new HashSet<>(Arrays.asList(timeslots.get(5), new Timeslot(4)))
         );
 
         expectedEx.expect(IllegalArgumentException.class);
@@ -1701,7 +1699,7 @@ public class EventTest {
     public void addUnavailableLocalizationNonexistingTimeslotTest() {
         expectedEx.expect(IllegalArgumentException.class);
         expectedEx.expectMessage("does not exist in this event");
-        event.addUnavailableLocalizationAtTimeslot(localizations.get(0), new AbstractTimeslot(6));
+        event.addUnavailableLocalizationAtTimeslot(localizations.get(0), new Timeslot(6));
     }
 
     @Test
@@ -1808,7 +1806,7 @@ public class EventTest {
         expectedEx.expect(IllegalArgumentException.class);
         expectedEx.expectMessage("does not exist in the list of timeslots");
         event.addUnavailableLocalizationAtTimeslotRange(localizations.get(1),
-                new AbstractTimeslot(3),
+                new Timeslot(3),
                 timeslots.get(4)
         );
     }
@@ -1819,7 +1817,7 @@ public class EventTest {
         expectedEx.expectMessage("does not exist in the list of timeslots");
         event.addUnavailableLocalizationAtTimeslotRange(localizations.get(1),
                 timeslots.get(0),
-                new AbstractTimeslot(3)
+                new Timeslot(3)
         );
     }
 
@@ -1873,7 +1871,7 @@ public class EventTest {
     public void removeUnavailableLocalizationTimeslotNonexistingTimeslotTest() {
         expectedEx.expect(IllegalArgumentException.class);
         expectedEx.expectMessage("does not exist in this event");
-        event.removeUnavailableLocalizationTimeslot(localizations.get(1), new AbstractTimeslot(0));
+        event.removeUnavailableLocalizationTimeslot(localizations.get(1), new Timeslot(0));
     }
 
     @Test
@@ -2141,7 +2139,7 @@ public class EventTest {
 
         Map<Player, Set<Timeslot>> playersAtTimeslots = new HashMap<>();
         playersAtTimeslots.put(players.get(4), new HashSet<>(Arrays.asList(timeslots.get(3))));
-        playersAtTimeslots.put(players.get(0), new HashSet<>(Arrays.asList(timeslots.get(3), new AbstractTimeslot(3))));
+        playersAtTimeslots.put(players.get(0), new HashSet<>(Arrays.asList(timeslots.get(3), new Timeslot(3))));
 
         expectedEx.expect(IllegalArgumentException.class);
         expectedEx.expectMessage("does not exist in this event");
@@ -2195,7 +2193,7 @@ public class EventTest {
     public void addPlayerAtTimeslotNonexistingTimeslotTest() {
         expectedEx.expect(IllegalArgumentException.class);
         expectedEx.expectMessage("does not exist in this event");
-        event.addPlayerAtTimeslot(players.get(4), new AbstractTimeslot(4));
+        event.addPlayerAtTimeslot(players.get(4), new Timeslot(4));
     }
 
     @Test
@@ -2265,14 +2263,14 @@ public class EventTest {
     public void addPlayerAtTimeslotRangeNonexistingT1Test() {
         expectedEx.expect(IllegalArgumentException.class);
         expectedEx.expectMessage("does not exist in the list of timeslots");
-        event.addPlayerAtTimeslotRange(players.get(2), new AbstractTimeslot(3), timeslots.get(4));
+        event.addPlayerAtTimeslotRange(players.get(2), new Timeslot(3), timeslots.get(4));
     }
 
     @Test
     public void addPlayerAtTimeslotRangeNonexistingT2Test() {
         expectedEx.expect(IllegalArgumentException.class);
         expectedEx.expectMessage("does not exist in the list of timeslots");
-        event.addPlayerAtTimeslotRange(players.get(2), timeslots.get(0), new AbstractTimeslot(3));
+        event.addPlayerAtTimeslotRange(players.get(2), timeslots.get(0), new Timeslot(3));
     }
 
     @Test

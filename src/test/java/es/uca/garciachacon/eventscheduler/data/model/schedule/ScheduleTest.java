@@ -8,7 +8,7 @@ import es.uca.garciachacon.eventscheduler.data.model.tournament.Tournament;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.event.Event;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Localization;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Player;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.timeslot.Timeslot;
+import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Timeslot;
 import es.uca.garciachacon.eventscheduler.data.validation.validable.ValidationException;
 import es.uca.garciachacon.eventscheduler.solver.TournamentSolver;
 import es.uca.garciachacon.eventscheduler.utils.TournamentUtils;
@@ -35,7 +35,7 @@ public class ScheduleTest {
     @Before
     public void setUp() {
         List<Localization> localizations = TournamentUtils.buildGenericLocalizations(2, "Court");
-        List<Timeslot> timeslots = TournamentUtils.buildAbstractTimeslots(8);
+        List<Timeslot> timeslots = TournamentUtils.buildSimpleTimeslots(8);
 
         Event singles = new Event("Singles", TournamentUtils.buildGenericPlayers(8, "SPl"), localizations, timeslots);
         Event doubles = new Event("Doubles",

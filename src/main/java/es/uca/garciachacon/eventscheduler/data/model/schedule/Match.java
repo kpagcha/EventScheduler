@@ -3,7 +3,7 @@ package es.uca.garciachacon.eventscheduler.data.model.schedule;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Localization;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Player;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Team;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.timeslot.Timeslot;
+import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Timeslot;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
@@ -109,6 +109,10 @@ public class Match {
         return duration;
     }
 
+    public List<Team> getTeams() {
+        return Collections.unmodifiableList(teams);
+    }
+
     /**
      * Establece el conjunto de equipos que se enfrentan en este partido
      *
@@ -151,10 +155,6 @@ public class Match {
                         "All players in a team must be contained in the list of players of this match");
 
         this.teams = teams;
-    }
-
-    public List<Team> getTeams() {
-        return Collections.unmodifiableList(teams);
     }
 
     /**

@@ -17,9 +17,8 @@ public class Application {
         Scanner sc = new Scanner(System.in);
 
         System.out.println("0 Zarlon");
-        System.out.println("1 Tournament");
-        System.out.println("2 ATP");
-        System.out.println("3 Different domains");
+        System.out.println("1 Simple");
+        System.out.println("2 Teams and ALL_DIFFERENT");
         System.out.print("Choose tournament: ");
         int tournamentOption = sc.nextInt();
 
@@ -29,17 +28,13 @@ public class Application {
                 t = TournamentUtils.getZarlonTournament();
                 break;
             case 1:
-                t = TournamentUtils.getSampleTournament();
+                t = TournamentUtils.getSimpleTournament();
                 break;
             case 2:
-                t = TournamentUtils.getSampleAtp();
-                break;
-            case 3:
-                t = TournamentUtils.getSampleWithDifferentDomains();
+                t = TournamentUtils.getTournamentWithTeamsAndAllDifferentMatchupMode();
                 break;
             default:
-                t = TournamentUtils.getSampleTournament();
-                break;
+                t = TournamentUtils.getSimpleTournament();
         }
 
         System.out.println("\n1 domOverWDeg");

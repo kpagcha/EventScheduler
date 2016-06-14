@@ -5,7 +5,7 @@ import es.uca.garciachacon.eventscheduler.data.model.tournament.Tournament;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.event.Event;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Localization;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Player;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.timeslot.Timeslot;
+import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Timeslot;
 import es.uca.garciachacon.eventscheduler.solver.constraint.*;
 import org.chocosolver.solver.Solver;
 import org.chocosolver.solver.constraints.Constraint;
@@ -26,123 +26,59 @@ import java.util.logging.Logger;
  */
 public class TournamentSolver {
     /**
-     * Modos de emparejamiento (para categorías con más de un partido por jugador).
-     * <p>
-     * <p>Si un evento define un modo de emparejamiento distinto de CUSTOM, el número de ocurrencias que cada
-     * enfrentamiento predefinido especifique será ignorado y, por tanto, tendrá preferencia el modo de
-     * enfrentamiento.</p>
+     * Logger del solver
      */
-    public enum MatchupMode {
-        /**
-         * Todos los emparejamientos deben ser entre distintos jugadores o equipos
-         */
-        ALL_DIFFERENT,
-
-        /**
-         * Todos los emparejamientos deben ser entre los mismos jugadores o equipos
-         */
-        ALL_EQUAL,
-
-        /**
-         * Los emparejamientos se pueden dar entre cualquier jugador o equipo disponible en cualquier número. Se pueden
-         * repetir
-         * emparejamientos
-         */
-        ANY,
-
-        /**
-         * El número de emparejamientos entre los jugadores será el indicado por el propio enfrentamiento
-         */
-        CUSTOM
-    }
-
-    /**
-     * Estrategia de búsqueda a aplicar en el proceso de resolución
-     */
-    public enum SearchStrategy {
-        /**
-         * Estrategia domOverWDeg definida por Choco 3
-         */
-        DOMOVERWDEG,
-
-        /**
-         * Estrategia minDom_LB definida por Choco 3
-         */
-        MINDOM_UB,
-
-        /**
-         * Estrategia minDom_UB definida por Choco 3
-         */
-        MINDOM_LB
-    }
-
-    /**
-     * Solver de Choco que modela y resuelve el problema
-     */
-    private Solver solver;
-
+    private static final Logger LOGGER = Logger.getLogger(TournamentSolver.class.getName());
     /**
      * Restricciones del problema
      */
     private final List<Constraint> constraints = new ArrayList<>();
-
     /**
      * Torneo para el que se calcula el horario
      */
     private final Tournament tournament;
-
     /**
      * Horario. x_e,p,c,t: horario_categoria,jugador,pista,hora. Dominio [0, 1]
      */
     private final IntVar[][][][] x;
-
     /**
      * Comienzos de partidos. Dominio [0, 1]
      */
     private final IntVar[][][][] g;
-
+    /**
+     * Solver de Choco que modela y resuelve el problema
+     */
+    private Solver solver;
     /**
      * Horarios calculados de la solución actual
      */
     private Map<Event, EventSchedule> schedules;
-
     /**
      * Indica si se ha encontrado la última solución
      */
     private boolean lastSolutionFound = false;
-
     private long foundSolutionsCount = 0;
-
     /**
      * Estrategia de búsqueda empleada en la resolución del problema
      */
     private SearchStrategy searchStrategy = SearchStrategy.DOMOVERWDEG;
-
     /**
      * Para las estrategias de búsqueda minDom_UB y minDom_LB indicar si priorizar timeslots (true) o pistas (false)
      * a la hora de hacer las asignaciones
      */
     private boolean fillTimeslotsFirst = true;
-
     /**
      * Tiempo máximo de resolución en milisegundos. 0 significa sin límite
      */
     private long resolutionTimeLimit = 0;
-
     /**
      * Bandera que indica la parada del proceso de resolución
      */
     private boolean stop = false;
-
     /**
      * Información sobre el problema y la resolución del mismo
      */
     private ResolutionData resolutionData;
-
-    /**
-     * Logger del solver
-     */
-    private static final Logger LOGGER = Logger.getLogger(TournamentSolver.class.getName());
 
     /**
      * Construye el objeto solver a partir de la información del torneo
@@ -188,24 +124,28 @@ public class TournamentSolver {
         return g;
     }
 
-    public void setSearchStrategy(SearchStrategy strategy) {
-        searchStrategy = strategy;
-    }
-
     public SearchStrategy getSearchStrategy() {
         return searchStrategy;
     }
 
-    public void setFillTimeslotsFirst(boolean fillFirst) {
-        fillTimeslotsFirst = fillFirst;
+    public void setSearchStrategy(SearchStrategy strategy) {
+        searchStrategy = strategy;
     }
 
     public boolean getFillTimeslotsFirst() {
         return fillTimeslotsFirst;
     }
 
+    public void setFillTimeslotsFirst(boolean fillFirst) {
+        fillTimeslotsFirst = fillFirst;
+    }
+
     public long getFoundSolutionsCount() {
         return foundSolutionsCount;
+    }
+
+    public long getResolutionTimeLimit() {
+        return resolutionTimeLimit;
     }
 
     /**
@@ -219,10 +159,6 @@ public class TournamentSolver {
         if (limit < 0)
             throw new IllegalArgumentException("Resolution time limit cannot be less than zero");
         resolutionTimeLimit = limit;
-    }
-
-    public long getResolutionTimeLimit() {
-        return resolutionTimeLimit;
     }
 
     public ResolutionData getResolutionData() {
@@ -801,5 +737,56 @@ public class TournamentSolver {
         }
 
         return sb.toString();
+    }
+
+    /**
+     * Modos de emparejamiento (para categorías con más de un partido por jugador).
+     * <p>
+     * <p>Si un evento define un modo de emparejamiento distinto de CUSTOM, el número de ocurrencias que cada
+     * enfrentamiento predefinido especifique será ignorado y, por tanto, tendrá preferencia el modo de
+     * enfrentamiento.</p>
+     */
+    public enum MatchupMode {
+        /**
+         * Todos los emparejamientos deben ser entre distintos jugadores o equipos
+         */
+        ALL_DIFFERENT,
+
+        /**
+         * Todos los emparejamientos deben ser entre los mismos jugadores o equipos
+         */
+        ALL_EQUAL,
+
+        /**
+         * Los emparejamientos se pueden dar entre cualquier jugador o equipo disponible en cualquier número. Se pueden
+         * repetir
+         * emparejamientos
+         */
+        ANY,
+
+        /**
+         * El número de emparejamientos entre los jugadores será el indicado por el propio enfrentamiento
+         */
+        CUSTOM
+    }
+
+    /**
+     * Estrategia de búsqueda a aplicar en el proceso de resolución
+     */
+    public enum SearchStrategy {
+        /**
+         * Estrategia domOverWDeg definida por Choco 3
+         */
+        DOMOVERWDEG,
+
+        /**
+         * Estrategia minDom_LB definida por Choco 3
+         */
+        MINDOM_UB,
+
+        /**
+         * Estrategia minDom_UB definida por Choco 3
+         */
+        MINDOM_LB
     }
 }

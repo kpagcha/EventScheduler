@@ -5,7 +5,7 @@ import es.uca.garciachacon.eventscheduler.data.model.schedule.value.PlayerSchedu
 import es.uca.garciachacon.eventscheduler.data.model.tournament.event.Event;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Player;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Team;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.timeslot.Timeslot;
+import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Timeslot;
 import es.uca.garciachacon.eventscheduler.solver.TournamentSolver;
 
 import java.util.ArrayList;
@@ -30,8 +30,8 @@ public class EventSchedule extends Schedule {
      * matriz bidimensional de {@link PlayerScheduleValue}.
      *
      * @param event evento al que pertenece el horario que se va a construir
-     * @param x     array de IntVar de tres dimensiones con los valores de la
-     *              solución calculada por el EventSolver
+     * @param x     array de IntVar de tres dimensiones con los valores de la solución calculada por
+     *              {@link TournamentSolver}
      */
     public EventSchedule(Event event, int[][][] x) {
         if (event == null || x == null)
@@ -92,12 +92,11 @@ public class EventSchedule extends Schedule {
     private void calculateMatches() {
         int matchDuration = event.getTimeslotsPerMatch();
 
-        // Horario donde solo se marcan los comienzos de partidos
+        // Horario donde sólo se marcan los comienzos de partidos
         PlayerScheduleValue[][] scheduleBeginnings = new PlayerScheduleValue[players.size()][timeslots.size()];
         for (int p = 0; p < players.size(); p++) {
             for (int t = 0; t < timeslots.size(); t++) {
-                // si se juega un partido se marcan los siguientes de su rango
-                // como libres
+                // si se juega un partido se marcan los siguientes de su rango como libres
                 if (schedule[p][t].isOccupied()) {
                     scheduleBeginnings[p][t] = (PlayerScheduleValue) schedule[p][t];
                     for (int i = 1; i < matchDuration; i++)

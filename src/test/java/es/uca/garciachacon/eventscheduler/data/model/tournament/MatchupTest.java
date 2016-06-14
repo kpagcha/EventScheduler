@@ -4,8 +4,7 @@ import es.uca.garciachacon.eventscheduler.data.model.tournament.event.Event;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.event.Matchup;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Localization;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Player;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.timeslot.AbstractTimeslot;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.timeslot.Timeslot;
+import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Timeslot;
 import es.uca.garciachacon.eventscheduler.utils.TournamentUtils;
 import org.junit.Before;
 import org.junit.Rule;
@@ -20,24 +19,23 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 /**
- * Test de la clase {@link Matchup}
+ * Tests de la clase {@link Matchup}
  */
 public class MatchupTest {
 
+    @Rule
+    public ExpectedException expectedEx = ExpectedException.none();
     private Event event;
     private List<Player> players;
     private List<Localization> localizations;
     private List<Timeslot> timeslots;
-
-    @Rule
-    public ExpectedException expectedEx = ExpectedException.none();
 
     @Before
     public void setUp() {
         event = new Event("Event",
                 TournamentUtils.buildGenericPlayers(8, "Player"),
                 TournamentUtils.buildGenericLocalizations(4, "Court"),
-                TournamentUtils.buildAbstractTimeslots(10)
+                TournamentUtils.buildSimpleTimeslots(10)
         );
         players = event.getPlayers();
         localizations = event.getLocalizations();
@@ -213,7 +211,7 @@ public class MatchupTest {
         new Matchup(event,
                 new HashSet<>(Arrays.asList(players.get(3), players.get(2))),
                 new HashSet<>(Arrays.asList(localizations.get(2))),
-                new HashSet<>(Arrays.asList(timeslots.get(3), new AbstractTimeslot(3))),
+                new HashSet<>(Arrays.asList(timeslots.get(3), new Timeslot(3))),
                 1
         );
     }

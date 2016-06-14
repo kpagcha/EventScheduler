@@ -2,9 +2,7 @@ package es.uca.garciachacon.eventscheduler.utils;
 
 import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Localization;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Player;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.timeslot.DefiniteTimeslot;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.timeslot.Timeslot;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.timeslot.UndefiniteTimeslot;
+import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Timeslot;
 import org.junit.Test;
 
 import java.time.DayOfWeek;
@@ -91,70 +89,70 @@ public class TournamentUtilsTest {
 
     @Test
     public void buildAbstractTimeslotsTest() {
-        List<Timeslot> timeslots = TournamentUtils.buildAbstractTimeslots(10);
+        List<Timeslot> timeslots = TournamentUtils.buildSimpleTimeslots(10);
         assertEquals(10, timeslots.size());
         for (int i = 0; i < timeslots.size(); i++)
             assertEquals(i, timeslots.get(i).getChronologicalOrder());
 
-        timeslots = TournamentUtils.buildAbstractTimeslots(-1);
+        timeslots = TournamentUtils.buildSimpleTimeslots(-1);
         assertTrue(timeslots.isEmpty());
     }
 
     @Test
     public void buildDefiniteDayOfWeekTimeslotsTest() {
-        List<Timeslot> timeslots = TournamentUtils.buildDefiniteDayOfWeekTimeslots(14);
+        List<Timeslot> timeslots = TournamentUtils.buildDayOfWeekTimeslots(14);
         assertEquals(14, timeslots.size());
         for (int i = 0; i < 7; i++)
             assertEquals(0, timeslots.get(i).getChronologicalOrder());
         for (int i = 7; i < 14; i++)
             assertEquals(1, timeslots.get(i).getChronologicalOrder());
 
-        assertTrue(((DefiniteTimeslot) timeslots.get(0)).getStart().equals(DayOfWeek.MONDAY));
-        assertTrue(((DefiniteTimeslot) timeslots.get(4)).getStart().equals(DayOfWeek.FRIDAY));
-        assertTrue(((DefiniteTimeslot) timeslots.get(7)).getStart().equals(DayOfWeek.MONDAY));
+        assertTrue(timeslots.get(0).getStart().get().equals(DayOfWeek.MONDAY));
+        assertTrue(timeslots.get(4).getStart().get().equals(DayOfWeek.FRIDAY));
+        assertTrue(timeslots.get(7).getStart().get().equals(DayOfWeek.MONDAY));
 
-        assertTrue(((DefiniteTimeslot) timeslots.get(12)).getDuration().equals(Duration.ofHours(1)));
+        assertTrue(timeslots.get(12).getDuration().get().equals(Duration.ofHours(1)));
 
-        timeslots = TournamentUtils.buildDefiniteDayOfWeekTimeslots(-5);
+        timeslots = TournamentUtils.buildDayOfWeekTimeslots(-5);
         assertTrue(timeslots.isEmpty());
     }
 
     @Test
     public void buildDefiniteLocalTimeTimeslotsTest() {
-        List<Timeslot> timeslots = TournamentUtils.buildDefiniteLocalTimeTimeslots(56);
+        List<Timeslot> timeslots = TournamentUtils.buildLocalTimeTimeslots(56);
         assertEquals(56, timeslots.size());
         for (int i = 0; i < 24; i++) {
             Timeslot t = timeslots.get(i);
             System.out.println(t + " ==> " + t.getChronologicalOrder());
             assertEquals(0, t.getChronologicalOrder());
-            assertEquals(LocalTime.of(i, 0), ((DefiniteTimeslot) t).getStart());
+            assertEquals(LocalTime.of(i, 0), t.getStart().get());
         }
         for (int i = 24; i < 48; i++) {
             Timeslot t = timeslots.get(i);
             assertEquals(1, t.getChronologicalOrder());
-            assertEquals(LocalTime.of(i % 24, 0), ((DefiniteTimeslot) t).getStart());
+            assertEquals(LocalTime.of(i % 24, 0), t.getStart().get());
         }
         for (int i = 48; i < 56; i++) {
             Timeslot t = timeslots.get(i);
             assertEquals(2, t.getChronologicalOrder());
-            assertEquals(LocalTime.of(i % 24, 0), ((DefiniteTimeslot) t).getStart());
+            assertEquals(LocalTime.of(i % 24, 0), t.getStart().get());
         }
 
-        timeslots = TournamentUtils.buildDefiniteLocalTimeTimeslots(-1);
+        timeslots = TournamentUtils.buildLocalTimeTimeslots(-1);
         assertTrue(timeslots.isEmpty());
     }
 
     @Test
     public void buildUndefiniteTimeslotsTest() {
-        List<Timeslot> timeslots = TournamentUtils.buildUndefiniteTimeslots(12);
+        List<Timeslot> timeslots = TournamentUtils.buildOneHourTimeslots(12);
         assertEquals(12, timeslots.size());
         for (int i = 0; i < timeslots.size(); i++) {
-            UndefiniteTimeslot t = (UndefiniteTimeslot) timeslots.get(i);
+            Timeslot t = timeslots.get(i);
             assertEquals(i, t.getChronologicalOrder());
-            assertEquals(Duration.ofHours(1), t.getDuration());
+            assertEquals(Duration.ofHours(1), t.getDuration().get());
         }
 
-        timeslots = TournamentUtils.buildUndefiniteTimeslots(0);
+        timeslots = TournamentUtils.buildOneHourTimeslots(0);
         assertTrue(timeslots.isEmpty());
     }
 }

@@ -3,10 +3,9 @@ package es.uca.garciachacon.eventscheduler.data.model.tournament.event;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Localization;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Player;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.timeslot.Timeslot;
+import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Timeslot;
 import org.apache.commons.lang3.StringUtils;
 
-import java.util.Comparator;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -66,7 +65,7 @@ public class Matchup {
      * @param players       conjunto de al menos dos jugadores y pertenecientes al evento
      * @param localizations conjunto de al menos una localización y perteneciente al evento
      * @param timeslots     conjunto de al menos un <i>timeslot</i>
-     * @param occurrences    número de veces que el enfrentamiento tendrá lugar, el valor estará entre 1 y el número de
+     * @param occurrences   número de veces que el enfrentamiento tendrá lugar, el valor estará entre 1 y el número de
      *                      partidos por jugador que defina el evento (ver {@link Event#getMatchesPerPlayer()}
      * @throws IllegalArgumentException si <code>event</code> es <code>null</code>
      * @throws IllegalArgumentException si <code>players</code> es <code>null</code> o tiene un número de jugadoers
@@ -131,8 +130,10 @@ public class Matchup {
 
         for (Player player : players) {
             long resultingCount = event.getPredefinedMatchups()
-                    .stream().filter(m -> m.getPlayers().contains(player)).mapToInt(Matchup::getOccurrences).sum() +
-                    occurrences;
+                    .stream()
+                    .filter(m -> m.getPlayers().contains(player))
+                    .mapToInt(Matchup::getOccurrences)
+                    .sum() + occurrences;
 
             if (resultingCount > event.getMatchesPerPlayer())
                 throw new IllegalArgumentException(String.format(
@@ -171,12 +172,11 @@ public class Matchup {
     }
 
     public String toString() {
-        return String.format("[Players = [%s], Localizations = [%s], Timeslots = [%s], Occurrences = %d]",
+        return String.format("[Players=[%s], Localizations=[%s], Timeslots=[%s], Occurrences=%d]",
                 StringUtils.join(players, ","),
                 StringUtils.join(localizations, ","),
-                StringUtils.join(timeslots.stream().sorted(Comparator.reverseOrder()).collect(Collectors.toList()),
-                        ","
-                ), occurrences
+                StringUtils.join(timeslots.stream().sorted(Timeslot::compareTo).collect(Collectors.toList()), ","),
+                occurrences
         );
     }
 }
