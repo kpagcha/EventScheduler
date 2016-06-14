@@ -45,7 +45,7 @@ public class TeamTest {
         assertFalse(team.contains(player1));
 
         team = new Team(new HashSet<>(Arrays.asList(player4, player2)));
-        assertEquals("Player 4-Player 2", team.getName());
+        assertTrue(team.getName().equals("Player 4-Player 2") || team.getName().equals("Player 2-Player 4"));
         assertEquals(2, team.getPlayers().size());
         assertTrue(team.contains(player2));
         assertFalse(team.contains(player1));

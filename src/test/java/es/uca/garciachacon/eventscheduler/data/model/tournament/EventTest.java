@@ -319,9 +319,10 @@ public class EventTest {
 
     @Test
     public void setTournamentTwiceTest() {
-        event.setTournament(new Tournament("Tournament", event));
+        Tournament tournament = new Tournament("Tournament", event);
         expectedEx.expect(IllegalStateException.class);
         expectedEx.expectMessage("Tournament has already been set");
+        event.setTournament(tournament);
     }
 
     @Test
