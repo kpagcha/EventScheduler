@@ -152,12 +152,10 @@ public class EventValidator implements Validator<Event> {
 
         // No se devuelve directamente para formar los mensajes de validación
         boolean isValid = validateName(event) && validatePlayers(event) && validateLocalizations(event) &&
-                validateTimeslots(event) &&
-                validateMatchesPerPlayer(event) && validatePlayersPerMatch(event) && validateMatchDuration(event) &&
-                validateTeams(event) && validateUnavailablePlayers(event) && validatePredefinedMatchups(event) &&
-                validateBreaks(event) &&
-                validateUnavailableLocaliztions(event) && validatePlayersInLocalizations(event) &&
-                validatePlayersAtTimeslots(event);
+                validateTimeslots(event) && validateMatchesPerPlayer(event) && validatePlayersPerMatch(event) &&
+                validateMatchDuration(event) && validateTeams(event) && validateUnavailablePlayers(event) &&
+                validatePredefinedMatchups(event) && validateBreaks(event) && validateUnavailableLocaliztions(event) &&
+                validatePlayersInLocalizations(event) && validatePlayersAtTimeslots(event);
 
         return isValid;
     }
@@ -419,11 +417,6 @@ public class EventValidator implements Validator<Event> {
         boolean isValid = true;
 
         if (!teams.isEmpty()) {
-            if (teams.size() < 2) {
-                isValid = false;
-                messages.add("There cannot be less than 2 teams");
-            }
-
             if (teams.contains(null)) {
                 messages.add("Teams cannot contain a null team");
                 return false;
@@ -463,7 +456,7 @@ public class EventValidator implements Validator<Event> {
                         if (teams.get(j).getPlayers().contains(player)) {
                             isValid = false;
                             messages.add(String.format("A player cannot exist in multiple teams; player (%s) is " +
-                                    "duplicated",
+                                            "duplicated",
                                     player
                             ));
                         }

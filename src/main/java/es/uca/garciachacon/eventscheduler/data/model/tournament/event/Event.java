@@ -65,17 +65,22 @@ public class Event implements Validable {
     /**
      * Número de partidos que cada jugador ha de jugar en esta categoría
      */
-    private int nMatchesPerPlayer = 1;
+    private int nMatchesPerPlayer;
 
     /**
      * Duración de un partido en timeslots u horas
      */
-    private int nTimeslotsPerMatch = 2;
+    private int nTimeslotsPerMatch;
 
     /**
      * Número de jugador que componen un partido
      */
-    private int nPlayersPerMatch = 2;
+    private int nPlayersPerMatch;
+
+    /**
+     * Número de jugadores por equipo, si hay equipos
+     */
+    private int nPlayersPerTeam;
 
     /**
      * Composición de los equipos, si hay
@@ -125,82 +130,108 @@ public class Event implements Validable {
     private Validator<Event> validator = new EventValidator();
 
     /**
-     * Construye un evento con la información esencial: nombre, jugadores, localizaciones y timeslots.
+     * Construye un evento que tendrá un conjunto de jugadores que participarán en él, un conjunto de localizaciones
+     * de juego donde tendrán lugar los enfrentamientos, así como un conjunto de <i>timeslots</i> donde transcurrirán
+     * los mismos.
      *
-     * @param name          nombre del evento o de la categoría, no nulo
-     * @param players       jugadores que participan, lista no nula
-     * @param localizations localizaciones de juego en las que tendrá lugar, lista no nula
-     * @param timeslots     horas o timeslots en los que discurrirá, lista no nula
-     * @throws IllegalArgumentException si no se cumple alguna de las siguientes precondiciones:<br>
-     *                                  <h2>Jugadores:</h2>
-     *                                  <ul>
-     *                                  <li>La lista de jugadores no puede ser <code>null</code>
-     *                                  <li>El número de jugadores no puede ser inferior a 1
-     *                                  <li>El número de jugadores por partido no puede ser inferior a 1
-     *                                  <li>El número de jugadores por partido no puede ser superior al número de
-     *                                  jugadores
-     *                                  <li>El número de jugadores debe ser un múltiplo del número de jugadores por
-     *                                  partido
-     *                                  <li>Un jugador no puede estar repetido
-     *                                  </ul>
-     *                                  <br>
-     *                                  <h2>Localizaciones:</h2>
-     *                                  <ul>
-     *                                  <li>La lista de localizaciones no es <code>null</code>
-     *                                  <li>La lista de localizaciones tiene más de un elemento
-     *                                  <li>La lista de localizaciones no tiene ningún elemento repetido
-     *                                  </ul>
-     *                                  <br>
-     *                                  <h2>Horas</h2>
-     *                                  <ul>
-     *                                  <li>La lista de horas no es <code>null</code>
-     *                                  <li>La lista de horas tiene más de un timeslot
-     *                                  <li>La duración de un partido es superior a 1 timeslot
-     *                                  <li>El número de partidos por jugador es, como mínimo, 1
-     *                                  <li>El número de horas en la lista debe ser, como mínimo, el producto de la
-     *                                  duración de un partido y
-     *                                  el número de partidos que cada jugador debe jugar, es decir,
-     *                                  <code>nTimeslotsPerMatch * nMatchesPerPlayer</code>
-     *                                  <li>Cada hora debe ser posterior a la anterior, es decir, en términos de
-     *                                  comparación, superior estrictamente
-     *                                  <li>Una hora no puede estar repetida
-     *                                  </ul>
+     * @param name          nombre del evento
+     * @param players       jugadores que participan en el evento deportivo
+     * @param localizations localizaciones de juego en las que tendrá lugar
+     * @param timeslots     <i>timeslots</i> en los que los enfrentamientos ocurrirán
+     * @throws NullPointerException si alguno de los argumentos es <code>null</code>
      */
     public Event(String name, List<Player> players, List<Localization> localizations, List<Timeslot> timeslots) {
-        if (name == null)
-            throw new IllegalArgumentException("The name cannot be null");
-
-        checkPlayersPreconditions(players, nPlayersPerMatch);
-        checkLocalizationsPreconditions(localizations);
-        checkTimeslotsPreconditions(timeslots, nTimeslotsPerMatch, nMatchesPerPlayer);
-
-        this.name = name;
-        this.players = players;
-        this.localizations = localizations;
-        this.timeslots = timeslots;
+        this(name, players, localizations, timeslots, 1, 2, 2);
     }
 
     /**
-     * Construye un evento con la información esencial y configuración básica adicional.
+     * Construye un evento que tendrá un conjunto de jugadores que participarán en él, un conjunto de localizaciones
+     * de juego donde tendrán lugar los enfrentamientos, así como un conjunto de <i>timeslots</i> donde transcurrirán
+     * los mismos. Además, se indica el númeor de partidos que cada jugador deberá jugar, el número de
+     * <i>timeslots</i> que cada partido ocupará (su duración) y el número de jugadores que compone cada partido.
+     * <p>
+     * Si la lista de <i>timeslots</i> no está ordenada, se ordenará de forma que cada <i>timeslot</i> preceda al que
+     * le siga en la lista, es decir, cada elemento es mayor que el siguiente. No obstante, no puede haber
+     * <i>timeslots</i> con el mismo orden cronológico.
      *
-     * @param name              nombre no null del evento
-     * @param players           lista no vacía de jugadores únicos
-     * @param localizations     lista no vacía de localizaciones de juego no repetidas
-     * @param timeslots         lista de no vacía horas de juego, no null y con más de un elemento
-     * @param matchesPerPlayer  número de partidos por jugador, superior a 1
-     * @param timeslotsPerMatch número de timeslots por partido, superior a 1
-     * @param playersPerMatch   número de jugadores por partido, igual o superior a 1 y divisor del tamaño de la lista
-     *                          de jugadores
+     * @param name              nombre del evento
+     * @param players           jugadores que participan en el evento deportivo
+     * @param localizations     localizaciones de juego en las que tendrá lugar
+     * @param matchesPerPlayer  número de partidos por jugador, mayor o igual que 1
+     * @param timeslotsPerMatch número de timeslots por partido, mayor o igual que 1
+     * @param playersPerMatch   número de jugadores por partido, mayor o igual que 1 y coherente con el número de
+     *                          jugadores del evento (debe ser divisor)
+     * @throws NullPointerException     si alguno de los argumentos es <code>null</code>
+     * @throws IllegalArgumentException si la lista de jugadores está vacía
+     * @throws IllegalArgumentException si la lista de jugadores contiene un jugador <code>null</code>
+     * @throws IllegalArgumentException si el número de jugadores por partido es menor que 1
+     * @throws IllegalArgumentException si el número de jugadores partido no es coherente con el número de jugadores
+     *                                  que contiene la lista, es decir, si no es divisor de este último
+     * @throws IllegalArgumentException si la lista de jugadores contiene jugadores duplicados
+     * @throws IllegalArgumentException si la lista de localizaciones está vacía
+     * @throws IllegalArgumentException si la lista de localizaciones contiene una localización <code>null</code>
+     * @throws IllegalArgumentException si la lista de localizaciones contiene localizaciones duplicadas
+     * @throws IllegalArgumentException si la lista de <i>timeslots</i> está vacía
+     * @throws IllegalArgumentException si la lista de <i>timeslots</i> contiene un <i>timeslot</i> <code>null</code>
+     * @throws IllegalArgumentException si el número de <i>timeslots</i> por partido es menor que 1
+     * @throws IllegalArgumentException si el número de jugadores por partido es menor que 1
+     * @throws IllegalArgumentException si la lista de <i>timeslots</i> contiene <i>timeslots</i> duplicados
+     * @throws IllegalArgumentException si la lista de <i>timeslots</i>, una vez ordenada, contiene algún
+     *                                  <i>timeslot</i> que precede estrictamente al siguiente, es decir, que al
+     *                                  compararlos son iguales
      */
     public Event(String name, List<Player> players, List<Localization> localizations, List<Timeslot> timeslots,
-            int matchesPerPlayer, int timeslotsPerMatch, int playersPerMatch) {
+                 int matchesPerPlayer, int timeslotsPerMatch, int playersPerMatch) {
+        Objects.requireNonNull(name);
+        Objects.requireNonNull(players);
+        Objects.requireNonNull(localizations);
+        Objects.requireNonNull(timeslots);
 
-        if (name == null)
-            throw new IllegalArgumentException("The name cannot be null");
+        if (players.isEmpty())
+            throw new IllegalArgumentException("Players cannot be empty");
 
-        checkPlayersPreconditions(players, playersPerMatch);
-        checkLocalizationsPreconditions(localizations);
-        checkTimeslotsPreconditions(timeslots, timeslotsPerMatch, matchesPerPlayer);
+        if (players.contains(null))
+            throw new IllegalArgumentException("Players cannot contain a null player");
+
+        if (playersPerMatch < 1)
+            throw new IllegalArgumentException("Number of players per match cannot be less than 1");
+
+        if (players.size() % playersPerMatch != 0)
+            throw new IllegalArgumentException(String.format("Number of players is not coherent to the number of " +
+                    "players per match (%d)", playersPerMatch));
+
+        if (new HashSet<>(players).size() < players.size())
+            throw new IllegalArgumentException("Players cannot contain duplicates");
+
+        if (localizations.isEmpty())
+            throw new IllegalArgumentException("Localizations cannot be empty");
+
+        if (localizations.contains(null))
+            throw new IllegalArgumentException("Localizations cannot contain a null localization");
+
+        if (new HashSet<>(localizations).size() < localizations.size())
+            throw new IllegalArgumentException("Localizations cannot contain duplicates");
+
+        if (timeslots.isEmpty())
+            throw new IllegalArgumentException("Timeslots cannot be empty");
+
+        if (timeslots.contains(null))
+            throw new IllegalArgumentException("Timeslots cannot contain a null timeslot");
+
+        if (timeslotsPerMatch < 1)
+            throw new IllegalArgumentException("Number of timeslots per match cannot be less than 1");
+
+        if (matchesPerPlayer < 1)
+            throw new IllegalArgumentException("Number of matches per player cannot be less than 1");
+
+        if (new HashSet<>(timeslots).size() < timeslots.size())
+            throw new IllegalArgumentException("Timeslots cannot contain duplicates");
+
+        Collections.sort(timeslots, Timeslot::compareTo);
+
+        for (int i = 0; i < timeslots.size() - 1; i++)
+            if (timeslots.get(i).compareTo(timeslots.get(i + 1)) == 0)
+                throw new IllegalArgumentException("Every timeslot must strictly precede the following");
 
         this.name = name;
         this.players = players;
@@ -210,107 +241,6 @@ public class Event implements Validable {
         nMatchesPerPlayer = matchesPerPlayer;
         nTimeslotsPerMatch = timeslotsPerMatch;
         nPlayersPerMatch = playersPerMatch;
-    }
-
-    /**
-     * Comprueba las precondiciones de jugadores y número de jugadores por partido.
-     *
-     * @param players          lista de jugadores únicos
-     * @param nPlayersPerMatch número de jugadores por partido
-     * @throws IllegalArgumentException si no se cumple alguna de las precondiciones de jugadores, ver
-     *                                  {@link #Event(String, List, List, List)})
-     */
-    private void checkPlayersPreconditions(List<Player> players, int nPlayersPerMatch) {
-        if (players == null)
-            throw new IllegalArgumentException("The list of players cannot be null");
-
-        if (players.size() < 1)
-            throw new IllegalArgumentException("The number of players (" + players.size() + ") cannot be less than 1");
-
-        if (players.contains(null))
-            throw new IllegalArgumentException("A player cannot be null");
-
-        if (nPlayersPerMatch < 1)
-            throw new IllegalArgumentException(
-                    "The number of players per match (" + nPlayersPerMatch + ") cannot be less than 1");
-
-        if (players.size() % nPlayersPerMatch != 0)
-            throw new IllegalArgumentException("The number of players (" + players.size() +
-                    ") must be a multiple of the number of players per match specified in this event (" +
-                    nPlayersPerMatch + ")");
-
-        for (int i = 0; i < players.size() - 1; i++)
-            for (int j = i + 1; j < players.size(); j++)
-                if (players.get(i).equals(players.get(j)))
-                    throw new IllegalArgumentException("All players must be unique");
-    }
-
-    /**
-     * Comprueba las precondiciones para las localizaciones de juego del evento
-     *
-     * @param localizations lista de localizaciones de juego
-     * @throws IllegalArgumentException si no se cumple alguna de las precondiciones
-     */
-    private void checkLocalizationsPreconditions(List<Localization> localizations) {
-        if (localizations == null)
-            throw new IllegalArgumentException("The list of localizations cannot be null");
-
-        if (localizations.size() < 1)
-            throw new IllegalArgumentException(
-                    "The number of localizations (" + localizations.size() + ") cannot be less than 1");
-
-        if (localizations.contains(null))
-            throw new IllegalArgumentException("A localization cannot be null");
-
-        for (int i = 0; i < localizations.size() - 1; i++)
-            for (int j = i + 1; j < localizations.size(); j++)
-                if (localizations.get(i).equals(localizations.get(j)))
-                    throw new IllegalArgumentException("All localizations must be unique");
-    }
-
-    /**
-     * Comprueba las precondiciones para las horas de juego, el número de partidos por jugador y la duración de un
-     * partido
-     *
-     * @param timeslots          lista de horas de juego, no null y con más de un elemento
-     * @param nTimeslotsPerMatch número de timeslots por partido, superior a 1
-     * @param nMatchesPerPlayer  número de partidos por jugador, superior a 1
-     * @throws IllegalArgumentException si alguna precondición falla (ver {@link #Event(String, List, List, List)})
-     */
-    private void checkTimeslotsPreconditions(List<Timeslot> timeslots, int nTimeslotsPerMatch, int nMatchesPerPlayer) {
-        if (timeslots == null)
-            throw new IllegalArgumentException("The list of timeslots cannot be null");
-
-        if (timeslots.size() < 1)
-            throw new IllegalArgumentException(
-                    "The number of timeslots (" + timeslots.size() + ") cannot be less than 1");
-
-        if (timeslots.contains(null))
-            throw new IllegalArgumentException("A timeslot cannot be null");
-
-        if (nTimeslotsPerMatch < 1)
-            throw new IllegalArgumentException(
-                    "The number of timeslots per match (" + nTimeslotsPerMatch + ") cannot be less than 1");
-
-        if (nMatchesPerPlayer < 1)
-            throw new IllegalArgumentException(
-                    "The number of matches per player (" + nMatchesPerPlayer + ") cannot be less than 1");
-
-        if (timeslots.size() < nMatchesPerPlayer * nTimeslotsPerMatch)
-            throw new IllegalArgumentException("The number of timeslots (" + timeslots.size() +
-                    ") cannot be less than the product of the number of matches per player and the duration of a " +
-                    "match");
-
-        for (int i = 0; i < timeslots.size() - 1; i++)
-            for (int j = i + 1; j < timeslots.size(); j++)
-                if (timeslots.get(i).equals(timeslots.get(j)))
-                    throw new IllegalArgumentException("All timeslots must be unique");
-
-        for (int i = 0; i < timeslots.size() - 1; i++)
-            if (timeslots.get(i).compareTo(timeslots.get(i + 1)) < 1)
-                throw new IllegalArgumentException(
-                        "Timeslot (" + timeslots.get(i) + ") must be greater than the next one (" +
-                                timeslots.get(i + 1) + ")");
     }
 
     @SuppressWarnings("unchecked")
@@ -335,13 +265,13 @@ public class Event implements Validable {
     }
 
     /**
-     * Asigna el nombre del torneo. Si es null se lanza IllegalArgumentException
+     * Asigna el nombre del evento.
      *
-     * @param name una cadena no nula que representa el nombre del torneo. Se lanzará excepción si la cadena es null
+     * @param name nombre del evento
+     * @throws NullPointerException si el nombre es <code>null</code>
      */
     public void setName(String name) {
-        if (name == null)
-            throw new IllegalArgumentException("Name cannot be null");
+        Objects.requireNonNull(name);
 
         this.name = name;
     }
@@ -351,8 +281,7 @@ public class Event implements Validable {
     }
 
     public void setTournament(Tournament tournament) {
-        if (tournament == null)
-            throw new IllegalArgumentException("Tournament cannot be null");
+        Objects.requireNonNull(tournament);
 
         if (this.tournament != null)
             throw new IllegalStateException("Tournament has already been set");
@@ -393,19 +322,23 @@ public class Event implements Validable {
 
     /**
      * Asigna el número de partidos por jugador. Además, elimina todos los emparejamientos predefinidos, si hubiese.
+     * <p>
+     * Si el número de partidos por jugador asignado es 1, el modo de emparejamiento automáticamente cambia a
+     * {@link MatchupMode#ANY}.
      *
-     * @param matchesPerPlayer número de partidos por jugador, mínimo 1
-     * @throws IllegalArgumentException si no se cumple alguna de las precondiciones de los timeslots (ver
-     *                                  {@link #Event(String, List, List, List)})
+     * @param matchesPerPlayer número de partidos por jugador, mayor o igual que 1
+     * @throws IllegalArgumentException si el número de partidos por jugador es menor que 1
      */
     public void setMatchesPerPlayer(int matchesPerPlayer) {
-        checkTimeslotsPreconditions(timeslots, nTimeslotsPerMatch, matchesPerPlayer);
+        if (matchesPerPlayer < 1)
+            throw new IllegalArgumentException("Number of matches per player cannot be less than 1");
 
         predefinedMatchups.clear();
 
-        nMatchesPerPlayer = matchesPerPlayer;
         if (matchesPerPlayer == 1)
             matchupMode = MatchupMode.ANY;
+
+        nMatchesPerPlayer = matchesPerPlayer;
     }
 
     public int getTimeslotsPerMatch() {
@@ -416,12 +349,12 @@ public class Event implements Validable {
      * Asigna la duración de un partido, es decir, el número de <i>timeslots</i> sobre los que los partidos del
      * envento transcurren. Además, elimina todos los emparejamientos predefinidos, si hubiese.
      *
-     * @param timeslotsPerMatch número de timeslots por partidos, superior a 1
-     * @throws IllegalArgumentException si falla alguna precondición de timeslots (ver
-     *                                  {@link #Event(String, List, List, List)})
+     * @param timeslotsPerMatch número de timeslots por partidos, mayor o igual que 1
+     * @throws IllegalArgumentException si el número de <i>timeslots</i> por partido es menor que 1
      */
     public void setTimeslotsPerMatch(int timeslotsPerMatch) {
-        checkTimeslotsPreconditions(timeslots, timeslotsPerMatch, nMatchesPerPlayer);
+        if (timeslotsPerMatch < 1)
+            throw new IllegalArgumentException("Number of timeslots per match cannot be less than 1");
 
         predefinedMatchups.clear();
 
@@ -434,117 +367,66 @@ public class Event implements Validable {
 
     /**
      * Asigna el número de jugadores por partido. Además, elimina todos los equipos existentes así como los
-     * emparejamientos predefinidos, si hubiese.
+     * emparejamientos predefinidos, si hubiese. Como se eliminan los equipos, el número de jugadores por equipo
+     * vuelve a ser 0.
+     * <p>
+     * Si el número de jugadores por partido es 1, el modo de emparejamiento cambia automáticamente al valor por
+     * defecto, {@link MatchupMode#ANY}.
      *
-     * @param playersPerMatch número de jugadores por partido, superior a 1
+     * @param playersPerMatch número de jugadores por partido, mayor o igual que 1
      * @throws IllegalArgumentException si falla alguna de las precondiciones de jugadores (ver
      *                                  {@link #Event(String, List, List, List)})
      */
     public void setPlayersPerMatch(int playersPerMatch) {
-        checkPlayersPreconditions(players, playersPerMatch);
+        if (players.size() % nPlayersPerMatch != 0)
+            throw new IllegalArgumentException(String.format("Number of players per match is not coherent to the " +
+                    "number of players this event has (%d)", players.size()));
 
-        nPlayersPerMatch = playersPerMatch;
-
-        teams.clear();
         predefinedMatchups.clear();
+        clearTeams();
 
         if (playersPerMatch == 1)
             matchupMode = MatchupMode.ANY;
+
+        nPlayersPerMatch = playersPerMatch;
+    }
+
+    public int getPlayersPerTeam() {
+        return nPlayersPerTeam;
     }
 
     /**
-     * Comprueba las precondiciones de los equipos
+     * Asigna el número de jugadores por equipo que tendrá el evento, y por ende, convierte este evento a un evento
+     * por equipos, de forma que la composición los horarios y los partidos resultantes será diferente. El cálculo
+     * del horario por parte de {@link es.uca.garciachacon.eventscheduler.solver.TournamentSolver}, no obstante, no
+     * variará.
+     * <p>
+     * El número de jugadores por equipo es, por defecto, 0, lo que indica que el evento no incluye equipos. No
+     * obstante, este valor es actualizado por métodos que añaden equipos al evento como {@link Event#setTeams(List)}
+     * y {@link Event#addTeam(Team)}.
+     * <p>
+     * Si existen equipos y se invoca este método, si el número de jugadores por equipo que el valor del argumento
+     * <code>playersPerTeam</code> contiene es distinto al número de jugadores por equipo actual del evento, se
+     * actualizará el valor y además se vaciará la lista de equipos, eliminándose cualquier configuración anterior de
+     * los mismos.
+     * <p>
+     * El número de jugadores por equipo debe tener un valor mayor o igual que 2.
      *
-     * @param teams lista de equipos
-     * @throws IllegalArgumentException si alguna de las precondiciones no se cumple, ver {@link #setTeams(List)}
+     * @param playersPerTeam número de jugadores por equipo a definir sobre este evento, mayor o igual que 2
+     * @throws IllegalArgumentException si <code>playersPerTeam</code> es menor que 2
      */
-    private void checkTeamsPreconditions(List<Team> teams) {
-        if (teams == null)
-            throw new IllegalArgumentException("Teams cannot be null");
+    public void setPlayersPerTeam(int playersPerTeam) {
+        if (playersPerTeam < 2)
+            throw new IllegalArgumentException("Players per team cannot be less than 2");
 
-        if (teams.isEmpty())
-            throw new IllegalArgumentException("Teams cannot be empty");
-
-        int playersPerTeam = teams.get(0).getPlayers().size();
-
-        for (Team team : teams) {
-            if (team == null)
-                throw new IllegalArgumentException("A team cannot be null");
-
-            int teamSize = team.getPlayers().size();
-            if (teamSize != playersPerTeam)
-                throw new IllegalArgumentException(
-                        "All teams must have the same number of players (" + playersPerTeam + ", and this team has " +
-                                teamSize + ")");
-
-            for (Player player : team.getPlayers())
-                if (!players.contains(player))
-                    throw new IllegalArgumentException(
-                            "The player (" + player + ") does not exist in the list of players of this event");
+        if (playersPerTeam != nPlayersPerTeam) {
+            nPlayersPerTeam = playersPerTeam;
+            teams.clear();
         }
-
-        if (nPlayersPerMatch % playersPerTeam != 0)
-            throw new IllegalArgumentException(String.format(
-                    "Number of players in a team (%d) must be a divisor of the number of players per match (%d)",
-                    playersPerTeam,
-                    nPlayersPerMatch
-            ));
-
-        for (int i = 0; i < teams.size() - 1; i++)
-            for (Player player : teams.get(i).getPlayers())
-                for (int j = i + 1; j < teams.size(); j++)
-                    if (teams.get(j).getPlayers().contains(player))
-                        throw new IllegalArgumentException("A player (" + player + ") can only be present " +
-                                "in one team (player is in " + teams.get(i) + " and " + teams.get(j) + ")");
     }
 
     /**
-     * Comprueba las precondiciones de un equipo
-     *
-     * @param team un equipo de jugadores
-     * @throws IllegalArgumentException si alguna de las precondiciones no se cumple, ver {@link #setTeams(List)},
-     *                                  aquellas reglas concernientes a un único equipo, y derivables:
-     *                                  <ul>
-     *                                  <li>El número de jugadores del equipo es igual al número de equipos que
-     *                                  conforman la lista existente (si hay alguno)
-     *                                  <li>El equipo no puede existir ya, o ninguno de los jugadores que lo componen
-     *                                  puede estar ya asignados a otro equipo
-     *                                  </ul>
-     */
-    private void checkTeamPreconditions(Team team) {
-        if (team == null)
-            throw new IllegalArgumentException("Team cannot be null");
-
-        for (Player player : team.getPlayers())
-            if (!players.contains(player))
-                throw new IllegalArgumentException(
-                        "The player (" + player + ") does not exist in the list of players of this event");
-
-        int playersInTeam = teams.isEmpty() ? team.getPlayers().size() : teams.get(0).getPlayers().size();
-
-        if (!teams.isEmpty()) {
-            if (team.getPlayers().size() != playersInTeam)
-                throw new IllegalArgumentException(
-                        "The number of players in the team (" + team.getPlayers().size() + ") must be the same");
-
-            for (Player player : team.getPlayers())
-                for (Team t : teams)
-                    if (t.getPlayers().contains(player))
-                        throw new IllegalArgumentException(
-                                "A player (" + player + ") can only be present in one team (player is already in " + t +
-                                        ")");
-        }
-
-        if (nPlayersPerMatch % playersInTeam != 0)
-            throw new IllegalArgumentException(String.format(
-                    "Number of players in a team (%d) must be a divisor of the number of players per match (%d)",
-                    playersInTeam,
-                    nPlayersPerMatch
-            ));
-    }
-
-    /**
-     * Devuelve la lista de equipos del torneo envuelta en un wrapper que la hace no modificable
+     * Devuelve la lista de equipos del torneo envuelta en una lista no modificable
      *
      * @return la lista de equipos del torneo, no modificable
      */
@@ -553,51 +435,77 @@ public class Event implements Validable {
     }
 
     /**
-     * Asigna la lista de equipos que componen el evento.
+     * Asigna la lista de equipos que componen el evento. Si para alguno de los equipos de la lista se da alguna de
+     * las situaciones que conllevarían el lanzamiento de una excepción como describe {@link Event#addTeam(Team)},
+     * este método también las lanzará ya que invoca sucesivamente el método anterior para añadir los equipos a este
+     * evento.
      *
-     * @param teams lista de equipos no nula, con jugadores pertenecientes a este evento, sin jugadores repetidos en
-     *              distintos equipos y todos los equipos del mismo tamaño
-     * @throws IllegalArgumentException si no se cumplen algunas de las siguientes precondiciones:
-     *                                  <ul>
-     *                                  <li>La lista de equipos no es nula
-     *                                  <li>La lista de equipos no está vacía</li>
-     *                                  <li>Todos los jugadores pertenecen a este evento
-     *                                  <li>Ningún jugador se encuentra repetido en distintos equipos y, por ende, no
-     *                                  hay enfrentamientos repetidor
-     *                                  <li>Todos los equipos tienen el mismo número de jugadores
-     *                                  <li>El número total de jugadores que componen todos los equipos debe ser igual
-     *                                  al número de jugadores del evento
-     *                                  </ul>
+     * @param teams lista de equipos que se desean añadir al evento
      */
     public void setTeams(List<Team> teams) {
-        checkTeamsPreconditions(teams);
+        Objects.requireNonNull(teams);
 
-        teams.forEach(t -> t.setEvent(this));
-        this.teams = teams;
+        teams.forEach(this::addTeam);
     }
 
     /**
-     * Añade un equipo
+     * Añade un equipo a este evento. Si no existían equipos, se empieza a considerar este evento como evento por
+     * equipos y se asigna como número de jugadores por equipo del evento el número de jugadores que el equipo que se
+     * añade tenga.
      *
-     * @param team equipo no nulo
-     * @throws IllegalArgumentException si no se cumplen las precondiciones
+     * @param team un equipo válido para este evento
+     * @throws NullPointerException     si <code>team</code> es <code>null</code>
+     * @throws IllegalArgumentException si el equipo contiene algún jugador que no pertenece a este evento
+     * @throws IllegalArgumentException si el equipo contiene algún jugador que ya pertenece a algún otro equipo del
+     *                                  evento
+     * @throws IllegalArgumentException si el número de jugadores del equipo no es coherente con el número de
+     *                                  jugadores por equipo que este evento define, es decir, debe ser divisor de
+     *                                  este último
+     * @throws IllegalArgumentException si el número de jugadores del equipo es distinto del número de jugadores por
+     *                                  equipo que este evento define (si ya se ha definido)
      */
     public void addTeam(Team team) {
-        checkTeamPreconditions(team);
+        Objects.requireNonNull(team);
+
+        if (!players.containsAll(team.getPlayers()))
+            throw new IllegalArgumentException("Players unknown to this event are contained in the team");
+
+        if (teams.stream().map(Team::getPlayers).flatMap(Collection::stream).anyMatch(team.getPlayers()::contains))
+            throw new IllegalArgumentException("A player already belongs to an existing team");
+
+        int playersInTeam = team.getPlayers().size();
+
+        if (nPlayersPerTeam == 0) {
+            if (nPlayersPerMatch % playersInTeam != 0)
+                throw new IllegalArgumentException(String.format(
+                        "The number of players in this team (%d) is not coherent to the number of players per match " +
+                                "in this event (must be a divisor of %d)",
+                        playersInTeam, nPlayersPerMatch
+                ));
+
+            nPlayersPerTeam = playersInTeam;
+
+        } else if (playersInTeam != nPlayersPerTeam)
+            throw new IllegalArgumentException(String.format(
+                    "The number of players in this team (%d) is not the same than the number this event defines (%d)",
+                    playersInTeam,
+                    nPlayersPerMatch
+            ));
 
         team.setEvent(this);
+
         teams.add(team);
     }
 
     /**
-     * Añade un equipo, si la composición del mismo no es nula, de dos jugadores o más y pertenecientes al evento.
+     * Añade un equipo compuesto por los jugadores indicados. Internamente invoca a {@link Event#addTeam(Team)},
+     * luego se lanzarán las excepciones descritas en el mismo si se da el caso.
      *
-     * @param teamPlayers jugadores que compondrán el nuevo equipo a añadir y pertenecientes a este evento
-     * @throws IllegalArgumentException si no se cumplen las precondiciones
+     * @param teamPlayers jugadores que compondrán el nuevo equipo a añadir
+     * @throws NullPointerException si <code>teamPlayers</code> es <code>null</code>
      */
     public void addTeam(Player... teamPlayers) {
-        if (teamPlayers == null)
-            throw new IllegalArgumentException("Players cannot be null");
+        Objects.requireNonNull(teamPlayers);
 
         addTeam(new Team(teamPlayers));
     }
@@ -605,17 +513,20 @@ public class Event implements Validable {
     /**
      * Elimina un equipo de la lista de equipos, si existe. Si no, no habrá modificaciones.
      *
-     * @param team un equipo de jugadores
+     * @param team un equipo de jugadores que se desea eliminar del evento
      */
     public void removeTeam(Team team) {
         teams.remove(team);
     }
 
     /**
-     * Vacía el conjunto de equipos definidos sobre el evento.
+     * Vacía el conjunto de equipos definidos sobre el evento, eliminando todos los equipos. Este evento, por tanto,
+     * ya no será un evento por equipos, por lo que el número de jugadores por equipo vuelve a ser 0, representando
+     * su estado inicial de evento sin equipos.
      */
     public void clearTeams() {
         teams.clear();
+        nPlayersPerTeam = 0;
     }
 
     /**
@@ -744,19 +655,19 @@ public class Event implements Validable {
 
         if (!players.contains(player))
             throw new IllegalArgumentException(String.format("Player (%s) does not exist in the list of players of "
-                    + "this event",
+                            + "this event",
                     player
             ));
 
         if (!timeslots.contains(t1))
             throw new IllegalArgumentException(String.format("Timeslot (%s) does not exist in the list of timeslots "
-                    + "of this event",
+                            + "of this event",
                     t1
             ));
 
         if (!timeslots.contains(t2))
             throw new IllegalArgumentException(String.format("Timeslot (%s) does not exist in the list of timeslots "
-                    + "of this event",
+                            + "of this event",
                     t2
             ));
 
@@ -1086,13 +997,13 @@ public class Event implements Validable {
 
         if (!timeslots.contains(t1))
             throw new IllegalArgumentException(String.format("Timeslot (%s) does not exist in the list of timeslots "
-                    + "of this event",
+                            + "of this event",
                     t1
             ));
 
         if (!timeslots.contains(t2))
             throw new IllegalArgumentException(String.format("Timeslot (%s) does not exist in the list of timeslots "
-                    + "of this event",
+                            + "of this event",
                     t2
             ));
 
@@ -1257,19 +1168,19 @@ public class Event implements Validable {
 
         if (!localizations.contains(localization))
             throw new IllegalArgumentException(String.format("Localization (%s) does not exist in the list of " +
-                    "localizations of this event",
+                            "localizations of this event",
                     localization
             ));
 
         if (!timeslots.contains(t1))
             throw new IllegalArgumentException(String.format("Timeslot (%s) does not exist in the list of timeslots "
-                    + "of this event",
+                            + "of this event",
                     t1
             ));
 
         if (!timeslots.contains(t2))
             throw new IllegalArgumentException(String.format("Timeslot (%s) does not exist in the list of timeslots "
-                    + "of this event",
+                            + "of this event",
                     t2
             ));
 
@@ -1542,19 +1453,19 @@ public class Event implements Validable {
 
         if (!players.contains(player))
             throw new IllegalArgumentException(String.format("Player (%s) does not exist in the list of players of "
-                    + "this event",
+                            + "this event",
                     player
             ));
 
         if (!timeslots.contains(t1))
             throw new IllegalArgumentException(String.format("Timeslot (%s) does not exist in the list of timeslots "
-                    + "of this event",
+                            + "of this event",
                     t1
             ));
 
         if (!timeslots.contains(t2))
             throw new IllegalArgumentException(String.format("Timeslot (%s) does not exist in the list of timeslots "
-                    + "of this event",
+                            + "of this event",
                     t2
             ));
 
