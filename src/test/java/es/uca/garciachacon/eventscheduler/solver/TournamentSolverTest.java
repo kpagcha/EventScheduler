@@ -1681,9 +1681,10 @@ public class TournamentSolverTest {
         cat1.addPlayerAtTimeslots(players.get(6),
                 new HashSet<>(Arrays.asList(timeslots.get(3), timeslots.get(4), timeslots.get(5), timeslots.get(6)))
         );
-        cat2.addPlayersAtTimeslots(new HashSet<>(Arrays.asList(players.get(4), players.get(5))),
-                new HashSet<>(Arrays.asList(timeslots.get(6), timeslots.get(7), timeslots.get(8), timeslots.get(9)))
-        );
+        Set<Timeslot> assignedTimeslots =
+                new HashSet<>(Arrays.asList(timeslots.get(6), timeslots.get(7), timeslots.get(8), timeslots.get(9)));
+        cat2.addPlayerAtTimeslots(players.get(4), assignedTimeslots);
+        cat2.addPlayerAtTimeslots(players.get(5), assignedTimeslots);
 
         assertTrue(tournament.solve());
 
