@@ -197,8 +197,8 @@ public class Event implements Validable {
             throw new IllegalArgumentException("Number of players per match cannot be less than 1");
 
         if (players.size() % playersPerMatch != 0)
-            throw new IllegalArgumentException(String.format("Number of players is not coherent to the number of " +
-                    "players per match (%d)", playersPerMatch));
+            throw new IllegalArgumentException(String.format("Number of players (%d) is not coherent to the number of" +
+                    " players per match (%d)", players.size(), playersPerMatch));
 
         if (new HashSet<>(players).size() < players.size())
             throw new IllegalArgumentException("Players cannot contain duplicates");
@@ -227,7 +227,7 @@ public class Event implements Validable {
         if (new HashSet<>(timeslots).size() < timeslots.size())
             throw new IllegalArgumentException("Timeslots cannot contain duplicates");
 
-        Collections.sort(timeslots, Timeslot::compareTo);
+        Collections.sort(timeslots, Collections.reverseOrder());
 
         for (int i = 0; i < timeslots.size() - 1; i++)
             if (timeslots.get(i).compareTo(timeslots.get(i + 1)) == 0)
@@ -241,23 +241,6 @@ public class Event implements Validable {
         nMatchesPerPlayer = matchesPerPlayer;
         nTimeslotsPerMatch = timeslotsPerMatch;
         nPlayersPerMatch = playersPerMatch;
-    }
-
-    @SuppressWarnings("unchecked")
-    public <T> void setValidator(Validator<T> validator) {
-        if (validator == null)
-            throw new IllegalArgumentException("The parameter cannot be null");
-
-        this.validator = (Validator<Event>) validator;
-    }
-
-    public List<String> getMessages() {
-        return validator.getValidationMessages();
-    }
-
-    public void validate() throws ValidationException {
-        if (!validator.validate(this))
-            throw new ValidationException(String.format("Validation has failed for this event (%s)", name));
     }
 
     public String getName() {
@@ -374,11 +357,15 @@ public class Event implements Validable {
      * defecto, {@link MatchupMode#ANY}.
      *
      * @param playersPerMatch número de jugadores por partido, mayor o igual que 1
-     * @throws IllegalArgumentException si falla alguna de las precondiciones de jugadores (ver
-     *                                  {@link #Event(String, List, List, List)})
+     * @throws IllegalArgumentException si el número de jugadores por partido es menor que 1
+     * @throws IllegalArgumentException si el número de jugadores por partido no es coherente con el número de
+     *                                  jugadores que el evento tiene (es decir, debe ser divisor de este valor)
      */
     public void setPlayersPerMatch(int playersPerMatch) {
-        if (players.size() % nPlayersPerMatch != 0)
+        if (playersPerMatch < 1)
+            throw new IllegalArgumentException("Number of players per match cannot be less than 1");
+
+        if (players.size() % playersPerMatch != 0)
             throw new IllegalArgumentException(String.format("Number of players per match is not coherent to the " +
                     "number of players this event has (%d)", players.size()));
 
@@ -410,7 +397,12 @@ public class Event implements Validable {
      * actualizará el valor y además se vaciará la lista de equipos, eliminándose cualquier configuración anterior de
      * los mismos.
      * <p>
-     * El número de jugadores por equipo debe tener un valor mayor o igual que 2.
+     * El número de jugadores por equipo debe tener un valor mayor o igual que 2. Si se pretende eliminar la
+     * propiedad de este evento como evento por equipos pasándole a este método el argumento 0, no se consideraría
+     * una operación válida y se lanzaría la correspondiente excepción. Para lograr este comportamiento, se puede
+     * hacer uso del método {@link Event#clearTeams()} para eliminar todos los equipos y hacer que el evento deje de
+     * ser por equipos, o bien eliminar sucesivamente cada equipo existente con {@link Event#removeTeam(Team)} hasta
+     * que no quede ninguno (si hubiera algún equipo).
      *
      * @param playersPerTeam número de jugadores por equipo a definir sobre este evento, mayor o igual que 2
      * @throws IllegalArgumentException si <code>playersPerTeam</code> es menor que 2
@@ -441,9 +433,14 @@ public class Event implements Validable {
      * evento.
      *
      * @param teams lista de equipos que se desean añadir al evento
+     * @throws NullPointerException     si <code>teams</code> es <code>null</code>
+     * @throws IllegalArgumentException si <code>teams</code> está vacío
      */
     public void setTeams(List<Team> teams) {
         Objects.requireNonNull(teams);
+
+        if (teams.isEmpty())
+            throw new IllegalArgumentException("Teams cannot be empty");
 
         teams.forEach(this::addTeam);
     }
@@ -489,7 +486,7 @@ public class Event implements Validable {
             throw new IllegalArgumentException(String.format(
                     "The number of players in this team (%d) is not the same than the number this event defines (%d)",
                     playersInTeam,
-                    nPlayersPerMatch
+                    nPlayersPerTeam
             ));
 
         team.setEvent(this);
@@ -511,12 +508,16 @@ public class Event implements Validable {
     }
 
     /**
-     * Elimina un equipo de la lista de equipos, si existe. Si no, no habrá modificaciones.
+     * Elimina un equipo de la lista de equipos, si existe. Si el equipo eliminado es el último del evento, éste ya
+     * dejará de considerarse como un evento por equipos. Si el equipo no existe, no habrá modificaciones.
      *
      * @param team un equipo de jugadores que se desea eliminar del evento
      */
     public void removeTeam(Team team) {
         teams.remove(team);
+
+        if (teams.isEmpty())
+            nPlayersPerTeam = 0;
     }
 
     /**
@@ -530,9 +531,28 @@ public class Event implements Validable {
     }
 
     /**
-     * @return true si sobre la categoría se definen equipos explícitos, y false si no
+     * Comprueba si este es un evento por equipos o no. Este estado lo define el valor del número de jugadores por
+     * equipo que el evento tiene. Este valor es por defecto 0, e indica que no hay equipos, mientras que si el
+     * evento es por equipos su valor será mayor o igual que 2.
+     *
+     * @return <code>true</code> si el evento es por equipos, y <code>false</code> si no lo es
      */
     public boolean hasTeams() {
+        return nPlayersPerTeam >= 2;
+    }
+
+    /**
+     * Comprueba si este evento incluye algún equipo predefinido; estos son los equipos cuya composición de jugadores
+     * en particular es desconocida. Si hay al menos un equipo predefinido, el evento es por equipos y el método
+     * {@link Event#hasTeams()} devolverá <code>true</code>, así como este. No obstante, si no hay ningún equipo
+     * predefinido este método devolverá <code>false</code>, pero se deberá consultar mediante el método
+     * {@link Event#hasTeams()} si el evento es por equipos o no, o alternativamente, comprobar el valor de retorno
+     * de {@link Event#getPlayersPerTeam()}.
+     *
+     * @return <code>true</code> si este evento tiene al menos un equipo predefinido, y <code>false</code> si no
+     * incluye ninguno (pero esto no quiere decir que el evento no sea por equipos, puede serlo o puede no serlo)
+     */
+    public boolean hasPredefinedTeams() {
         return !teams.isEmpty();
     }
 
@@ -743,13 +763,12 @@ public class Event implements Validable {
      * .</p>
      *
      * @param matchups una lista de múltiples enfrentamientos no repetidos entre jugadores del evento
-     * @throws IllegalArgumentException si <code>matchups</code> es <code>null</code>
+     * @throws NullPointerException si <code>matchups</code> es <code>null</code>
      * @throws IllegalArgumentException si el número de enfrentamientos de un jugador en particular supera el máximo
      *                                  posible, es decir, el número de partidos por jugador que este evento define
      */
     public void setPredefinedMatchups(Set<Matchup> matchups) {
-        if (matchups == null)
-            throw new IllegalArgumentException("Matchups cannot be null");
+        Objects.requireNonNull(matchups);
 
         for (Matchup matchup : matchups) {
             for (Player player : matchup.getPlayers()) {
@@ -1612,5 +1631,21 @@ public class Event implements Validable {
 
     public String toString() {
         return name;
+    }
+
+    public <T> void setValidator(Validator<T> validator) {
+        if (validator == null)
+            throw new IllegalArgumentException("The parameter cannot be null");
+
+        this.validator = (Validator<Event>) validator;
+    }
+
+    public List<String> getMessages() {
+        return validator.getValidationMessages();
+    }
+
+    public void validate() throws ValidationException {
+        if (!validator.validate(this))
+            throw new ValidationException(String.format("Validation has failed for this event (%s)", name));
     }
 }

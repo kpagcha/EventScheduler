@@ -1,6 +1,5 @@
 package es.uca.garciachacon.eventscheduler.data.model.tournament;
 
-import es.uca.garciachacon.eventscheduler.data.model.schedule.LocalizationSchedule;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.event.Event;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.event.Matchup;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Localization;
@@ -74,17 +73,13 @@ public class EventTest {
         }
     }
 
-    @Test
+    @Test(expected = NullPointerException.class)
     public void constructorNullNameTest() {
-        expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("name cannot be null");
         event = new Event(null, players, localizations, timeslots);
     }
 
-    @Test
+    @Test(expected = NullPointerException.class)
     public void extendedConstructorNullNameTest() {
-        expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("name cannot be null");
         event = new Event(null,
                 players,
                 localizations,
@@ -95,10 +90,8 @@ public class EventTest {
         );
     }
 
-    @Test
+    @Test(expected = NullPointerException.class)
     public void constructorNullPlayersTest() {
-        expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("players cannot be null");
         event = new Event("Event", null, localizations, timeslots);
     }
 
@@ -107,7 +100,7 @@ public class EventTest {
         players.clear();
 
         expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("cannot be less than 1");
+        expectedEx.expectMessage("Players cannot be empty");
         event = new Event("Event", players, localizations, timeslots);
     }
 
@@ -117,7 +110,7 @@ public class EventTest {
         players.set(6, null);
 
         expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("player cannot be null");
+        expectedEx.expectMessage("Players cannot contain a null player");
         event = new Event("Event", players, localizations, timeslots);
     }
 
@@ -126,28 +119,21 @@ public class EventTest {
         players.set(4, players.get(2));
 
         expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("players must be unique");
+        expectedEx.expectMessage("Players cannot contain duplicates");
         event = new Event("Event", players, localizations, timeslots);
     }
 
-    /**
-     * Test que comprueba que se lanza excpeción al usar el primer constructor de evento
-     * ({@link Event#Event(String, List, List, List)},
-     * cuando el número de jugadores no es múltiplo del número por defecto de jugadores por partido
-     */
     @Test
     public void constructorDefaultPlayerPerMatchTest() {
         players.add(new Player("Extra Player"));
 
         expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("must be a multiple of the number of players per match");
+        expectedEx.expectMessage("Number of players (9) is not coherent to the number of players per match (2)");
         event = new Event("Event", players, localizations, timeslots);
     }
 
-    @Test
+    @Test(expected = NullPointerException.class)
     public void constructorNullLocalizationsTest() {
-        expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("localizations cannot be null");
         event = new Event("Event", players, null, timeslots);
     }
 
@@ -156,7 +142,7 @@ public class EventTest {
         localizations.clear();
 
         expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("cannot be less than 1");
+        expectedEx.expectMessage("Localizations cannot be empty");
         event = new Event("Event", players, localizations, timeslots);
     }
 
@@ -165,7 +151,7 @@ public class EventTest {
         localizations.set(1, null);
 
         expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("localization cannot be null");
+        expectedEx.expectMessage("Localizations cannot contain a null localization");
         event = new Event("Event", players, localizations, timeslots);
     }
 
@@ -174,14 +160,12 @@ public class EventTest {
         localizations.add(localizations.get(0));
 
         expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("localizations must be unique");
+        expectedEx.expectMessage("Localizations cannot contain duplicates");
         event = new Event("Event", players, localizations, timeslots);
     }
 
-    @Test
+    @Test(expected = NullPointerException.class)
     public void constructorNullTimeslotsTest() {
-        expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("timeslots cannot be null");
         event = new Event("Event", players, localizations, null);
     }
 
@@ -190,7 +174,7 @@ public class EventTest {
         timeslots.clear();
 
         expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("cannot be less than 1");
+        expectedEx.expectMessage("Timeslots cannot be empty");
         event = new Event("Event", players, localizations, timeslots);
     }
 
@@ -199,17 +183,7 @@ public class EventTest {
         timeslots.set(7, null);
 
         expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("timeslot cannot be null");
-        event = new Event("Event", players, localizations, timeslots);
-    }
-
-    @Test
-    public void constructorNotEnoughTimeslotTest() {
-        timeslots = TournamentUtils.buildDayOfWeekTimeslots(1);
-
-        expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage(
-                "cannot be less than the product of the number of matches per player and the duration of a match");
+        expectedEx.expectMessage("Timeslots cannot contain a null timeslot");
         event = new Event("Event", players, localizations, timeslots);
     }
 
@@ -219,18 +193,16 @@ public class EventTest {
         timeslots.set(5, timeslots.get(7));
 
         expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("timeslots must be unique");
+        expectedEx.expectMessage("Timeslots cannot contain duplicates");
         event = new Event("Event", players, localizations, timeslots);
     }
 
     @Test
-    public void constructorDisorderedTimeslotsTest() {
-        Timeslot tmp = timeslots.get(3);
-        timeslots.set(3, timeslots.get(4));
-        timeslots.set(4, tmp);
+    public void constructorUnorderedTimeslotsTest() {
+        timeslots.add(new Timeslot(4));
 
         expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("must be greater than the next one");
+        expectedEx.expectMessage("Every timeslot must strictly precede the following");
         event = new Event("Event", players, localizations, timeslots);
     }
 
@@ -239,7 +211,7 @@ public class EventTest {
         nPlayersPerMatch = 0;
 
         expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("cannot be less than 1");
+        expectedEx.expectMessage("Number of players per match cannot be less than 1");
         event = new Event("Event",
                 players,
                 localizations,
@@ -255,7 +227,7 @@ public class EventTest {
         nPlayersPerMatch = 3;
 
         expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("must be a multiple of the number of players per match");
+        expectedEx.expectMessage("Number of players (8) is not coherent to the number of players per match (3)");
         event = new Event("Event",
                 players,
                 localizations,
@@ -271,7 +243,7 @@ public class EventTest {
         nMatchesPerPlayer = 0;
 
         expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("cannot be less than 1");
+        expectedEx.expectMessage("Number of matches per player cannot be less than 1");
         event = new Event("Event",
                 players,
                 localizations,
@@ -287,7 +259,7 @@ public class EventTest {
         nTimeslotsPerMatch = 0;
 
         expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("cannot be less than 1");
+        expectedEx.expectMessage("Number of timeslots per match cannot be less than 1");
         event = new Event("Event",
                 players,
                 localizations,
@@ -304,16 +276,13 @@ public class EventTest {
         assertEquals("New Event", event.getName());
     }
 
-    @Test
+    @Test(expected = NullPointerException.class)
     public void setNullNameTest() {
-        expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("Name cannot be null");
         event.setName(null);
     }
 
-    @Test
+    @Test(expected = NullPointerException.class)
     public void setNullTournamentTest() {
-        expectedEx.expect(IllegalArgumentException.class);
         event.setTournament(null);
     }
 
@@ -390,14 +359,6 @@ public class EventTest {
     }
 
     @Test
-    public void setMatchesPerPlayerMoreThanTimeslotsTest() {
-        expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage(
-                "cannot be less than the product of the number of matches per player and the duration of a match");
-        event.setMatchesPerPlayer(5);
-    }
-
-    @Test
     public void setTimeslotsPerMatchTest() {
         event.setTimeslotsPerMatch(4);
         assertEquals(4, event.getTimeslotsPerMatch());
@@ -413,18 +374,9 @@ public class EventTest {
     @Test
     public void setTimeslotsPerMatchLessThanOneTest() {
         expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("cannot be less than 1");
+        expectedEx.expectMessage("Number of timeslots per match cannot be less than 1");
         event.setTimeslotsPerMatch(0);
     }
-
-    @Test
-    public void setTimeslotsPerMatchMoreThanTimeslotsTest() {
-        expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage(
-                "cannot be less than the product of the number of matches per player and the duration of a match");
-        event.setTimeslotsPerMatch(9);
-    }
-
     @Test
     public void setPlayersPerMatchTest() {
         event.setPlayersPerMatch(4);
@@ -444,6 +396,39 @@ public class EventTest {
     }
 
     @Test
+    public void setPlayersPerTeamTest() {
+        assertEquals(0, event.getPlayersPerTeam());
+        assertFalse(event.hasTeams());
+        assertFalse(event.hasPredefinedTeams());
+
+        event.setPlayersPerTeam(2);
+        assertEquals(2, event.getPlayersPerTeam());
+        assertTrue(event.hasTeams());
+        assertFalse(event.hasPredefinedTeams());
+
+        event.addTeam(players.get(3), players.get(6));
+        assertTrue(event.hasPredefinedTeams());
+
+        event.setPlayersPerTeam(2);
+        assertEquals(2, event.getPlayersPerTeam());
+        assertTrue(event.hasTeams());
+        assertEquals(1, event.getTeams().size());
+
+        event.setPlayersPerTeam(3);
+        assertEquals(3, event.getPlayersPerTeam());
+        assertTrue(event.hasTeams());
+        assertFalse(event.hasPredefinedTeams());
+        assertEquals(0, event.getTeams().size());
+    }
+
+    @Test
+    public void setPlayersPerTeamLessThanTwoTest() {
+        expectedEx.expect(IllegalArgumentException.class);
+        expectedEx.expectMessage("Players per team cannot be less than 2");
+        event.setPlayersPerTeam(1);
+    }
+
+    @Test
     public void setPlayersPerMatchLessThanOneTest() {
         expectedEx.expect(IllegalArgumentException.class);
         expectedEx.expectMessage("cannot be less than 1");
@@ -453,7 +438,8 @@ public class EventTest {
     @Test
     public void setPlayersPerMatchDivisorOfNumberOfPlayersTest() {
         expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("must be a multiple of the number of players per match");
+        expectedEx.expectMessage("Number of players per match is not coherent to the number of players this event has" +
+                " (8)");
         event.setPlayersPerMatch(3);
     }
 
@@ -483,51 +469,18 @@ public class EventTest {
         assertTrue(event.getTeams().get(8).contains(players.get(17)));
     }
 
-    @Test
-    public void addTeamsPartiallyTest() {
-        Event e = new Event("Event",
-                TournamentUtils.buildGenericPlayers(8, "Player"),
-                TournamentUtils.buildGenericLocalizations(1, "Court"),
-                TournamentUtils.buildLocalTimeTimeslots(4),
-                1,
-                2,
-                4
-        );
-
-        //e.addTeam(e.getPlayers().get(0), e.getPlayers().get(1));
-        //e.addTeam(e.getPlayers().get(2), e.getPlayers().get(3));
-
-        Tournament t = new Tournament("Tournament", e);
-        t.getSolver().setSearchStrategy(TournamentSolver.SearchStrategy.MINDOM_UB);
-        try {
-            t.solve();
-        } catch (ValidationException e1) {
-            t.getMessages().forEach(System.out::println);
-        }
-
-        LocalizationSchedule schedule = new LocalizationSchedule(t);
-        System.out.println(schedule);
-        schedule.getMatches().forEach(System.out::println);
-
-        fail("Método con el que se está probando los bugs");
-    }
-
-    @Test
+    @Test(expected = NullPointerException.class)
     public void setNullTeamsTest() {
-        expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("Teams cannot be null");
         event.setTeams(null);
     }
 
-    @Test
+    @Test(expected = NullPointerException.class)
     public void setTeamsNullTeamTest() {
         event.setPlayersPerMatch(4);
         List<Team> teams = new ArrayList<>();
         teams.add(new Team(players.get(0), players.get(1)));
         teams.add(null);
 
-        expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("team cannot be null");
         event.setTeams(teams);
     }
 
@@ -550,7 +503,7 @@ public class EventTest {
         teams.add(new Team(players.get(2), unknownPlayer));
 
         expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("does not exist in the list of players of this event");
+        expectedEx.expectMessage("Players unknown to this event are contained in the team");
         event.setTeams(teams);
     }
 
@@ -562,7 +515,8 @@ public class EventTest {
         teams.add(new Team(players.get(6), players.get(7), players.get(2)));
 
         expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("teams must have the same number of players");
+        expectedEx.expectMessage("The number of players in this team (3) is not the same than the number this event " +
+                "defines (2)");
         event.setTeams(teams);
     }
 
@@ -574,7 +528,8 @@ public class EventTest {
         teams.add(new Team(players.get(5), players.get(4), players.get(2)));
 
         expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("must be a divisor of the number of players per match");
+        expectedEx.expectMessage("The number of players in this team (3) is not coherent to the number of players " +
+                "per match in this event (must be a divisor of 4)");
         event.setTeams(teams);
     }
 
@@ -587,7 +542,7 @@ public class EventTest {
         teams.add(new Team(players.get(5), players.get(1)));
 
         expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("can only be present in one team");
+        expectedEx.expectMessage("A player already belongs to an existing team");
         event.setTeams(teams);
     }
 
@@ -617,38 +572,28 @@ public class EventTest {
         assertEquals(4, event.getTeams().size());
     }
 
-    @Test
+    @Test(expected = NullPointerException.class)
     public void addTeamNullTest() {
-        expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("Team cannot be null");
         event.addTeam((Team) null);
     }
 
-    @Test
+    @Test(expected = NullPointerException.class)
     public void addTeamPlayersNullPlayersTest() {
-        expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("Players cannot be null");
-        event.addTeam((Player[]) null);
-    }
-
-    @Test
-    public void addTeamNullPlayersTest() {
-        expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("Players cannot be null");
         event.addTeam((Player[]) null);
     }
 
     @Test
     public void addTeamUnexistingPlayerTest() {
         expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("does not exist in the list of players of this event");
+        expectedEx.expectMessage("Players unknown to this event are contained in the team");
         event.addTeam(new Team(players.get(3), new Player("Unknown Player")));
     }
 
     @Test
     public void addTeamDivisorOfNumberOfPlayersTest() {
         expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("must be a divisor of the number of players per match");
+        expectedEx.expectMessage("The number of players in this team (3) is not coherent to the number of players per" +
+                " match in this event (must be a divisor of 2)");
         event.addTeam(new Team(players.get(3), players.get(4), players.get(7)));
     }
 
@@ -658,7 +603,8 @@ public class EventTest {
         event.addTeam(players.get(0), players.get(3));
 
         expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("must be the same");
+        expectedEx.expectMessage("The number of players in this team (4) is not the same than the number this event " +
+                "defines (2)");
         event.addTeam(players.get(2), players.get(4), players.get(6), players.get(7));
     }
 
@@ -668,7 +614,7 @@ public class EventTest {
         event.addTeam(players.get(0), players.get(3));
 
         expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("can only be present in one team");
+        expectedEx.expectMessage("A player already belongs to an existing team");
         event.addTeam(players.get(2), players.get(3));
     }
 
@@ -685,10 +631,29 @@ public class EventTest {
 
         assertFalse(event.getTeams().contains(team));
         assertEquals(3, event.getTeams().size());
+
+        assertTrue(event.hasTeams());
+        assertTrue(event.hasPredefinedTeams());
+
+        while (!event.getTeams().isEmpty())
+            event.removeTeam(event.getTeams().get(0));
+
+        assertFalse(event.hasTeams());
+        assertFalse(event.hasPredefinedTeams());
+        assertEquals(0, event.getPlayersPerTeam());
     }
 
     @Test
-    public void hasTeamsTest() {
+    public void hasTeamsWhenSettingPlayersPerTeamTest() {
+        event.setPlayersPerTeam(2);
+        assertTrue(event.hasTeams());
+
+        event.clearTeams();
+        assertFalse(event.hasTeams());
+    }
+
+    @Test
+    public void hasTeamsWhenAddingTeamTest() {
         assertFalse(event.hasTeams());
 
         event.addTeam(players.get(0), players.get(1));
@@ -696,6 +661,20 @@ public class EventTest {
 
         event.removeTeam(event.getTeams().get(0));
         assertFalse(event.hasTeams());
+        assertFalse(event.hasPredefinedTeams());
+    }
+
+    @Test
+    public void hasPredefinedTeamsTest() {
+        event.setPlayersPerTeam(4);
+        assertFalse(event.hasPredefinedTeams());
+
+        event.addTeam(players.get(0), players.get(1), players.get(4), players.get(6));
+        assertTrue(event.hasPredefinedTeams());
+
+        event.clearTeams();
+
+        assertFalse(event.hasPredefinedTeams());
     }
 
     @Test
@@ -705,9 +684,12 @@ public class EventTest {
         event.addTeam(players.get(0), players.get(1));
         event.addTeam(players.get(2), players.get(3));
         assertTrue(event.hasTeams());
+        assertTrue(event.hasPredefinedTeams());
 
         event.clearTeams();
         assertFalse(event.hasTeams());
+        assertFalse(event.hasPredefinedTeams());
+        assertEquals(0, event.getPlayersPerTeam());
     }
 
     @Test
@@ -1128,10 +1110,8 @@ public class EventTest {
         assertEquals(5, event.getPlayersAtTimeslots().get(players.get(7)).size());
     }
 
-    @Test
+    @Test(expected = NullPointerException.class)
     public void setPredefinedMatchupsNullTest() {
-        expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("Matchups cannot be null");
         event.setPredefinedMatchups(null);
     }
 

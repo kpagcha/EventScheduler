@@ -50,7 +50,7 @@ import java.util.Optional;
  * }
  * </pre>
  */
-public class Timeslot extends Entity {
+public class Timeslot extends Entity implements Comparable<Timeslot> {
     /**
      * Orden cronológico del <i>timeslot</i>
      */
