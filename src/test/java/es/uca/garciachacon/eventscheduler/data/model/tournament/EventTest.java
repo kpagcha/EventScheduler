@@ -19,6 +19,7 @@ import org.junit.rules.ExpectedException;
 import java.time.Duration;
 import java.time.LocalTime;
 import java.util.*;
+import java.util.stream.IntStream;
 
 import static org.junit.Assert.*;
 
@@ -49,28 +50,32 @@ public class EventTest {
     }
 
     @Test
-    public void constructorsTestSuccess() {
-        try {
-            event = new Event("Event", players, localizations, timeslots);
-            assertEquals(8, event.getPlayers().size());
-            assertEquals(2, event.getLocalizations().size());
-            assertEquals(8, event.getTimeslots().size());
+    public void constructorsTest() {
+        event = new Event("Event", players, localizations, timeslots);
+        assertEquals(8, event.getPlayers().size());
+        assertEquals(2, event.getLocalizations().size());
+        assertEquals(8, event.getTimeslots().size());
 
-            players = TournamentUtils.buildGenericPlayers(24, "Player");
-            localizations = TournamentUtils.buildGenericLocalizations(5, "Court");
-            timeslots = TournamentUtils.buildSimpleTimeslots(16);
+        players = TournamentUtils.buildGenericPlayers(24, "Player");
+        localizations = TournamentUtils.buildGenericLocalizations(5, "Court");
+        timeslots = TournamentUtils.buildSimpleTimeslots(16);
 
-            event = new Event("Event", players, localizations, timeslots, 2, 3, 4);
-            assertEquals(24, event.getPlayers().size());
-            assertEquals(5, event.getLocalizations().size());
-            assertEquals(16, event.getTimeslots().size());
-            assertEquals(2, event.getMatchesPerPlayer());
-            assertEquals(3, event.getTimeslotsPerMatch());
-            assertEquals(4, event.getPlayersPerMatch());
+        event = new Event("Event", players, localizations, timeslots, 2, 3, 4);
+        assertEquals(24, event.getPlayers().size());
+        assertEquals(5, event.getLocalizations().size());
+        assertEquals(16, event.getTimeslots().size());
+        assertEquals(2, event.getMatchesPerPlayer());
+        assertEquals(3, event.getTimeslotsPerMatch());
+    }
 
-        } catch (IllegalArgumentException e) {
-            fail("Exception thrown for an event expected to be valid");
-        }
+    @Test
+    public void constructorTimeslotOrderedTest() {
+        Collections.shuffle(timeslots);
+
+        event = new Event("Event", players, localizations, this.timeslots);
+
+        assertFalse(IntStream.range(1, timeslots.size())
+                .anyMatch(i -> timeslots.get(i - 1).compareTo(timeslots.get(i)) <= 0));
     }
 
     @Test(expected = NullPointerException.class)

@@ -16,28 +16,172 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * Representación de un evento o categoría deportiva en el contexto de un torneo deportivo.
+ * Representa un evento deportivo o una categoría deportiva en el contexto de un torneo deportivo. Es un elemento
+ * principal del torneo ({@link Tournament}), el cual se compone de eventos o categorías. Cuando se instancia un
+ * torneo, automáticamente se crea la asociación bidireccional entre el torneo y los eventos que lo componen. A partir
+ * de esta última clase torneo que engloba al menos un evento, se puede calcular los horarios y, por tanto, se
+ * obtendría el horario de un evento en particular. Para más información acerca del cálculo de los horarios y los
+ * partidos, se puede consultar {@link Tournament} o, directamente, la clase empleada para modelar el problema e
+ * iniciar el proceso de resolución {@link es.uca.garciachacon.eventscheduler.solver.TournamentSolver}.
  * <p>
- * Un evento se compone de jugadores que componen enfrentamientos y partidos en los que participan, y que discurren
- * en determinadas localizaciones de juego asignadas al evento, y a determinadas hora de juego.
+ * Un evento se define con un conjunto de jugadores ({@link Player}), los cuales se enfrentarán entre sí en distintos
+ * partidos que se celebrarán. Estos partidos tienen lugar en una serie de emplazamientos o localizaciones de juego
+ * disponibles ({@link Localization}), y transurrirán a lo largo de un conjunto de horas de juego disponibles
+ * ({@link Timeslot}). Las localizaciones y <i>timeslots</i> del evento representan entidades disponibles, lo cual no
+ * quiere decir que se les deba dar uso por completo. No obstante, los jugadores sí son entidades que se deben
+ * emplear en su totalidad, es decir, todos los jugadores formarán parte de, al menos, un partido.
  * <p>
- * Una categoría además incluye información adicional que especifica elementos más detallados:
- * <ul>
- * <li>Número de partidos que cada jugador del evento debe jugar
- * <li>Número de horas o <i>timeslots</i> que un partido ocupa, es decir, su duración
- * <li>Número de jugadores que componen un partido
- * <li>Equipos, entendidos como asociación de jugadores individuales, que participan en el evento, si los hubiese
- * <li>Conjunto de horas del evento en las que un enfrentamiento no puede tener lugar, es decir, <i>breaks</i> o
- * descansos, como descansos para comer, la noche, etc...
- * <li>Registro de horas a las que cada jugador no está disponible para tomar parte en un enfrentamiento, si hubiese
- * <li>Registro de localizaciones de juego que no se encuentran disponibles a determinadas horas por cualquier razón,
- * si hubiese
- * <li>Registro de enfrentamientos fijos o predefinidos de antemano entre distintos jugadores en particular, si hubiese
- * <li>Registro de localizaciones de juego predefinidas de antemano donde los jugadores especificados deben jugar, si
- * hubiese
- * <li>Registro de horas de juego predefinidas de antemano cuando los jugadores especificados deben jugar, si hubiese
- * <li>Modo de enfrentamiento, que especifica el modo como se calcularán los emparejamientos
- * </ul>
+ * Un evento puede tener diversas opciones configurables: se puede indicar el número de jugadores que componen un
+ * partido, con un valor mínimo de incluso 1 para situaciones en las que el evento modele un deporte o una actividad
+ * de un único jugador. Para establecer el valor de esta opción se puede hacer uso de uno de los constructores,
+ * {@link Event#Event(String, List, List, List, int, int, int)} o emplear {@link Event#setPlayersPerMatch(int)}.
+ * <p>
+ * Se puede configurar el número de partidos que cada jugador deba jugar, con un mínimo de 1, posibilitando modelar
+ * eventos tipo liguilla, liga o <i>round-robin</i>. Este valor se puede asignar con
+ * {@link Event#setMatchesPerPlayer(int)}, o haciendo uso del constructor mencionado anteriormente.
+ * <p>
+ * Cada evento tendrá un número fijo de partidos del que se compondrá, y vendrá determinado por el valor de estos dos
+ * últimos componentes configurables: el número de jugadores por partido y el número de partidos por jugador.
+ * <p>
+ * Para los eventos con más de un jugador por partido y múltiples partidos por jugador, se puede definir mediante
+ * {@link MatchupMode} el modo de emparejamiento que se empleará para cada uno de estos múltiples partidos. Éste es
+ * por defecto {@link MatchupMode#ANY}, indicando que no hay restricciones respecto del modo como se calcularán los
+ * partidos de este evento a la hora de formar el horario. Se pueden indicar otros modos, como
+ * {@link MatchupMode#ALL_DIFFERENT}, que obliga a que todos los enfrentamientos siempre enfrenten a una combinación
+ * diferente de jugadores (por ejemplo, el enfrentamiento "Jugador 1 contra Jugador 2" solamente ocurrirá una vez; no
+ * se repetirá), o {@link MatchupMode#ALL_EQUAL}, que obliga a lo contrario, todos los enfrentamientos para cada
+ * jugador, deberán componerse de la misma combinación de jugadores (por ejemplo, el enfrentamiento "Jugador 1 contra
+ * Jugador 2" deberá ocurrir tantas veces como número de partidos por jugador defina el evento).
+ * <p>
+ * Los partidos de un evento tendrán una duración que se cuantifica en número de <i>timeslots</i>, es decir, el
+ * número de horas de juegos que tiene el rango de <i>timeslots</i> entre el comienzo del partido y el final. Este
+ * valor se asigna con el método {@link Event#setTimeslotsPerMatch(int)}, o haciendo uso del constructor
+ * anteriormente mencionado. El valor mínimo es de 1, e indica que el partido termina en el mismo <i>timeslot</i> en
+ * el que termina. Por ejemplo, si un evento define un número de <i>timeslots</i> por partido de 3, y tenemos un
+ * espacio temporal en el que transcurrirán los partidos de [t1, t2, ..., t10], si a un partido se le es asignado un
+ * comienzo en <i>timeslot</i> <i>t3</i>, transcurrirá durante el rango <i>t3, t4, t5</i>: comienza en <i>t3</i> y
+ * termina en <i>t5</i>, incluido.
+ * <p>
+ * Se pueden marcar distintas horas de juego con un carácter especial que las hará considerarse como <i>breaks</i>,
+ * tiempos de descanso o, sencillamente, momentos del evento en los que no puede tener lugar ningún partido (ni
+ * comenzar ni transcurrir ninguno de las particiones de su duración). Se pueden emplear métodos como
+ * {@link Event#setBreaks(List)} o {@link Event#addBreak(Timeslot)} para marcar los <i>breaks</i> del evento. Este
+ * componente se debería emplear para situaciones que modelen eventos como aquellos que tienen lugar a lo largo de
+ * varios días, y se quiera excluir el período de la noche del transcurso del torneo.
+ * <p>
+ * Veáse el siguiente ejemplo de un evento que tiene lugar durante dos días, y se divide en dos etapas: el
+ * día 1 de 16:00 a 21:00 y el día 2 de 10:00 a 14:00. La duración de cada partido es de 2 <i>timeslots</i>:
+ * <p>
+ * <pre>
+ * {@code
+ *  List<Timeslot> timeslots = new ArrayList();
+ *
+ *  // Se añaden los partidos del primer día, comenzando a las 16:00 con una duración de 1 hora cada uno
+ *  timeslots.add(new Timeslot(1, LocalTime.of(16, 0), Duration.ofHours(1)));
+ *  timeslots.add(new Timeslot(1, LocalTime.of(17, 0), Duration.ofHours(1)));
+ *  timeslots.add(new Timeslot(1, LocalTime.of(18, 0), Duration.ofHours(1)));
+ *  timeslots.add(new Timeslot(1, LocalTime.of(19, 0), Duration.ofHours(1)));
+ *  timeslots.add(new Timeslot(1, LocalTime.of(20, 0), Duration.ofHours(1)));
+ *
+ *  // Se añaden los partidos del segundo día
+ *  timeslots.add(new Timeslot(2, LocalTime.of(10, 0), Duration.ofHours(1)));
+ *  timeslots.add(new Timeslot(2, LocalTime.of(11, 0), Duration.ofHours(1)));
+ *  timeslots.add(new Timeslot(2, LocalTime.of(12, 0), Duration.ofHours(1)));
+ *  timeslots.add(new Timeslot(2, LocalTime.of(13, 0), Duration.ofHours(1)));
+ *
+ *  Event event = new Event("Example Event", players, courts, timeslots);
+ *  event.setTimeslotsPerMatch(2);
+ *
+ *  // en este punto, tal y como se ha definido el evento, existe la posibilidad de que se calculen partido que
+ *  // comiencen el día 1 a las 20:00 y terminen el día 2 a las 10:00 porque estos timeslots son consecutivos
+ *  new Tournament("Example Tournament", event).solve();
+ * }
+ * </pre>
+ * <p>
+ * La situación anteriormente descrita es indeseable. Este puede ser uno de los casos en los que sea conveniente el
+ * uso de los <i>breaks</i>. Habría que añadir un <i>timeslots</i> adicional a la lista que sea inmediatamente
+ * posterior al último <i>timeslot</i> del día 1 (el que comienza a las 20:00), que representase el período nocturno
+ * de inactividad entre el día 1 y 2:
+ * <p>
+ * <pre>
+ * {@code
+ *   Timeslot night = new Timeslot(1, LocalTime.of(21:00));
+ *   timeslots.add(night);
+ * }
+ * </pre>
+ * <p>
+ * Y, finalmente, se marcaría ese <i>timeslot</i> como <i>break</i> después de crear la instancia del evento:
+ * <p>
+ * <pre>
+ * {@code
+ *   event.addBreak(night);
+ * }
+ * </pre>
+ * <p>
+ * Un evento puede considerar equipos de dos maneras distintas:
+ * <p>
+ * Un equipo entendido como una entidad única compuesta por jugadores, donde en términos prácticos el equipo se
+ * consideraría un jugador entendido como entidad que juega, más que individuo en particular que juega. En este caso,
+ * el cálculo del horario es igual que si se tuviesen individuos porque en realidad se representan de igual forma.
+ * <p>
+ * El otro caso es el que considera la individualidad de cada jugador a la hora de calcular los horarios, pero al
+ * mismo tiempo, forma parte de un equipo. Una de las situaciones en las que se deberían emplear equipos es en
+ * torneos con múltiples categorías donde sea posible que un mismo individuo participe en distintas de las mismas.
+ * Por ejemplo, en un torneo de tenis con una categoría de simples y otra de dobles, sería ideal tener en cuenta la
+ * participación múltiple de un jugador tanto en el cuadro de simples como en el de dobles, donde participa como
+ * componente de un equipo (la pareja de dobles). Si en la categoría de dobles se representasen los equipos como
+ * entidad propia y no se considerase la individualidad de los componentes (cuando en realidad la hay), existiría la
+ * posibilidad de colisión de partidos del cuadro de simples con partidos del cuadro de dobles para un individuo dado.
+ * <p>
+ * Este último caso se puede manejar haciendo uso de métodos como {@link Event#addTeam(Team)} para añadir un equipo
+ * de jugadores que se conoce de antemano. Si no se conoce la composición de ningún equipo, pero aún así se quiere
+ * dotar de carácter de por equipos al evento, se ha de hacer uso del método {@link Event#setPlayersPerTeam(int)} e
+ * indicar el número de jugadores que compondrá cada equipo. Esto hará que se considere el evento como un evento por
+ * equipos. También es importante recordar que se debe indicar el total de jugadores que compondrán cada partido
+ * mediante {@link Event#setPlayersPerMatch(int)} (o mediante el constructor), que es diferente del número de
+ * jugadores por equipo, pero ambos valores deben ser coherentes (es decir, en un evento de, por ejemplo, 10
+ * jugadores por partido, no pueden existir equipos de 3 jugadores; este último debe ser divisor del primero).
+ * <p>
+ * Sobre un evento se puede configurar la posibilidad de que determinados jugadores no se encuentren disponibles a
+ * ciertas horas de juego determinadas, o que simplemente no se desee que los partidos de estos jugadores se planeen
+ * para estas horas. Haciendo uso de métodos como {@link Event#setUnavailablePlayers(Map)} o
+ * {@link Event#addUnavailablePlayerAtTimeslot(Player, Timeslot)} se puede indicar cuándo un jugador determinado no
+ * está disponible, por lo tanto, no tendrá un partido a esa hora.
+ * <p>
+ * Un componente similar al anterior se trata la configuración de localizaciones de juego no disponibles. Al igual
+ * que la configuración de jugadores de juego no disponibles, se puede indicar para cada localización aquéllos
+ * <i>timeslots</i> en los que ningún partido de ningún jugador puede tener lugar. Se puede añadir una
+ * indisponibilidad de localización con {@link Event#setUnavailableLocalizations(Map)},
+ * {@link Event#addUnavailableLocalizationAtTimeslot(Localization, Timeslot)} y métodos relacionados.
+ * <p>
+ * Es posible definir de antemano un enfrentamiento que obligatoriamente deberá ocurrir en el evento. Un
+ * enfrentamiento es modelado por {@link Matchup} (para más información léase la documentación de esta clase). Se
+ * puede añadir un emparejamiento predefinido con {@link Event#addMatchup(Matchup)} y métodos relacionados. Los
+ * enfrentamientos que se registren ocurrirán obligatoriamente entre los jugadores que indiquen, u en cualquiera de las
+ * localizaciones y de las horas de juego que especifiquen.
+ * <p>
+ * De entre todas las localizaciones disponibles que define el evento, es posible restringir el conjunto de ellas
+ * para un jugador en particular de modo que sus partidos obligatoriamente tengan lugar en las localizaciones que les
+ * han sido asociadas. Para configurar esta opción se usan los métodos {@link Event#setPlayersInLocalizations(Map)} o
+ * {@link Event#addPlayerInLocalization(Player, Localization)}. Así, por ejemplo, si se tuviese un total de cinco
+ * localizaciones para el evento, si al "Jugador 1" se le asignase la localización "Pista 2", sus partidos únicamente
+ * podrán tener lugar en esa "Pista 2", pero en ninguna de las demás.
+ * <p>
+ * De forma similar a la opción anterior, se puede asignar a un jugador los <i>timeslots</i> en los que sus partidos
+ * deben comenzar de entre todos los <i>timeslots</i> del espacio temporal del evento. Se usan los métodos
+ * {@link Event#setPlayersAtTimeslots(Map)}, {@link Event#addPlayerAtTimeslot(Player, Timeslot)} y relacionados.
+ * <p>
+ * Se da una situación especial que involucra a los emparejamientos predeterminados y a las localizaciones y horas de
+ * juego asignadas a jugadores. Esta situación únicamente se da en eventos con más de un partido por jugador. Si se
+ * añade un emparejamiento predefinido, se consultan las localizaciones y horas asignadas a cada jugador que conforma
+ * este emparejamiento. Para cada jugador, si a éste no se le ha asignado ninguna localización donde sus partidos
+ * deban tener lugar (es decir, que <code>event.getPlayersInLocalizations().get(player)</code> no existe, es
+ * <code>null</code>), automáticamente se le asignarán todas las localizaciones del evento. Esto no quiere decir que
+ * el enfrentamiento predeterminado que se vaya a añadir no vaya a suceder en el subconjunto de localizaciones que
+ * indique; el comportamiento será el esperado. La misma lógica se aplica para los <i>timeslots</i> asginados a un
+ * jugador. Sin embargo, si el jugador sí tenía localizaciones de juego asignadas (u horas de juego, se emplea la
+ * misma mecánica), no se asignarán automáticamente todas las del evento, sino que a las que tenía asignadas se le
+ * sumarán las del enfrentamiento.
  */
 public class Event implements Validable {
     /**
@@ -231,11 +375,12 @@ public class Event implements Validable {
         if (new HashSet<>(timeslots).size() < timeslots.size())
             throw new IllegalArgumentException("Timeslots cannot contain duplicates");
 
-        Collections.sort(timeslots, Collections.reverseOrder());
+        timeslots.sort(Collections.reverseOrder());
 
-        for (int i = 0; i < timeslots.size() - 1; i++)
-            if (timeslots.get(i).compareTo(timeslots.get(i + 1)) == 0)
-                throw new IllegalArgumentException("Every timeslot must strictly precede the following");
+        // La ordenación anterior no garantiza que haya timeslots con el mismo orden; de este modo esto se puede
+        // controlar porque en un TreeSet no habrá más de un elemento con el mismo orden
+        if (new TreeSet<>(timeslots).size() != timeslots.size())
+            throw new IllegalArgumentException("Every timeslot must strictly precede the following");
 
         this.name = name;
         this.players = players;

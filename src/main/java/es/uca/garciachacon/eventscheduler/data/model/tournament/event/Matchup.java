@@ -10,20 +10,21 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * <p>Representa un enfrentamiento y define cuatro componentes: al menos dos jugadores que compondrán el
+ * Representa un enfrentamiento y define cuatro componentes: al menos dos jugadores que compondrán el
  * enfrentamiento (un partido), una lista de posibles localizaciones de juego donde tendrá lugar el enfrentamiento,
  * una lista de horas de juego o <i>timeslots</i> donde comenzará el enfrentamiento y el número de ocurrencias que
  * habrá de tener. El número de ocurrencias únicamente será relevante en eventos que definan un modo de
  * enfrentamiento personalizado ({@link es.uca.garciachacon.eventscheduler.solver.TournamentSolver.MatchupMode#CUSTOM
- * })</p>
- * <p>Nótese que las horas de juego indicadas especifican los posibles comienzos de enfrentamientos, al contrario
+ * }), de lo contrario, este valor será absolutamente ignorado y no tendrá consecuencias en el cálculo de los horarios.
+ * <p>
+ * Nótese que las horas de juego indicadas especifican los posibles comienzos de enfrentamientos, al contrario
  * que la propiedad de un evento que asigna horas de juego a los jugadores, donde se especifica el conjunto de horas
  * donde sus enfrentamientos deben transcurrir, es decir, considerando <i>timeslots</i> intermedios o finales.
- * </p>
- * <p>Los enfrentamientos se publicarán sobre el <i>solver</i> del torneo para aplicar las debidas restricciones que
+ * <p>
+ * Los enfrentamientos se publicarán sobre el <i>solver</i> del torneo para aplicar las debidas restricciones que
  * aseguren que en el horario se refleje efectivamente el enfrentamiento definido entre los jugadores especificados,
  * en una de las localizaciones especificadas, en un determinado rango de las horas especificadas y con el número de
- * ocurrencias especificado. </p>
+ * ocurrencias especificado.
  */
 public class Matchup {
 
@@ -81,7 +82,7 @@ public class Matchup {
      *                                  jugar
      */
     public Matchup(Event event, Set<Player> players, Set<Localization> localizations, Set<Timeslot> timeslots,
-            int occurrences) throws IllegalArgumentException {
+                   int occurrences) throws IllegalArgumentException {
         if (event == null)
             throw new IllegalArgumentException("Event cannot be null");
 
