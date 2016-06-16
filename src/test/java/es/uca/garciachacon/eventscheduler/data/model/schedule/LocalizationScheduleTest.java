@@ -88,9 +88,8 @@ public class LocalizationScheduleTest {
 
         try {
             new LocalizationSchedule((Event) null);
-            fail("IllegalArgumentException expected");
-        } catch (IllegalArgumentException e) {
-            assertEquals("Event cannot be null", e.getMessage());
+            fail("NullPointerException expected");
+        } catch (NullPointerException e) {
         }
     }
 
@@ -113,9 +112,8 @@ public class LocalizationScheduleTest {
 
         try {
             new LocalizationSchedule((Tournament) null);
-            fail("IllegalArgumentException expected");
-        } catch (IllegalArgumentException e) {
-            assertEquals("Tournament cannot be null", e.getMessage());
+            fail("NullPointerException expected");
+        } catch (NullPointerException e) {
         }
     }
 
@@ -248,9 +246,8 @@ public class LocalizationScheduleTest {
 
         try {
             new LocalizationScheduleValueOccupied(null);
-            fail("IllegalArgumentException expected");
-        } catch (IllegalArgumentException e) {
-            assertEquals(e.getMessage(), "Players indices cannot be null");
+            fail("NullPointerException expected");
+        } catch (NullPointerException e) {
         }
 
         try {

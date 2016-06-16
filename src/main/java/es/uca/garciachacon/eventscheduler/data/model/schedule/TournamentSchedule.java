@@ -11,6 +11,7 @@ import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Tim
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -28,8 +29,7 @@ public class TournamentSchedule extends Schedule {
      * @param tournament torneo al que pertenece el horario que se va a construir
      */
     public TournamentSchedule(Tournament tournament) {
-        if (tournament == null)
-            throw new IllegalArgumentException("Tournament cannot be null");
+        Objects.requireNonNull(tournament);
 
         this.tournament = tournament;
 

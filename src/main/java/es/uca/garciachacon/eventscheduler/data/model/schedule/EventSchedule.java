@@ -10,6 +10,7 @@ import es.uca.garciachacon.eventscheduler.solver.TournamentSolver;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -34,8 +35,8 @@ public class EventSchedule extends Schedule {
      *              {@link TournamentSolver}
      */
     public EventSchedule(Event event, int[][][] x) {
-        if (event == null || x == null)
-            throw new IllegalArgumentException("Parameters cannot be null");
+        Objects.requireNonNull(event);
+        Objects.requireNonNull(x);
 
         this.event = event;
 

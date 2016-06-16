@@ -57,40 +57,49 @@ import java.util.stream.Collectors;
  */
 @JsonDeserialize(using = TournamentDeserializer.class)
 public class Tournament implements Validable {
+
     /**
      * Categorías que componen el torneo
      */
     private final List<Event> events;
+
     /**
      * Todos los jugadores que participan en el torneo. No se repiten los presentes en múltiples categorías
      */
     private final List<Player> allPlayers;
+
     /**
      * Todos los terrenos de juego en los que se desarrolla en el torneo. No se repiten los presentes en múltiples
      * categorías
      */
     private final List<Localization> allLocalizations;
+
     /**
      * Todos los timeslots en los que discurre el torneo. No se repiten los presentes en múltiples categorías
      */
     private final List<Timeslot> allTimeslots;
+
     /**
      * El solver que obtendrá los horarios de cada categoría el torneo
      */
     @JsonIgnore
     private final TournamentSolver solver;
+
     /**
      * Nombre del torneo
      */
     private String name;
+
     /**
      * Horarios para cada categoría
      */
     private Map<Event, EventSchedule> currentSchedules;
+
     /**
      * Horario del torneo que combina los horarios de todas las categorías en uno solo
      */
     private TournamentSchedule schedule;
+
     /**
      * Validador del torneo
      */
@@ -106,8 +115,8 @@ public class Tournament implements Validable {
      *                                  está vacía
      */
     public Tournament(String name, List<Event> categories) {
-        if (name == null || categories == null)
-            throw new IllegalArgumentException("The parameters cannot be null");
+        Objects.requireNonNull(name);
+        Objects.requireNonNull(categories);
 
         if (categories.isEmpty())
             throw new IllegalArgumentException("The list of categories cannot be empty");
@@ -206,8 +215,7 @@ public class Tournament implements Validable {
      * @throws IllegalArgumentException si el nombre es <code>null</code>
      */
     public void setName(String name) {
-        if (name == null)
-            throw new IllegalArgumentException("Name cannot be null");
+        Objects.requireNonNull(name);
 
         this.name = name;
     }
@@ -270,7 +278,6 @@ public class Tournament implements Validable {
         return solver;
     }
 
-    @SuppressWarnings("unchecked")
     public <T> void setValidator(Validator<T> validator) {
         if (validator == null)
             throw new IllegalArgumentException("The parameter cannot be null");
@@ -306,14 +313,11 @@ public class Tournament implements Validable {
      * @param timeslot culquier hora
      */
     public void addUnavailablePlayerAtTimeslot(Player player, Timeslot timeslot) {
-        if (player == null || timeslot == null)
-            throw new IllegalArgumentException("The parameters cannot be null");
+        Objects.requireNonNull(player);
+        Objects.requireNonNull(timeslot);
 
         events.stream()
-                .filter(event -> event.getPlayers().contains(player) && event.getTimeslots().contains(timeslot) &&
-                        (!event.getUnavailablePlayers().containsKey(player) ||
-                                !event.getUnavailablePlayers().get(player).contains(timeslot)
-                        ))
+                .filter(event -> event.getPlayers().contains(player) && event.getTimeslots().contains(timeslot))
                 .forEach(event -> event.addUnavailablePlayerAtTimeslot(player, timeslot));
     }
 
@@ -326,11 +330,10 @@ public class Tournament implements Validable {
      * @param timeslots cualquier conjunto no nulo de horas en las que el jugador no esté disponible
      */
     public void addUnavailablePlayerAtTimeslots(Player player, Set<Timeslot> timeslots) {
-        if (player == null || timeslots == null)
-            throw new IllegalArgumentException("The parameters cannot be null");
+        Objects.requireNonNull(player);
+        Objects.requireNonNull(timeslots);
 
-        for (Timeslot timeslot : timeslots)
-            addUnavailablePlayerAtTimeslot(player, timeslot);
+        timeslots.forEach(t -> addUnavailablePlayerAtTimeslot(player, t));
     }
 
     /**
@@ -346,17 +349,17 @@ public class Tournament implements Validable {
     public void addUnavailablePlayerAtTimeslotRange(Player player, Timeslot t1, Timeslot t2) {
         if (!allPlayers.contains(player))
             throw new IllegalArgumentException(String.format(
-                    "Player (%s) does not exist in the list of players of " + "the tournament",
+                    "Player (%s) does not exist in the list of players of the tournament",
                     player
             ));
 
         if (!allTimeslots.contains(t1))
             throw new IllegalArgumentException(String.format("Timeslots (%s) does not exist in the list of timeslots " +
-                    "" + " of the tournament", t1));
+                    "of the tournament", t1));
 
         if (!allTimeslots.contains(t2))
             throw new IllegalArgumentException(String.format("Timeslots (%s) does not exist in the list of timeslots " +
-                    "" + "of the tournament", t2));
+                    " of the tournament", t2));
 
         Timeslot start, end;
         if (t1.compareTo(t2) >= 0) {
@@ -381,9 +384,6 @@ public class Tournament implements Validable {
      * @param timeslot cualquier hora
      */
     public void removeUnavailablePlayerAtTimeslot(Player player, Timeslot timeslot) {
-        if (player == null || timeslot == null)
-            throw new IllegalArgumentException("The parameters cannot be null");
-
         events.stream()
                 .filter(event -> event.getPlayers().contains(player) && event.getTimeslots().contains(timeslot))
                 .forEach(event -> event.removeUnavailablePlayerAtTimeslot(player, timeslot));
@@ -396,8 +396,7 @@ public class Tournament implements Validable {
      * @param timeslotBreak una hora cualquiera
      */
     public void addBreak(Timeslot timeslotBreak) {
-        if (timeslotBreak == null)
-            throw new IllegalArgumentException("Break cannot be null");
+        Objects.requireNonNull(timeslotBreak);
 
         events.stream()
                 .filter(event -> event.getTimeslots().contains(timeslotBreak) && !event.isBreak(timeslotBreak))
@@ -413,8 +412,7 @@ public class Tournament implements Validable {
      * @param timeslotBreaks una conjunto de horas que indican un período de descanso o break
      */
     public void addBreaks(Set<Timeslot> timeslotBreaks) {
-        if (timeslotBreaks == null)
-            throw new IllegalArgumentException("Breaks cannot be null");
+        Objects.requireNonNull(timeslotBreaks);
 
         for (Timeslot timeslot : timeslotBreaks)
             events.stream()
@@ -429,9 +427,6 @@ public class Tournament implements Validable {
      * @param timeslot una hora cualquiera que se marca como break
      */
     public void removeBreak(Timeslot timeslot) {
-        if (timeslot == null)
-            throw new IllegalArgumentException("Timeslot cannot be null");
-
         events.stream()
                 .filter(event -> event.getTimeslots().contains(timeslot) && event.isBreak(timeslot))
                 .forEach(event -> event.removeBreak(timeslot));
@@ -446,8 +441,8 @@ public class Tournament implements Validable {
      * @param timeslot     hora a la que invalidar
      */
     public void addUnavailableLocalizationAtTimeslot(Localization localization, Timeslot timeslot) {
-        if (localization == null || timeslot == null)
-            throw new IllegalArgumentException("The parameters cannot be null");
+        Objects.requireNonNull(localization);
+        Objects.requireNonNull(timeslot);
 
         events.stream().filter(event -> event.getLocalizations().contains(localization) &&
                 event.getTimeslots().contains(timeslot) &&
@@ -464,11 +459,10 @@ public class Tournament implements Validable {
      * @param timeslots    el conjunto de horas a las que se marca la pista inválida
      */
     public void addUnavailableLocalizationAtTimeslots(Localization localization, Set<Timeslot> timeslots) {
-        if (localization == null || timeslots == null)
-            throw new IllegalArgumentException("The parameters cannot be null");
+        Objects.requireNonNull(localization);
+        Objects.requireNonNull(timeslots);
 
-        for (Timeslot timeslot : timeslots)
-            addUnavailableLocalizationAtTimeslot(localization, timeslot);
+        timeslots.forEach(t -> addUnavailableLocalizationAtTimeslot(localization, t));
     }
 
     /**
@@ -515,9 +509,6 @@ public class Tournament implements Validable {
      * @param localization localización que vuelve a estar disponible para todas las horas
      */
     public void removeUnavailableLocalization(Localization localization) {
-        if (localization == null)
-            throw new IllegalArgumentException("Localization cannot be null");
-
         events.stream()
                 .filter(event -> event.getLocalizations().contains(localization))
                 .forEach(event -> event.removeUnavailableLocalization(localization));
@@ -533,9 +524,6 @@ public class Tournament implements Validable {
      * @param timeslot     hora que se va a marcar nuevamente como disponible una localización
      */
     public void removeUnavailableLocalizationAtTimeslot(Localization localization, Timeslot timeslot) {
-        if (localization == null || timeslot == null)
-            throw new IllegalArgumentException("The parameters cannot be null");
-
         events.stream()
                 .filter(event -> event.getLocalizations().contains(localization) &&
                         event.getTimeslots().contains(timeslot))

@@ -4,6 +4,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Representa un valor de horario agrupado por localizaciones ocupado, donde en una localización concreta a una hora
@@ -20,8 +21,7 @@ public class LocalizationScheduleValueOccupied extends LocalizationScheduleValue
     public LocalizationScheduleValueOccupied(List<Integer> playersIndices) {
         super(OCCUPIED);
 
-        if (playersIndices == null)
-            throw new IllegalArgumentException("Players indices cannot be null");
+        Objects.requireNonNull(playersIndices);
 
         if (playersIndices.contains(null))
             throw new IllegalArgumentException("Player index cannot be null");

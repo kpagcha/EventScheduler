@@ -6,6 +6,7 @@ import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Pla
 import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Timeslot;
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -68,32 +69,26 @@ public class Matchup {
      * @param timeslots     conjunto de al menos un <i>timeslot</i>
      * @param occurrences   número de veces que el enfrentamiento tendrá lugar, el valor estará entre 1 y el número de
      *                      partidos por jugador que defina el evento (ver {@link Event#getMatchesPerPlayer()}
-     * @throws IllegalArgumentException si <code>event</code> es <code>null</code>
-     * @throws IllegalArgumentException si <code>players</code> es <code>null</code> o tiene un número de jugadoers
-     *                                  distinto del número de jugadores por partido que especifica el evento, o si
-     *                                  alguno de éstos es <code>null</code> o no pertenece al evento
-     * @throws IllegalArgumentException si <code>localizations</code> es <code>null</code> o está vacío, o si
-     *                                  alguna de las localizaciones es <code>null</code> o no pertenece al evento
-     * @throws IllegalArgumentException si <code>timeslots</code> es <code>null</code> o está vacío, o si alguno de
-     *                                  estos <i>timeslots</i> es <code>null</code> o no pertenece al evento
+     * @throws NullPointerException     si alguno de los argumentos es <code>null</code>
+     * @throws IllegalArgumentException si <code>players</code> tiene un número de jugadores distinto del número de
+     *                                  jugadores por partido que especifica el evento, o si alguno de éstos es
+     *                                  <code>null</code> o no pertenece al
+     *                                  evento
+     * @throws IllegalArgumentException si <code>localizations</code> o está vacío, o si alguna de las localizaciones
+     *                                  es <code>null</code> o no pertenece al evento
+     * @throws IllegalArgumentException si <code>timeslots</code> está vacío, o si alguno de estos <i>timeslots</i>
+     *                                  es <code>null</code> o no pertenece al evento
      * @throws IllegalArgumentException si <code>occurrences</code> es menor que 1 o mayor que el número de partidos
      *                                  por jugador que el evento define
-     * @throws IllegalArgumentException si se superase el número máximo de partidos que un jugar en particular pueda
+     * @throws IllegalStateException    si se superase el número máximo de partidos que un jugar en particular pueda
      *                                  jugar
      */
     public Matchup(Event event, Set<Player> players, Set<Localization> localizations, Set<Timeslot> timeslots,
-                   int occurrences) throws IllegalArgumentException {
-        if (event == null)
-            throw new IllegalArgumentException("Event cannot be null");
-
-        if (players == null)
-            throw new IllegalArgumentException("Players cannot be null");
-
-        if (localizations == null)
-            throw new IllegalArgumentException("Localizations cannot be null");
-
-        if (timeslots == null)
-            throw new IllegalArgumentException("Timeslots cannot be null");
+                   int occurrences) {
+        Objects.requireNonNull(event);
+        Objects.requireNonNull(players);
+        Objects.requireNonNull(localizations);
+        Objects.requireNonNull(timeslots);
 
         if (players.size() != event.getPlayersPerMatch())
             throw new IllegalArgumentException(String.format("Players cannot contain a number of players (%d) " +
@@ -137,7 +132,7 @@ public class Matchup {
                     .sum() + occurrences;
 
             if (resultingCount > event.getMatchesPerPlayer())
-                throw new IllegalArgumentException(String.format(
+                throw new IllegalStateException(String.format(
                         "Player's (%s) number of predefined matchups (%d) would exceed the limit (%d)",
                         player,
                         resultingCount,

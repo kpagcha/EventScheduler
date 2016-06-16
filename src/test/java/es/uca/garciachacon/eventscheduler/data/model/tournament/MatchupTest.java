@@ -61,10 +61,8 @@ public class MatchupTest {
         assertEquals(1, matchup.getOccurrences());
     }
 
-    @Test
+    @Test(expected = NullPointerException.class)
     public void constructorNullEventTest() {
-        expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("Event cannot be null");
         new Matchup(null,
                 new HashSet<>(Arrays.asList(players.get(3), players.get(5))),
                 new HashSet<>(localizations),
@@ -73,17 +71,13 @@ public class MatchupTest {
         );
     }
 
-    @Test
+    @Test(expected = NullPointerException.class)
     public void constructorNullPlayersTest() {
-        expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("Players cannot be null");
         new Matchup(event, null, new HashSet<>(localizations), new HashSet<>(timeslots), 1);
     }
 
-    @Test
+    @Test(expected = NullPointerException.class)
     public void constructorNullLocalizationsTest() {
-        expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("Localizations cannot be null");
         new Matchup(event,
                 new HashSet<>(Arrays.asList(players.get(3), players.get(5))),
                 null,
@@ -92,10 +86,8 @@ public class MatchupTest {
         );
     }
 
-    @Test
+    @Test(expected = NullPointerException.class)
     public void constructorNullTimeslotsTest() {
-        expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("Timeslots cannot be null");
         new Matchup(event, new HashSet<>(players), new HashSet<>(localizations), null, 1);
     }
 
@@ -225,7 +217,7 @@ public class MatchupTest {
                 1
         ));
 
-        expectedEx.expect(IllegalArgumentException.class);
+        expectedEx.expect(IllegalStateException.class);
         expectedEx.expectMessage("number of predefined matchups (2) would exceed the limit (1)");
         new Matchup(event,
                 new HashSet<>(Arrays.asList(players.get(3), players.get(2))),

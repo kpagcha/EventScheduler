@@ -118,7 +118,7 @@ public class TournamentTest {
         assertEquals(24, tournament.getAllPlayers().size());
     }
 
-    @Test
+    @Test(expected = NullPointerException.class)
     public void constructorNullNameTest() {
         Event event = new Event("Event",
                 TournamentUtils.buildGenericPlayers(16, "Player"),
@@ -126,15 +126,11 @@ public class TournamentTest {
                 TournamentUtils.buildSimpleTimeslots(10)
         );
 
-        expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("parameters cannot be null");
         new Tournament(null, event);
     }
 
-    @Test
+    @Test(expected = NullPointerException.class)
     public void constructorNullEventsTest() {
-        expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("parameters cannot be null");
         new Tournament("Tournament", (List<Event>) null);
     }
 
@@ -152,7 +148,7 @@ public class TournamentTest {
         new Tournament("Tournament", Collections.singletonList(null));
     }
 
-    @Test
+    @Test(expected = NullPointerException.class)
     public void setNameTest() {
         Event event = new Event("Event",
                 TournamentUtils.buildGenericPlayers(16, "Player"),
@@ -166,8 +162,6 @@ public class TournamentTest {
 
         assertEquals("Modified Tournament", tournament.getName());
 
-        expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("Name cannot be null");
         tournament.setName(null);
     }
 
@@ -390,30 +384,26 @@ public class TournamentTest {
 
         try {
             t.addUnavailablePlayerAtTimeslot(null, timeslots.get(1));
-            fail("IllegalArgumentException expected");
-        } catch (IllegalArgumentException e) {
-            assertEquals("The parameters cannot be null", e.getMessage());
+            fail("NullPointerException expected");
+        } catch (NullPointerException e) {
         }
 
         try {
             t.addUnavailablePlayerAtTimeslot(players.get(3), null);
-            fail("IllegalArgumentException expected");
-        } catch (IllegalArgumentException e) {
-            assertEquals("The parameters cannot be null", e.getMessage());
+            fail("NullPointerException expected");
+        } catch (NullPointerException e) {
         }
 
         try {
             t.addUnavailablePlayerAtTimeslots(null, new HashSet<>(Collections.singletonList(timeslots.get(1))));
-            fail("IllegalArgumentException expected");
-        } catch (IllegalArgumentException e) {
-            assertEquals("The parameters cannot be null", e.getMessage());
+            fail("NullPointerException expected");
+        } catch (NullPointerException e) {
         }
 
         try {
             t.addUnavailablePlayerAtTimeslots(players.get(15), null);
-            fail("IllegalArgumentException expected");
-        } catch (IllegalArgumentException e) {
-            assertEquals("The parameters cannot be null", e.getMessage());
+            fail("NullPointerException expected");
+        } catch (NullPointerException e) {
         }
 
         t.addUnavailablePlayerAtTimeslot(player2, timeslot7);
@@ -427,20 +417,6 @@ public class TournamentTest {
 
         t.removeUnavailablePlayerAtTimeslot(player2, timeslot7);
         assertNull(e1.getUnavailablePlayers().get(player2));
-
-        try {
-            t.removeUnavailablePlayerAtTimeslot(null, timeslots.get(3));
-            fail("IllegalArgumentException expected");
-        } catch (IllegalArgumentException e) {
-            assertEquals("The parameters cannot be null", e.getMessage());
-        }
-
-        try {
-            t.removeUnavailablePlayerAtTimeslot(players.get(3), null);
-            fail("IllegalArgumentException expected");
-        } catch (IllegalArgumentException e) {
-            assertEquals("The parameters cannot be null", e.getMessage());
-        }
 
         t.addUnavailablePlayerAtTimeslotRange(player2, timeslots.get(3), timeslots.get(6));
         assertEquals(4, e1.getUnavailablePlayers().get(player2).size());
@@ -527,23 +503,14 @@ public class TournamentTest {
 
         try {
             t.addBreaks(null);
-            fail("IllegalArgumentException expected");
-        } catch (IllegalArgumentException e) {
-            assertEquals("Breaks cannot be null", e.getMessage());
+            fail("NullPointerException expected");
+        } catch (NullPointerException e) {
         }
 
         try {
             t.addBreak(null);
-            fail("IllegalArgumentException expected");
-        } catch (IllegalArgumentException e) {
-            assertEquals("Break cannot be null", e.getMessage());
-        }
-
-        try {
-            t.removeBreak(null);
-            fail("IllegalArgumentException expected");
-        } catch (IllegalArgumentException e) {
-            assertEquals("Timeslot cannot be null", e.getMessage());
+            fail("NullPointerException expected");
+        } catch (NullPointerException e) {
         }
     }
 
@@ -608,53 +575,28 @@ public class TournamentTest {
 
         try {
             t.addUnavailableLocalizationAtTimeslot(null, timeslots.get(0));
-            fail("IllegalArgumentException expected");
-        } catch (IllegalArgumentException e) {
-            assertEquals("The parameters cannot be null", e.getMessage());
+            fail("NullPointerException expected");
+        } catch (NullPointerException e) {
         }
 
         try {
             t.addUnavailableLocalizationAtTimeslot(localizations.get(4), null);
-            fail("IllegalArgumentException expected");
-        } catch (IllegalArgumentException e) {
-            assertEquals("The parameters cannot be null", e.getMessage());
+            fail("NullPointerException expected");
+        } catch (NullPointerException e) {
         }
 
         try {
             t.addUnavailableLocalizationAtTimeslots(null,
                     new HashSet<>(Arrays.asList(timeslots.get(8), timeslots.get(11)))
             );
-            fail("IllegalArgumentException expected");
-        } catch (IllegalArgumentException e) {
-            assertEquals("The parameters cannot be null", e.getMessage());
+            fail("NullPointerException expected");
+        } catch (NullPointerException e) {
         }
 
         try {
             t.addUnavailableLocalizationAtTimeslots(localizations.get(4), null);
-            fail("IllegalArgumentException expected");
-        } catch (IllegalArgumentException e) {
-            assertEquals("The parameters cannot be null", e.getMessage());
-        }
-
-        try {
-            t.removeUnavailableLocalization(null);
-            fail("IllegalArgumentException expected");
-        } catch (IllegalArgumentException e) {
-            assertEquals("Localization cannot be null", e.getMessage());
-        }
-
-        try {
-            t.removeUnavailableLocalizationAtTimeslot(null, timeslots.get(3));
-            fail("IllegalArgumentException expected");
-        } catch (IllegalArgumentException e) {
-            assertEquals("The parameters cannot be null", e.getMessage());
-        }
-
-        try {
-            t.removeUnavailableLocalizationAtTimeslot(localizations.get(4), null);
-            fail("IllegalArgumentException expected");
-        } catch (IllegalArgumentException e) {
-            assertEquals("The parameters cannot be null", e.getMessage());
+            fail("NullPointerException expected");
+        } catch (NullPointerException e) {
         }
 
         try {

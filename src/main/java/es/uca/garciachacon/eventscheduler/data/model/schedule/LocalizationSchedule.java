@@ -33,8 +33,7 @@ public class LocalizationSchedule extends Schedule {
      * @param event evento no nulo
      */
     public LocalizationSchedule(Event event) {
-        if (event == null)
-            throw new IllegalArgumentException("Event cannot be null");
+        Objects.requireNonNull(event);
 
         name = event.getName();
         players = event.getPlayers();
@@ -91,8 +90,7 @@ public class LocalizationSchedule extends Schedule {
      *                                  todos, es decir, que el horario sea <code>null</code>
      */
     public LocalizationSchedule(Tournament tournament) {
-        if (tournament == null)
-            throw new IllegalArgumentException("Tournament cannot be null");
+        Objects.requireNonNull(tournament);
 
         if (tournament.getSchedule() == null)
             throw new IllegalStateException("Tournament schedule not calculated");

@@ -139,17 +139,15 @@ public class MatchTest {
         assertEquals(2, match.getTeams().size());
     }
 
-    @Test
+    @Test(expected = NullPointerException.class)
     public void setTeamsNullTest() {
-        expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("Teams cannot be null");
         match.setTeams(null);
     }
 
     @Test
     public void setTeamEmtpyTest() {
         expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("List of teams cannot be empty");
+        expectedEx.expectMessage("Teams cannot be empty");
         match.setTeams(new ArrayList<>());
     }
 

@@ -149,7 +149,7 @@ import java.util.stream.Collectors;
  * está disponible, por lo tanto, no tendrá un partido a esa hora.
  * <p>
  * Un componente similar al anterior se trata la configuración de localizaciones de juego no disponibles. Al igual
- * que la configuración de jugadores de juego no disponibles, se puede indicar para cada localización aquéllos
+ * que la configuración de jugadores de juego no disponibles, se puede indicar para cada localización aquellos
  * <i>timeslots</i> en los que ningún partido de ningún jugador puede tener lugar. Se puede añadir una
  * indisponibilidad de localización con {@link Event#setUnavailableLocalizations(Map)},
  * {@link Event#addUnavailableLocalizationAtTimeslot(Localization, Timeslot)} y métodos relacionados.
@@ -157,7 +157,7 @@ import java.util.stream.Collectors;
  * Es posible definir de antemano un enfrentamiento que obligatoriamente deberá ocurrir en el evento. Un
  * enfrentamiento es modelado por {@link Matchup} (para más información léase la documentación de esta clase). Se
  * puede añadir un emparejamiento predefinido con {@link Event#addMatchup(Matchup)} y métodos relacionados. Los
- * enfrentamientos que se registren ocurrirán obligatoriamente entre los jugadores que indiquen, u en cualquiera de las
+ * enfrentamientos que se registren ocurrirán obligatoriamente entre los jugadores que indiquen, y en cualquiera de las
  * localizaciones y de las horas de juego que especifiquen.
  * <p>
  * De entre todas las localizaciones disponibles que define el evento, es posible restringir el conjunto de ellas

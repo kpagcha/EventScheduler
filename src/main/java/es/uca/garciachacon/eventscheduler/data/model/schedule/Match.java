@@ -6,9 +6,7 @@ import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Tea
 import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Timeslot;
 import org.apache.commons.lang3.StringUtils;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 /**
  * Representa un partido o enfrentamiento. Un partido normalmente se compone de dos o más jugadores que se enfrentan
@@ -123,19 +121,16 @@ public class Match {
      *                                  equipo están contenidos en la lista de jugadores del partido
      */
     public void setTeams(List<Team> teams) {
-        if (teams == null)
-            throw new IllegalArgumentException("Teams cannot be null");
+        Objects.requireNonNull(teams);
 
         if (teams.isEmpty())
-            throw new IllegalArgumentException("List of teams cannot be empty");
+            throw new IllegalArgumentException("Teams cannot be empty");
 
         if (teams.contains(null))
             throw new IllegalArgumentException("Teams cannot contain a null team");
 
-        for (int i = 0; i < teams.size() - 1; i++)
-            for (int j = i + 1; j < teams.size(); j++)
-                if (teams.get(i) == teams.get(j))
-                    throw new IllegalArgumentException("Teams cannot be duplicated");
+        if (new HashSet<>(teams).size() != teams.size())
+            throw new IllegalArgumentException("Teams cannot be duplicated");
 
         int nPlayersPerTeam = teams.get(0).getPlayers().size();
         for (int i = 1; i < teams.size(); i++)

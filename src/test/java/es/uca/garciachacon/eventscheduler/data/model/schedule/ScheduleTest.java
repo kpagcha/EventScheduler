@@ -102,20 +102,18 @@ public class ScheduleTest {
 
         try {
             new EventSchedule(null, new int[][][]{});
-            fail("IllegalArgumentException expected");
-        } catch (IllegalArgumentException e) {
-            assertEquals("Parameters cannot be null", e.getMessage());
+            fail("NullPointerException expected");
+        } catch (NullPointerException e) {
         }
 
         try {
             new EventSchedule(tournament.getEvents().get(0), null);
-            fail("IllegalArgumentException expected");
-        } catch (IllegalArgumentException e) {
-            assertEquals("Parameters cannot be null", e.getMessage());
+            fail("NullPointerException expected");
+        } catch (NullPointerException e) {
         }
     }
 
-    @Test
+    @Test(expected = NullPointerException.class)
     public void tournamentScheduleTest() throws ValidationException {
         assertNull(tournament.getCurrentSchedules());
 
@@ -159,12 +157,7 @@ public class ScheduleTest {
         assertNotNull(schedule);
         assertEquals(tournament.getNumberOfMatches(), schedule.getMatches().size());
 
-        try {
-            new TournamentSchedule(null);
-            fail("IllegalArgumentException expected");
-        } catch (IllegalArgumentException e) {
-            assertEquals("Tournament cannot be null", e.getMessage());
-        }
+        new TournamentSchedule(null);
     }
 
     @Test
