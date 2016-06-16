@@ -140,7 +140,10 @@ import java.util.stream.Collectors;
  * equipos. También es importante recordar que se debe indicar el total de jugadores que compondrán cada partido
  * mediante {@link Event#setPlayersPerMatch(int)} (o mediante el constructor), que es diferente del número de
  * jugadores por equipo, pero ambos valores deben ser coherentes (es decir, en un evento de, por ejemplo, 10
- * jugadores por partido, no pueden existir equipos de 3 jugadores; este último debe ser divisor del primero).
+ * jugadores por partido, no pueden existir equipos de 3 jugadores; este último debe ser divisor del primero). Los
+ * jugadores de un equipo predefinido jugarán juntos todos los partidos en los que participen, sin embargo, los demás
+ * equipos desconocidos que se formen durante el cálculo del horario, variarián (y esto será lo más probable)
+ * dependiendo del partido. Para que la composición de los equipos sea fija es necesario definirlos previamente.
  * <p>
  * Sobre un evento se puede configurar la posibilidad de que determinados jugadores no se encuentren disponibles a
  * ciertas horas de juego determinadas, o que simplemente no se desee que los partidos de estos jugadores se planeen
@@ -329,7 +332,7 @@ public class Event implements Validable {
      *                                  compararlos son iguales
      */
     public Event(String name, List<Player> players, List<Localization> localizations, List<Timeslot> timeslots,
-                 int matchesPerPlayer, int timeslotsPerMatch, int playersPerMatch) {
+            int matchesPerPlayer, int timeslotsPerMatch, int playersPerMatch) {
         Objects.requireNonNull(name);
         Objects.requireNonNull(players);
         Objects.requireNonNull(localizations);
@@ -345,8 +348,11 @@ public class Event implements Validable {
             throw new IllegalArgumentException("Number of players per match cannot be less than 1");
 
         if (players.size() % playersPerMatch != 0)
-            throw new IllegalArgumentException(String.format("Number of players (%d) is not coherent to the number of" +
-                    " players per match (%d)", players.size(), playersPerMatch));
+            throw new IllegalArgumentException(String.format(
+                    "Number of players (%d) is not coherent to the number of" + " players per match (%d)",
+                    players.size(),
+                    playersPerMatch
+            ));
 
         if (new HashSet<>(players).size() < players.size())
             throw new IllegalArgumentException("Players cannot contain duplicates");
@@ -509,14 +515,23 @@ public class Event implements Validable {
      * @throws IllegalArgumentException si el número de jugadores por partido es menor que 1
      * @throws IllegalArgumentException si el número de jugadores por partido no es coherente con el número de
      *                                  jugadores que el evento tiene (es decir, debe ser divisor de este valor)
+     * @throws IllegalArgumentException si el número de jugadores por partido no es coherente con el número de
+     *                                  jugadores por equipo que el evento define (si es un evento por equipos, es
+     *                                  decir, éste es distinto de 0), o sea, debe ser múltiplo del mismo
      */
     public void setPlayersPerMatch(int playersPerMatch) {
         if (playersPerMatch < 1)
             throw new IllegalArgumentException("Number of players per match cannot be less than 1");
 
         if (players.size() % playersPerMatch != 0)
-            throw new IllegalArgumentException(String.format("Number of players per match is not coherent to the " +
-                    "number of players this event has (%d)", players.size()));
+            throw new IllegalArgumentException(String.format(
+                    "Number of players per match is not coherent to the " + "number of players this event has (%d)",
+                    players.size()
+            ));
+
+        if (nPlayersPerTeam != 0 && playersPerMatch % nPlayersPerTeam != 0)
+            throw new IllegalArgumentException(String.format("Number of players per match must be coherent to the " +
+                    "number of players per team in this event (must be multiple of %d)", nPlayersPerTeam));
 
         predefinedMatchups.clear();
         clearTeams();
@@ -555,12 +570,19 @@ public class Event implements Validable {
      *
      * @param playersPerTeam número de jugadores por equipo a definir sobre este evento, mayor o igual que 2
      * @throws IllegalArgumentException si <code>playersPerTeam</code> es menor que 2
+     * @throws IllegalArgumentException si el número de jugadores por equipo no es coherente con el número de
+     *                                  jugadores por partido eque el evento define, es decir, debe ser divisor de
+     *                                  este último
      */
     public void setPlayersPerTeam(int playersPerTeam) {
         if (playersPerTeam < 2)
             throw new IllegalArgumentException("Players per team cannot be less than 2");
 
         if (playersPerTeam != nPlayersPerTeam) {
+            if (nPlayersPerMatch % playersPerTeam != 0)
+                throw new IllegalArgumentException(String.format("Number of players per team must be coherent to the " +
+                        "number of players per match in this event (must be divisor of %d)", nPlayersPerMatch));
+
             nPlayersPerTeam = playersPerTeam;
             teams.clear();
         }
@@ -623,11 +645,9 @@ public class Event implements Validable {
 
         if (nPlayersPerTeam == 0) {
             if (nPlayersPerMatch % playersInTeam != 0)
-                throw new IllegalArgumentException(String.format(
-                        "The number of players in this team (%d) is not coherent to the number of players per match " +
-                                "in this event (must be a divisor of %d)",
-                        playersInTeam, nPlayersPerMatch
-                ));
+                throw new IllegalArgumentException(String.format("The number of players in this team (%d) is not " +
+                        "coherent to the number of players per match " +
+                        "in this event (must be a divisor of %d)", playersInTeam, nPlayersPerMatch));
 
             nPlayersPerTeam = playersInTeam;
 
@@ -1306,9 +1326,10 @@ public class Event implements Validable {
     public void setPlayersInLocalizations(Map<Player, Set<Localization>> playersInLocalizations) {
         Objects.requireNonNull(playersInLocalizations);
 
-        playersInLocalizations.forEach((player, localizations) ->
-                localizations.forEach(localization -> addPlayerInLocalization(player, localization))
-        );
+        playersInLocalizations.forEach((player, localizations) -> localizations.forEach(localization ->
+                addPlayerInLocalization(player,
+                localization
+        )));
     }
 
     /**

@@ -420,8 +420,9 @@ public class EventTest {
         assertTrue(event.hasTeams());
         assertEquals(1, event.getTeams().size());
 
-        event.setPlayersPerTeam(3);
-        assertEquals(3, event.getPlayersPerTeam());
+        event.setPlayersPerMatch(8);
+        event.setPlayersPerTeam(4);
+        assertEquals(4, event.getPlayersPerTeam());
         assertTrue(event.hasTeams());
         assertFalse(event.hasPredefinedTeams());
         assertEquals(0, event.getTeams().size());
@@ -432,6 +433,16 @@ public class EventTest {
         expectedEx.expect(IllegalArgumentException.class);
         expectedEx.expectMessage("Players per team cannot be less than 2");
         event.setPlayersPerTeam(1);
+    }
+
+    @Test
+    public void setPlayersPerTeamDivisorOfNumberOfPlayersPerMatchTest() {
+        event.setPlayersPerMatch(4);
+
+        expectedEx.expect(IllegalArgumentException.class);
+        expectedEx.expectMessage("Number of players per team must be coherent to the number of players per match in " +
+                "this event (must be divisor of 4)");
+        event.setPlayersPerTeam(3);
     }
 
     @Test
@@ -447,6 +458,17 @@ public class EventTest {
         expectedEx.expectMessage("Number of players per match is not coherent to the number of players this event has" +
                 " (8)");
         event.setPlayersPerMatch(3);
+    }
+
+    @Test
+    public void setPlayersPerMatchMultipleOfNumberOfPlayersPerTeamTest() {
+        event.setPlayersPerMatch(4);
+        event.setPlayersPerTeam(4);
+
+        expectedEx.expect(IllegalArgumentException.class);
+        expectedEx.expectMessage("Number of players per match must be coherent to the number of players per team in " +
+                "this event (must be multiple of 4)");
+        event.setPlayersPerMatch(2);
     }
 
     @Test
@@ -672,6 +694,7 @@ public class EventTest {
 
     @Test
     public void hasPredefinedTeamsTest() {
+        event.setPlayersPerMatch(4);
         event.setPlayersPerTeam(4);
         assertFalse(event.hasPredefinedTeams());
 

@@ -10,6 +10,7 @@ import es.uca.garciachacon.eventscheduler.data.model.tournament.event.Event;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.event.Matchup;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Localization;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Player;
+import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Team;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Timeslot;
 import es.uca.garciachacon.eventscheduler.data.validation.validable.ValidationException;
 import es.uca.garciachacon.eventscheduler.solver.TournamentSolver.MatchupMode;
@@ -284,6 +285,33 @@ public class TournamentSolverTest {
     @Test
     public void tournamentWithTeamsCaseTest() throws ValidationException {
         Event event = new Event("Event",
+                TournamentUtils.buildGenericPlayers(18, "Player"),
+                TournamentUtils.buildGenericLocalizations(1, "Court"),
+                TournamentUtils.buildSimpleTimeslots(6)
+        );
+        event.setPlayersPerMatch(6);
+        event.setPlayersPerTeam(3);
+
+        tournament = new Tournament("Tournament", event);
+
+        assertTrue(tournament.solve());
+
+        List<Match> matches = tournament.getSchedule().getMatches();
+
+        for (Match match : matches) {
+            List<Team> matchTeams = match.getTeams();
+
+            assertEquals(2, matchTeams.size());
+
+            for (Team team : matchTeams)
+                assertEquals(3, team.getPlayers().size());
+        }
+    }
+
+    @Test
+    public void tournamentWithPredefinedTeamsCaseTest() throws ValidationException {
+        Event event = new Event(
+                "Event",
                 TournamentUtils.buildGenericPlayers(8, "Player"),
                 TournamentUtils.buildGenericLocalizations(1, "Court"),
                 TournamentUtils.buildSimpleTimeslots(4),
@@ -735,7 +763,6 @@ public class TournamentSolverTest {
         assertTrue(tournament.solve());
 
         TournamentSchedule schedule = tournament.getSchedule();
-        System.out.println(schedule);
 
         List<Player> players = tournament.getAllPlayers();
         for (Player player : players)
@@ -829,6 +856,218 @@ public class TournamentSolverTest {
                     count++;
             assertTrue(count >= 1 && count <= 3);
         }
+    }
+
+    @Test
+    public void tournamentWithAllDifferentMatchupModeAndTeamsCaseTest() throws ValidationException {
+        List<Player> players = TournamentUtils.buildGenericPlayers(16, "Player");
+        Event event = new Event(
+                "Event",
+                players,
+                TournamentUtils.buildGenericLocalizations(2, "Court"),
+                TournamentUtils.buildSimpleTimeslots(8)
+        );
+        event.setMatchesPerPlayer(2);
+        event.setTimeslotsPerMatch(2);
+        event.setPlayersPerMatch(4);
+        event.setMatchupMode(MatchupMode.ALL_DIFFERENT);
+
+        event.addTeam(players.get(0), players.get(1));
+        event.addTeam(players.get(2), players.get(3));
+
+        tournament = new Tournament("Tournament", event);
+        tournament.getSolver().setSearchStrategy(SearchStrategy.MINDOM_UB);
+
+        assertTrue(tournament.solve());
+
+        TournamentSchedule schedule = tournament.getSchedule();
+
+        for (Player player : players)
+            assertEquals(2, schedule.filterMatchesByPlayer(player).size());
+
+        List<Match> matches = schedule.getMatches();
+        for (int i = 0; i < matches.size() - 1; i++)
+            for (int j = i + 1; j < matches.size(); j++)
+                assertFalse(matches.get(i).getPlayers().equals(matches.get(j).getPlayers()));
+
+        for (Match match : schedule.getMatches())
+            assertEquals(2, match.getTeams().size());
+
+        assertEquals(
+                2,
+                schedule.filterMatchesByPlayers(new ArrayList<>(Arrays.asList(players.get(0), players.get(1)))).size()
+        );
+        assertEquals(
+                2,
+                schedule.filterMatchesByPlayers(new ArrayList<>(Arrays.asList(players.get(2), players.get(3)))).size()
+        );
+    }
+
+    @Test
+    public void tournamentWithAllEqualMatchupModeAndTeamsCaseTest() throws ValidationException {
+        List<Player> players = TournamentUtils.buildGenericPlayers(16, "Player");
+        Event event = new Event(
+                "Event",
+                players,
+                TournamentUtils.buildGenericLocalizations(2, "Court"),
+                TournamentUtils.buildSimpleTimeslots(8)
+        );
+        event.setMatchesPerPlayer(2);
+        event.setTimeslotsPerMatch(2);
+        event.setPlayersPerMatch(4);
+        event.setMatchupMode(MatchupMode.ALL_EQUAL);
+
+        event.addTeam(players.get(0), players.get(1));
+        event.addTeam(players.get(2), players.get(3));
+        event.addTeam(players.get(10), players.get(13));
+
+        tournament = new Tournament("Tournament", event);
+        tournament.getSolver().setSearchStrategy(SearchStrategy.MINDOM_UB);
+
+        assertTrue(tournament.solve());
+
+        TournamentSchedule schedule = tournament.getSchedule();
+
+        for (Player player : players)
+            assertEquals(2, schedule.filterMatchesByPlayer(player).size());
+
+        List<Match> matches = schedule.getMatches();
+        for (int i = 0; i < matches.size(); i++) {
+            int count = 0;
+            for (int j = 0; j < matches.size(); j++)
+                if (matches.get(i).getPlayers().equals(matches.get(j).getPlayers()))
+                    count++;
+            assertEquals(2, count);
+        }
+
+        for (Match match : schedule.getMatches())
+            assertEquals(2, match.getTeams().size());
+
+        assertEquals(
+                2,
+                schedule.filterMatchesByPlayers(new ArrayList<>(Arrays.asList(players.get(0), players.get(1)))).size()
+        );
+        assertEquals(
+                2,
+                schedule.filterMatchesByPlayers(new ArrayList<>(Arrays.asList(players.get(2), players.get(3)))).size()
+        );
+        assertEquals(
+                2,
+                schedule.filterMatchesByPlayers(new ArrayList<>(Arrays.asList(players.get(10), players.get(13)))).size()
+        );
+    }
+
+    @Test
+    public void tournamentWithAnyMatchupModeAndTeamsCaseTest() throws ValidationException {
+        List<Player> players = TournamentUtils.buildGenericPlayers(16, "Player");
+        Event event = new Event(
+                "Event",
+                players,
+                TournamentUtils.buildGenericLocalizations(2, "Court"),
+                TournamentUtils.buildSimpleTimeslots(8)
+        );
+        event.setMatchesPerPlayer(2);
+        event.setTimeslotsPerMatch(2);
+        event.setPlayersPerMatch(4);
+        event.setMatchupMode(MatchupMode.ANY);
+
+        event.addTeam(players.get(0), players.get(1));
+        event.addTeam(players.get(2), players.get(3));
+        event.addTeam(players.get(6), players.get(9));
+
+        tournament = new Tournament("Tournament", event);
+        tournament.getSolver().setSearchStrategy(SearchStrategy.MINDOM_UB);
+
+        assertTrue(tournament.solve());
+
+        TournamentSchedule schedule = tournament.getSchedule();
+
+        for (Player player : players)
+            assertEquals(2, schedule.filterMatchesByPlayer(player).size());
+
+        List<Match> matches = schedule.getMatches();
+        for (int i = 0; i < matches.size(); i++) {
+            int count = 0;
+            for (int j = 0; j < matches.size(); j++)
+                if (matches.get(i).getPlayers().equals(matches.get(j).getPlayers()))
+                    count++;
+            assertTrue(count == 1 || count == 2);
+        }
+
+        for (Match match : schedule.getMatches())
+            assertEquals(2, match.getTeams().size());
+
+        assertEquals(
+                2,
+                schedule.filterMatchesByPlayers(new ArrayList<>(Arrays.asList(players.get(0), players.get(1)))).size()
+        );
+        assertEquals(
+                2,
+                schedule.filterMatchesByPlayers(new ArrayList<>(Arrays.asList(players.get(2), players.get(3)))).size()
+        );
+        assertEquals(
+                2,
+                schedule.filterMatchesByPlayers(new ArrayList<>(Arrays.asList(players.get(6), players.get(9)))).size()
+        );
+    }
+
+    @Test
+    public void tournamentWithCustomMatchupModeAndTeamsCaseTest() throws ValidationException {
+        List<Player> players = TournamentUtils.buildGenericPlayers(16, "Pl");
+        Event event = new Event(
+                "Event",
+                players,
+                TournamentUtils.buildGenericLocalizations(2, "Court"),
+                TournamentUtils.buildSimpleTimeslots(8)
+        );
+        event.setMatchesPerPlayer(2);
+        event.setTimeslotsPerMatch(2);
+        event.setPlayersPerMatch(4);
+        event.setMatchupMode(MatchupMode.CUSTOM);
+
+        Team team1 = new Team(players.get(0), players.get(1));
+        Team team2 = new Team(players.get(3), players.get(5));
+        Team team3 = new Team(players.get(7), players.get(11));
+        Team team4 = new Team(players.get(10), players.get(14));
+        event.addTeam(team1);
+        event.addTeam(team2);
+        event.addTeam(team3);
+        event.addTeam(team4);
+
+        Set<Player> matchup1Players =
+                Stream.concat(team1.getPlayers().stream(), team2.getPlayers().stream()).collect(Collectors.toSet());
+        event.addMatchup(new Matchup(
+                event,
+                matchup1Players,
+                new HashSet<>(event.getLocalizations()),
+                new HashSet<>(event.getTimeslots()),
+                1
+        ));
+        Set<Player> matchup2Players =
+                Stream.concat(team3.getPlayers().stream(), team4.getPlayers().stream()).collect(Collectors.toSet());
+        event.addMatchup(new Matchup(
+                event,
+                matchup2Players,
+                new HashSet<>(event.getLocalizations()),
+                new HashSet<>(event.getTimeslots()),
+                2
+        ));
+
+        tournament = new Tournament("Tournament", event);
+        tournament.getSolver().setSearchStrategy(SearchStrategy.MINDOM_UB);
+
+        assertTrue(tournament.solve());
+
+        TournamentSchedule schedule = tournament.getSchedule();
+
+        for (Player player : players)
+            assertEquals(2, schedule.filterMatchesByPlayer(player).size());
+
+        for (Match match : schedule.getMatches())
+            assertEquals(2, match.getTeams().size());
+
+        assertEquals(1, schedule.filterMatchesByPlayers(new ArrayList<>(matchup1Players)).size());
+        assertEquals(2, schedule.filterMatchesByPlayers(new ArrayList<>(matchup2Players)).size());
     }
 
     @Test

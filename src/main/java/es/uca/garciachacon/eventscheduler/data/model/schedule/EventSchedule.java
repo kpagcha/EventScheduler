@@ -3,15 +3,13 @@ package es.uca.garciachacon.eventscheduler.data.model.schedule;
 import es.uca.garciachacon.eventscheduler.data.model.schedule.value.PlayerScheduleValue;
 import es.uca.garciachacon.eventscheduler.data.model.schedule.value.PlayerScheduleValueOccupied;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.event.Event;
+import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Localization;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Player;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Team;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Timeslot;
 import es.uca.garciachacon.eventscheduler.solver.TournamentSolver;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
+import java.util.*;
 
 /**
  * Horario de un evento o categoría en particular.
@@ -110,60 +108,88 @@ public class EventSchedule extends Schedule {
         }
         matches = new ArrayList<>((players.size() / event.getPlayersPerMatch()) * event.getMatchesPerPlayer());
 
+
+        List<Player> players = event.getPlayers();
+        List<Localization> localizations = event.getLocalizations();
+        List<Timeslot> timeslots = event.getTimeslots();
         int nPlayersPerMatch = event.getPlayersPerMatch();
+
+        // Recorre cada columna (timeslot) del horario para averiguar qué partidos se juegan en ese momento
         for (int t = 0; t < timeslots.size(); t++) {
+
+            // Lista de control con los jugadores para los que ya se ha encontrado partido en este timeslot
             List<Integer> playersAlreadyMatched = new ArrayList<>();
 
-            for (int thisPlayer = 0; thisPlayer < players.size() - nPlayersPerMatch + 1; thisPlayer++) {
-                if (scheduleBeginnings[thisPlayer][t].isOccupied()) {
-                    List<Integer> playersBelongingToMatch = new ArrayList<>();
-                    playersBelongingToMatch.add(thisPlayer);
+            // Recorre cada fila (jugadores) (menos las del final) para ver si cada jugador juega o no juega
+            for (int thisPlayer = 0; thisPlayer < this.players.size() - nPlayersPerMatch + 1; thisPlayer++) {
 
-                    boolean matchCompleted = false;
+                // El jugador actual juega en este momento y no ha sido añadido ya a un partido
+                if (scheduleBeginnings[thisPlayer][t].isOccupied() && !playersAlreadyMatched.contains(thisPlayer)) {
 
-                    for (int otherPlayer = thisPlayer + 1; otherPlayer < players.size(); otherPlayer++) {
+                    // Lista que contendrá la composición de jugadores del partido encontrado
+                    List<Player> playersInMatch = new ArrayList<>(Arrays.asList(players.get(thisPlayer)));
+
+                    // Busca jugadores que pertenezcan al partido encontrado
+                    for (int otherPlayer = thisPlayer + 1; otherPlayer < this.players.size(); otherPlayer++) {
+
+                        // Si el "otro" jugador juega un partido, no se ha añadido ya y ambos valores son iguales (se
+                        // juegan en la misma localización), el jugador pertenece al mismo partido y se añade
                         if (scheduleBeginnings[otherPlayer][t].isOccupied() &&
                                 !playersAlreadyMatched.contains(otherPlayer) &&
-                                scheduleBeginnings[thisPlayer][t].equals(scheduleBeginnings[otherPlayer][t])) {
+                                scheduleBeginnings[otherPlayer][t].equals(scheduleBeginnings[thisPlayer][t])) {
 
                             playersAlreadyMatched.add(otherPlayer);
 
-                            playersBelongingToMatch.add(otherPlayer);
+                            playersInMatch.add(players.get(otherPlayer));
 
-                            if (playersBelongingToMatch.size() == nPlayersPerMatch) {
-                                matchCompleted = true;
+                            if (playersInMatch.size() == nPlayersPerMatch)
                                 break;
-                            }
                         }
                     }
 
-                    if (matchCompleted || nPlayersPerMatch == 1) {
-                        List<Player> playersList = new ArrayList<>(nPlayersPerMatch);
-                        playersList.addAll(playersBelongingToMatch.stream()
-                                .map(playerIndex -> event.getPlayers().get(playerIndex))
-                                .collect(Collectors.toList()));
+                    Match match = new Match(
+                            playersInMatch,
+                            localizations.get(((PlayerScheduleValueOccupied) scheduleBeginnings[thisPlayer][t])
+                                    .getLocalization()),
+                            timeslots.get(t),
+                            timeslots.get(t + matchDuration - 1),
+                            matchDuration
+                    );
 
-                        Match match = new Match(
-                                playersList,
-                                event.getLocalizations()
-                                        .get(((PlayerScheduleValueOccupied) scheduleBeginnings[thisPlayer][t])
-                                                .getLocalization()),
-                                event.getTimeslots().get(t),
-                                event.getTimeslots().get(t + matchDuration - 1),
-                                matchDuration
-                        );
+                    matches.add(match);
 
-                        matches.add(match);
+                    playersInMatch = new ArrayList<>(playersInMatch);
 
-                        if (event.hasTeams()) {
-                            List<Team> teamsInMatch = new ArrayList<>();
-                            for (Player player : playersList) {
-                                Team team = event.filterTeamByPlayer(player);
-                                if (!teamsInMatch.contains(team))
-                                    teamsInMatch.add(team);
+                    if (event.hasTeams()) {
+                        List<Team> teamsInMatch = new ArrayList<>();
+
+                        // Primero se añaden los equipos conocidos
+                        for (int i = 0; i < playersInMatch.size(); i++) {
+                            Team team = event.filterTeamByPlayer(playersInMatch.get(i));
+
+                            if (team != null && !teamsInMatch.contains(team)) {
+                                team.getPlayers().forEach(playersInMatch::remove);
+                                teamsInMatch.add(team);
                             }
-                            match.setTeams(teamsInMatch);
                         }
+
+                        int nPlayersPerTeam = event.getPlayersPerTeam();
+
+                        // Se crean aleatoriamente los equipos desconocidos
+                        Collections.shuffle(playersInMatch);
+                        while (!playersInMatch.isEmpty()) {
+                            Set<Player> randomTeamPlayers = new HashSet<>(nPlayersPerTeam);
+
+                            for (int i = 0; i < nPlayersPerTeam; i++) {
+                                Player randomPlayer = playersInMatch.get(0);
+                                randomTeamPlayers.add(randomPlayer);
+                                playersInMatch.remove(randomPlayer);
+                            }
+
+                            teamsInMatch.add(new Team(randomTeamPlayers));
+                        }
+
+                        match.setTeams(teamsInMatch);
                     }
                 }
             }

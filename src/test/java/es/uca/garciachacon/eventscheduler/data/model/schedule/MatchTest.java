@@ -60,31 +60,23 @@ public class MatchTest {
         assertEquals(2, match.getTeams().size());
     }
 
-    @Test
+    @Test(expected = NullPointerException.class)
     public void constructorNullPlayersTest() {
-        expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("parameters cannot be null");
         new Match(null, localization, start, end, 1);
     }
 
-    @Test
+    @Test(expected = NullPointerException.class)
     public void constructorNullLocalizationTest() {
-        expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("parameters cannot be null");
         new Match(players, null, start, end, 1);
     }
 
-    @Test
+    @Test(expected = NullPointerException.class)
     public void constructorNullStartTimeslotTest() {
-        expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("parameters cannot be null");
         new Match(players, localization, null, end, 1);
     }
 
-    @Test
+    @Test(expected = NullPointerException.class)
     public void constructorNullEndTimeslotTest() {
-        expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("parameters cannot be null");
         new Match(players, localization, start, null, 1);
     }
 

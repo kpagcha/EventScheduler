@@ -51,13 +51,19 @@ public class Match {
      * @param start        hora o <i>timeslot</i> de comienzo del partido
      * @param end          hora o <i>timeslot</i> de fin del partido
      * @param duration     número de timeslots que dura el partido. Mayor que 0
-     * @throws IllegalArgumentException si algún parámetro es <code>null</code>, si la lista de jugadores está vacía
-     *                                  o si la duración no es superior a 0, o si <code>end</code> es anterior a
-     *                                  <code>start</code>
+     * @throws NullPointerException     si algún argumento es <code>null</code>
+     * @throws IllegalArgumentException si la lista de jugadores está vacía
+     * @throws IllegalArgumentException si la lista de jugadores tiene duplicados
+     * @throws IllegalArgumentException si la duración del partido es menor que 1
+     * @throws IllegalArgumentException si el <i>timeslot</i> final precede al comienzo
+     * @throws IllegalArgumentException si la duración del partido es 1 y los <i>timeslots</i> comienzo y fin son
+     *                                  distintos
      */
     public Match(List<Player> players, Localization localization, Timeslot start, Timeslot end, int duration) {
-        if (players == null || localization == null || start == null || end == null)
-            throw new IllegalArgumentException("The parameters cannot be null");
+        Objects.requireNonNull(players);
+        Objects.requireNonNull(localization);
+        Objects.requireNonNull(start);
+        Objects.requireNonNull(end);
 
         if (players.isEmpty())
             throw new IllegalArgumentException("Players cannot be empty");
@@ -115,10 +121,13 @@ public class Match {
      * Establece el conjunto de equipos que se enfrentan en este partido
      *
      * @param teams una lista de equipos que cumple las precondiciones especificadas
-     * @throws IllegalArgumentException si <code>teams</code> es <code>null</code>, si tiene está vacío, si contiene
-     *                                  un equipo <code>null</code>, si el número de jugadores de cada equipo no es el
-     *                                  mismo o si no todos los jugadores de cada
-     *                                  equipo están contenidos en la lista de jugadores del partido
+     * @throws NullPointerException     si la lista de equipos es <code>null</code>
+     * @throws IllegalArgumentException si los equipos contienen un equipo <code>null</code>
+     * @throws IllegalArgumentException si los equipos contienen equipos repetidos
+     * @throws IllegalArgumentException si hay equipos con diferentes números de jugadores
+     * @throws IllegalArgumentException si hay equipos con jugadores que no pertenecen a los jugadores de este partido
+     * @throws IllegalArgumentException si el número de jugadores de algún equipo no es coherente con el número de
+     *                                  jugadores del partido (debe ser divisor de este último)
      */
     public void setTeams(List<Team> teams) {
         Objects.requireNonNull(teams);
