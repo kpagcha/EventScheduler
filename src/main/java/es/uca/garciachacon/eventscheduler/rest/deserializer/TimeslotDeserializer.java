@@ -25,93 +25,11 @@ public class TimeslotDeserializer extends JsonDeserializer<Timeslot> {
         TemporalAccessor start = null;
         TemporalAmount duration = null;
 
-        if (startNode != null) {
-            JsonNode startTypeNode = startNode.get("type");
-            String startType = startTypeNode.isTextual() ? startTypeNode.asText() : null;
+        if (startNode != null)
+            start = parseStart(startNode, start);
 
-            JsonNode valueNode = startNode.get("value");
-
-            switch (startType.trim()) {
-                case "DayOfWeek":
-                    if (valueNode.isInt())
-                        start = DayOfWeek.of(valueNode.asInt());
-                    else if (valueNode.isTextual())
-                        start = DayOfWeek.valueOf(valueNode.asText());
-                    break;
-
-                case "Month":
-                    if (valueNode.isInt())
-                        start = Month.of(valueNode.asInt());
-                    else if (valueNode.isTextual())
-                        start = Month.valueOf(valueNode.asText());
-                    break;
-
-                case "MonthDay":
-                    start = MonthDay.of(Integer.parseInt(valueNode.get("month").asText()),
-                            Integer.parseInt(valueNode.get("dayOfMonth").asText())
-                    );
-                    break;
-
-                case "Year":
-                    start = Year.of(Integer.parseInt(valueNode.get("year").asText()));
-                    break;
-
-                case "YearMonth":
-                    start = YearMonth.of(Integer.parseInt(valueNode.get("year").asText()),
-                            Integer.parseInt(valueNode.get("month").asText())
-                    );
-                    break;
-
-                case "LocalTime":
-                    start = parseTime(valueNode);
-                    break;
-
-                case "LocalDate":
-                    start = parseDate(valueNode);
-                    break;
-
-                case "LocalDateTime":
-                    if (valueNode.isTextual())
-                        start = LocalDateTime.parse(valueNode.asText());
-                    else
-                        start = LocalDateTime.of(parseDate(valueNode.get("date")), parseTime(valueNode.get("time")));
-            }
-        }
-
-        if (durationNode != null) {
-            JsonNode durationTypeNode = durationNode.get("type");
-            String durationType = durationTypeNode.isTextual() ? durationTypeNode.asText() : null;
-
-            JsonNode valueNode = durationNode.get("value");
-
-            long longValue = Long.parseLong(valueNode.asText());
-
-            switch (durationType.trim()) {
-                case "milliseconds":
-                    duration = Duration.ofMillis(longValue);
-                    break;
-                case "seconds":
-                    duration = Duration.ofSeconds(longValue);
-                    break;
-                case "minutes":
-                    duration = Duration.ofMinutes(longValue);
-                    break;
-                case "hours":
-                    duration = Duration.ofHours(longValue);
-                    break;
-                case "days":
-                    duration = Duration.ofDays(longValue);
-                    break;
-                case "weeks":
-                    duration = Period.ofWeeks(Math.toIntExact(longValue));
-                    break;
-                case "months":
-                    duration = Period.ofMonths(Math.toIntExact(longValue));
-                    break;
-                case "years":
-                    duration = Period.ofYears(Math.toIntExact(longValue));
-            }
-        }
+        if (durationNode != null)
+            duration = parseDuration(durationNode, duration);
 
         if (start == null && duration == null)
             timeslot = new Timeslot(chronologicalOrder);
@@ -130,6 +48,98 @@ public class TimeslotDeserializer extends JsonDeserializer<Timeslot> {
         }
 
         return timeslot;
+    }
+
+    private TemporalAccessor parseStart(JsonNode startNode, TemporalAccessor start) {
+        JsonNode startTypeNode = startNode.get("type");
+        String startType = startTypeNode.isTextual() ? startTypeNode.asText() : null;
+
+        JsonNode valueNode = startNode.get("value");
+
+        switch (startType.trim()) {
+            case "DayOfWeek":
+                if (valueNode.isInt())
+                    start = DayOfWeek.of(valueNode.asInt());
+                else if (valueNode.isTextual())
+                    start = DayOfWeek.valueOf(valueNode.asText());
+                break;
+
+            case "Month":
+                if (valueNode.isInt())
+                    start = Month.of(valueNode.asInt());
+                else if (valueNode.isTextual())
+                    start = Month.valueOf(valueNode.asText());
+                break;
+
+            case "MonthDay":
+                start = MonthDay.of(
+                        Integer.parseInt(valueNode.get("month").asText()),
+                        Integer.parseInt(valueNode.get("dayOfMonth").asText())
+                );
+                break;
+
+            case "Year":
+                start = Year.of(Integer.parseInt(valueNode.asText()));
+                break;
+
+            case "YearMonth":
+                start = YearMonth.of(
+                        Integer.parseInt(valueNode.get("year").asText()),
+                        Integer.parseInt(valueNode.get("month").asText())
+                );
+                break;
+
+            case "LocalTime":
+                start = parseTime(valueNode);
+                break;
+
+            case "LocalDate":
+                start = parseDate(valueNode);
+                break;
+
+            case "LocalDateTime":
+                if (valueNode.isTextual())
+                    start = LocalDateTime.parse(valueNode.asText());
+                else
+                    start = LocalDateTime.of(parseDate(valueNode.get("date")), parseTime(valueNode.get("time")));
+        }
+        return start;
+    }
+
+    private TemporalAmount parseDuration(JsonNode durationNode, TemporalAmount duration) {
+        JsonNode durationTypeNode = durationNode.get("type");
+        String durationType = durationTypeNode.isTextual() ? durationTypeNode.asText() : null;
+
+        JsonNode valueNode = durationNode.get("value");
+
+        long longValue = Long.parseLong(valueNode.asText());
+
+        switch (durationType.trim()) {
+            case "milliseconds":
+                duration = Duration.ofMillis(longValue);
+                break;
+            case "seconds":
+                duration = Duration.ofSeconds(longValue);
+                break;
+            case "minutes":
+                duration = Duration.ofMinutes(longValue);
+                break;
+            case "hours":
+                duration = Duration.ofHours(longValue);
+                break;
+            case "days":
+                duration = Period.ofDays(Math.toIntExact(longValue));
+                break;
+            case "weeks":
+                duration = Period.ofWeeks(Math.toIntExact(longValue));
+                break;
+            case "months":
+                duration = Period.ofMonths(Math.toIntExact(longValue));
+                break;
+            case "years":
+                duration = Period.ofYears(Math.toIntExact(longValue));
+        }
+        return duration;
     }
 
     private LocalTime parseTime(JsonNode node) {
