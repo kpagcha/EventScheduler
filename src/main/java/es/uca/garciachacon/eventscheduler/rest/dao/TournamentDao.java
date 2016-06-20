@@ -12,6 +12,7 @@ public class TournamentDao implements ITournamentDao {
     public synchronized boolean create(Tournament tournament) {
         if (tournaments.containsKey(tournament.getName()))
             return false;
+
         tournaments.put(tournament.getName(), tournament);
         return true;
     }

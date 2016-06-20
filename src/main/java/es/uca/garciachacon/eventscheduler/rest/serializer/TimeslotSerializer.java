@@ -89,6 +89,7 @@ public class TimeslotSerializer extends JsonSerializer<Timeslot> {
 
             gen.writeStringField("type", startValue.getClass().getSimpleName());
             gen.writeObjectField("value", startValue);
+
         }
 
         gen.writeEndObject();
@@ -107,15 +108,17 @@ public class TimeslotSerializer extends JsonSerializer<Timeslot> {
             String type = "seconds";
             long val = seconds;
 
-            if (seconds % 3600 == 0) {
-                type = "hours";
-                val = d.toHours();
-            } else if (seconds % 60 == 0) {
-                type = "minutes";
-                val = d.toMinutes();
-            } else if (seconds < 1) {
+            if (d.getNano() != 0) {
                 type = "milliseconds";
                 val = d.toMillis();
+            } else if (seconds != 0) {
+                if (seconds % 3600 == 0) {
+                    type = "hours";
+                    val = d.toHours();
+                } else if (seconds % 60 == 0) {
+                    type = "minutes";
+                    val = d.toMinutes();
+                }
             }
 
             gen.writeStringField("type", type);
@@ -132,10 +135,10 @@ public class TimeslotSerializer extends JsonSerializer<Timeslot> {
             if (days != 0 && years == 0 && months == 0) {
                 gen.writeStringField("type", "days");
                 gen.writeObjectField("value", days);
-            } else if (years == 0) {
+            } else if (years == 0 && days == 0) {
                 gen.writeStringField("type", "months");
                 gen.writeObjectField("value", months);
-            } else if (months == 0) {
+            } else if (months == 0 && days == 0) {
                 gen.writeStringField("type", "years");
                 gen.writeObjectField("value", years);
             } else {
@@ -145,7 +148,8 @@ public class TimeslotSerializer extends JsonSerializer<Timeslot> {
 
         } else {
 
-            gen.writeStringField("type", durationValue.getClass().getSimpleName());
+            String className = durationValue.getClass().getSimpleName();
+            gen.writeStringField("type", className.isEmpty() ? durationValue.getClass().getName() : className);
             gen.writeObjectField("value", durationValue);
 
         }

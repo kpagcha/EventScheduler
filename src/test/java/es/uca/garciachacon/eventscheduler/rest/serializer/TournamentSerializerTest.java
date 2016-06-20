@@ -19,7 +19,7 @@ import java.util.*;
 import static org.junit.Assert.*;
 
 /**
- * Tests de la clase de serialización de un torneo {@link TournamentSerializer}.
+ * Tests de la clase de serialización de un torneo, {@link TournamentSerializer}.
  */
 public class TournamentSerializerTest {
     private Tournament tournament;
