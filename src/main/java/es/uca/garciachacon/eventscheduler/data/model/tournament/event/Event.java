@@ -1,6 +1,7 @@
 package es.uca.garciachacon.eventscheduler.data.model.tournament.event;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.Tournament;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Localization;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Player;
@@ -186,6 +187,7 @@ import java.util.stream.Collectors;
  * misma mecánica), no se asignarán automáticamente todas las del evento, sino que a las que tenía asignadas se le
  * sumarán las del enfrentamiento.
  */
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class Event implements Validable {
     /**
      * Jugadores concretos o abstractos (equipos) que participan en el evento
@@ -1084,7 +1086,8 @@ public class Event implements Validable {
     }
 
     /**
-     * Añade un <i>timeslot</i> a la lista de <i>breaks</i>. Si ya existe, no habrá modificaciones.
+     * Añade un <i>timeslot</i> a la lista de <i>breaks</i>. Si ya existe, no habrá modificaciones. Si se añade, se
+     * ordenará de forma ascendente la lista.
      *
      * @param timeslotBreak una hora del evento que no exista ya en la lista de breaks
      * @throws NullPointerException     si el <i>break</i> es <code>null</code>
@@ -1096,8 +1099,10 @@ public class Event implements Validable {
         if (!timeslots.contains(timeslotBreak))
             throw new IllegalArgumentException("Timeslot does not exist in this event");
 
-        if (!breaks.contains(timeslotBreak))
+        if (!breaks.contains(timeslotBreak)) {
             breaks.add(timeslotBreak);
+            breaks.sort(Comparator.reverseOrder());
+        }
     }
 
     /**

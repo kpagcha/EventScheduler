@@ -31,7 +31,7 @@ public class TimeslotDeserializer extends JsonDeserializer<Timeslot> {
 
             JsonNode valueNode = startNode.get("value");
 
-            switch (startType) {
+            switch (startType.trim()) {
                 case "DayOfWeek":
                     if (valueNode.isInt())
                         start = DayOfWeek.of(valueNode.asInt());
@@ -74,9 +74,7 @@ public class TimeslotDeserializer extends JsonDeserializer<Timeslot> {
                     if (valueNode.isTextual())
                         start = LocalDateTime.parse(valueNode.asText());
                     else
-                        start = LocalDateTime.of((LocalDate) parseDate(valueNode.get("date")),
-                                (LocalTime) parseTime(valueNode.get("time"))
-                        );
+                        start = LocalDateTime.of(parseDate(valueNode.get("date")), parseTime(valueNode.get("time")));
             }
         }
 
@@ -88,8 +86,7 @@ public class TimeslotDeserializer extends JsonDeserializer<Timeslot> {
 
             long longValue = Long.parseLong(valueNode.asText());
 
-            switch (durationType) {
-
+            switch (durationType.trim()) {
                 case "milliseconds":
                     duration = Duration.ofMillis(longValue);
                     break;
@@ -135,34 +132,36 @@ public class TimeslotDeserializer extends JsonDeserializer<Timeslot> {
         return timeslot;
     }
 
-    private TemporalAccessor parseTime(JsonNode node) {
-        TemporalAccessor start;
+    private LocalTime parseTime(JsonNode node) {
+        LocalTime time;
         if (node.isTextual())
-            start = LocalTime.parse(node.asText());
+            time = LocalTime.parse(node.asText());
         else {
             int second = 0;
             JsonNode valueSecondNode = node.path("second");
             if (valueSecondNode.isInt())
                 second = valueSecondNode.asInt();
 
-            start = LocalTime.of(Integer.parseInt(node.get("hour").asText()),
+            time = LocalTime.of(
+                    Integer.parseInt(node.get("hour").asText()),
                     Integer.parseInt(node.get("minute").asText()),
                     second
             );
         }
-        return start;
+        return time;
     }
 
-    private TemporalAccessor parseDate(JsonNode node) {
-        TemporalAccessor start;
+    private LocalDate parseDate(JsonNode node) {
+        LocalDate date;
         if (node.isTextual())
-            start = LocalDate.parse(node.asText());
+            date = LocalDate.parse(node.asText());
         else {
-            start = LocalDate.of(Integer.parseInt(node.get("year").asText()),
+            date = LocalDate.of(
+                    Integer.parseInt(node.get("year").asText()),
                     Integer.parseInt(node.get("month").asText()),
                     Integer.parseInt(node.get("day").asText())
             );
         }
-        return start;
+        return date;
     }
 }

@@ -24,6 +24,8 @@ public class EventSchedulerService {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Tournament createTournament(Tournament tournament) {
-        return tournamentDao.create(tournament) ? tournament : null;
+        tournamentDao.create(tournament);
+        return tournament;
+        //return tournamentDao.create(tournament) ? tournament : null;
     }
 }

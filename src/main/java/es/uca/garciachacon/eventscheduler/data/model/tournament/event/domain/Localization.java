@@ -1,12 +1,7 @@
 package es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-
-import java.io.IOException;
+import es.uca.garciachacon.eventscheduler.rest.deserializer.LocalizationDeserializer;
 
 /**
  * Representación de una localización de juego en la que transcurre un partido o un enfrentamiento perteneciente a un
@@ -19,14 +14,5 @@ import java.io.IOException;
 public class Localization extends Entity {
     public Localization(String name) {
         super(name);
-    }
-}
-
-class LocalizationDeserializer extends JsonDeserializer<Localization> {
-    @Override
-    public Localization deserialize(JsonParser jp, DeserializationContext ctx) throws IOException {
-        JsonNode node = jp.getCodec().readTree(jp);
-        JsonNode nameNode = node.get("name");
-        return new Localization(nameNode.isNull() ? null : nameNode.textValue());
     }
 }

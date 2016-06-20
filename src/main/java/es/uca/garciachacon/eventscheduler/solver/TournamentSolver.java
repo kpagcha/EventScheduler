@@ -29,61 +29,77 @@ public class TournamentSolver {
      * Logger del solver
      */
     private static final Logger LOGGER = Logger.getLogger(TournamentSolver.class.getName());
+
     /**
      * Restricciones del problema
      */
     private final List<Constraint> constraints = new ArrayList<>();
+
     /**
      * Torneo para el que se calcula el horario
      */
     private final Tournament tournament;
+
     /**
      * Horario. x_e,p,c,t: horario_categoria,jugador,pista,hora. Dominio [0, 1]
      */
     private final IntVar[][][][] x;
+
     /**
      * Comienzos de partidos. Dominio [0, 1]
      */
     private final IntVar[][][][] g;
+
     /**
      * Solver de Choco que modela y resuelve el problema
      */
     private Solver solver;
+
     /**
      * Horarios calculados de la solución actual
      */
     private Map<Event, EventSchedule> schedules;
+
     /**
      * Indica si se ha encontrado la última solución
      */
     private boolean lastSolutionFound = false;
+
+    /**
+     * Contador de soluciones encontradas
+     */
     private long foundSolutionsCount = 0;
+
     /**
      * Estrategia de búsqueda empleada en la resolución del problema
      */
     private SearchStrategy searchStrategy = SearchStrategy.DOMOVERWDEG;
+
     /**
      * Para las estrategias de búsqueda minDom_UB y minDom_LB indicar si priorizar timeslots (true) o pistas (false)
      * a la hora de hacer las asignaciones
      */
     private boolean fillTimeslotsFirst = true;
+
     /**
      * Tiempo máximo de resolución en milisegundos. 0 significa sin límite
      */
     private long resolutionTimeLimit = 0;
+
     /**
      * Bandera que indica la parada del proceso de resolución
      */
     private boolean stop = false;
+
     /**
      * Información sobre el problema y la resolución del mismo
      */
     private ResolutionData resolutionData;
 
     /**
-     * Construye el objeto solver a partir de la información del torneo
+     * Construye un <i>solver</i> a partir de la información del torneo.
      *
-     * @param tournament torneo para el que se va a resolver el problema
+     * @param tournament torneo para el que se va a modelar el problema, calcular horario y encontrar partidos
      */
     public TournamentSolver(Tournament tournament) {
         this.tournament = tournament;

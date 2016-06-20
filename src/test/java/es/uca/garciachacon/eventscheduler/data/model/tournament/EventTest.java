@@ -16,8 +16,10 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import java.time.DayOfWeek;
 import java.time.Duration;
 import java.time.LocalTime;
+import java.time.Month;
 import java.util.*;
 import java.util.stream.IntStream;
 
@@ -72,7 +74,20 @@ public class EventTest {
     public void constructorTimeslotOrderedTest() {
         Collections.shuffle(timeslots);
 
-        event = new Event("Event", players, localizations, this.timeslots);
+        event = new Event("Event", players, localizations, timeslots);
+
+        assertFalse(IntStream.range(1, timeslots.size())
+                .anyMatch(i -> timeslots.get(i - 1).compareTo(timeslots.get(i)) <= 0));
+    }
+
+    @Test
+    public void constructorDifferentSubclassTimeslotsOrderedTest() {
+        timeslots.clear();
+        timeslots.add(new Timeslot(1, DayOfWeek.WEDNESDAY));
+        timeslots.add(new Timeslot(1, DayOfWeek.FRIDAY));
+        timeslots.add(new Timeslot(2, Month.APRIL));
+
+        event = new Event("Event", players, localizations, timeslots);
 
         assertFalse(IntStream.range(1, timeslots.size())
                 .anyMatch(i -> timeslots.get(i - 1).compareTo(timeslots.get(i)) <= 0));

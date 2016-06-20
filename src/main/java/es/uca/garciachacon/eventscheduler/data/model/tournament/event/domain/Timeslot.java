@@ -1,5 +1,10 @@
 package es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import es.uca.garciachacon.eventscheduler.rest.deserializer.TimeslotDeserializer;
+import es.uca.garciachacon.eventscheduler.rest.serializer.TimeslotSerializer;
+
 import java.time.temporal.TemporalAccessor;
 import java.time.temporal.TemporalAmount;
 import java.util.Optional;
@@ -50,6 +55,8 @@ import java.util.Optional;
  * }
  * </pre>
  */
+@JsonDeserialize(using = TimeslotDeserializer.class)
+@JsonSerialize(using = TimeslotSerializer.class)
 public class Timeslot extends Entity implements Comparable<Timeslot> {
     /**
      * Orden cronológico del <i>timeslot</i>
