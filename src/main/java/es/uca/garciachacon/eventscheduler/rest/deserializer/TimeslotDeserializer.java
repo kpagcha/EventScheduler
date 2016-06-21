@@ -42,7 +42,7 @@ public class TimeslotDeserializer extends JsonDeserializer<Timeslot> {
 
         JsonNode nameNode = node.get("name");
         if (nameNode != null) {
-            String name = nameNode.isTextual() ? "" : nameNode.asText();
+            String name = nameNode.isTextual() ? nameNode.asText() : "";
             if (!name.isEmpty())
                 timeslot.setName(name);
         }
