@@ -9,6 +9,13 @@ import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Loc
 
 import java.io.IOException;
 
+/**
+ * Deserializador de una localización ({@link Localization}). Espera JSON con el siguiente formato:
+ * <code>{"name": "Court 1"}</code>.
+ * <p>
+ * Si el nombre de la localización no es texto, se lanzará una excepción al
+ * intentar construir el objeto.
+ */
 public class LocalizationDeserializer extends JsonDeserializer<Localization> {
     @Override
     public Localization deserialize(JsonParser jp, DeserializationContext ctx) throws IOException {

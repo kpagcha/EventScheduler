@@ -18,6 +18,269 @@ import es.uca.garciachacon.eventscheduler.solver.TournamentSolver;
 import java.io.IOException;
 import java.util.*;
 
+/**
+ * Deserializador de un torneo, representado por {@link Tournament}. El formato del cuerpo JSON esperado contiene
+ * cinco campos obligatorios.
+ * <p>
+ * El primer campo se trata del <strong>nombre</strong>, bajo el nombre de campo <code>"name"</code>. Debe ser
+ * textual.
+ * <p>
+ * El segundo campo es una lista de todos los <strong>jugadores</strong> de los que el torneo se compone, es decir,
+ * la suma de todos los jugadores únicos que componen los eventos o categorías del torneo. El formato de cada jugador
+ * debe ser como describe el deserializador {@link PlayerDeserializer}. El nombre del campo es <code>"players"</code>.
+ * <p>
+ * El tercer campo es una lista de todos las <strong>localizaciones</strong> de juego del torneo. El formato de cada
+ * localización debe ser el descrito en {@link LocalizationDeserializer}. El nombre del campo es
+ * <code>"localizations"</code>.
+ * <p>
+ * El cuarto campo es una lista de todos los <strong><i>timeslots</i></strong> del torneo. Al igual que los jugadores
+ * y las localizaciones, se trata de la suma de los <i>timeslots</i> únicos de cada categoría. Cada <i>timeslot</i>
+ * debe tener cualquier formato de los especificados por {@link TimeslotDeserializer}. El nombre del campo es
+ * <code>"timeslots"</code>.
+ * <p>
+ * El quinto campo, y último, es una lista de los <strong>eventos</strong> o categorías que componen el torneo. Cada
+ * objeto evento en la lista tendrá un complejo formato que se describirá más adelante. Debe haber al menos un
+ * evento. El nombre del campo es <code>"events"</code>.
+ * <p>
+ * En resumen, el formato esperado para deserializar un torneo es el siguiente:
+ * <p>
+ * <pre>
+ * {
+ *   "name" : "Tournament",
+ *   "players" : [ {
+ *     "name" : "Player 1"
+ *   }, {
+ *     "name" : "Player 2"
+ *   }, {
+ *     "name" : "Player 3"
+ *   }, {
+ *     "name" : "Player 4"
+ *   }, {
+ *     "name" : "Player 5"
+ *   }, {
+ *     "name" : "Player 6"
+ *   } ],
+ *   "localizations" : [ {
+ *     "name" : "Court 1"
+ *   }, {
+ *     "name" : "Court 2"
+ *   }, {
+ *     "name" : "Court 3"
+ *   } ],
+ *   "timeslots" : [ {
+ *     "name" : "Timeslot [order=0]",
+ *     "chronologicalOrder" : 0
+ *   }, {
+ *     "name" : "Timeslot [order=1]",
+ *     "chronologicalOrder" : 1
+ *   }, {
+ *     "name" : "Timeslot [order=2]",
+ *     "chronologicalOrder" : 2
+ *   }, {
+ *     "name" : "Timeslot [order=3]",
+ *     "chronologicalOrder" : 3
+ *   }, {
+ *     "name" : "Timeslot [order=4]",
+ *     "chronologicalOrder" : 4
+ *   } ],
+ *     "events" : [ {
+ *     "name" : "Event"
+ *   } ]
+ * }
+ * </pre>
+ * <p>
+ * A continuación se especifica el formato requerido para cada objeto evento de la lista <code>"events"</code>.
+ * <p>
+ * El <strong>nombre</strong> del evento se asocia al campo <code>"name"</code> y es obligatorio.
+ * <p>
+ * Los <strong>jugadores, localizaciones y <i>timeslots</i></strong> del evento se especifican mediante listas cuyo
+ * contenido incluyen referencias a los jugadores, localizaciones y <i>timeslots</i> de los campos
+ * <code>"players"</code>, <code>"localizations"</code> y <code>"timeslots"</code> del torneo. Las referencias en las
+ * listas respectivas son las posiciones de los elementos. El nombre de los atributos en el objeto evento para estos
+ * tres elementos es el mismo: <code>"players"</code>, <code>"localizations"</code> y <code>"timeslots"</code>.
+ * <p>
+ * En el siguiente ejemplo, los jugadores del evento único del torneo se tratarían del primero y del tercero de los
+ * jugadores en la lista de todos los jugadores del evento, las localizaciones serían la segunda y tercera, y los
+ * <i>timeslots</i> los cuatro primeros:
+ * <p>
+ * <pre>
+ * {
+ *   "name" : "Tournament",
+ *   "players" : [ {
+ *     "name" : "Player 1"
+ *   }, {
+ *     "name" : "Player 2"
+ *   }, {
+ *     "name" : "Player 3"
+ *   }, {
+ *     "name" : "Player 4"
+ *   }, {
+ *     "name" : "Player 5"
+ *   }, {
+ *     "name" : "Player 6"
+ *   } ],
+ *   "localizations" : [ {
+ *     "name" : "Court 1"
+ *   }, {
+ *     "name" : "Court 2"
+ *   }, {
+ *     "name" : "Court 3"
+ *   } ],
+ *   "timeslots" : [ {
+ *     "name" : "Timeslot [order=0]",
+ *     "chronologicalOrder" : 0
+ *   }, {
+ *     "name" : "Timeslot [order=1]",
+ *     "chronologicalOrder" : 1
+ *   }, {
+ *     "name" : "Timeslot [order=2]",
+ *     "chronologicalOrder" : 2
+ *   }, {
+ *     "name" : "Timeslot [order=3]",
+ *     "chronologicalOrder" : 3
+ *   }, {
+ *     "name" : "Timeslot [order=4]",
+ *     "chronologicalOrder" : 4
+ *   } ],
+ *     "events" : [ {
+ *     "name" : "Event",
+ *     "players": [ 0, 2 ],
+ *     "localizations": [ 1, 2 ],
+ *     "timeslots": [ 0, 1, 2, 3 ]
+ *   } ]
+ * }
+ * </pre>
+ * <p>
+ * Si el evento no incluye uno o varios de estos tres campos, automáticamente se asignarán al evento todos los
+ * jugadores y/o localizaciones y/o <i>timeslots</i> del torneo, como fue el caso en el primer ejemplo.
+ * <p>
+ * Se puede indicar el <strong>número de partidos por jugador</strong> del evento mediante el campo
+ * <code>"matchesPerPlayer"</code>:
+ * <pre>
+ * {
+ *   "matchesPerPlayer": 2
+ * }
+ * </pre>
+ * <p>
+ * El <strong>número de <i>timeslots</i> por partidos</strong> es otro campo adicional y se incluye como sigue:
+ * <pre>
+ * {
+ *   "timeslotsPerMatch": 1
+ * }
+ * </pre>
+ * <p>
+ * Para definir el <strong>número de jugadores por partido</strong>:
+ * <pre>
+ * {
+ *   "playersPerMatch": 2
+ * }
+ * </pre>
+ * <p>
+ * Y el <strong>número de jugadores por equipo</strong>:
+ * <p>
+ * <pre>
+ * {
+ *   "playersPerTeam": 3
+ * }
+ * </pre>
+ * <p>
+ * Para añadir <strong>equipos</strong> al evento se incluirá una lista de objetos con la propiedad opcional
+ * <code>"name"</code> y el campo obligatorio <code>"players"</code> que contiene las referencias de los jugadores
+ * que componen cada equipo. Las referencias funcionan de igual forma que en la lista de jugadores del evento: son
+ * las posiciones de los jugadores en la lista de jugadores del torneo.
+ * <p>
+ * <pre>
+ * "teams" : [ {
+ *     "name" : "Player 3-Player 5",
+ *     "players" : [ 4, 2 ]
+ *   }, {
+ *     "name" : "Player 2-Player 1",
+ *     "players" : [ 0, 1 ]
+ *   } ]
+ * </pre>
+ * <p>
+ * Se pueden añadir <strong><i>breaks</i></strong> al evento usando el campo <code>"breaks"</code> y contendrá una
+ * lista de las posiciones de los <i>timeslots</i> del evento que se corresponden con <i>breaks</i>.
+ * <p>
+ * <pre>
+ * "breaks" : [ 3, 4 ]
+ * </pre>
+ * <p>
+ * Las <strong>no disponibilidades de jugadores</strong> se indicarán con el campo <code>"unavailablePlayers"</code>,
+ * al que se le asociará un objeto JSON, donde los campos clave son cadenas que indican la posición del jugador que
+ * tiene no disponibilidades, y a cada una de estos campos clave (jugadores) se le asocian una lista de posiciones
+ * que indican los <i>timeslots</i> a los que cada jugador no está disponible.
+ * <p>
+ * En el siguiente ejemplo, se indica que el quinto jugador no está disponible en los <i>timeslots</i> tercero y
+ * cuarto, y que el tercer jugador no está disonible en el segundo.
+ * <p>
+ * <pre>
+ * "unavailablePlayers" : {
+ *   "4" : [ 2, 3 ],
+ *   "2" : [ 1 ]
+ * }
+ * </pre>
+ * <p>
+ * El formato de las <strong>localizaciones no disponibles</strong> es idéntico al de los jugadores no disponibles.
+ * El campo que se usa es <code>"unavailableLocalizations"</code>.
+ * <p>
+ * <pre>
+ * "unavailableLocalizations" : {
+ *   "1" : [ 1, 2, 4, 5 ]
+ * }
+ * </pre>
+ * <p>
+ * La asignación de <strong>jugadores en localizaciones</strong> se indica con el campo
+ * <code>"playersInLocalizations"</code> y el formato es igual que el de las no disponibilidades.
+ * <p>
+ * <pre>
+ * "playersInLocalizations" : {
+ *   "4" : [ 0 ],
+ *   "2" : [ 2, 0 ],
+ *   "1" : [ 1 ]
+ * }
+ * </pre>
+ * <p>
+ * La asignación de <strong>jugadores en <i>timeslots</i></strong> se incluye bajo el campo
+ * <code>"playersAtTimeslots"</code> y sigue el mismo formato que los anteriores componentes.
+ * <p>
+ * <pre>
+ * "playersAtTimeslots" : {
+ *   "5" : [ 2 ],
+ *   "3" : [ 2, 1 ]
+ * }
+ * </pre>
+ * <p>
+ * Para añadir <strong>enfrentamientos predefinidos</strong> se usa el campo <code>"predefinedMatchups"</code>. Se
+ * incluirá una lista con objetos con los siguientes atributos obligatorios: <code>"players"</code> que indicará las
+ * posiciones de los jugadores que componen el enfrentamiento, <code>"localizations"</code> con las posiciones de las
+ * posibles localizaciones del enfrentamiento, <code>"timeslots"</code> con una lista de los <i>timeslots</i> en los
+ * que podrá comenzar y <code>"occurrences"</code> asociado al número de ocurrencias del enfrentamiento, un valor
+ * entero y positivo.
+ * <p>
+ * <pre>
+ * "predefinedMatchups" : [ {
+ *   "players" : [ 0, 1 ],
+ *   "localizations" : [ 2 ],
+ *   "timeslots" : [ 2, 0, 1 ],
+ *   "occurrences" : 1
+ * }, {
+ *   "players" : [ 4, 2 ],
+ *   "localizations" : [ 2, 1, 0 ],
+ *   "timeslots" : [ 2, 3 ],
+ *   "occurrences" : 1
+ * } ]
+ * </pre>
+ * <p>
+ * El <strong>modo de enfrentamiento</strong> se añade con una cadena asociada al campo <code>"matchupMode"</code>.
+ * El valor está limitado a los siguientes: <code>"ANY"</code>, <code>"ALL_DIFFERENT"</code>,
+ * <code>"ALL_EQUAL"</code> y <code>"CUSTOM"</code>, donde se ignoran mayúsculas y minúsculas, y el guión bajo puede
+ * ser sustituido por un espacio.
+ * <p>
+ * <pre>
+ * "matchupMode" : "all_different"
+ * </pre>
+ */
 public class TournamentDeserializer extends JsonDeserializer<Tournament> {
     @Override
     public Tournament deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
@@ -287,7 +550,7 @@ public class TournamentDeserializer extends JsonDeserializer<Tournament> {
     private void parseMatchupMode(JsonNode node, Event event) {
         JsonNode matchupModeNode = node.get("matchupMode");
         if (matchupModeNode != null) {
-            TournamentSolver.MatchupMode matchupMode;
+            TournamentSolver.MatchupMode matchupMode = null;
             switch (matchupModeNode.asText().trim().toLowerCase()) {
                 case "all_different":
                 case "all different":
@@ -303,8 +566,6 @@ public class TournamentDeserializer extends JsonDeserializer<Tournament> {
                 case "custom":
                     matchupMode = TournamentSolver.MatchupMode.CUSTOM;
                     break;
-                default:
-                    matchupMode = null;
             }
 
             event.setMatchupMode(matchupMode);

@@ -10,12 +10,27 @@ import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Loc
 import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Player;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Team;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Timeslot;
+import es.uca.garciachacon.eventscheduler.rest.deserializer.TimeslotDeserializer;
+import es.uca.garciachacon.eventscheduler.rest.deserializer.TournamentDeserializer;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * Serializador de un torneo que transforma una instancia de {@link Tournament} en una cadena con formato JSON, y
+ * además es compatible con el proceso de deserializacitn de un torneo realizado por {@link TournamentDeserializer}.
+ * <p>
+ * El formato del objeto JSON producido por este serializador, al ser compatible con el proceso de deserialización,
+ * es el mismo que el descrito en {@link TournamentDeserializer}, por lo tanto en la documentación de esta clase se
+ * puede encontrar la información acerca del formato del JSON resultante.
+ * <p>
+ * La única salvedad en el formato se correspondería a casos en los que los tipos de los comienzos y/o duraciones de
+ * algunos de los <i>timeslots</i> del torneo no se correspondan con ninguno de los que contempla el deserializador.
+ * En este caso, la deserialización de éstos la describe el deserializador de <i>timeslots</i>,
+ * {@link TimeslotDeserializer}.
+ */
 public class TournamentSerializer extends JsonSerializer<Tournament> {
     @Override
     public void serialize(Tournament tournament, JsonGenerator gen, SerializerProvider serializers) throws IOException {

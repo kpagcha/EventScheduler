@@ -9,6 +9,13 @@ import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Pla
 
 import java.io.IOException;
 
+/**
+ * Deserializador de un jugador ({@link Player}). Espera JSON con el siguiente formato:
+ * <code>{"name": John Doe"}</code>.
+ * <p>
+ * Si el nombre del jugador no es texto, se lanzará una excepción al
+ * intentar construir el objeto.
+ */
 public class PlayerDeserializer extends JsonDeserializer<Player> {
     @Override
     public Player deserialize(JsonParser jp, DeserializationContext ctx) throws IOException {

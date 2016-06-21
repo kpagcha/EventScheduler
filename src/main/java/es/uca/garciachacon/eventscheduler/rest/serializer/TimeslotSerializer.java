@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Timeslot;
+import es.uca.garciachacon.eventscheduler.rest.deserializer.TimeslotDeserializer;
 
 import java.io.IOException;
 import java.time.*;
@@ -11,6 +12,36 @@ import java.time.temporal.TemporalAccessor;
 import java.time.temporal.TemporalAmount;
 import java.util.Optional;
 
+/**
+ * Serializador de un <i>timeslot</i>, que transforma una instancia de la clase {@link Timeslot} a su representación
+ * mediante JSON. Es compatible en gran parte con la clase de deserialización {@link TimeslotDeserializer}, por lo
+ * que la serialización y deserialización es bidireccional.
+ * <p>
+ * No obstante, hay una serie de casos en los que un <i>timeslot</i> no puede ser deserializado porque en sus campos
+ * <code>"start"</code> y/o <code>"duration"</code>, donde se indica el tipo de dato que representa el comienzo del
+ * <i>timeslot</i> y su duración respectivamente, el valor es desconocido por el deserializador.
+ * <p>
+ * Para el comienzo de un <i>timeslot</i>, representado por la clase {@link TemporalAccessor}, son los casos en los
+ * que se usa una implementación personalizada de la interfaz, por ejemplo, una clase anónima, o una implementación
+ * nativa distinta de las siguientes: {@link DayOfWeek}, {@link Month}, {@link MonthDay}, {@link Year},
+ * {@link YearMonth}, {@link LocalTime}, {@link LocalDate} y {@link LocalDateTime}. Si el tipo del comienzo es
+ * distinto, la serialización del valor del mismo será automática y por defecto, por tanto, será desconocida por el
+ * deserializador.
+ * <p>
+ * Para la duración de un <i>timeslot</i>, representado por la clase {@link TemporalAmount}, un caso de
+ * deserialización imposible sería si se usase una implementación propia de la interfaz, en lugar de las clases
+ * nativas {@link Duration} o {@link Period}. También sería el caso para duraciones o períodos de composición
+ * múltiple, por ejemplo: duraciones con valores distintos de 0 de tanto segundos como nanosegundos, o períodos donde
+ * más de uno de sus valores internos (días, meses y años) sean distintos de 0. En estos casos, la deserialización no
+ * sería viable.
+ * <p>
+ * El formato de la serialización es el mismo que el descrito en {@link TimeslotDeserializer}, excepto para los casos
+ * desconocidos que se han descrito. En tal caso, de igual modo, habrá campos <code>"type"</code> tanto bajo la
+ * propiedad <code>"start"</code> como <code>"duration"</code> (si la instancia tiene estos atributos presentes) e
+ * indicará el tipo del valor del comienzo y/o duración mediante el nombre de la clase que se esté utilizando; y
+ * también de forma análoga se incluirá el campo <code>"value"</code> con el valor del comienzo y/o duración y el
+ * valor será automáticamente serializado por Jackson.
+ */
 public class TimeslotSerializer extends JsonSerializer<Timeslot> {
     @Override
     public void serialize(Timeslot value, JsonGenerator gen, SerializerProvider serializers) throws IOException {

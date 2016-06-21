@@ -174,6 +174,22 @@ public class TournamentDeserializerTest {
 
         assertEquals(e.filterTeamByPlayer(players.get(0)), e.filterTeamByPlayer(players.get(3)));
         assertEquals(e.filterTeamByPlayer(players.get(4)), e.filterTeamByPlayer(players.get(5)));
+
+
+        String json = "{\"name\":\"Tournament\",\"players\":[{\"name\":\"Player 1\"},{\"name\":\"Player 2\"}," +
+                "{\"name\":\"Player 3\"},{\"name\":\"Player 4\"},{\"name\":\"Player 5\"},{\"name\":\"Player 6\"}," +
+                "{\"name\":\"Player 7\"},{\"name\":\"Player 8\"}],\"localizations\":[{\"name\":\"Court 1\"}," +
+                "{\"name\":\"Court 2\"},{\"name\":\"Court 3\"},{\"name\":\"Court 4\"}]," +
+                "\"timeslots\":[{\"name\":\"Timeslot [order=0]\",\"chronologicalOrder\":0},{\"name\":\"Timeslot " +
+                "[order=1]\",\"chronologicalOrder\":1},{\"name\":\"Timeslot [order=2]\",\"chronologicalOrder\":2}," +
+                "{\"name\":\"Timeslot [order=3]\",\"chronologicalOrder\":3},{\"name\":\"Timeslot [order=4]\"," +
+                "\"chronologicalOrder\":4},{\"name\":\"Timeslot [order=5]\",\"chronologicalOrder\":5}]," +
+                "\"events\":[{\"name\":\"Event\",\"players\":[0,1,2,3,4,5,6,7],\"localizations\":[0,1,2,3]," +
+                "\"timeslots\":[0,1,2,3,4,5],\"matchesPerPlayer\":1,\"timeslotsPerMatch\":2,\"playersPerMatch\":2," +
+                "\"playersPerTeam\":2,\"teams\":[{\"players\":[0,3]},{\"players\":[4,5]}],\"matchupMode\":\"ANY\"}]}";
+
+        t = mapper.readValue(json, Tournament.class);
+        assertEquals(2, t.getEvents().get(0).getTeams().size());
     }
 
     @Test
@@ -355,6 +371,22 @@ public class TournamentDeserializerTest {
         Event e = t.getEvents().get(0);
 
         assertEquals(TournamentSolver.MatchupMode.ALL_EQUAL, e.getMatchupMode());
+
+
+        event.setMatchupMode(TournamentSolver.MatchupMode.ALL_DIFFERENT);
+
+        t = mapper.readValue(getJsonBody(), Tournament.class);
+        e = t.getEvents().get(0);
+
+        assertEquals(TournamentSolver.MatchupMode.ALL_DIFFERENT, e.getMatchupMode());
+
+
+        event.setMatchupMode(TournamentSolver.MatchupMode.CUSTOM);
+
+        t = mapper.readValue(getJsonBody(), Tournament.class);
+        e = t.getEvents().get(0);
+
+        assertEquals(TournamentSolver.MatchupMode.CUSTOM, e.getMatchupMode());
     }
 
     private String getJsonBody() throws JsonProcessingException {

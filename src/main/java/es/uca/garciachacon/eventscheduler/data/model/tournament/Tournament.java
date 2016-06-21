@@ -1,5 +1,7 @@
 package es.uca.garciachacon.eventscheduler.data.model.tournament;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import es.uca.garciachacon.eventscheduler.data.model.schedule.EventSchedule;
@@ -17,6 +19,7 @@ import es.uca.garciachacon.eventscheduler.rest.deserializer.TournamentDeserializ
 import es.uca.garciachacon.eventscheduler.rest.serializer.TournamentSerializer;
 import es.uca.garciachacon.eventscheduler.solver.TournamentSolver;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -146,6 +149,17 @@ public class Tournament implements Validable {
      */
     public Tournament(String name, Event... categories) {
         this(name, new ArrayList<>(Arrays.asList(categories)));
+    }
+
+    /**
+     * Crea una instancia de un torneo a partir de una cadena JSON. La deserialización es realizada por
+     * {@link TournamentDeserializer}.
+     *
+     * @param json cadena JSON con la representación de un torneo
+     * @return instancia de un torneo creado a partir del cuerpo JSON
+     */
+    public static Tournament fromJson(String json) throws IOException {
+        return new ObjectMapper().readValue(json, Tournament.class);
     }
 
     /**
@@ -569,5 +583,15 @@ public class Tournament implements Validable {
 
     public String toString() {
         return name;
+    }
+
+    /**
+     * Devuelve una cadena JSON con la representación de este torneo. La serialización es realizada por
+     * {@link TournamentSerializer}.
+     *
+     * @return representación en JSON de este torneo
+     */
+    public String toJson() throws JsonProcessingException {
+        return new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(this);
     }
 }
