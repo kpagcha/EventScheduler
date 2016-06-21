@@ -249,7 +249,6 @@ public class TournamentSerializerTest {
         List<Player> players = event.getPlayers();
         List<Localization> localizations = event.getLocalizations();
         List<Timeslot> timeslots = event.getTimeslots();
-        event.addMatchup(players.get(0), players.get(1));
         event.addMatchup(new Matchup(
                 event,
                 new HashSet<>(Arrays.asList(players.get(2), players.get(3))),
@@ -260,54 +259,27 @@ public class TournamentSerializerTest {
 
         JsonNode predefinedMatchupsNode = getMainEventNode().get("predefinedMatchups");
 
-        assertEquals(2, predefinedMatchupsNode.size());
+        assertEquals(1, predefinedMatchupsNode.size());
 
         List<Integer> playersReferences = new ArrayList<>(2);
         playersReferences.add(predefinedMatchupsNode.get(0).get("players").get(0).asInt());
         playersReferences.add(predefinedMatchupsNode.get(0).get("players").get(1).asInt());
         Collections.sort(playersReferences);
 
-        assertEquals(0, playersReferences.get(0).intValue());
-        assertEquals(1, playersReferences.get(1).intValue());
-
-        List<Integer> localizationsReferences = new ArrayList<>(3);
-        for (int i = 0; i < 3; i++)
-            localizationsReferences.add(predefinedMatchupsNode.get(0).get("localizations").get(i).asInt());
-        Collections.sort(localizationsReferences);
-
-        for (int i = 0; i < 3; i++)
-            assertEquals(i, localizationsReferences.get(i).intValue());
-
-        List<Integer> timeslotsReferences = new ArrayList<>(timeslots.size());
-        for (int i = 0; i < timeslots.size() - event.getTimeslotsPerMatch() + 1; i++)
-            timeslotsReferences.add(predefinedMatchupsNode.get(0).get("timeslots").get(i).asInt());
-        Collections.sort(timeslotsReferences);
-
-        for (int i = 0; i < timeslots.size() - event.getTimeslotsPerMatch() + 1; i++)
-            assertEquals(i, timeslotsReferences.get(i).intValue());
-
-        assertEquals(1, predefinedMatchupsNode.get(0).get("occurrences").asInt());
-
-
-        playersReferences = new ArrayList<>(2);
-        playersReferences.add(predefinedMatchupsNode.get(1).get("players").get(0).asInt());
-        playersReferences.add(predefinedMatchupsNode.get(1).get("players").get(1).asInt());
-        Collections.sort(playersReferences);
-
         assertEquals(2, playersReferences.get(0).intValue());
         assertEquals(3, playersReferences.get(1).intValue());
 
-        assertEquals(0, predefinedMatchupsNode.get(1).get("localizations").get(0).asInt());
+        assertEquals(0, predefinedMatchupsNode.get(0).get("localizations").get(0).asInt());
 
-        timeslotsReferences = new ArrayList<>(2);
-        timeslotsReferences.add(predefinedMatchupsNode.get(1).get("timeslots").get(0).asInt());
-        timeslotsReferences.add(predefinedMatchupsNode.get(1).get("timeslots").get(1).asInt());
+        List<Integer> timeslotsReferences = new ArrayList<>(2);
+        timeslotsReferences.add(predefinedMatchupsNode.get(0).get("timeslots").get(0).asInt());
+        timeslotsReferences.add(predefinedMatchupsNode.get(0).get("timeslots").get(1).asInt());
         Collections.sort(timeslotsReferences);
 
         assertEquals(3, timeslotsReferences.get(0).intValue());
         assertEquals(4, timeslotsReferences.get(1).intValue());
 
-        assertEquals(1, predefinedMatchupsNode.get(1).get("occurrences").asInt());
+        assertEquals(1, predefinedMatchupsNode.get(0).get("occurrences").asInt());
     }
 
     @Test

@@ -110,18 +110,30 @@ public class Tournament implements Validable {
             throw new IllegalArgumentException("A category cannot be null");
 
         this.name = name;
-        events = new ArrayList<>(categories);
+        events = categories;
 
         allPlayers = new ArrayList<>();
         allTimeslots = new ArrayList<>();
         allLocalizations = new ArrayList<>();
 
-        events.forEach(event -> {
-            event.getPlayers().stream().filter(p -> !allPlayers.contains(p)).forEach(allPlayers::add);
-            event.getTimeslots().stream().filter(t -> !allTimeslots.contains(t)).forEach(allTimeslots::add);
-            event.getLocalizations().stream().filter(l -> !allLocalizations.contains(l)).forEach(allLocalizations::add);
+        for (Event event : events) {
+            allPlayers.addAll(event.getPlayers()
+                    .stream()
+                    .filter(p -> !allPlayers.contains(p))
+                    .collect(Collectors.toList()));
+
+            allLocalizations.addAll(event.getLocalizations()
+                    .stream()
+                    .filter(l -> !allLocalizations.contains(l))
+                    .collect(Collectors.toList()));
+
+            allTimeslots.addAll(event.getTimeslots()
+                    .stream()
+                    .filter(t -> !allTimeslots.contains(t))
+                    .collect(Collectors.toList()));
+
             event.setTournament(this);
-        });
+        }
 
         solver = new TournamentSolver(this);
     }
@@ -334,17 +346,17 @@ public class Tournament implements Validable {
     public void addUnavailablePlayerAtTimeslotRange(Player player, Timeslot t1, Timeslot t2) {
         if (!allPlayers.contains(player))
             throw new IllegalArgumentException(String.format(
-                    "Player (%s) does not exist in the list of players of the tournament",
+                    "Player (%s) does not exist in the list of players of " + "the tournament",
                     player
             ));
 
         if (!allTimeslots.contains(t1))
             throw new IllegalArgumentException(String.format("Timeslots (%s) does not exist in the list of timeslots " +
-                    "of the tournament", t1));
+                    "" + "of the tournament", t1));
 
         if (!allTimeslots.contains(t2))
             throw new IllegalArgumentException(String.format("Timeslots (%s) does not exist in the list of timeslots " +
-                    " of the tournament", t2));
+                    "" + " of the tournament", t2));
 
         Timeslot start, end;
         if (t1.compareTo(t2) >= 0) {

@@ -335,6 +335,19 @@ public class TimeslotSerializerTest {
         assertNotNull(durationNode.get("value"));
     }
 
+    @Test
+    public void serializeStartAndDurationTest() throws IOException {
+        timeslot = new Timeslot(1, LocalTime.of(12, 6), Duration.ofHours(2));
+
+        JsonNode node = getTimeslotNode();
+
+        JsonNode startNode = node.get("start");
+        JsonNode durationNode = node.get("duration");
+
+        assertNotNull(startNode);
+        assertNotNull(durationNode);
+    }
+
     private JsonNode getTimeslotNode() throws IOException {
         return mapper.readTree(mapper.writeValueAsString(timeslot));
     }

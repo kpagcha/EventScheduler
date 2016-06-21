@@ -391,9 +391,9 @@ public class Event implements Validable {
             throw new IllegalArgumentException("Every timeslot must strictly precede the following");
 
         this.name = name;
-        this.players = players;
-        this.localizations = localizations;
-        this.timeslots = timeslots;
+        this.players = new ArrayList<>(players);
+        this.localizations = new ArrayList<>(localizations);
+        this.timeslots = new ArrayList<>(timeslots);
 
         nMatchesPerPlayer = matchesPerPlayer;
         nTimeslotsPerMatch = timeslotsPerMatch;
