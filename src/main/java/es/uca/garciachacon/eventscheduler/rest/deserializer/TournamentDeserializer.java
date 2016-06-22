@@ -287,167 +287,278 @@ public class TournamentDeserializer extends JsonDeserializer<Tournament> {
         JsonNode node = p.getCodec().readTree(p);
         ObjectMapper mapper = new ObjectMapper();
 
-        String name = node.get("name").asText();
+        JsonNode nameNode = node.path("name");
+        if (nameNode.isMissingNode() || !nameNode.isTextual())
+            throw new MalformedJsonException("Expected \"name\" textual field");
 
+        String name = nameNode.asText();
+
+        JsonNode playersNode = node.path("players");
+        if (playersNode.isMissingNode() || !playersNode.isArray())
+            throw new MalformedJsonException("Expected \"players\" array field");
         List<Player> allPlayers =
                 mapper.reader(TypeFactory.defaultInstance().constructCollectionType(List.class, Player.class))
-                        .readValue(node.path("players"));
+                        .readValue(playersNode);
 
+        JsonNode localizationsNode = node.path("localizations");
+        if (localizationsNode.isMissingNode() || !localizationsNode.isArray())
+            throw new MalformedJsonException("Expected \"localizations\" array field");
         List<Localization> allLocalizations =
                 mapper.reader(TypeFactory.defaultInstance().constructCollectionType(List.class, Localization.class))
-                        .readValue(node.path("localizations"));
+                        .readValue(localizationsNode);
 
+        JsonNode timeslotsNode = node.path("timeslots");
+        if (timeslotsNode.isMissingNode() || !timeslotsNode.isArray())
+            throw new MalformedJsonException("Expected \"timeslots\" array field");
         List<Timeslot> allTimeslots =
                 mapper.reader(TypeFactory.defaultInstance().constructCollectionType(List.class, Timeslot.class))
-                        .readValue(node.path("timeslots"));
+                        .readValue(timeslotsNode);
 
         List<Event> events = new ArrayList<>();
 
-        JsonNode eventsNode = node.get("events");
-        if (eventsNode != null) {
-            for (JsonNode eventNode : eventsNode) {
-                String eventName = eventNode.get("name").asText();
+        JsonNode eventsNode = node.path("events");
+        if (eventsNode.isMissingNode() || !eventsNode.isArray())
+            throw new MalformedJsonException("Expected \"events\" array field");
 
-                List<Player> players = parsePlayers(allPlayers, eventNode);
-                List<Localization> localizations = parseLocalizations(allLocalizations, eventNode);
-                List<Timeslot> timeslots = parseTimeslots(allTimeslots, eventNode);
+        for (JsonNode eventNode : eventsNode) {
+            JsonNode eventNameNode = eventNode.path("name");
+            if (eventNameNode.isMissingNode() || !eventNameNode.isTextual())
+                throw new MalformedJsonException("Expected \"name\" textual field for the event");
 
-                if (players.isEmpty())
-                    players = allPlayers;
+            String eventName = eventNameNode.asText();
 
-                if (localizations.isEmpty())
-                    localizations = allLocalizations;
+            List<Player> players = parsePlayers(allPlayers, eventNode);
+            List<Localization> localizations = parseLocalizations(allLocalizations, eventNode);
+            List<Timeslot> timeslots = parseTimeslots(allTimeslots, eventNode);
 
-                if (timeslots.isEmpty())
-                    timeslots = allTimeslots;
+            if (players.isEmpty())
+                players = allPlayers;
 
-                Event event = new Event(eventName, players, localizations, timeslots);
+            if (localizations.isEmpty())
+                localizations = allLocalizations;
 
-                parseMatchesPerPlayer(eventNode, event);
+            if (timeslots.isEmpty())
+                timeslots = allTimeslots;
 
-                parseTimeslotsPerMatch(eventNode, event);
+            Event event = new Event(eventName, players, localizations, timeslots);
 
-                parsePlayersPerMatch(eventNode, event);
+            parseMatchesPerPlayer(eventNode, event);
 
-                parsePlayersPerTeam(eventNode, event);
+            parseTimeslotsPerMatch(eventNode, event);
 
-                parseTeams(eventNode, players, event);
+            parsePlayersPerMatch(eventNode, event);
 
-                parseBreaks(eventNode, timeslots, event);
+            parsePlayersPerTeam(eventNode, event);
 
-                parseUnavailablePlayers(eventNode, players, timeslots, event);
+            parseTeams(eventNode, players, event);
 
-                parseUnavailableLocalizations(eventNode, localizations, timeslots, event);
+            parseBreaks(eventNode, timeslots, event);
 
-                parsePlayersInLocalizations(eventNode, players, localizations, event);
+            parseUnavailablePlayers(eventNode, players, timeslots, event);
 
-                parsePlayersAtTimeslots(eventNode, players, timeslots, event);
+            parseUnavailableLocalizations(eventNode, localizations, timeslots, event);
 
-                // Se aplica después de configurar las localizaciones y horas asignadas para evitar comportamiento
-                // indeseado debido a la asignación automática de localizaciones y horas del método que establece
-                // los enfrentamientos predefinidos del evento
-                parsePredefinedMatchups(eventNode, players, localizations, timeslots, event);
+            parsePlayersInLocalizations(eventNode, players, localizations, event);
 
-                parseMatchupMode(eventNode, event);
+            parsePlayersAtTimeslots(eventNode, players, timeslots, event);
 
-                events.add(event);
-            }
+            // Se aplica después de configurar las localizaciones y horas asignadas para evitar comportamiento
+            // indeseado debido a la asignación automática de localizaciones y horas del método que establece
+            // los enfrentamientos predefinidos del evento
+            parsePredefinedMatchups(eventNode, players, localizations, timeslots, event);
+
+            parseMatchupMode(eventNode, event);
+
+            events.add(event);
         }
 
         return new Tournament(name, events);
     }
 
-    private List<Player> parsePlayers(List<Player> allPlayers, JsonNode eventNode) {
+    private List<Player> parsePlayers(List<Player> allPlayers, JsonNode eventNode) throws MalformedJsonException {
         List<Player> players = new ArrayList<>();
-        JsonNode playersNode = eventNode.get("players");
-        if (playersNode != null) {
-            for (JsonNode playerNode : playersNode)
-                players.add(allPlayers.get(playerNode.asInt()));
+
+        JsonNode playersNode = eventNode.path("players");
+        if (!playersNode.isMissingNode()) {
+            if (!playersNode.isArray())
+                throw new MalformedJsonException("Field \"players\" expected to be an array");
+
+            for (JsonNode playerNode : playersNode) {
+                if (!playerNode.isInt())
+                    throw new MalformedJsonException("Each item in \"players\" expected to be an integer");
+
+                try {
+                    players.add(allPlayers.get(playerNode.asInt()));
+                } catch (IndexOutOfBoundsException e) {
+                    throw new MalformedJsonException("IndexOutOfBoundsException at players element: " + e.getMessage());
+                }
+            }
         }
+
         return players;
     }
 
-    private List<Localization> parseLocalizations(List<Localization> allLocalizations, JsonNode eventNode) {
+    private List<Localization> parseLocalizations(List<Localization> allLocalizations, JsonNode eventNode)
+            throws MalformedJsonException {
         List<Localization> localizations = new ArrayList<>();
-        JsonNode localizationsNode = eventNode.get("localizations");
-        if (localizationsNode != null) {
-            for (JsonNode localizationNode : localizationsNode)
-                localizations.add(allLocalizations.get(localizationNode.asInt()));
+
+        JsonNode localizationsNode = eventNode.path("localizations");
+        if (!localizationsNode.isMissingNode()) {
+            if (!localizationsNode.isArray())
+                throw new MalformedJsonException("Field \"localizations\" expected to be an array");
+
+            for (JsonNode localizationNode : localizationsNode) {
+                if (!localizationNode.isInt())
+                    throw new MalformedJsonException("Each item in \"localizations\" expected to be an integer");
+
+                try {
+                    localizations.add(allLocalizations.get(localizationNode.asInt()));
+                } catch (IndexOutOfBoundsException e) {
+                    throw new MalformedJsonException(
+                            "IndexOutOfBoundsException at localizations element: " + e.getMessage());
+                }
+            }
         }
+
         return localizations;
     }
 
-    private List<Timeslot> parseTimeslots(List<Timeslot> allTimeslots, JsonNode eventNode) {
+    private List<Timeslot> parseTimeslots(List<Timeslot> allTimeslots, JsonNode eventNode)
+            throws MalformedJsonException {
         List<Timeslot> timeslots = new ArrayList<>();
-        JsonNode timeslotsNode = eventNode.get("timeslots");
-        if (timeslotsNode != null) {
-            for (JsonNode timeslotNode : timeslotsNode)
-                timeslots.add(allTimeslots.get(timeslotNode.asInt()));
+
+        JsonNode timeslotsNode = eventNode.path("timeslots");
+        if (!timeslotsNode.isMissingNode()) {
+            if (!timeslotsNode.isArray())
+                throw new MalformedJsonException("Field \"timeslots\" expected to be an array");
+
+            for (JsonNode timeslotNode : timeslotsNode) {
+                if (!timeslotNode.isInt())
+                    throw new MalformedJsonException("Each item in \"timeslots\" expected to be an integer");
+
+                try {
+                    timeslots.add(allTimeslots.get(timeslotNode.asInt()));
+                } catch (IndexOutOfBoundsException e) {
+                    throw new MalformedJsonException(
+                            "IndexOutOfBoundsException at timeslots element: " + e.getMessage());
+                }
+            }
         }
+
         return timeslots;
     }
 
-    private void parseMatchesPerPlayer(JsonNode node, Event event) {
-        JsonNode matchesPerPlayerNode = node.get("matchesPerPlayer");
-        if (matchesPerPlayerNode != null)
-            event.setMatchesPerPlayer(Integer.parseInt(matchesPerPlayerNode.asText()));
+    private void parseMatchesPerPlayer(JsonNode node, Event event) throws MalformedJsonException {
+        JsonNode matchesPerPlayerNode = node.path("matchesPerPlayer");
+        if (!matchesPerPlayerNode.isMissingNode()) {
+            if (!matchesPerPlayerNode.isInt())
+                throw new MalformedJsonException("Field \"matchesPerPlayer\" expected to be an integer");
+            event.setMatchesPerPlayer(matchesPerPlayerNode.asInt());
+        }
+
     }
 
-    private void parseTimeslotsPerMatch(JsonNode node, Event event) {
-        JsonNode timeslotsPerMatchNode = node.get("timeslotsPerMatch");
-        if (timeslotsPerMatchNode != null)
-            event.setTimeslotsPerMatch(Integer.parseInt(timeslotsPerMatchNode.asText()));
+    private void parseTimeslotsPerMatch(JsonNode node, Event event) throws MalformedJsonException {
+        JsonNode timeslotsPerMatchNode = node.path("timeslotsPerMatch");
+        if (!timeslotsPerMatchNode.isMissingNode()) {
+            if (!timeslotsPerMatchNode.isInt())
+                throw new MalformedJsonException("Field \"timeslotsPerMatch\" expected to be an integer");
+            event.setTimeslotsPerMatch(timeslotsPerMatchNode.asInt());
+        }
     }
 
-    private void parsePlayersPerMatch(JsonNode node, Event event) {
-        JsonNode playersPerMatchNode = node.get("playersPerMatch");
-        if (playersPerMatchNode != null)
-            event.setPlayersPerMatch(Integer.parseInt(playersPerMatchNode.asText()));
+    private void parsePlayersPerMatch(JsonNode node, Event event) throws MalformedJsonException {
+        JsonNode playersPerMatchNode = node.path("playersPerMatch");
+        if (!playersPerMatchNode.isMissingNode()) {
+            if (!playersPerMatchNode.isInt())
+                throw new MalformedJsonException("Field \"playersPerMatch\" expected to be an integer");
+            event.setPlayersPerMatch(playersPerMatchNode.asInt());
+        }
     }
 
-    private void parsePlayersPerTeam(JsonNode node, Event event) {
-        JsonNode playersPerTeamNode = node.get("playersPerTeam");
-        if (playersPerTeamNode != null)
-            event.setPlayersPerTeam(Integer.parseInt(playersPerTeamNode.asText()));
+    private void parsePlayersPerTeam(JsonNode node, Event event) throws MalformedJsonException {
+        JsonNode playersPerTeamNode = node.path("playersPerTeam");
+        if (!playersPerTeamNode.isMissingNode()) {
+            if (!playersPerTeamNode.isInt())
+                throw new MalformedJsonException("Field \"playersPerTeam\" expected to be an integer");
+            event.setPlayersPerTeam(playersPerTeamNode.asInt());
+        }
     }
 
-    private void parseTeams(JsonNode node, List<Player> players, Event event) {
-        JsonNode teamsNode = node.get("teams");
-        if (teamsNode != null) {
+    private void parseTeams(JsonNode node, List<Player> players, Event event) throws MalformedJsonException {
+        JsonNode teamsNode = node.path("teams");
+        if (!teamsNode.isMissingNode()) {
+            if (!teamsNode.isArray())
+                throw new MalformedJsonException("Field \"teams\" expected to be an array");
+
             List<Team> teams = new ArrayList<>();
 
             for (JsonNode teamNode : teamsNode) {
+                if (!teamNode.isObject())
+                    throw new MalformedJsonException("Each item in \"teams\" array field expected to be an object");
+
                 List<Player> playersInTeam = new ArrayList<>();
 
-                for (JsonNode playerNode : teamNode.get("players"))
-                    playersInTeam.add(players.get(playerNode.asInt()));
+                JsonNode playersNode = teamNode.path("players");
+                if (playersNode.isMissingNode() || !playersNode.isArray())
+                    throw new MalformedJsonException("Expected \"players\" array field in the team");
 
-                JsonNode teamName = teamNode.get("name");
-                if (teamName != null && teamName.isTextual())
-                    teams.add(new Team(teamName.asText(), new HashSet<>(playersInTeam)));
-                else
+                for (JsonNode playerNode : playersNode) {
+                    if (!playerNode.isInt())
+                        throw new MalformedJsonException(
+                                "Each item in \"players\" array field expected to be an integer");
+
+                    try {
+                        playersInTeam.add(players.get(playerNode.asInt()));
+                    } catch (IndexOutOfBoundsException e) {
+                        throw new MalformedJsonException(
+                                "IndexOutOfBoundsException at team players element: " + e.getMessage());
+                    }
+                }
+
+                JsonNode teamNameNode = teamNode.path("name");
+                if (teamNameNode.isMissingNode())
                     teams.add(new Team(new HashSet<>(playersInTeam)));
+                else {
+                    if (!teamNameNode.isTextual())
+                        throw new MalformedJsonException("Field \"name\" expected to be textual for the team");
+                    teams.add(new Team(teamNameNode.asText(), new HashSet<>(playersInTeam)));
+                }
             }
             event.setTeams(teams);
         }
     }
 
-    private void parseBreaks(JsonNode node, List<Timeslot> timeslots, Event event) {
-        JsonNode breaksNode = node.get("breaks");
-        if (breaksNode != null) {
+    private void parseBreaks(JsonNode node, List<Timeslot> timeslots, Event event) throws MalformedJsonException {
+        JsonNode breaksNode = node.path("breaks");
+        if (!breaksNode.isMissingNode()) {
+            if (!breaksNode.isArray())
+                throw new MalformedJsonException("Field \"breaks\" expected to be an array");
+
             List<Timeslot> breaks = new ArrayList<>();
-            for (JsonNode breakNode : breaksNode)
-                breaks.add(timeslots.get(breakNode.asInt()));
+            for (JsonNode breakNode : breaksNode) {
+                if (!breakNode.isInt())
+                    throw new MalformedJsonException("Each item in \"breaks\" array field expected to be an integer");
+
+                try {
+                    breaks.add(timeslots.get(breakNode.asInt()));
+                } catch (IndexOutOfBoundsException e) {
+                    throw new MalformedJsonException("IndexOutOfBoundsException at breaks element: " + e.getMessage());
+                }
+            }
 
             event.setBreaks(breaks);
         }
     }
 
-    private void parseUnavailablePlayers(JsonNode node, List<Player> players, List<Timeslot> timeslots, Event event) {
+    private void parseUnavailablePlayers(JsonNode node, List<Player> players, List<Timeslot> timeslots, Event event)
+            throws MalformedJsonException {
+        JsonNode unavailablePlayersNode = node.path("unavailablePlayers");
 
-        JsonNode unavailablePlayersNode = node.get("unavailablePlayers");
+        if (!unavailablePlayersNode.isMissingNode()) {
+            if (!unavailablePlayersNode.isObject())
+                throw new MalformedJsonException("Field \"unavailablePlayers\" expected to be an object");
 
-        if (unavailablePlayersNode != null) {
             Map<Player, Set<Timeslot>> unavailablePlayers = new HashMap<>();
 
             Iterator<Map.Entry<String, JsonNode>> nodeIterator = unavailablePlayersNode.fields();
@@ -455,10 +566,29 @@ public class TournamentDeserializer extends JsonDeserializer<Tournament> {
                 Map.Entry<String, JsonNode> entry = nodeIterator.next();
 
                 Set<Timeslot> unavailablePlayerTimeslots = new HashSet<>();
-                for (JsonNode unavailableTimeslotNode : entry.getValue())
-                    unavailablePlayerTimeslots.add(timeslots.get(unavailableTimeslotNode.asInt()));
+                JsonNode timeslotsNode = entry.getValue();
 
-                unavailablePlayers.put(players.get(Integer.valueOf(entry.getKey())), unavailablePlayerTimeslots);
+                if (!timeslotsNode.isArray())
+                    throw new MalformedJsonException("Unavailable player timeslots expected to be an array");
+
+                for (JsonNode unavailableTimeslotNode : timeslotsNode) {
+                    if (!unavailableTimeslotNode.isInt())
+                        throw new MalformedJsonException(
+                                "Each item in unavailable player timeslots expected to be an integer");
+
+                    try {
+                        unavailablePlayerTimeslots.add(timeslots.get(unavailableTimeslotNode.asInt()));
+                    } catch (IndexOutOfBoundsException e) {
+                        throw new MalformedJsonException(
+                                "IndexOutOfBoundsException at unavailable player timeslots element: " + e.getMessage());
+                    }
+                }
+
+                try {
+                    unavailablePlayers.put(players.get(Integer.valueOf(entry.getKey())), unavailablePlayerTimeslots);
+                } catch (NumberFormatException e) {
+                    throw new MalformedJsonException("Unavailable player expected to be a textual integer");
+                }
             }
 
             event.setUnavailablePlayers(unavailablePlayers);
@@ -466,11 +596,13 @@ public class TournamentDeserializer extends JsonDeserializer<Tournament> {
     }
 
     private void parseUnavailableLocalizations(JsonNode node, List<Localization> localizations,
-            List<Timeslot> timeslots, Event event) {
+            List<Timeslot> timeslots, Event event) throws MalformedJsonException {
+        JsonNode unavailableLocalizationsNode = node.path("unavailableLocalizations");
 
-        JsonNode unavailableLocalizationsNode = node.get("unavailableLocalizations");
+        if (!unavailableLocalizationsNode.isMissingNode()) {
+            if (!unavailableLocalizationsNode.isObject())
+                throw new MalformedJsonException("Field \"unavailableLocalizations\" expected to be an object");
 
-        if (unavailableLocalizationsNode != null) {
             Map<Localization, Set<Timeslot>> unavailableLocalizations = new HashMap<>();
 
             Iterator<Map.Entry<String, JsonNode>> nodeIterator = unavailableLocalizationsNode.fields();
@@ -478,12 +610,32 @@ public class TournamentDeserializer extends JsonDeserializer<Tournament> {
                 Map.Entry<String, JsonNode> entry = nodeIterator.next();
 
                 Set<Timeslot> unavailableLocalizationTimeslots = new HashSet<>();
-                for (JsonNode unavailableTimeslotNode : entry.getValue())
-                    unavailableLocalizationTimeslots.add(timeslots.get(unavailableTimeslotNode.asInt()));
+                JsonNode timeslotsNode = entry.getValue();
 
-                unavailableLocalizations.put(localizations.get(Integer.valueOf(entry.getKey())),
-                        unavailableLocalizationTimeslots
-                );
+                if (!timeslotsNode.isArray())
+                    throw new MalformedJsonException("Unavailable localization timeslots expected to be an array");
+
+                for (JsonNode unavailableTimeslotNode : timeslotsNode) {
+                    if (!unavailableTimeslotNode.isInt())
+                        throw new MalformedJsonException(
+                                "Each item in unavailable localization timeslots expected to be an integer");
+
+                    try {
+                        unavailableLocalizationTimeslots.add(timeslots.get(unavailableTimeslotNode.asInt()));
+                    } catch (IndexOutOfBoundsException e) {
+                        throw new MalformedJsonException(
+                                "IndexOutOfBoundsException at unavailable localization timeslots element: " +
+                                        e.getMessage());
+                    }
+                }
+
+                try {
+                    unavailableLocalizations.put(localizations.get(Integer.valueOf(entry.getKey())),
+                            unavailableLocalizationTimeslots
+                    );
+                } catch (NumberFormatException e) {
+                    throw new MalformedJsonException("Unavailable localization expected to be a textual integer");
+                }
             }
 
             event.setUnavailableLocalizations(unavailableLocalizations);
@@ -491,25 +643,77 @@ public class TournamentDeserializer extends JsonDeserializer<Tournament> {
     }
 
     private void parsePredefinedMatchups(JsonNode node, List<Player> players, List<Localization> localizations,
-            List<Timeslot> timeslots, Event event) {
-        JsonNode predefinedMatchupsNode = node.get("predefinedMatchups");
-        if (predefinedMatchupsNode != null) {
+            List<Timeslot> timeslots, Event event) throws MalformedJsonException {
+        JsonNode predefinedMatchupsNode = node.path("predefinedMatchups");
+
+        if (!predefinedMatchupsNode.isMissingNode()) {
+            if (!predefinedMatchupsNode.isArray())
+                throw new MalformedJsonException("Field \"predefinedMatchups\" expected to be an array");
+
             Set<Matchup> matchups = new HashSet<>();
 
             for (JsonNode predefinedMatchupNode : predefinedMatchupsNode) {
+                if (!predefinedMatchupNode.isObject())
+                    throw new MalformedJsonException("Each item in \"predefinedMatchups\" expected to be an object");
+
                 Set<Player> matchupPlayers = new HashSet<>();
-                for (JsonNode playerNode : predefinedMatchupNode.get("players"))
-                    matchupPlayers.add(players.get(playerNode.asInt()));
+                JsonNode playersNode = predefinedMatchupNode.path("players");
+                if (playersNode.isMissingNode() || !playersNode.isArray())
+                    throw new MalformedJsonException("Expected \"players\" array field in matchup");
+
+                for (JsonNode playerNode : playersNode) {
+                    if (!playerNode.isInt())
+                        throw new MalformedJsonException("Each item in matchup players expected to be an integer");
+
+                    try {
+                        matchupPlayers.add(players.get(playerNode.asInt()));
+                    } catch (IndexOutOfBoundsException e) {
+                        throw new MalformedJsonException(
+                                "IndexOutOfBoundsException at matchup players element: " + e.getMessage());
+                    }
+                }
 
                 Set<Localization> matchupLocalizations = new HashSet<>();
-                for (JsonNode localizationNode : predefinedMatchupNode.get("localizations"))
-                    matchupLocalizations.add(localizations.get(localizationNode.asInt()));
+                JsonNode localizationsNode = predefinedMatchupNode.path("localizations");
+                if (localizationsNode.isMissingNode() || !localizationsNode.isArray())
+                    throw new MalformedJsonException("Expected \"localizations\" array field in matchup");
+
+                for (JsonNode localizationNode : localizationsNode) {
+                    if (!localizationNode.isInt())
+                        throw new MalformedJsonException(
+                                "Each item in matchup localizations expected to be an " + "integer");
+
+                    try {
+                        matchupLocalizations.add(localizations.get(localizationNode.asInt()));
+                    } catch (IndexOutOfBoundsException e) {
+                        throw new MalformedJsonException(
+                                "IndexOutOfBoundsException at matchup localizations element: " + e.getMessage());
+                    }
+                }
 
                 Set<Timeslot> matchupTimeslots = new HashSet<>();
-                for (JsonNode timeslotNode : predefinedMatchupNode.get("timeslots"))
-                    matchupTimeslots.add(timeslots.get(timeslotNode.asInt()));
+                JsonNode timeslotsNode = predefinedMatchupNode.path("timeslots");
+                if (timeslotsNode.isMissingNode() || !timeslotsNode.isArray())
+                    throw new MalformedJsonException("Expected \"timeslots\" array field in matchup");
 
-                int occurrences = predefinedMatchupNode.get("occurrences").asInt();
+                for (JsonNode timeslotNode : timeslotsNode) {
+                    try {
+                        if (!timeslotNode.isInt())
+                            throw new MalformedJsonException(
+                                    "Each item in matchup timeslots expected to be an " + "integer");
+
+                        matchupTimeslots.add(timeslots.get(timeslotNode.asInt()));
+                    } catch (IndexOutOfBoundsException e) {
+                        throw new MalformedJsonException(
+                                "IndexOutOfBoundsException at matchup timeslots element: " + e.getMessage());
+                    }
+                }
+
+                JsonNode ocurrencesNode = predefinedMatchupNode.path("occurrences");
+                if (ocurrencesNode.isMissingNode() || !ocurrencesNode.isInt())
+                    throw new MalformedJsonException("Expected \"occurrences\" integer node in matchup");
+
+                int occurrences = ocurrencesNode.asInt();
 
                 matchups.add(new Matchup(event, matchupPlayers, matchupLocalizations, matchupTimeslots, occurrences));
             }
@@ -519,38 +723,89 @@ public class TournamentDeserializer extends JsonDeserializer<Tournament> {
     }
 
     private void parsePlayersInLocalizations(JsonNode node, List<Player> players, List<Localization> localizations,
-            Event event) {
-        JsonNode playersInLocalizationsNode = node.get("playersInLocalizations");
-        if (playersInLocalizationsNode != null) {
+            Event event) throws MalformedJsonException {
+        JsonNode playersInLocalizationsNode = node.path("playersInLocalizations");
+
+        if (!playersInLocalizationsNode.isMissingNode()) {
+            if (!playersInLocalizationsNode.isObject())
+                throw new MalformedJsonException("Field \"playersInLocalizations\" expected to be an object");
+
             Iterator<Map.Entry<String, JsonNode>> nodeIterator = playersInLocalizationsNode.fields();
             while (nodeIterator.hasNext()) {
                 Map.Entry<String, JsonNode> entry = nodeIterator.next();
-                Player player = players.get(Integer.valueOf(entry.getKey()));
 
-                for (JsonNode localizationNode : entry.getValue())
-                    event.addPlayerInLocalization(player, localizations.get(localizationNode.asInt()));
+                Player player;
+                try {
+                    player = players.get(Integer.valueOf(entry.getKey()));
+                } catch (NumberFormatException e) {
+                    throw new MalformedJsonException("Player expected to be a textual integer");
+                }
+
+                JsonNode localizationsNode = entry.getValue();
+                if (!localizationsNode.isArray())
+                    throw new MalformedJsonException("Assigned localizations expected to be an array");
+
+                for (JsonNode localizationNode : localizationsNode) {
+                    if (!localizationNode.isInt())
+                        throw new MalformedJsonException("Each item in assigned localizations expected to be an " +
+                                "integer");
+
+                    try {
+                        event.addPlayerInLocalization(player, localizations.get(localizationNode.asInt()));
+                    } catch (IndexOutOfBoundsException e) {
+                        throw new MalformedJsonException(
+                                "IndexOutOfBoundsException at assigned localizations element: " + e.getMessage());
+                    }
+                }
             }
         }
     }
 
-    private void parsePlayersAtTimeslots(JsonNode node, List<Player> players, List<Timeslot> timeslots, Event event) {
-        JsonNode playersAtTimeslotsNode = node.get("playersAtTimeslots");
-        if (playersAtTimeslotsNode != null) {
+    private void parsePlayersAtTimeslots(JsonNode node, List<Player> players, List<Timeslot> timeslots, Event event)
+            throws MalformedJsonException {
+        JsonNode playersAtTimeslotsNode = node.path("playersAtTimeslots");
+
+        if (!playersAtTimeslotsNode.isMissingNode()) {
+            if (!playersAtTimeslotsNode.isObject())
+                throw new MalformedJsonException("Field \"playersAtTimeslots\" expected to be an object");
+
             Iterator<Map.Entry<String, JsonNode>> nodeIterator = playersAtTimeslotsNode.fields();
             while (nodeIterator.hasNext()) {
                 Map.Entry<String, JsonNode> entry = nodeIterator.next();
-                Player player = players.get(Integer.valueOf(entry.getKey()));
+                Player player;
+                try {
+                    player = players.get(Integer.valueOf(entry.getKey()));
+                } catch (NumberFormatException e) {
+                    throw new MalformedJsonException("Player expected to be a textual integer");
+                }
 
-                for (JsonNode timeslotNode : entry.getValue())
-                    event.addPlayerAtTimeslot(player, timeslots.get(timeslotNode.asInt()));
+                JsonNode timeslotsNode = entry.getValue();
+                if (!timeslotsNode.isArray())
+                    throw new MalformedJsonException("Assigned timeslots expected to be an array");
+
+                for (JsonNode timeslotNode : timeslotsNode) {
+                    if (!timeslotNode.isInt())
+                        throw new MalformedJsonException("Each item in assigned timeslots expected to be an integer");
+
+                    try {
+                        event.addPlayerAtTimeslot(player, timeslots.get(timeslotNode.asInt()));
+                    } catch (IndexOutOfBoundsException e) {
+                        throw new MalformedJsonException(
+                                "IndexOutOfBoundsException at assigned timeslots element: " + e.getMessage());
+                    }
+                }
             }
         }
     }
 
-    private void parseMatchupMode(JsonNode node, Event event) {
-        JsonNode matchupModeNode = node.get("matchupMode");
-        if (matchupModeNode != null) {
-            TournamentSolver.MatchupMode matchupMode = null;
+    private void parseMatchupMode(JsonNode node, Event event) throws MalformedJsonException {
+        JsonNode matchupModeNode = node.path("matchupMode");
+
+        if (!matchupModeNode.isMissingNode()) {
+            if (!matchupModeNode.isTextual())
+                throw new MalformedJsonException("Field \"matchupMode\" expected to be textual");
+
+            TournamentSolver.MatchupMode matchupMode;
             switch (matchupModeNode.asText().trim().toLowerCase()) {
                 case "all_different":
                 case "all different":
@@ -566,6 +821,8 @@ public class TournamentDeserializer extends JsonDeserializer<Tournament> {
                 case "custom":
                     matchupMode = TournamentSolver.MatchupMode.CUSTOM;
                     break;
+                default:
+                    throw new MalformedJsonException("Unknown matchup mode value");
             }
 
             event.setMatchupMode(matchupMode);

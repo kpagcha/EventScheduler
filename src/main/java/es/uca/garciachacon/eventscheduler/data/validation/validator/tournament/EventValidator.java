@@ -74,7 +74,6 @@ import java.util.Set;
  * <li>Lista no <code>null</code>
  * <li>Lista sin elementos <code>null</code>
  * <li>Lista sin equipos repetidos
- * <li>Si hay equipos, es decir, la lista no está vacía, debe haber más de 1
  * <li>Todos los equipos deben tener el mismo número de jugadores
  * <li>Todos los jugadores de cada equipo deben pertenecer a la lista de jugadores del evento
  * <li>No puede existir un jugador en más de un equipo
