@@ -253,6 +253,7 @@ public class TournamentTest {
 
             assertNotNull(tournamentSchedule);
             assertNotNull(schedules);
+            assertTrue(tournament.hasSchedule());
 
             out.reset();
             tournament.printCurrentSchedules();
@@ -279,6 +280,7 @@ public class TournamentTest {
 
             assertNull(tournament.getSchedule());
             assertNull(tournament.getCurrentSchedules());
+            assertFalse(tournament.hasSchedule());
 
             out.reset();
             tournament.printCurrentSchedules();

@@ -164,6 +164,16 @@ public class Tournament implements Validable {
 
     /**
      * Comienza el proceso de resolución para calcular un primer horario.
+     * <p>
+     * Para calcular sucesivas soluciones del torneo y obtener los sucesivos horarios, se ha de hacer uso del método
+     * {@link Tournament#nextSchedules}. Si se usa este método <code>solve</code> en lugar del anterior, se
+     * reiniciará el proceso de resolución, reconstruyéndose un nuevo modelo del problema y comenzando desde el
+     * principio la resolución.
+     * <p>
+     * Si se realizan modificaciones sobre la configuración del torneo, es decir, sobre alguno de los elementos
+     * configurables de los eventos que lo componen, se debe hacer uso de este método para iniciar el proceso de
+     * resolución sobre la nueva configuración. Si se intenta hacer uso de {@link Tournament#nextSchedules}, habrá
+     * resultados inesperados y probablemente errores, porque el modelo ha cambiado.
      *
      * @return true si se ha encontrado una solución, false si no o si ya no hay más soluciones
      * @throws ValidationException si la validación del torneo falla
@@ -180,12 +190,19 @@ public class Tournament implements Validable {
     }
 
     /**
-     * Actualiza el valor de los horarios con la nueva solución combinada. Si se ha llegado
-     * a la última solución y se llama a este método se establece el valor de los horarios a <code>null</code>.
+     * Actualiza el valor de los horarios con la nueva solución combinada. Si se ha llegado a la última solución y se
+     * llama a este método se establece el valor de los horarios a <code>null</code>.
      * <p>
      * Además, se recalcula el horario combinado, o se le asigna <code>null</code> si no hay más soluciones.
+     * <p>
+     * Si se realizan modificaciones sobre la configuración del torneo, es decir, sobre alguno de los elementos
+     * configurables de los eventos que lo componen, se debe hacer uso de {@link Tournament#solve} para iniciar el
+     * proceso de resolución sobre la nueva configuración. Si se usa este método para calcular posteriores horarios
+     * sin reiniciar el proceso anteriormente, probablemente se obtengan resultados inesperados y errores porque la
+     * resolución se aplica sobre el modelo antiguo del problema, el modelo previo a las modificaciones sobre la
+     * configuración. Esta situación se debe evitar.
      *
-     * @return true si se han actualizado los horarios con una nueva solución, y false si ya
+     * @return <code></code> si se han actualizado los horarios con una nueva solución, y <code>false</code> si ya
      * se ha alcanzado la última solución
      */
     public boolean nextSchedules() {
@@ -196,8 +213,8 @@ public class Tournament implements Validable {
 
     /**
      * Devuelve los horarios de cada categoría con el valor actual. Si no se ha actualizado el valor llamando
-     * al método nextSchedules o si el solver ha alcanzado la última solución y se ha llamado seguidamente a
-     * nextSchedules, devuelve null.
+     * al método {@link Tournament#nextSchedules} o si el solver ha alcanzado la última solución y se ha llamado
+     * seguidamente a este último, devuelve <code>null</code>.
      *
      * @return los horarios de cada categoría
      */
@@ -208,11 +225,39 @@ public class Tournament implements Validable {
     /**
      * Devuelve un único horario combinado del torneo que include todos los jugadores, todas las localizaciones de
      * juego y todas las horas o timeslots de los que compone.
+     * <p>
+     * Si aún no se ha calculado un horario para este torneo mediante {@link Tournament#solve()}, o si ya se han
+     * calculado todos los horarios posibles, o si el torneo no posee ningún horario posible, se devolverá
+     * <code>null</code>.
      *
-     * @return horario combinado del torneo
+     * @return horario del torneo que incluye en un único horario el de todos los eventos que lo componen, o
+     * <code>null</code> si el torneo no tiene un horario posible, o aún no se ha calculado, o ya se han calculado
+     * todos.
      */
     public TournamentSchedule getSchedule() {
         return schedule;
+    }
+
+    /**
+     * Comprueba si el torneo tiene horarios calculados o no. Si no tiene, puede ser porque aún no se ha iniciado el
+     * proceso de resolución ({@link Tournament#solve()}), o porque ya se han encontrado todos los horarios posibles
+     * para este torneo, o porque el torneo sencillamente no tiene un horario posible.
+     *
+     * @return <code>true</code> si el torneo posee un horario que ha sido calculado; <code>false</code> si no
+     */
+    public boolean hasSchedule() {
+        return schedule != null;
+    }
+
+    /**
+     * Comprueba si se han alcanzado todas las soluciones del problema del torneo, es decir, se han obtenido todos
+     * los horarios del mismo mediante sucesivas llamadas a {@link Tournament#nextSchedules}, hasta agotar el proceso
+     * de resolución.
+     *
+     * @return <code>true</code> si se han explorado todos los horarios posibles, <code>false</code> si no
+     */
+    public boolean allSolutionsReached() {
+        return schedule == null && solver.getFoundSolutionsCount() > 0;
     }
 
     public String getName() {
@@ -220,7 +265,7 @@ public class Tournament implements Validable {
     }
 
     /**
-     * Asigna un nombre no nulo al torneo.
+     * Asigna un nombre al torneo.
      *
      * @param name nombre no <code>null</code> del torneo
      * @throws IllegalArgumentException si el nombre es <code>null</code>

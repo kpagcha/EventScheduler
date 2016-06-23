@@ -16,6 +16,12 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * Contiene información acerca de un problema que se ha modelado para representar un torneo deportivo cuyos horarios
+ * se quieren calcular y, si éstos han sido calculados, es decir, el problema ha sido resuelto y tiene solución,
+ * también se incluye información acerca del proceso de resolución, como el tiempo de construcción del modelo o el
+ * tiempo de resolución del problema.
+ */
 public class ResolutionData {
     /**
      * Solver cuya información y estadísticas contiene esta clase ResolutionData
@@ -28,22 +34,18 @@ public class ResolutionData {
      */
     @JsonIgnore
     private final Tournament tournament;
-
-    /**
-     * Nombre del solver
-     */
-    private String solverName;
-
     /**
      * Se ha completado el proceso de resolución
      */
     private final boolean resolutionProcessCompleted;
-
     /**
      * Nombres de las estrategias de búsqueda usadas para la resolución
      */
     private final List<String> searchStrategies;
-
+    /**
+     * Nombre del solver
+     */
+    private String solverName;
     /**
      * Número de variables del modelo
      */

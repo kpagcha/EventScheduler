@@ -1,6 +1,7 @@
 package es.uca.garciachacon.eventscheduler.rest;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import es.uca.garciachacon.eventscheduler.data.model.schedule.TournamentSchedule;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.Tournament;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.event.Event;
 import es.uca.garciachacon.eventscheduler.rest.dao.ITournamentDao;
@@ -9,6 +10,7 @@ import es.uca.garciachacon.eventscheduler.utils.TournamentUtils;
 import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -20,7 +22,7 @@ import java.util.Set;
  */
 @Path("eventscheduler")
 public class EventSchedulerService {
-    private ITournamentDao tournamentDao;
+    private ITournamentDao dao;
 
     /**
      * Inyecta automáticamente la implementación del DAO especificada en {@link Binder}.
@@ -29,7 +31,7 @@ public class EventSchedulerService {
      */
     @Inject
     public EventSchedulerService(ITournamentDao tournamentDao) {
-        this.tournamentDao = tournamentDao;
+        dao = tournamentDao;
     }
 
     public static void main(String[] args) throws JsonProcessingException {
@@ -50,7 +52,7 @@ public class EventSchedulerService {
         );
         Tournament t2 = new Tournament("Tournament", e2);
 
-        System.out.println(t2.toJson());
+        System.out.println(t1.toJson());
     }
 
     /**
@@ -59,11 +61,12 @@ public class EventSchedulerService {
      *
      * @return pares de identificador-torneo almacenados
      */
+    @Path("/tournaments")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Map<String, String> getTournaments() {
         Map<String, String> tournaments = new HashMap<>();
-        tournamentDao.getTournaments().forEach((id, t) -> tournaments.put(id, t.getName()));
+        dao.getAll().forEach((id, t) -> tournaments.put(id, t.getName()));
         return tournaments;
     }
 
@@ -74,10 +77,11 @@ public class EventSchedulerService {
      * @param tournament torneo a crear
      * @return identificador único del torneo que se ha creado
      */
+    @Path("/tournaments")
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     public String createTournament(Tournament tournament) {
-        return tournamentDao.create(tournament);
+        return dao.create(tournament);
     }
 
     /**
@@ -86,11 +90,11 @@ public class EventSchedulerService {
      *
      * @return lista de identificadores únicos
      */
-    @Path("/ids")
+    @Path("/tournaments/ids")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Set<String> getIds() {
-        return tournamentDao.getIds();
+        return dao.getIds();
     }
 
     /**
@@ -101,13 +105,44 @@ public class EventSchedulerService {
      * @param id el identificador del torneo que se quiere obtener
      * @return torneo correspondiente al identificador especificado
      */
-    @Path("/{id}")
+    @Path("/tournaments/{id}")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Tournament getTournament(@PathParam("id") String id) {
-        Optional<Tournament> optTournament = tournamentDao.getTournament(id);
+        Optional<Tournament> optTournament = dao.get(id);
         if (optTournament.isPresent())
             return optTournament.get();
         throw new NotFoundException();
+    }
+
+    /**
+     * Petición DELETE que elimina un torneo con el identificador asociado que se especifica en la ruta.
+     * <p>
+     * Si existe un torneo con el identificador indicado, se devuelve una respuesta HTTP con código 204 <i>
+     * (NO_CONTENT)</i>. Si no existe, la respuesta tendrá el código 404 <i>(NOT_FOUND)</i>.
+     *
+     * @param id el identificador del torneo a eliminar
+     * @return respuesta con código 204 si el torneo ha sido eliminador; 404 si no
+     */
+    @Path("/tournaments/{id}")
+    @DELETE
+    public Response deleteTournament(@PathParam("id") String id) {
+        if (dao.delete(id))
+            return Response.status(Response.Status.NO_CONTENT).build();
+        throw new NotFoundException();
+    }
+
+    @Path("/tournaments/{id}/schedule")
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    public TournamentSchedule getTournamentSchedule(@PathParam("id") String id) {
+        if (!dao.getIds().contains(id))
+            throw new NotFoundException();
+
+        Optional<TournamentSchedule> schedule = dao.getSchedule(id);
+        if (schedule.isPresent())
+            return schedule.get();
+        else
+            return null;
     }
 }
