@@ -29,6 +29,7 @@ import static org.junit.Assert.*;
 public class TournamentDeserializerTest {
     @Rule
     public ExpectedException expectedEx = ExpectedException.none();
+
     private Tournament tournament;
     private Event event;
     private ObjectMapper mapper = new ObjectMapper();

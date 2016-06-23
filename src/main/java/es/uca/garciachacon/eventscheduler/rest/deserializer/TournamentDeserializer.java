@@ -280,6 +280,9 @@ import java.util.*;
  * <pre>
  * "matchupMode" : "all_different"
  * </pre>
+ * <p>
+ * Si el contenido del JSON que se quiere deserializar no se ajusta al formato descrito se lanzará una
+ * {@link MalformedJsonException} que describirá el problema en el formato.
  */
 public class TournamentDeserializer extends JsonDeserializer<Tournament> {
     @Override
@@ -288,27 +291,27 @@ public class TournamentDeserializer extends JsonDeserializer<Tournament> {
         ObjectMapper mapper = new ObjectMapper();
 
         JsonNode nameNode = node.path("name");
-        if (nameNode.isMissingNode() || !nameNode.isTextual())
+        if (!nameNode.isTextual())
             throw new MalformedJsonException("Expected \"name\" textual field");
 
         String name = nameNode.asText();
 
         JsonNode playersNode = node.path("players");
-        if (playersNode.isMissingNode() || !playersNode.isArray())
+        if (!playersNode.isArray())
             throw new MalformedJsonException("Expected \"players\" array field");
         List<Player> allPlayers =
                 mapper.reader(TypeFactory.defaultInstance().constructCollectionType(List.class, Player.class))
                         .readValue(playersNode);
 
         JsonNode localizationsNode = node.path("localizations");
-        if (localizationsNode.isMissingNode() || !localizationsNode.isArray())
+        if (!localizationsNode.isArray())
             throw new MalformedJsonException("Expected \"localizations\" array field");
         List<Localization> allLocalizations =
                 mapper.reader(TypeFactory.defaultInstance().constructCollectionType(List.class, Localization.class))
                         .readValue(localizationsNode);
 
         JsonNode timeslotsNode = node.path("timeslots");
-        if (timeslotsNode.isMissingNode() || !timeslotsNode.isArray())
+        if (!timeslotsNode.isArray())
             throw new MalformedJsonException("Expected \"timeslots\" array field");
         List<Timeslot> allTimeslots =
                 mapper.reader(TypeFactory.defaultInstance().constructCollectionType(List.class, Timeslot.class))
@@ -317,12 +320,12 @@ public class TournamentDeserializer extends JsonDeserializer<Tournament> {
         List<Event> events = new ArrayList<>();
 
         JsonNode eventsNode = node.path("events");
-        if (eventsNode.isMissingNode() || !eventsNode.isArray())
+        if (!eventsNode.isArray())
             throw new MalformedJsonException("Expected \"events\" array field");
 
         for (JsonNode eventNode : eventsNode) {
             JsonNode eventNameNode = eventNode.path("name");
-            if (eventNameNode.isMissingNode() || !eventNameNode.isTextual())
+            if (!eventNameNode.isTextual())
                 throw new MalformedJsonException("Expected \"name\" textual field for the event");
 
             String eventName = eventNameNode.asText();
@@ -500,7 +503,7 @@ public class TournamentDeserializer extends JsonDeserializer<Tournament> {
                 List<Player> playersInTeam = new ArrayList<>();
 
                 JsonNode playersNode = teamNode.path("players");
-                if (playersNode.isMissingNode() || !playersNode.isArray())
+                if (!playersNode.isArray())
                     throw new MalformedJsonException("Expected \"players\" array field in the team");
 
                 for (JsonNode playerNode : playersNode) {
@@ -531,6 +534,7 @@ public class TournamentDeserializer extends JsonDeserializer<Tournament> {
 
     private void parseBreaks(JsonNode node, List<Timeslot> timeslots, Event event) throws MalformedJsonException {
         JsonNode breaksNode = node.path("breaks");
+
         if (!breaksNode.isMissingNode()) {
             if (!breaksNode.isArray())
                 throw new MalformedJsonException("Field \"breaks\" expected to be an array");
@@ -658,7 +662,7 @@ public class TournamentDeserializer extends JsonDeserializer<Tournament> {
 
                 Set<Player> matchupPlayers = new HashSet<>();
                 JsonNode playersNode = predefinedMatchupNode.path("players");
-                if (playersNode.isMissingNode() || !playersNode.isArray())
+                if (!playersNode.isArray())
                     throw new MalformedJsonException("Expected \"players\" array field in matchup");
 
                 for (JsonNode playerNode : playersNode) {
@@ -675,7 +679,7 @@ public class TournamentDeserializer extends JsonDeserializer<Tournament> {
 
                 Set<Localization> matchupLocalizations = new HashSet<>();
                 JsonNode localizationsNode = predefinedMatchupNode.path("localizations");
-                if (localizationsNode.isMissingNode() || !localizationsNode.isArray())
+                if (!localizationsNode.isArray())
                     throw new MalformedJsonException("Expected \"localizations\" array field in matchup");
 
                 for (JsonNode localizationNode : localizationsNode) {
@@ -693,7 +697,7 @@ public class TournamentDeserializer extends JsonDeserializer<Tournament> {
 
                 Set<Timeslot> matchupTimeslots = new HashSet<>();
                 JsonNode timeslotsNode = predefinedMatchupNode.path("timeslots");
-                if (timeslotsNode.isMissingNode() || !timeslotsNode.isArray())
+                if (!timeslotsNode.isArray())
                     throw new MalformedJsonException("Expected \"timeslots\" array field in matchup");
 
                 for (JsonNode timeslotNode : timeslotsNode) {
@@ -710,7 +714,7 @@ public class TournamentDeserializer extends JsonDeserializer<Tournament> {
                 }
 
                 JsonNode ocurrencesNode = predefinedMatchupNode.path("occurrences");
-                if (ocurrencesNode.isMissingNode() || !ocurrencesNode.isInt())
+                if (!ocurrencesNode.isInt())
                     throw new MalformedJsonException("Expected \"occurrences\" integer node in matchup");
 
                 int occurrences = ocurrencesNode.asInt();
@@ -747,8 +751,8 @@ public class TournamentDeserializer extends JsonDeserializer<Tournament> {
 
                 for (JsonNode localizationNode : localizationsNode) {
                     if (!localizationNode.isInt())
-                        throw new MalformedJsonException("Each item in assigned localizations expected to be an " +
-                                "integer");
+                        throw new MalformedJsonException(
+                                "Each item in assigned localizations expected to be an " + "integer");
 
                     try {
                         event.addPlayerInLocalization(player, localizations.get(localizationNode.asInt()));

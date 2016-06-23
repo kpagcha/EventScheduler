@@ -7,7 +7,7 @@ import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
 /**
- * Manejo personalizado de las excepciones de tipo {@link MalformedJsonException} que se lanzan desde el servicio web.
+ * Manejo dedicado de las excepciones de tipo {@link MalformedJsonException} que se lanzan desde el servicio web.
  * <p>
  * Cuando se produzca una excepción de este tipo, correspondiente a errores de formato JSON durante la
  * deserialización de un cuerpo JSON (y también durante la serialización, aunque es una situación menos común), la

@@ -8,6 +8,7 @@ import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Tim
 
 import java.io.IOException;
 import java.time.*;
+import java.time.format.DateTimeParseException;
 import java.time.temporal.TemporalAccessor;
 import java.time.temporal.TemporalAmount;
 
@@ -132,18 +133,22 @@ public class TimeslotDeserializer extends JsonDeserializer<Timeslot> {
 
         Timeslot timeslot;
 
-        int chronologicalOrder = Integer.parseInt(node.get("chronologicalOrder").asText());
-        JsonNode startNode = node.get("start");
-        JsonNode durationNode = node.get("duration");
+        JsonNode chronologicalOrderNode = node.path("chronologicalOrder");
+        if (!chronologicalOrderNode.isInt())
+            throw new MalformedJsonException("Expected \"chronologicalOrder\" integer field");
+
+        int chronologicalOrder = chronologicalOrderNode.asInt();
+        JsonNode startNode = node.path("start");
+        JsonNode durationNode = node.path("duration");
 
         TemporalAccessor start = null;
         TemporalAmount duration = null;
 
-        if (startNode != null)
-            start = parseStart(startNode, start);
+        if (!startNode.isMissingNode())
+            start = parseStart(startNode);
 
-        if (durationNode != null)
-            duration = parseDuration(durationNode, duration);
+        if (!durationNode.isMissingNode())
+            duration = parseDuration(durationNode);
 
         if (start == null && duration == null)
             timeslot = new Timeslot(chronologicalOrder);
@@ -154,53 +159,112 @@ public class TimeslotDeserializer extends JsonDeserializer<Timeslot> {
         else
             timeslot = new Timeslot(chronologicalOrder, start, duration);
 
-        JsonNode nameNode = node.get("name");
-        if (nameNode != null) {
-            String name = nameNode.isTextual() ? nameNode.asText() : "";
-            if (!name.isEmpty())
-                timeslot.setName(name);
+        JsonNode nameNode = node.path("name");
+        if (!nameNode.isMissingNode()) {
+            if (!nameNode.isTextual())
+                throw new MalformedJsonException("Field \"name\" expected to be textual");
+            timeslot.setName(nameNode.asText());
         }
 
         return timeslot;
     }
 
-    private TemporalAccessor parseStart(JsonNode startNode, TemporalAccessor start) {
-        JsonNode startTypeNode = startNode.get("type");
-        String startType = startTypeNode.isTextual() ? startTypeNode.asText() : null;
+    private TemporalAccessor parseStart(JsonNode startNode) throws MalformedJsonException {
+        if (!startNode.isObject())
+            throw new MalformedJsonException("Field \"start\" expected to be an object");
 
-        JsonNode valueNode = startNode.get("value");
+        JsonNode startTypeNode = startNode.path("type");
+        if (!startTypeNode.isTextual())
+            throw new MalformedJsonException("Expected \"type\" textual field");
 
-        switch (startType.trim()) {
+        TemporalAccessor start;
+        JsonNode valueNode = startNode.path("value");
+
+        if (valueNode.isMissingNode())
+            throw new MalformedJsonException("Expected \"value\" node");
+
+        switch (startTypeNode.asText().trim()) {
             case "DayOfWeek":
-                if (valueNode.isInt())
-                    start = DayOfWeek.of(valueNode.asInt());
-                else if (valueNode.isTextual())
-                    start = DayOfWeek.valueOf(valueNode.asText());
+                if (valueNode.isInt()) {
+                    try {
+                        start = DayOfWeek.of(valueNode.asInt());
+                    } catch (DateTimeException e) {
+                        throw new MalformedJsonException("Invalid day of week: " + e.getMessage());
+                    }
+                } else if (valueNode.isTextual()) {
+                    try {
+                        start = DayOfWeek.valueOf(valueNode.asText());
+                    } catch (IllegalArgumentException e) {
+                        throw new MalformedJsonException("Invalid day of week: " + e.getMessage());
+                    }
+                } else
+                    throw new MalformedJsonException("Field \"value\" expected to be an integer or a string");
                 break;
 
             case "Month":
-                if (valueNode.isInt())
-                    start = Month.of(valueNode.asInt());
-                else if (valueNode.isTextual())
-                    start = Month.valueOf(valueNode.asText());
+                if (valueNode.isInt()) {
+                    try {
+                        start = Month.of(valueNode.asInt());
+                    } catch (DateTimeException e) {
+                        throw new MalformedJsonException("Invalid month: " + e.getMessage());
+                    }
+                } else if (valueNode.isTextual()) {
+                    try {
+                        start = Month.valueOf(valueNode.asText());
+                    } catch (IllegalArgumentException e) {
+                        throw new MalformedJsonException("Invalid month: " + e.getMessage());
+                    }
+                } else
+                    throw new MalformedJsonException("Field \"value\" expected to be an integer or a string");
                 break;
 
             case "MonthDay":
-                start = MonthDay.of(
-                        Integer.parseInt(valueNode.get("month").asText()),
-                        Integer.parseInt(valueNode.get("dayOfMonth").asText())
-                );
+                if (!valueNode.isObject())
+                    throw new MalformedJsonException("Field \"value\" expected to be an object");
+
+                JsonNode monthDayMonthNode = valueNode.path("month");
+                if (!monthDayMonthNode.isInt())
+                    throw new MalformedJsonException("Expected \"month\" integer field");
+
+                JsonNode monthDayDayOfMonthNode = valueNode.path("dayOfMonth");
+                if (!monthDayDayOfMonthNode.isInt())
+                    throw new MalformedJsonException("Expected \"dayOfMonth\" integer field");
+
+                try {
+                    start = MonthDay.of(monthDayMonthNode.asInt(), monthDayDayOfMonthNode.asInt());
+                } catch (DateTimeException e) {
+                    throw new MalformedJsonException("Invalid month-day: " + e.getMessage());
+                }
                 break;
 
             case "Year":
-                start = Year.of(Integer.parseInt(valueNode.asText()));
+                if (!valueNode.isInt())
+                    throw new MalformedJsonException("Field \"value\" expected to be an integer");
+
+                try {
+                    start = Year.of(valueNode.asInt());
+                } catch (DateTimeException e) {
+                    throw new MalformedJsonException("Invalid year: " + e.getMessage());
+                }
                 break;
 
             case "YearMonth":
-                start = YearMonth.of(
-                        Integer.parseInt(valueNode.get("year").asText()),
-                        Integer.parseInt(valueNode.get("month").asText())
-                );
+                if (!valueNode.isObject())
+                    throw new MalformedJsonException("Field \"value\" expected to be an object");
+
+                JsonNode yearMonthYearNode = valueNode.path("year");
+                if (!yearMonthYearNode.isInt())
+                    throw new MalformedJsonException("Expected \"year\" integer field");
+
+                JsonNode yearMonthMonthNode = valueNode.path("month");
+                if (!yearMonthMonthNode.isInt())
+                    throw new MalformedJsonException("Expected \"month\" integer field");
+
+                try {
+                    start = YearMonth.of(yearMonthYearNode.asInt(), yearMonthMonthNode.asInt());
+                } catch (DateTimeException e) {
+                    throw new MalformedJsonException("Invalid year-month: " + e.getMessage());
+                }
                 break;
 
             case "LocalTime":
@@ -212,80 +276,147 @@ public class TimeslotDeserializer extends JsonDeserializer<Timeslot> {
                 break;
 
             case "LocalDateTime":
-                if (valueNode.isTextual())
-                    start = LocalDateTime.parse(valueNode.asText());
+                if (valueNode.isTextual()) {
+                    try {
+                        start = LocalDateTime.parse(valueNode.asText());
+                    } catch (DateTimeParseException e) {
+                        throw new MalformedJsonException("Cannot parse date-time: " + e.getMessage());
+                    }
+                } else if (valueNode.isObject())
+                    start = LocalDateTime.of(parseDate(valueNode.path("date")), parseTime(valueNode.path("time")));
                 else
-                    start = LocalDateTime.of(parseDate(valueNode.get("date")), parseTime(valueNode.get("time")));
+                    throw new MalformedJsonException("Field \"value\" expected to be textual or an object");
+                break;
+
+            default:
+                throw new MalformedJsonException("Unknown start type");
         }
         return start;
     }
 
-    private TemporalAmount parseDuration(JsonNode durationNode, TemporalAmount duration) {
-        JsonNode durationTypeNode = durationNode.get("type");
-        String durationType = durationTypeNode.isTextual() ? durationTypeNode.asText() : null;
+    private TemporalAmount parseDuration(JsonNode durationNode) throws MalformedJsonException {
+        if (!durationNode.isObject())
+            throw new MalformedJsonException("Field \"duration\" expected to be an object");
 
-        JsonNode valueNode = durationNode.get("value");
+        JsonNode durationTypeNode = durationNode.path("type");
+        if (!durationTypeNode.isTextual())
+            throw new MalformedJsonException("Expected \"type\" textual field");
 
-        long longValue = Long.parseLong(valueNode.asText());
+        JsonNode valueNode = durationNode.path("value");
+        if (!(valueNode.isInt() || valueNode.isLong()))
+            throw new MalformedJsonException("Expected \"value\" integer field");
 
-        switch (durationType.trim()) {
-            case "milliseconds":
-                duration = Duration.ofMillis(longValue);
-                break;
-            case "seconds":
-                duration = Duration.ofSeconds(longValue);
-                break;
-            case "minutes":
-                duration = Duration.ofMinutes(longValue);
-                break;
-            case "hours":
-                duration = Duration.ofHours(longValue);
-                break;
-            case "days":
-                duration = Period.ofDays(Math.toIntExact(longValue));
-                break;
-            case "weeks":
-                duration = Period.ofWeeks(Math.toIntExact(longValue));
-                break;
-            case "months":
-                duration = Period.ofMonths(Math.toIntExact(longValue));
-                break;
-            case "years":
-                duration = Period.ofYears(Math.toIntExact(longValue));
+        TemporalAmount duration;
+        long longValue = valueNode.asLong();
+
+        try {
+            switch (durationTypeNode.asText().trim()) {
+                case "milliseconds":
+                    duration = Duration.ofMillis(longValue);
+                    break;
+                case "seconds":
+                    duration = Duration.ofSeconds(longValue);
+                    break;
+                case "minutes":
+                    try {
+                        duration = Duration.ofMinutes(longValue);
+                    } catch (ArithmeticException e) {
+                        throw new MalformedJsonException("Invalid minutes: " + e.getMessage());
+                    }
+                    break;
+                case "hours":
+                    try {
+                        duration = Duration.ofHours(longValue);
+                    } catch (ArithmeticException e) {
+                        throw new MalformedJsonException("Invalid hours: " + e.getMessage());
+                    }
+                    break;
+                case "days":
+                    duration = Period.ofDays(Math.toIntExact(longValue));
+                    break;
+                case "weeks":
+                    duration = Period.ofWeeks(Math.toIntExact(longValue));
+                    break;
+                case "months":
+                    duration = Period.ofMonths(Math.toIntExact(longValue));
+                    break;
+                case "years":
+                    duration = Period.ofYears(Math.toIntExact(longValue));
+                    break;
+                default:
+                    throw new MalformedJsonException("Unknown duration type");
+            }
+        } catch (ArithmeticException e) {
+            throw new MalformedJsonException("Duration value too big: " + e.getMessage());
         }
         return duration;
     }
 
-    private LocalTime parseTime(JsonNode node) {
-        LocalTime time;
-        if (node.isTextual())
-            time = LocalTime.parse(node.asText());
-        else {
-            int second = 0;
-            JsonNode valueSecondNode = node.path("second");
-            if (valueSecondNode.isInt())
-                second = valueSecondNode.asInt();
+    private LocalTime parseTime(JsonNode timeNode) throws MalformedJsonException {
+        if (timeNode.isMissingNode())
+            throw new MalformedJsonException("Expected time value");
 
-            time = LocalTime.of(
-                    Integer.parseInt(node.get("hour").asText()),
-                    Integer.parseInt(node.get("minute").asText()),
-                    second
-            );
-        }
+        LocalTime time;
+        if (timeNode.isTextual()) {
+            try {
+                time = LocalTime.parse(timeNode.asText());
+            } catch (DateTimeParseException e) {
+                throw new MalformedJsonException("Cannot parse time: " + e.getMessage());
+            }
+        } else if (timeNode.isObject()) {
+            int second = timeNode.path("second").asInt();
+
+            JsonNode hourNode = timeNode.path("hour");
+            if (!hourNode.isInt())
+                throw new MalformedJsonException("Expected \"hour\" integer field");
+
+            JsonNode minuteNode = timeNode.path("minute");
+            if (!minuteNode.isInt())
+                throw new MalformedJsonException("Expected \"minute\" integer field");
+
+            try {
+                time = LocalTime.of(hourNode.asInt(), minuteNode.asInt(), second);
+            } catch (DateTimeException e) {
+                throw new MalformedJsonException("Invalid time: " + e.getMessage());
+            }
+        } else
+            throw new MalformedJsonException("Time value expected to be textual or an object");
+
         return time;
     }
 
-    private LocalDate parseDate(JsonNode node) {
+    private LocalDate parseDate(JsonNode dateNode) throws MalformedJsonException {
+        if (dateNode.isMissingNode())
+            throw new MalformedJsonException("Expected date value");
+
         LocalDate date;
-        if (node.isTextual())
-            date = LocalDate.parse(node.asText());
-        else {
-            date = LocalDate.of(
-                    Integer.parseInt(node.get("year").asText()),
-                    Integer.parseInt(node.get("month").asText()),
-                    Integer.parseInt(node.get("day").asText())
-            );
-        }
+        if (dateNode.isTextual()) {
+            try {
+                date = LocalDate.parse(dateNode.asText());
+            } catch (DateTimeParseException e) {
+                throw new MalformedJsonException("Cannot parse date: " + e.getMessage());
+            }
+        } else if (dateNode.isObject()) {
+            JsonNode yearNode = dateNode.path("year");
+            if (!yearNode.isInt())
+                throw new MalformedJsonException("Expected \"year\" integer field");
+
+            JsonNode monthNode = dateNode.get("month");
+            if (!monthNode.isInt())
+                throw new MalformedJsonException("Expected \"month\" integer field");
+
+            JsonNode dayNode = dateNode.get("day");
+            if (!dayNode.isInt())
+                throw new MalformedJsonException("Expected \"day\" integer field");
+
+            try {
+                date = LocalDate.of(yearNode.asInt(), monthNode.asInt(), dayNode.asInt());
+            } catch (DateTimeException e) {
+                throw new MalformedJsonException("Invalid date: " + e.getMessage());
+            }
+        } else
+            throw new MalformedJsonException("Date value expected to be textual or an object");
+
         return date;
     }
 }
