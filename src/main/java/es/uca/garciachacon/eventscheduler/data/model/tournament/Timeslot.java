@@ -1,4 +1,4 @@
-package es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain;
+package es.uca.garciachacon.eventscheduler.data.model.tournament;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;

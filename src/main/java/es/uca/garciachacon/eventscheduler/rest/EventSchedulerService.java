@@ -2,8 +2,8 @@ package es.uca.garciachacon.eventscheduler.rest;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import es.uca.garciachacon.eventscheduler.data.model.schedule.TournamentSchedule;
+import es.uca.garciachacon.eventscheduler.data.model.tournament.Event;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.Tournament;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.event.Event;
 import es.uca.garciachacon.eventscheduler.rest.dao.ITournamentDao;
 import es.uca.garciachacon.eventscheduler.utils.TournamentUtils;
 

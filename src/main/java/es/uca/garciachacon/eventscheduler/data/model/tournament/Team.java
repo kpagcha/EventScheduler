@@ -1,12 +1,12 @@
-package es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain;
+package es.uca.garciachacon.eventscheduler.data.model.tournament;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.event.Event;
 import es.uca.garciachacon.eventscheduler.solver.TournamentSolver;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -40,14 +40,14 @@ public class Team extends Entity {
      *
      * @param name    una cadena no nula
      * @param players un conjunto con más dos de jugadores, no <code>null</code>
-     * @throws IllegalArgumentException si <code>players</code> es <code>null</code>, o si alguno sus elementos son
-     *                                  <code>null</code> o si su tamaño es inferior a 2
+     * @throws NullPointerException si <code>players</code> es <code>null</code>
+     * @throws IllegalArgumentException si el equipo tiene menos de dos jugadores
+     * @throws IllegalArgumentException si el equipo tiene un jugador <code>null</code>
      */
     public Team(String name, Set<Player> players) {
         super(name);
 
-        if (players == null)
-            throw new IllegalArgumentException("Players cannot be null");
+        Objects.requireNonNull(players);
 
         if (players.size() < 2)
             throw new IllegalArgumentException("A team cannot have less than two players");
@@ -103,14 +103,13 @@ public class Team extends Entity {
      * asociación se gestiona de forma interna.
      *
      * @param event un evento no nulo
-     * @throws IllegalArgumentException si el evento es <code>null</code>
+     * @throws NullPointerException si el evento es <code>null</code>
      * @throws IllegalStateException    si ya existe una asociación. Es ilegal invocar a esta función externamente, no
      *                                  se puede cambiar voluntariamente el evento asociado al equipo; ésta es una
      *                                  responsabilidad de la clase {@link Event}
      */
-    public void setEvent(Event event) {
-        if (event == null)
-            throw new IllegalArgumentException("Event cannot be null");
+    protected void setEvent(Event event) {
+        Objects.requireNonNull(event);
 
         if (this.event != null)
             throw new IllegalStateException("Event has already been set");

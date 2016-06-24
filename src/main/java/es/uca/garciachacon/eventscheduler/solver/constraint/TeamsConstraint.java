@@ -1,8 +1,8 @@
 package es.uca.garciachacon.eventscheduler.solver.constraint;
 
-import es.uca.garciachacon.eventscheduler.data.model.tournament.event.Event;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Player;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Team;
+import es.uca.garciachacon.eventscheduler.data.model.tournament.Event;
+import es.uca.garciachacon.eventscheduler.data.model.tournament.Player;
+import es.uca.garciachacon.eventscheduler.data.model.tournament.Team;
 import org.chocosolver.solver.constraints.IntConstraintFactory;
 
 import java.util.List;

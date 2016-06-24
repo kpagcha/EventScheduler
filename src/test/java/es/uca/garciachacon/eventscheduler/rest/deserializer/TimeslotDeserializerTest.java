@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Timeslot;
+import es.uca.garciachacon.eventscheduler.data.model.tournament.Timeslot;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;

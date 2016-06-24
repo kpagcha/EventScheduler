@@ -3,12 +3,8 @@ package es.uca.garciachacon.eventscheduler.data.model.schedule;
 import es.uca.garciachacon.eventscheduler.data.model.schedule.value.AbstractScheduleValue;
 import es.uca.garciachacon.eventscheduler.data.model.schedule.value.PlayerScheduleValue;
 import es.uca.garciachacon.eventscheduler.data.model.schedule.value.PlayerScheduleValueOccupied;
-import es.uca.garciachacon.eventscheduler.data.model.schedule.value.ScheduleValue;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.Tournament;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.event.Event;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Localization;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Player;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Timeslot;
+import es.uca.garciachacon.eventscheduler.data.model.schedule.value.Value;
+import es.uca.garciachacon.eventscheduler.data.model.tournament.*;
 import es.uca.garciachacon.eventscheduler.data.validation.validable.ValidationException;
 import es.uca.garciachacon.eventscheduler.solver.TournamentSolver;
 import es.uca.garciachacon.eventscheduler.utils.TournamentUtils;
@@ -26,7 +22,7 @@ import static org.junit.Assert.*;
 /**
  * Tests de las clases {@link Schedule}, {@link EventSchedule} y {@link TournamentSchedule}.
  * <p>
- * Include además, test de {@link AbstractScheduleValue} y {@linkplain ScheduleValue}.
+ * Include además, test de {@link AbstractScheduleValue} y {@linkplain Value}.
  */
 public class ScheduleTest {
 
@@ -298,7 +294,7 @@ public class ScheduleTest {
         assertTrue(v.equals(new PlayerScheduleValue(PlayerScheduleValue.FREE)));
 
         try {
-            new PlayerScheduleValue(new ScheduleValue("UNKNOWN"));
+            new PlayerScheduleValue(new Value("UNKNOWN"));
             fail("IllegalArgumentException expected");
         } catch (IllegalArgumentException e) {
             assertEquals(e.getMessage(), "Illegal value");
@@ -329,13 +325,13 @@ public class ScheduleTest {
 
     @Test
     public void scheduleValueTest() {
-        ScheduleValue v = new ScheduleValue("STATE_1");
+        Value v = new Value("STATE_1");
         assertEquals("STATE_1", v.getName());
         assertTrue(v.is("STATE_1"));
         assertTrue(v.is("state_1"));
         assertFalse(v.is("STATE_2"));
-        assertTrue(v.equals(new ScheduleValue("State_1")));
-        assertFalse(v.equals(new ScheduleValue("STATE_2")));
+        assertTrue(v.equals(new Value("State_1")));
+        assertFalse(v.equals(new Value("STATE_2")));
         assertNotNull(v);
         assertFalse(v.equals(new Object()));
     }

@@ -11,7 +11,7 @@ import java.util.Objects;
  * determinada un conjunto de jugadores especificado por el valor que esta clase almacena se enfrentan en un partido.
  */
 public class LocalizationScheduleValueOccupied extends LocalizationScheduleValue {
-    protected static final List<ScheduleValue> possibleValues = Collections.singletonList(OCCUPIED);
+    protected static final List<Value> possibleValues = Collections.singletonList(OCCUPIED);
 
     /**
      * Indices de los jugadores que se enfrentan en un partido
@@ -35,7 +35,7 @@ public class LocalizationScheduleValueOccupied extends LocalizationScheduleValue
         this.playersIndices = playersIndices;
     }
 
-    protected List<ScheduleValue> getPossibleValues() {
+    protected List<Value> getPossibleValues() {
         return possibleValues;
     }
 

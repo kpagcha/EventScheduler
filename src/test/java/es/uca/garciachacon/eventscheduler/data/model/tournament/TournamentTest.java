@@ -2,12 +2,8 @@ package es.uca.garciachacon.eventscheduler.data.model.tournament;
 
 import es.uca.garciachacon.eventscheduler.data.model.schedule.EventSchedule;
 import es.uca.garciachacon.eventscheduler.data.model.schedule.TournamentSchedule;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.event.Event;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Localization;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Player;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Timeslot;
 import es.uca.garciachacon.eventscheduler.data.validation.validable.ValidationException;
-import es.uca.garciachacon.eventscheduler.data.validation.validator.tournament.TournamentValidator;
+import es.uca.garciachacon.eventscheduler.data.validation.validator.TournamentValidator;
 import es.uca.garciachacon.eventscheduler.solver.TournamentSolver.SearchStrategy;
 import es.uca.garciachacon.eventscheduler.utils.TournamentUtils;
 import org.hamcrest.core.StringContains;

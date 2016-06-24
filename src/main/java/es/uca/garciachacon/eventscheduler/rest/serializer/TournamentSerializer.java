@@ -3,13 +3,7 @@ package es.uca.garciachacon.eventscheduler.rest.serializer;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.Tournament;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.event.Event;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.event.Matchup;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Localization;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Player;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Team;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Timeslot;
+import es.uca.garciachacon.eventscheduler.data.model.tournament.*;
 import es.uca.garciachacon.eventscheduler.rest.deserializer.TimeslotDeserializer;
 import es.uca.garciachacon.eventscheduler.rest.deserializer.TournamentDeserializer;
 

@@ -1,16 +1,11 @@
-package es.uca.garciachacon.eventscheduler.data.model.tournament.event;
+package es.uca.garciachacon.eventscheduler.data.model.tournament;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.Tournament;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Localization;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Player;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Team;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Timeslot;
 import es.uca.garciachacon.eventscheduler.data.validation.validable.Validable;
 import es.uca.garciachacon.eventscheduler.data.validation.validable.ValidationException;
+import es.uca.garciachacon.eventscheduler.data.validation.validator.EventValidator;
 import es.uca.garciachacon.eventscheduler.data.validation.validator.Validator;
-import es.uca.garciachacon.eventscheduler.data.validation.validator.tournament.EventValidator;
 import es.uca.garciachacon.eventscheduler.solver.TournamentSolver.MatchupMode;
 
 import java.util.*;
@@ -188,28 +183,33 @@ import java.util.stream.Collectors;
  * sumarán las del enfrentamiento.
  */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-public class Event implements Validable {
+public class Event extends Observable implements Validable {
+
+    /**
+     * Nombre del evento o la categoría
+     */
+    private String name;
+
     /**
      * Jugadores concretos o abstractos (equipos) que participan en el evento
      */
     private final List<Player> players;
+
     /**
      * Localizaciones o terrenos de juego disponibles para la categoría
      */
     private final List<Localization> localizations;
+
     /**
      * Horas en las que tendrá lugar esta categoría (dominio temporal del evento o categoría)
      */
     private final List<Timeslot> timeslots;
+
     /**
      * Torneo al que pertenece la categoría
      */
     @JsonIgnore
     private Tournament tournament;
-    /**
-     * Nombre del evento o la categoría
-     */
-    private String name;
 
     /**
      * Número de partidos que cada jugador ha de jugar en esta categoría
@@ -420,7 +420,7 @@ public class Event implements Validable {
         return tournament;
     }
 
-    public void setTournament(Tournament tournament) {
+    protected void setTournament(Tournament tournament) {
         Objects.requireNonNull(tournament);
 
         if (this.tournament != null)
@@ -1600,23 +1600,53 @@ public class Event implements Validable {
         return players.size() * nMatchesPerPlayer * nTimeslotsPerMatch;
     }
 
+    /**
+     * Devuelve la representación en cadena de este evento, simplemente su nombre.
+     *
+     * @return el nombre del evento
+     */
     public String toString() {
         return name;
     }
 
+    /**
+     * Inyecta el objeto encargado de la validación de este evento.
+     *
+     * @param validator implementación de un <i>validador</i> que ejecutará la validación del evento
+     */
     public <T> void setValidator(Validator<T> validator) {
-        if (validator == null)
-            throw new IllegalArgumentException("The parameter cannot be null");
+        Objects.requireNonNull(validator);
 
         this.validator = (Validator<Event>) validator;
     }
 
+    /**
+     * Si falla la validación de este evento, devuelve la lista de mensajes de error.
+     *
+     * @return mensajes de error de validación
+     */
     public List<String> getMessages() {
         return validator.getValidationMessages();
     }
 
+    /**
+     * Valida el estado final de este evento
+     *
+     * @throws ValidationException si falla la validación
+     */
     public void validate() throws ValidationException {
         if (!validator.validate(this))
             throw new ValidationException(String.format("Validation has failed for this event (%s)", name));
+    }
+
+    /**
+     * Marca el evento con un estado final consistente, es decir, que no se han producido cambios en ningunos de sus
+     * atributos.
+     * <p>
+     * Este método es invocado desde {@link Tournament#solve()} para indicar que los eventos de los que se compone el
+     * torneo están listos para modelar el problema en el proceso de resolución.
+     */
+    protected void setAsUnchanged() {
+        clearChanged();
     }
 }

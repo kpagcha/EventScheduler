@@ -3,12 +3,8 @@ package es.uca.garciachacon.eventscheduler.data.model.schedule;
 import es.uca.garciachacon.eventscheduler.data.model.schedule.value.AbstractScheduleValue;
 import es.uca.garciachacon.eventscheduler.data.model.schedule.value.LocalizationScheduleValue;
 import es.uca.garciachacon.eventscheduler.data.model.schedule.value.LocalizationScheduleValueOccupied;
-import es.uca.garciachacon.eventscheduler.data.model.schedule.value.ScheduleValue;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.Tournament;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.event.Event;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Localization;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Player;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Timeslot;
+import es.uca.garciachacon.eventscheduler.data.model.schedule.value.Value;
+import es.uca.garciachacon.eventscheduler.data.model.tournament.*;
 import es.uca.garciachacon.eventscheduler.data.validation.validable.ValidationException;
 import es.uca.garciachacon.eventscheduler.solver.TournamentSolver;
 import es.uca.garciachacon.eventscheduler.utils.TournamentUtils;
@@ -238,7 +234,7 @@ public class LocalizationScheduleTest {
         assertNotNull(v);
 
         try {
-            new LocalizationScheduleValue(new ScheduleValue("UNKNOWN"));
+            new LocalizationScheduleValue(new Value("UNKNOWN"));
             fail("IllegalArgumentException expected");
         } catch (IllegalArgumentException e) {
             assertEquals(e.getMessage(), "Illegal value");

@@ -17,38 +17,38 @@ public class PlayerScheduleValue extends AbstractScheduleValue {
     /**
      * El jugador juega en esta hora en una pista determinada
      */
-    public static final ScheduleValue OCCUPIED = new ScheduleValue("OCCUPIED");
+    public static final Value OCCUPIED = new Value("OCCUPIED");
 
     /**
      * El jugador no juega en esta hora
      */
-    public static final ScheduleValue FREE = new ScheduleValue("FREE");
+    public static final Value FREE = new Value("FREE");
 
     /**
      * El jugador no se encuentra disponible a esta hora
      */
-    public static final ScheduleValue UNAVAILABLE = new ScheduleValue("UNAVAILABLE");
+    public static final Value UNAVAILABLE = new Value("UNAVAILABLE");
 
     /**
      * Esta hora se corresponde a un break u hora en la que no tienen lugar enfrentamientos
      */
-    public static final ScheduleValue BREAK = new ScheduleValue("BREAK");
+    public static final Value BREAK = new Value("BREAK");
 
     /**
      * Esta hora se corresponde a una hora sobre la que se han limitado las pistas disponibles
      */
-    public static final ScheduleValue LIMITED = new ScheduleValue("LIMITED");
+    public static final Value LIMITED = new Value("LIMITED");
 
     /**
      * Esta hora no pertenece al dominio de horas de la categoría. Este valor solo lo tomarán horarios combinados (de
      * torneo)
      */
-    public static final ScheduleValue NOT_IN_DOMAIN = new ScheduleValue("NOT_IN_DOMAIN");
+    public static final Value NOT_IN_DOMAIN = new Value("NOT_IN_DOMAIN");
 
     /**
      * Posibles valores internos que puede tomar un valor de hueco de horario por jugadores
      */
-    protected static final List<ScheduleValue> possibleValues =
+    protected static final List<Value> possibleValues =
             Collections.unmodifiableList(new ArrayList<>(Arrays.asList(FREE,
                     UNAVAILABLE,
                     BREAK,
@@ -61,11 +61,11 @@ public class PlayerScheduleValue extends AbstractScheduleValue {
      *
      * @param val valor interno que especifica el hueco de horario
      */
-    public PlayerScheduleValue(ScheduleValue val) {
+    public PlayerScheduleValue(Value val) {
         super(val);
     }
 
-    protected List<ScheduleValue> getPossibleValues() {
+    protected List<Value> getPossibleValues() {
         return possibleValues;
     }
 

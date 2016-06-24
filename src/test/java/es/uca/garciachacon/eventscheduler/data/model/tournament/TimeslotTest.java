@@ -1,6 +1,5 @@
 package es.uca.garciachacon.eventscheduler.data.model.tournament;
 
-import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Timeslot;
 import es.uca.garciachacon.eventscheduler.utils.TournamentUtils;
 import org.junit.Test;
 

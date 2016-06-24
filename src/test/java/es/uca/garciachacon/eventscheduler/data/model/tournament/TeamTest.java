@@ -1,8 +1,5 @@
 package es.uca.garciachacon.eventscheduler.data.model.tournament;
 
-import es.uca.garciachacon.eventscheduler.data.model.tournament.event.Event;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Player;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Team;
 import es.uca.garciachacon.eventscheduler.utils.TournamentUtils;
 import org.junit.Rule;
 import org.junit.Test;
@@ -58,10 +55,8 @@ public class TeamTest {
         new Team(null, new HashSet<>(Arrays.asList(new Player("John Smith"), new Player("Jane Doe"))));
     }
 
-    @Test
+    @Test(expected = NullPointerException.class)
     public void constructorNullPlayersTest() {
-        expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("Players cannot be null");
         new Team("Team", null);
     }
 
@@ -115,7 +110,7 @@ public class TeamTest {
         team.setEvent(event);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = NullPointerException.class)
     public void setNullEventTest() {
         Team team = new Team(new Player("Player 1"), new Player("Player 2"));
         team.setEvent(null);

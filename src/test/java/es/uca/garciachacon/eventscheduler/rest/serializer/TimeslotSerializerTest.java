@@ -2,7 +2,7 @@ package es.uca.garciachacon.eventscheduler.rest.serializer;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Timeslot;
+import es.uca.garciachacon.eventscheduler.data.model.tournament.Timeslot;
 import org.junit.Test;
 
 import java.io.IOException;

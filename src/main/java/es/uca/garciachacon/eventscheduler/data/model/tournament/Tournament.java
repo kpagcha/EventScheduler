@@ -7,14 +7,10 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import es.uca.garciachacon.eventscheduler.data.model.schedule.EventSchedule;
 import es.uca.garciachacon.eventscheduler.data.model.schedule.Match;
 import es.uca.garciachacon.eventscheduler.data.model.schedule.TournamentSchedule;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.event.Event;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Localization;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Player;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Timeslot;
 import es.uca.garciachacon.eventscheduler.data.validation.validable.Validable;
 import es.uca.garciachacon.eventscheduler.data.validation.validable.ValidationException;
+import es.uca.garciachacon.eventscheduler.data.validation.validator.TournamentValidator;
 import es.uca.garciachacon.eventscheduler.data.validation.validator.Validator;
-import es.uca.garciachacon.eventscheduler.data.validation.validator.tournament.TournamentValidator;
 import es.uca.garciachacon.eventscheduler.rest.deserializer.TournamentDeserializer;
 import es.uca.garciachacon.eventscheduler.rest.serializer.TournamentSerializer;
 import es.uca.garciachacon.eventscheduler.solver.TournamentSolver;
@@ -152,17 +148,6 @@ public class Tournament implements Validable {
     }
 
     /**
-     * Crea una instancia de un torneo a partir de una cadena JSON. La deserialización es realizada por
-     * {@link TournamentDeserializer}.
-     *
-     * @param json cadena JSON con la representación de un torneo
-     * @return instancia de un torneo creado a partir del cuerpo JSON
-     */
-    public static Tournament fromJson(String json) throws IOException {
-        return new ObjectMapper().readValue(json, Tournament.class);
-    }
-
-    /**
      * Comienza el proceso de resolución para calcular un primer horario.
      * <p>
      * Para calcular sucesivas soluciones del torneo y obtener los sucesivos horarios, se ha de hacer uso del método
@@ -174,6 +159,9 @@ public class Tournament implements Validable {
      * configurables de los eventos que lo componen, se debe hacer uso de este método para iniciar el proceso de
      * resolución sobre la nueva configuración. Si se intenta hacer uso de {@link Tournament#nextSchedules}, habrá
      * resultados inesperados y probablemente errores, porque el modelo ha cambiado.
+     * <p>
+     * Cuando se llama a este método se restablece el estado de <i>cambiado</i> de todos los eventos que lo componen,
+     * indicando que están en un estado consistente y final para el proceso de resolución que ha comenzado.
      *
      * @return true si se ha encontrado una solución, false si no o si ya no hay más soluciones
      * @throws ValidationException si la validación del torneo falla
@@ -183,8 +171,15 @@ public class Tournament implements Validable {
 
         boolean solved = solver.execute();
 
-        currentSchedules = solver.getSolvedSchedules();
-        schedule = currentSchedules == null ? null : new TournamentSchedule(this);
+        if (solved) {
+            currentSchedules = solver.getSolution().get();
+            schedule = new TournamentSchedule(this);
+        } else {
+            currentSchedules = null;
+            schedule = null;
+        }
+
+        events.forEach(Event::setAsUnchanged);
 
         return solved;
     }
@@ -202,13 +197,33 @@ public class Tournament implements Validable {
      * resolución se aplica sobre el modelo antiguo del problema, el modelo previo a las modificaciones sobre la
      * configuración. Esta situación se debe evitar.
      *
-     * @return <code></code> si se han actualizado los horarios con una nueva solución, y <code>false</code> si ya
+     * @return <code>true</code> si se han actualizado los horarios con una nueva solución, y <code>false</code> si ya
      * se ha alcanzado la última solución
+     * @throws IllegalStateException si algún evento se encuentra en un estado inconsistente, es decir, se modificado
+     *                               alguna de sus propiedades o configuraciones, por lo tanto es necesario
+     *                               reconstruir el modelo del torneo y reiniciar el proceso de resolución llamando a
+     *                               {@link Tournament#solve()}
      */
     public boolean nextSchedules() {
-        currentSchedules = solver.getSolvedSchedules();
-        schedule = currentSchedules == null ? null : new TournamentSchedule(this);
-        return currentSchedules != null;
+        if (events.stream().anyMatch(Observable::hasChanged))
+            throw new IllegalStateException("An event has an inconsistent state");
+
+        if (!solver.hasResolutionProcessFinished()) {
+            Optional<Map<Event, EventSchedule>> solution = solver.getSolution();
+
+            boolean solutionFound = solution.isPresent();
+            if (solutionFound) {
+                currentSchedules = solution.get();
+                schedule = new TournamentSchedule(this);
+            } else {
+                currentSchedules = null;
+                schedule = null;
+            }
+
+            return solutionFound;
+        }
+
+        return false;
     }
 
     /**
@@ -257,7 +272,7 @@ public class Tournament implements Validable {
      * @return <code>true</code> si se han explorado todos los horarios posibles, <code>false</code> si no
      */
     public boolean allSolutionsReached() {
-        return schedule == null && solver.getFoundSolutionsCount() > 0;
+        return schedule == null && solver.getFoundSolutions() > 0;
     }
 
     public String getName() {
@@ -638,5 +653,16 @@ public class Tournament implements Validable {
      */
     public String toJson() throws JsonProcessingException {
         return new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(this);
+    }
+
+    /**
+     * Crea una instancia de un torneo a partir de una cadena JSON. La deserialización es realizada por
+     * {@link TournamentDeserializer}.
+     *
+     * @param json cadena JSON con la representación de un torneo
+     * @return instancia de un torneo creado a partir del cuerpo JSON
+     */
+    public static Tournament fromJson(String json) throws IOException {
+        return new ObjectMapper().readValue(json, Tournament.class);
     }
 }

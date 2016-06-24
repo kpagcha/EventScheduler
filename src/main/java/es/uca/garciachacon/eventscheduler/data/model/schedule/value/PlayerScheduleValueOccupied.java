@@ -13,14 +13,14 @@ public class PlayerScheduleValueOccupied extends PlayerScheduleValue {
      */
     private final int localization;
 
-    protected static final List<ScheduleValue> possibleValues = Collections.singletonList(OCCUPIED);
+    protected static final List<Value> possibleValues = Collections.singletonList(OCCUPIED);
 
     public PlayerScheduleValueOccupied(int localization) {
         super(OCCUPIED);
         this.localization = localization;
     }
 
-    protected List<ScheduleValue> getPossibleValues() {
+    protected List<Value> getPossibleValues() {
         return possibleValues;
     }
 

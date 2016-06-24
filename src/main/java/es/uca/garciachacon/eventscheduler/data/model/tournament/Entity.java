@@ -1,4 +1,4 @@
-package es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain;
+package es.uca.garciachacon.eventscheduler.data.model.tournament;
 
 /**
  * Una entidad abstracta que representa un modelo básico con un nombre.

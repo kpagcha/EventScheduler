@@ -1,24 +1,15 @@
 package es.uca.garciachacon.eventscheduler.rest.serializer;
 
 import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonSerializer;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializerProvider;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.Tournament;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.event.Event;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Localization;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Player;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Timeslot;
+import es.uca.garciachacon.eventscheduler.data.model.tournament.Timeslot;
 import es.uca.garciachacon.eventscheduler.rest.deserializer.TimeslotDeserializer;
-import es.uca.garciachacon.eventscheduler.solver.TournamentSolver;
-import es.uca.garciachacon.eventscheduler.utils.TournamentUtils;
 
 import java.io.IOException;
 import java.time.*;
 import java.time.temporal.TemporalAccessor;
 import java.time.temporal.TemporalAmount;
-import java.util.List;
 import java.util.Optional;
 
 /**
@@ -52,19 +43,6 @@ import java.util.Optional;
  * valor será automáticamente serializado por Jackson.
  */
 public class TimeslotSerializer extends JsonSerializer<Timeslot> {
-    public static void main(String[] args) throws JsonProcessingException {
-        List<Player> p = TournamentUtils.buildGenericPlayers(4, "Player");
-        List<Localization> l = TournamentUtils.buildGenericLocalizations(2, "Court");
-        List<Timeslot> t = TournamentUtils.buildSimpleTimeslots(4);
-        Event event = new Event("Event", p, l, t);
-
-        event.setMatchupMode(TournamentSolver.MatchupMode.ALL_DIFFERENT);
-
-        Tournament tournament = new Tournament("Tournament", event);
-
-        System.out.println(new ObjectMapper().writeValueAsString(tournament));
-    }
-
     @Override
     public void serialize(Timeslot value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
         gen.writeStartObject();

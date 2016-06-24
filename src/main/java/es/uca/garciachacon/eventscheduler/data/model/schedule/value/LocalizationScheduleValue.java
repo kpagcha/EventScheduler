@@ -17,33 +17,33 @@ public class LocalizationScheduleValue extends AbstractScheduleValue {
     /**
      * En la localización comienza un partido a la hora correspondiente en el horario
      */
-    public static final ScheduleValue OCCUPIED = new ScheduleValue("OCCUPIED");
+    public static final Value OCCUPIED = new Value("OCCUPIED");
 
     /**
      * Localización libre a la hora correspondiente
      */
-    public static final ScheduleValue FREE = new ScheduleValue("FREE");
+    public static final Value FREE = new Value("FREE");
 
     /**
      * Localización no disponible a la hora correspondiente para ninguna categoría
      */
-    public static final ScheduleValue UNAVAILABLE = new ScheduleValue("UNAVAILABLE");
+    public static final Value UNAVAILABLE = new Value("UNAVAILABLE");
 
     /**
      * La disponibilidad de la localización a la hora correspondiente está limitada para una o más categorías, pero no
      * para todas
      */
-    public static final ScheduleValue LIMITED = new ScheduleValue("LIMITED");
+    public static final Value LIMITED = new Value("LIMITED");
 
     /**
      * En la localización discurre la continuación de un partido a la hora correspondiente
      */
-    public static final ScheduleValue CONTINUATION = new ScheduleValue("CONTINUATION");
+    public static final Value CONTINUATION = new Value("CONTINUATION");
 
     /**
      * Posibles valores internos que puede tomar un valor de hueco de horario por localizaciones
      */
-    protected static final List<ScheduleValue> possibleValues =
+    protected static final List<Value> possibleValues =
             Collections.unmodifiableList(new ArrayList<>(Arrays.asList(OCCUPIED,
                     FREE,
                     UNAVAILABLE,
@@ -56,11 +56,11 @@ public class LocalizationScheduleValue extends AbstractScheduleValue {
      *
      * @param val valor interno que especifica el hueco de horario
      */
-    public LocalizationScheduleValue(ScheduleValue val) {
+    public LocalizationScheduleValue(Value val) {
         super(val);
     }
 
-    protected List<ScheduleValue> getPossibleValues() {
+    protected List<Value> getPossibleValues() {
         return possibleValues;
     }
 

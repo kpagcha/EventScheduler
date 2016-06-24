@@ -1,6 +1,5 @@
 package es.uca.garciachacon.eventscheduler.data.model.tournament;
 
-import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Localization;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;

@@ -1,7 +1,5 @@
 package es.uca.garciachacon.eventscheduler.data.model.tournament;
 
-import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Entity;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Player;
 import org.junit.Test;
 
 import static org.junit.Assert.*;

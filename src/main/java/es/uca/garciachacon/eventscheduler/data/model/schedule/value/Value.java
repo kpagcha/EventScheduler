@@ -3,13 +3,18 @@ package es.uca.garciachacon.eventscheduler.data.model.schedule.value;
 /**
  * Clase para la representación interna del valor de un hueco en un horario.
  */
-public class ScheduleValue {
+public class Value {
     /**
      * Nombre que identifica al valor
      */
     private final String name;
 
-    public ScheduleValue(String name) {
+    /**
+     * Construye un valor con la cadena especificada
+     *
+     * @param name el valor interno
+     */
+    public Value(String name) {
         this.name = name;
     }
 
@@ -29,6 +34,6 @@ public class ScheduleValue {
     }
 
     public boolean equals(Object o) {
-        return o != null && o instanceof ScheduleValue && ((ScheduleValue) o).getName().equalsIgnoreCase(name);
+        return o != null && o instanceof Value && ((Value) o).getName().equalsIgnoreCase(name);
     }
 }

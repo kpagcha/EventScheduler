@@ -1,11 +1,7 @@
 package es.uca.garciachacon.eventscheduler.solver;
 
 import es.uca.garciachacon.eventscheduler.data.model.schedule.EventSchedule;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.Tournament;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.event.Event;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Localization;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Player;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Timeslot;
+import es.uca.garciachacon.eventscheduler.data.model.tournament.*;
 import es.uca.garciachacon.eventscheduler.solver.constraint.*;
 import org.chocosolver.solver.Solver;
 import org.chocosolver.solver.constraints.Constraint;
@@ -25,6 +21,59 @@ import java.util.logging.Logger;
  * definidas sobre el mismo.
  */
 public class TournamentSolver {
+
+
+    /**
+     * Modos de emparejamiento (para categorías con más de un partido por jugador).
+     * <p>
+     * Si un evento define un modo de emparejamiento distinto de CUSTOM, el número de ocurrencias que cada
+     * enfrentamiento predefinido especifique será ignorado y, por tanto, tendrá preferencia el modo de
+     * enfrentamiento.
+     */
+    public enum MatchupMode {
+        /**
+         * Todos los emparejamientos deben ser entre distintos jugadores o equipos
+         */
+        ALL_DIFFERENT,
+
+        /**
+         * Todos los emparejamientos deben ser entre los mismos jugadores o equipos
+         */
+        ALL_EQUAL,
+
+        /**
+         * Los emparejamientos se pueden dar entre cualquier jugador o equipo disponible en cualquier número. Se pueden
+         * repetir
+         * emparejamientos
+         */
+        ANY,
+
+        /**
+         * El número de emparejamientos entre los jugadores será el indicado por el propio enfrentamiento
+         */
+        CUSTOM
+    }
+
+    /**
+     * Estrategia de búsqueda a aplicar en el proceso de resolución
+     */
+    public enum SearchStrategy {
+        /**
+         * Estrategia domOverWDeg definida por Choco 3
+         */
+        DOMOVERWDEG,
+
+        /**
+         * Estrategia minDom_LB definida por Choco 3
+         */
+        MINDOM_UB,
+
+        /**
+         * Estrategia minDom_UB definida por Choco 3
+         */
+        MINDOM_LB
+    }
+
     /**
      * Logger del solver
      */
@@ -56,19 +105,24 @@ public class TournamentSolver {
     private Solver solver;
 
     /**
-     * Horarios calculados de la solución actual
+     * Horarios calculados correspondientes a la solución actual
      */
-    private Map<Event, EventSchedule> schedules;
+    private Optional<Map<Event, EventSchedule>> schedules;
+
+    /**
+     * Indica si ha comenzado el proceso de resolución
+     */
+    private boolean resolutionProcessStarted = false;
 
     /**
      * Indica si se ha encontrado la última solución
      */
-    private boolean lastSolutionFound = false;
+    private boolean resolutionProcessFinished = false;
 
     /**
      * Contador de soluciones encontradas
      */
-    private long foundSolutionsCount = 0;
+    private long foundSolutions = 0;
 
     /**
      * Estrategia de búsqueda empleada en la resolución del problema
@@ -124,10 +178,20 @@ public class TournamentSolver {
         }
     }
 
+    /**
+     * Devuelve el <i>solver</i> de Choco usado por esta clase para llevar a cabo la resolución del problema
+     *
+     * @return <i>solver</i> de Choco
+     */
     public Solver getInternalSolver() {
         return solver;
     }
 
+    /**
+     * Devuelve el torneo para el que este <i>solver</i> calculará sus horarios
+     *
+     * @return el torneo de este <i>solver</i>
+     */
     public Tournament getTournament() {
         return tournament;
     }
@@ -140,14 +204,28 @@ public class TournamentSolver {
         return g;
     }
 
+    /**
+     * Devuelve la estrategia de búsqueda empleada en la resolución del problema.
+     *
+     * @return estrategia de búsqueda empleada en la resolución
+     */
     public SearchStrategy getSearchStrategy() {
         return searchStrategy;
     }
 
     public void setSearchStrategy(SearchStrategy strategy) {
+        Objects.requireNonNull(strategy);
+
         searchStrategy = strategy;
     }
 
+    /**
+     * Devuelve si en la resolución, al calcular los horarios, se intentará priorizar la ocupación de
+     * <i>timeslots</i>, o de localizaciones de juego. Esta priorización solamente tiene efecto si la estrategia de
+     * búsqueda configurada es {@link SearchStrategy#MINDOM_UB} o {@link SearchStrategy#MINDOM_LB}.
+     *
+     * @return <code>true</code> si se priorizan <i>timeslots</i>; <code>false</code> si se priorizan localizaciones
+     */
     public boolean getFillTimeslotsFirst() {
         return fillTimeslotsFirst;
     }
@@ -156,12 +234,54 @@ public class TournamentSolver {
         fillTimeslotsFirst = fillFirst;
     }
 
-    public long getFoundSolutionsCount() {
-        return foundSolutionsCount;
+    /**
+     * Devuelve el número de soluciones encontradas hasta el momento. Si el torneo no tiene ningún horario posible,
+     * devolverá 0.
+     *
+     * @return número de soluciones encontradas
+     */
+    public long getFoundSolutions() {
+        return foundSolutions;
     }
 
+    /**
+     * Devuelve el tiempo máximo de resolución en milisegundos. Si devuelve 0 significa que no hay límite.
+     *
+     * @return tiempo máximo de resolución en milisegundos positivo, o 0 si no hay límite
+     */
     public long getResolutionTimeLimit() {
         return resolutionTimeLimit;
+    }
+
+    /**
+     * Comprueba si el proceso de resolución ha comenzado, es decir, si ya se ha invocado a
+     * {@link TournamentSolver#execute()}.
+     *
+     * @return <code>true</code> si ya ha comenzado el proceso de resolución, <code>false</code> si no
+     */
+    public boolean hasResolutionProcessStarted() {
+        return resolutionProcessStarted;
+    }
+
+    /**
+     * Comprueba si el proceso de resolución ya ha terminado, es decir, se ha encontrado la última solución posible,
+     * o si no se encontró ninguna solución al lanzar el proceso de resolución.
+     *
+     * @return <code>true</code> si ya ha terminado el proceso de resolución, <code>false</code> si no
+     */
+    public boolean hasResolutionProcessFinished() {
+        return resolutionProcessFinished;
+    }
+
+    /**
+     * Comprueba si el torneo tiene solución, es decir, si se ha encontrado al menos una. Si el proceso de resolución
+     * aún no ha comenzado, se devolverá <code>false</code>.
+     *
+     * @return <code>true</code> si el torneo tiene solución; <code>false</code> si no tiene, o si no ha comenzado el
+     * proceso de resolución
+     */
+    public boolean hasSolutions() {
+        return resolutionProcessStarted && foundSolutions > 0;
     }
 
     /**
@@ -174,6 +294,7 @@ public class TournamentSolver {
     public void setResolutionTimeLimit(long limit) {
         if (limit < 0)
             throw new IllegalArgumentException("Resolution time limit cannot be less than zero");
+
         resolutionTimeLimit = limit;
     }
 
@@ -187,24 +308,19 @@ public class TournamentSolver {
      * @return true si se ha encontrado una solución, false si no
      */
     public boolean execute() {
-        createSolver();
+        solver = new Solver("Tournament Solver");
+
+        schedules = Optional.empty();
+
+        resolutionProcessStarted = true;
+        resolutionProcessFinished = false;
+        foundSolutions = 0;
 
         buildModel();
 
         configureSearch();
 
         return solve();
-    }
-
-    /**
-     * Crea el objeto solver de Choco
-     */
-    private void createSolver() {
-        solver = new Solver("Tournament Solver");
-        foundSolutionsCount = 0;
-        //lastSolutionFound = false;
-        schedules = null;
-        resolutionData = null;
     }
 
     /**
@@ -217,7 +333,6 @@ public class TournamentSolver {
             int nPlayers = event.getPlayers().size();
             int nLocalizations = event.getLocalizations().size();
             int nTimeslots = event.getTimeslots().size();
-            int nTimeslotsPerMatch = event.getTimeslotsPerMatch();
 
             for (int p = 0; p < nPlayers; p++)
                 for (int c = 0; c < nLocalizations; c++)
@@ -593,10 +708,12 @@ public class TournamentSolver {
 
         if (!solutionFound) {
             if (solver.isFeasible() == ESat.FALSE)
-                LOGGER.log(Level.INFO, "Problem infeasible.");
+                LOGGER.log(Level.INFO, "Problem infeasible");
             else if (solver.isFeasible() == ESat.UNDEFINED)
-                LOGGER.log(Level.INFO, "A solution has not been found within given limits.");
-        }
+                LOGGER.log(Level.INFO, "Solution could not been found within given limits");
+        } else
+            foundSolutions++;
+
         return solutionFound;
     }
 
@@ -608,32 +725,30 @@ public class TournamentSolver {
     }
 
     /**
-     * Actualiza y devuelve los horarios de cada categoría. Si se ha llegado a la última solución a los horarios
-     * se les establece el valor de null; también si no se ha encontrado una solución. Si se ha encontrado una
-     * solución y es la primera, se inicializa el valor de los horarios, mientras que si la solución encontrada
-     * es una solución más (la siguiente encontrada) se actualiza el valor de los horarios. Si no hay solución
-     * siguiente se marca que se ha encontrado la última solución.
+     * Si no se ha intentado resolver el modelo, es decir, no se ha llamado a {@link TournamentSolver#execute()}, no
+     * habrá una solución disponible y se devolverá {@link Optional#empty()}.
+     * <p>
+     * Si es la primera vez que se invoca a este método despues de iniciar el proceso de resolución, se contruye el
+     * horario con esa primera solución y se devuelve.
+     * <p>
+     * Las subsiguientes invocaciones a este método calcularán la siguiente solución al problema, se construirá otro
+     * horario alternativo diferente al anterior, sobreescribiendo su valor, y se devuelve este nuevo horario. Si no
+     * hay más soluciones disponibles, se devuelve el valor del horario a su estado inicial, es decir, se devuelve un
+     * objecto opcional vacío {@link Optional#empty()}, y se marca el proceso de resolución como finalizado.
      *
-     * @return los horarios de cada categoría
+     * @return los horarios de cada categoría del torneo envueltos en una clase {@link Optional}
      */
-    public Map<Event, EventSchedule> getSolvedSchedules() {
-        // Cuando se llega a la última solución, si se vuelve a llamar a este método se "limpian" los horarios
-        if (lastSolutionFound) {
-            schedules = null;
-        } else if (solver.isFeasible() != ESat.TRUE) {
-            LOGGER.log(Level.INFO, "No schedules available; solution was not found.");
-            schedules = null;
-        } else if (schedules == null) {   // Se ha encontrado la primera solución
-            schedules = new HashMap<>(tournament.getEvents().size());
-            buildSchedules();
-        } else {                          // Se ha encontrado una siguiente solución
-            if (solver.nextSolution()) {
-                this.schedules.clear();
+    public Optional<Map<Event, EventSchedule>> getSolution() {
+        if (!resolutionProcessFinished) {
+            if (!schedules.isPresent() && foundSolutions == 1)
                 buildSchedules();
+            else if (solver.nextSolution()) {
+                buildSchedules();
+                foundSolutions++;
             } else {
-                LOGGER.log(Level.INFO, "All possible schedules have already been found.");
-                lastSolutionFound = true;
-                schedules = null;
+                LOGGER.log(Level.INFO, "All solutions found");
+                schedules = Optional.empty();
+                resolutionProcessFinished = true;
             }
         }
         return schedules;
@@ -644,11 +759,13 @@ public class TournamentSolver {
      */
     private void buildSchedules() {
         List<Event> events = tournament.getEvents();
+        Map<Event, EventSchedule> currentSchedules = new HashMap<>(events.size());
+
         for (int e = 0; e < events.size(); e++) {
             Event event = events.get(e);
-            schedules.put(event, new EventSchedule(event, solutionMatrixToInt(event, x[e])));
+            currentSchedules.put(event, new EventSchedule(event, internalMatrixToInt(event, x[e])));
         }
-        foundSolutionsCount++;
+        schedules = Optional.of(currentSchedules);
     }
 
     /**
@@ -658,7 +775,7 @@ public class TournamentSolver {
      * @param x     matriz de IntVar inicializada
      * @return matriz de enteros con los correspondientes valores de la solución
      */
-    private int[][][] solutionMatrixToInt(Event event, IntVar[][][] x) {
+    private int[][][] internalMatrixToInt(Event event, IntVar[][][] x) {
         int nPlayers = event.getPlayers().size();
         int nLocalizations = event.getLocalizations().size();
         int nTimeslots = event.getTimeslots().size();
@@ -753,56 +870,5 @@ public class TournamentSolver {
         }
 
         return sb.toString();
-    }
-
-    /**
-     * Modos de emparejamiento (para categorías con más de un partido por jugador).
-     * <p>
-     * Si un evento define un modo de emparejamiento distinto de CUSTOM, el número de ocurrencias que cada
-     * enfrentamiento predefinido especifique será ignorado y, por tanto, tendrá preferencia el modo de
-     * enfrentamiento.
-     */
-    public enum MatchupMode {
-        /**
-         * Todos los emparejamientos deben ser entre distintos jugadores o equipos
-         */
-        ALL_DIFFERENT,
-
-        /**
-         * Todos los emparejamientos deben ser entre los mismos jugadores o equipos
-         */
-        ALL_EQUAL,
-
-        /**
-         * Los emparejamientos se pueden dar entre cualquier jugador o equipo disponible en cualquier número. Se pueden
-         * repetir
-         * emparejamientos
-         */
-        ANY,
-
-        /**
-         * El número de emparejamientos entre los jugadores será el indicado por el propio enfrentamiento
-         */
-        CUSTOM
-    }
-
-    /**
-     * Estrategia de búsqueda a aplicar en el proceso de resolución
-     */
-    public enum SearchStrategy {
-        /**
-         * Estrategia domOverWDeg definida por Choco 3
-         */
-        DOMOVERWDEG,
-
-        /**
-         * Estrategia minDom_LB definida por Choco 3
-         */
-        MINDOM_UB,
-
-        /**
-         * Estrategia minDom_UB definida por Choco 3
-         */
-        MINDOM_LB
     }
 }

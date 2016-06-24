@@ -5,7 +5,7 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Localization;
+import es.uca.garciachacon.eventscheduler.data.model.tournament.Localization;
 
 import java.io.IOException;
 

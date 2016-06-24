@@ -1,6 +1,6 @@
 package es.uca.garciachacon.eventscheduler.solver.constraint;
 
-import es.uca.garciachacon.eventscheduler.data.model.tournament.event.Event;
+import es.uca.garciachacon.eventscheduler.data.model.tournament.Event;
 
 public abstract class EventConstraint extends SolverConstraint {
     protected final Event event;

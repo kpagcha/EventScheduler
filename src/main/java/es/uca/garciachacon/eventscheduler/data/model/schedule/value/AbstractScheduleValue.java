@@ -9,7 +9,7 @@ public abstract class AbstractScheduleValue {
     /**
      * Valor del elemento del horario
      */
-    protected ScheduleValue value;
+    protected Value value;
 
     /**
      * Construye un objeto de una clase hija de esta con el valor especificado
@@ -17,7 +17,7 @@ public abstract class AbstractScheduleValue {
      * @param val un valor incluido en la lista de posibles valores
      * @throws IllegalArgumentException si el valor no está incluido en la lista de posibles valores
      */
-    public AbstractScheduleValue(ScheduleValue val) {
+    public AbstractScheduleValue(Value val) {
         if (!getPossibleValues().contains(val))
             throw new IllegalArgumentException("Illegal value");
         value = val;
@@ -91,9 +91,9 @@ public abstract class AbstractScheduleValue {
      *
      * @return lista de posibles valores
      */
-    protected abstract List<ScheduleValue> getPossibleValues();
+    protected abstract List<Value> getPossibleValues();
 
-    public ScheduleValue getValue() {
+    public Value getValue() {
         return value;
     }
 

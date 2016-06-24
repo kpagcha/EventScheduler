@@ -5,13 +5,7 @@ import es.uca.garciachacon.eventscheduler.data.model.schedule.LocalizationSchedu
 import es.uca.garciachacon.eventscheduler.data.model.schedule.Match;
 import es.uca.garciachacon.eventscheduler.data.model.schedule.TournamentSchedule;
 import es.uca.garciachacon.eventscheduler.data.model.schedule.value.AbstractScheduleValue;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.Tournament;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.event.Event;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.event.Matchup;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Localization;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Player;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Team;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.event.domain.Timeslot;
+import es.uca.garciachacon.eventscheduler.data.model.tournament.*;
 import es.uca.garciachacon.eventscheduler.data.validation.validable.ValidationException;
 import es.uca.garciachacon.eventscheduler.solver.TournamentSolver.MatchupMode;
 import es.uca.garciachacon.eventscheduler.solver.TournamentSolver.SearchStrategy;
@@ -88,7 +82,7 @@ public class TournamentSolverTest {
 
         assertTrue(tournament.solve());
 
-        assertEquals(1, tournament.getSolver().getFoundSolutionsCount());
+        assertEquals(1, tournament.getSolver().getFoundSolutions());
 
         TournamentSchedule schedule = tournament.getSchedule();
         for (Player player : tournament.getAllPlayers())
@@ -127,11 +121,11 @@ public class TournamentSolverTest {
 
         assertTrue(tournament.solve());
         assertNotNull(tournament.getSchedule());
-        assertEquals(1, tournament.getSolver().getFoundSolutionsCount());
+        assertEquals(1, tournament.getSolver().getFoundSolutions());
 
         assertFalse(tournament.nextSchedules());
         assertNull(tournament.getSchedule());
-        assertEquals(1, tournament.getSolver().getFoundSolutionsCount());
+        assertEquals(1, tournament.getSolver().getFoundSolutions());
     }
 
     @Test
@@ -146,11 +140,11 @@ public class TournamentSolverTest {
 
         assertTrue(tournament.solve());
         assertNotNull(tournament.getSchedule());
-        assertEquals(1, tournament.getSolver().getFoundSolutionsCount());
+        assertEquals(1, tournament.getSolver().getFoundSolutions());
 
         assertTrue(tournament.nextSchedules());
         assertNotNull(tournament.getSchedule());
-        assertEquals(2, tournament.getSolver().getFoundSolutionsCount());
+        assertEquals(2, tournament.getSolver().getFoundSolutions());
 
         while (tournament.nextSchedules()) {
             // bloque vacío
@@ -158,7 +152,7 @@ public class TournamentSolverTest {
 
         assertFalse(tournament.nextSchedules());
         assertNull(tournament.getSchedule());
-        assertEquals(5, tournament.getSolver().getFoundSolutionsCount());
+        assertEquals(5, tournament.getSolver().getFoundSolutions());
     }
 
     @Test
@@ -173,7 +167,7 @@ public class TournamentSolverTest {
 
         assertFalse(tournament.solve());
         assertNull(tournament.getSchedule());
-        assertEquals(0, tournament.getSolver().getFoundSolutionsCount());
+        assertEquals(0, tournament.getSolver().getFoundSolutions());
     }
 
     @Test
@@ -1089,7 +1083,7 @@ public class TournamentSolverTest {
         assertFalse(tournament.solve());
         assertNull(tournament.getSchedule());
         assertNull(tournament.getCurrentSchedules());
-        assertEquals(0, tournament.getSolver().getFoundSolutionsCount());
+        assertEquals(0, tournament.getSolver().getFoundSolutions());
     }
 
     @Test
@@ -1117,7 +1111,7 @@ public class TournamentSolverTest {
         assertFalse(tournament.solve());
         assertNull(tournament.getSchedule());
         assertNull(tournament.getCurrentSchedules());
-        assertEquals(0, tournament.getSolver().getFoundSolutionsCount());
+        assertEquals(0, tournament.getSolver().getFoundSolutions());
     }
 
     @Test
@@ -1140,7 +1134,7 @@ public class TournamentSolverTest {
         assertFalse(tournament.solve());
         assertNull(tournament.getSchedule());
         assertNull(tournament.getCurrentSchedules());
-        assertEquals(0, tournament.getSolver().getFoundSolutionsCount());
+        assertEquals(0, tournament.getSolver().getFoundSolutions());
     }
 
     @Test
@@ -1171,7 +1165,7 @@ public class TournamentSolverTest {
         assertFalse(tournament.solve());
         assertNull(tournament.getSchedule());
         assertNull(tournament.getCurrentSchedules());
-        assertEquals(0, tournament.getSolver().getFoundSolutionsCount());
+        assertEquals(0, tournament.getSolver().getFoundSolutions());
     }
 
     @Test
@@ -1204,7 +1198,7 @@ public class TournamentSolverTest {
         assertFalse(tournament.solve());
         assertNull(tournament.getSchedule());
         assertNull(tournament.getCurrentSchedules());
-        assertEquals(0, tournament.getSolver().getFoundSolutionsCount());
+        assertEquals(0, tournament.getSolver().getFoundSolutions());
     }
 
     @Test
@@ -1258,11 +1252,11 @@ public class TournamentSolverTest {
         Tournament tournament = new Tournament("Tournament", cat1, cat2, cat3);
         tournament.getSolver().setSearchStrategy(SearchStrategy.MINDOM_UB);
 
-        assertEquals(0, tournament.getSolver().getFoundSolutionsCount());
+        assertEquals(0, tournament.getSolver().getFoundSolutions());
 
         assertTrue(tournament.solve());
 
-        assertEquals(1, tournament.getSolver().getFoundSolutionsCount());
+        assertEquals(1, tournament.getSolver().getFoundSolutions());
 
         Map<Event, EventSchedule> schedules = tournament.getCurrentSchedules();
         assertEquals(4, schedules.get(cat1).getMatches().size());
@@ -1299,12 +1293,12 @@ public class TournamentSolverTest {
         tournament.getSolver().setSearchStrategy(SearchStrategy.MINDOM_UB);
 
         assertTrue(tournament.solve());
-        assertEquals(1, tournament.getSolver().getFoundSolutionsCount());
+        assertEquals(1, tournament.getSolver().getFoundSolutions());
 
         while (tournament.nextSchedules()) {
             // bloque vacío
         }
-        assertEquals(11, tournament.getSolver().getFoundSolutionsCount());
+        assertEquals(11, tournament.getSolver().getFoundSolutions());
 
         assertFalse(tournament.nextSchedules());
         assertNull(tournament.getCurrentSchedules());
@@ -1506,7 +1500,7 @@ public class TournamentSolverTest {
         assertFalse(tournament.solve());
         assertNull(tournament.getSchedule());
         assertNull(tournament.getCurrentSchedules());
-        assertEquals(0, tournament.getSolver().getFoundSolutionsCount());
+        assertEquals(0, tournament.getSolver().getFoundSolutions());
     }
 
     @Test
@@ -1754,7 +1748,7 @@ public class TournamentSolverTest {
                     .during(timeslots.get(2), timeslots.get(3)));
         } while (tournament.nextSchedules());
 
-        assertEquals(40, tournament.getSolver().getFoundSolutionsCount());
+        assertEquals(40, tournament.getSolver().getFoundSolutions());
     }
 
     @Test

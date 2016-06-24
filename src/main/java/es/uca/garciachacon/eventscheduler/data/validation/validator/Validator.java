@@ -1,7 +1,5 @@
 package es.uca.garciachacon.eventscheduler.data.validation.validator;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
 import java.util.List;
 
 /**
@@ -11,7 +9,7 @@ public interface Validator<T> {
     /**
      * Valida el objeto, comprobando si cumple todas las reglas definidas sobre él.
      *
-     * @param o objeto no nulo que se valida
+     * @param o objeto que se valida
      * @return true si la validación es satisfactoria, y false si ha fallado
      */
     boolean validate(T o);
@@ -19,7 +17,7 @@ public interface Validator<T> {
     /**
      * Devuelve la lista de mensajes de error de la validación.
      *
-     * @return una lista con mensajes de error (cadenas), o vacía si no hubo ningún error de validación
+     * @return una lista con mensajes de error, o vacía si no hubo ningún error de validación
      */
     List<String> getValidationMessages();
 }
