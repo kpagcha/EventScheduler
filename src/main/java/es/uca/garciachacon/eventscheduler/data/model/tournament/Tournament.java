@@ -54,27 +54,33 @@ public class Tournament implements Validable {
      * Todos los jugadores que participan en el torneo. No se repiten los presentes en múltiples categorías
      */
     private final List<Player> allPlayers;
+
     /**
      * Todos los terrenos de juego en los que se desarrolla en el torneo. No se repiten los presentes en múltiples
      * categorías
      */
     private final List<Localization> allLocalizations;
+
     /**
      * Todos los timeslots en los que discurre el torneo. No se repiten los presentes en múltiples categorías
      */
     private final List<Timeslot> allTimeslots;
+
     /**
      * Categorías que componen el torneo
      */
     private final List<Event> events;
+
     /**
      * El solver que obtendrá los horarios de cada categoría el torneo
      */
     private final TournamentSolver solver;
+
     /**
      * Nombre del torneo
      */
     private String name;
+
     /**
      * Horarios para cada categoría
      */
@@ -419,8 +425,8 @@ public class Tournament implements Validable {
      */
     public void addUnavailablePlayerAtTimeslotRange(Player player, Timeslot t1, Timeslot t2) {
         if (!allPlayers.contains(player))
-            throw new IllegalArgumentException(String.format(
-                    "Player (%s) does not exist in the list of players of " + "the tournament",
+            throw new IllegalArgumentException(String.format("Player (%s) does not exist in the list of players of "
+                    + "the tournament",
                     player
             ));
 

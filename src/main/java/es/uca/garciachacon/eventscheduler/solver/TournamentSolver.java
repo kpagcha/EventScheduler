@@ -153,7 +153,7 @@ public class TournamentSolver {
     /**
      * Construye un <i>solver</i> a partir de la información del torneo.
      *
-     * @param tournament torneo para el que se va a modelar el problema, calcular horario y encontrar partidos
+     * @param tournament torneo para el que se va a modelar el problema, calcular horario y formar partidos
      */
     public TournamentSolver(Tournament tournament) {
         this.tournament = tournament;
@@ -230,6 +230,13 @@ public class TournamentSolver {
         return fillTimeslotsFirst;
     }
 
+    /**
+     * Fija si al calcular los horarios se priorizará la ocupación de <i>timeslots</i> o de jugadores. Sólamente
+     * tiene efecto si la estrategia de búsqueda configurada es {@link SearchStrategy#MINDOM_UB} o
+     * {@link SearchStrategy#MINDOM_LB}.
+     *
+     * @param fillFirst <code>true</code> para priorizar <i>timeslots</i>, y <code>false</code> para priorizar jugadores
+     */
     public void setFillTimeslotsFirst(boolean fillFirst) {
         fillTimeslotsFirst = fillFirst;
     }

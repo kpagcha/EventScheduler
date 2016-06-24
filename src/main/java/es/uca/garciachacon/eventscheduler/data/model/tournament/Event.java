@@ -181,6 +181,16 @@ import java.util.stream.Collectors;
  * jugador. Sin embargo, si el jugador sí tenía localizaciones de juego asignadas (u horas de juego, se emplea la
  * misma mecánica), no se asignarán automáticamente todas las del evento, sino que a las que tenía asignadas se le
  * sumarán las del enfrentamiento.
+ * <p>
+ * Cada vez que se hace una modificación en uno de los atributos o propiedades del evento que son relevantes al
+ * modelo del proceso de resolución y cálculo de horarios de un torneo, se marcará la entidad como <i>cambiada</i>
+ * mediante el método de {@link Observable}, {@link Event#setChanged()}. Esto indicará que la instancia del evento es
+ * antigua, y su estado difiere del que poseía al construir el torneo.
+ * <p>
+ * Un evento se considerará en un estado final y consistente cuando no esté marcado como <i>cambiadp</i>. En el
+ * contexto de la resolución de un torneo, ese estado consistente se conseguirá al invocar el proceso de resolución
+ * mediante {@link Tournament#solve()}, que restablece el estado del evento llamando al método
+ * {@link Event#setAsUnchanged()}.
  */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class Event extends Observable implements Validable {
