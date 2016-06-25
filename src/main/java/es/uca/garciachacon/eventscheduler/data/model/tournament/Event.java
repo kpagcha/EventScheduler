@@ -415,9 +415,9 @@ public class Event extends Observable implements Validable {
     }
 
     /**
-     * Asigna el nombre del evento.
+     * Asigna un nombre a este evento.
      *
-     * @param name nombre del evento
+     * @param name nuevo nombre que se le quiere asignar al evento
      * @throws NullPointerException si el nombre es <code>null</code>
      */
     public void setName(String name) {
@@ -432,9 +432,6 @@ public class Event extends Observable implements Validable {
 
     protected void setTournament(Tournament tournament) {
         Objects.requireNonNull(tournament);
-
-        if (this.tournament != null)
-            throw new IllegalStateException("Tournament has already been set");
 
         this.tournament = tournament;
     }
@@ -475,6 +472,9 @@ public class Event extends Observable implements Validable {
      * <p>
      * Si el número de partidos por jugador asignado es 1, el modo de emparejamiento automáticamente cambia a
      * {@link MatchupMode#ANY}.
+     * <p>
+     * Si el número de jugadores por partido que se intenta asignar es el mismo que el que ya está configurado, no se
+     * producen ninguno de los cambios.
      *
      * @param matchesPerPlayer número de partidos por jugador, mayor o igual que 1
      * @throws IllegalArgumentException si el número de partidos por jugador es menor que 1
@@ -483,12 +483,17 @@ public class Event extends Observable implements Validable {
         if (matchesPerPlayer < 1)
             throw new IllegalArgumentException("Number of matches per player cannot be less than 1");
 
+        if (matchesPerPlayer == nMatchesPerPlayer)
+            return;
+
         predefinedMatchups.clear();
 
         if (matchesPerPlayer == 1)
             matchupMode = MatchupMode.ANY;
 
         nMatchesPerPlayer = matchesPerPlayer;
+
+        setChanged();
     }
 
     public int getTimeslotsPerMatch() {
@@ -498,6 +503,9 @@ public class Event extends Observable implements Validable {
     /**
      * Asigna la duración de un partido, es decir, el número de <i>timeslots</i> sobre los que los partidos del
      * envento transcurren. Además, elimina todos los emparejamientos predefinidos, si hubiese.
+     * <p>
+     * Si el número de <i>timeslots</i> por partido que se quiere asignar es el mismo que el valor que ya está
+     * configurado, no habrá ninguna modificación.
      *
      * @param timeslotsPerMatch número de timeslots por partidos, mayor o igual que 1
      * @throws IllegalArgumentException si el número de <i>timeslots</i> por partido es menor que 1
@@ -506,9 +514,14 @@ public class Event extends Observable implements Validable {
         if (timeslotsPerMatch < 1)
             throw new IllegalArgumentException("Number of timeslots per match cannot be less than 1");
 
+        if (timeslotsPerMatch == nTimeslotsPerMatch)
+            return;
+
         predefinedMatchups.clear();
 
         nTimeslotsPerMatch = timeslotsPerMatch;
+
+        setChanged();
     }
 
     public int getPlayersPerMatch() {
@@ -522,6 +535,9 @@ public class Event extends Observable implements Validable {
      * <p>
      * Si el número de jugadores por partido es 1, el modo de emparejamiento cambia automáticamente al valor por
      * defecto, {@link MatchupMode#ANY}.
+     * <p>
+     * Si el número de jugadores por partido tiene un valor igual al existente, no se produce ninguna de las
+     * modificaciones.
      *
      * @param playersPerMatch número de jugadores por partido, mayor o igual que 1
      * @throws IllegalArgumentException si el número de jugadores por partido es menor que 1
@@ -537,13 +553,16 @@ public class Event extends Observable implements Validable {
 
         if (players.size() % playersPerMatch != 0)
             throw new IllegalArgumentException(String.format(
-                    "Number of players per match is not coherent to the " + "number of players this event has (%d)",
+                    "Number of players per match is not coherent to the number of players this event has (%d)",
                     players.size()
             ));
 
         if (nPlayersPerTeam != 0 && playersPerMatch % nPlayersPerTeam != 0)
             throw new IllegalArgumentException(String.format("Number of players per match must be coherent to the " +
                     "number of players per team in this event (must be multiple of %d)", nPlayersPerTeam));
+
+        if (playersPerMatch == nPlayersPerMatch)
+            return;
 
         predefinedMatchups.clear();
         clearTeams();
@@ -552,6 +571,8 @@ public class Event extends Observable implements Validable {
             matchupMode = MatchupMode.ANY;
 
         nPlayersPerMatch = playersPerMatch;
+
+        setChanged();
     }
 
     public int getPlayersPerTeam() {
@@ -575,10 +596,13 @@ public class Event extends Observable implements Validable {
      * <p>
      * El número de jugadores por equipo debe tener un valor mayor o igual que 2. Si se pretende eliminar la
      * propiedad de este evento como evento por equipos pasándole a este método el argumento 0, no se consideraría
-     * una operación válida y se lanzaría la correspondiente excepción. Para lograr este comportamiento, se puede
+     * una operación válida y se lanzaría la correspondiente excepción. Para llevar a cabo esta operación, se puede
      * hacer uso del método {@link Event#clearTeams()} para eliminar todos los equipos y hacer que el evento deje de
      * ser por equipos, o bien eliminar sucesivamente cada equipo existente con {@link Event#removeTeam(Team)} hasta
      * que no quede ninguno (si hubiera algún equipo).
+     * <p>
+     * Si el número de jugadores por equipo que se intenta configurar es igual al ya existente, no se producirá
+     * ningún cambio.
      *
      * @param playersPerTeam número de jugadores por equipo a definir sobre este evento, mayor o igual que 2
      * @throws IllegalArgumentException si <code>playersPerTeam</code> es menor que 2
@@ -590,14 +614,18 @@ public class Event extends Observable implements Validable {
         if (playersPerTeam < 2)
             throw new IllegalArgumentException("Players per team cannot be less than 2");
 
-        if (playersPerTeam != nPlayersPerTeam) {
-            if (nPlayersPerMatch % playersPerTeam != 0)
-                throw new IllegalArgumentException(String.format("Number of players per team must be coherent to the " +
-                        "number of players per match in this event (must be divisor of %d)", nPlayersPerMatch));
+        if (nPlayersPerMatch % playersPerTeam != 0)
+            throw new IllegalArgumentException(String.format("Number of players per team must be coherent to the " +
+                    "number of players per match in this event (must be divisor of %d)", nPlayersPerMatch));
 
-            nPlayersPerTeam = playersPerTeam;
-            teams.clear();
-        }
+        if (playersPerTeam == nPlayersPerTeam)
+            return;
+
+        teams.clear();
+
+        nPlayersPerTeam = playersPerTeam;
+
+        setChanged();
     }
 
     /**
@@ -616,14 +644,10 @@ public class Event extends Observable implements Validable {
      * evento.
      *
      * @param teams lista de equipos que se desean añadir al evento
-     * @throws NullPointerException     si <code>teams</code> es <code>null</code>
-     * @throws IllegalArgumentException si <code>teams</code> está vacío
+     * @throws NullPointerException si <code>teams</code> es <code>null</code>
      */
     public void setTeams(List<Team> teams) {
         Objects.requireNonNull(teams);
-
-        if (teams.isEmpty())
-            throw new IllegalArgumentException("Teams cannot be empty");
 
         teams.forEach(this::addTeam);
     }
@@ -673,6 +697,8 @@ public class Event extends Observable implements Validable {
         team.setEvent(this);
 
         teams.add(team);
+
+        setChanged();
     }
 
     /**
@@ -695,10 +721,12 @@ public class Event extends Observable implements Validable {
      * @param team un equipo de jugadores que se desea eliminar del evento
      */
     public void removeTeam(Team team) {
-        teams.remove(team);
+        if (teams.remove(team)) {
+            if (teams.isEmpty())
+                nPlayersPerTeam = 0;
 
-        if (teams.isEmpty())
-            nPlayersPerTeam = 0;
+            setChanged();
+        }
     }
 
     /**
@@ -707,8 +735,12 @@ public class Event extends Observable implements Validable {
      * su estado inicial de evento sin equipos.
      */
     public void clearTeams() {
-        teams.clear();
-        nPlayersPerTeam = 0;
+        if (!teams.isEmpty()) {
+            teams.clear();
+            nPlayersPerTeam = 0;
+
+            setChanged();
+        }
     }
 
     /**
@@ -804,6 +836,8 @@ public class Event extends Observable implements Validable {
             throw new IllegalArgumentException("Timeslot does not exist in this event");
 
         unavailablePlayers.computeIfAbsent(player, t -> new HashSet<>()).add(timeslot);
+
+        setChanged();
     }
 
     /**
@@ -848,14 +882,19 @@ public class Event extends Observable implements Validable {
      */
     public void removeUnavailablePlayerAtTimeslot(Player player, Timeslot timeslot) {
         // Elimina el timeslot asociado al jugador, y si el conjunto queda vacío, se elimina la entrada del diccionario
-        unavailablePlayers.computeIfPresent(player, (p, t) -> t.remove(timeslot) && t.isEmpty() ? null : t);
+        if (unavailablePlayers.computeIfPresent(player, (p, t) -> t.remove(timeslot) && t.isEmpty() ? null : t) == null)
+            setChanged();
     }
 
     /**
      * Vacía el diccionario de jugadores no disponibles en <i>timeslots</i>
      */
     public void clearUnavailablePlayers() {
-        unavailablePlayers.clear();
+        if (!unavailablePlayers.isEmpty()) {
+            unavailablePlayers.clear();
+
+            setChanged();
+        }
     }
 
     /**
@@ -892,6 +931,9 @@ public class Event extends Observable implements Validable {
     public void setPredefinedMatchups(Set<Matchup> matchups) {
         Objects.requireNonNull(matchups);
 
+        if (matchups.isEmpty())
+            return;
+
         for (Matchup matchup : matchups) {
             for (Player player : matchup.getPlayers()) {
                 long count = matchups.stream()
@@ -924,6 +966,8 @@ public class Event extends Observable implements Validable {
         }
 
         this.predefinedMatchups = matchups;
+
+        setChanged();
     }
 
     /**
@@ -959,6 +1003,8 @@ public class Event extends Observable implements Validable {
             playersInLocalizations.computeIfAbsent(player, l -> new HashSet<>()).addAll(assignedLocalizations);
             playersAtTimeslots.computeIfAbsent(player, l -> new HashSet<>()).addAll(assignedTimeslots);
         });
+
+        setChanged();
     }
 
     /**
@@ -989,7 +1035,7 @@ public class Event extends Observable implements Validable {
         if (assignedTimeslots.isEmpty())
             assignedTimeslots.addAll(timeslots);
 
-        addMatchup(new Matchup(this, players, assignedLocalizations, new HashSet<>(assignedTimeslots), 1));
+        addMatchup(new Matchup(this, players, assignedLocalizations, assignedTimeslots, 1));
     }
 
     /**
@@ -1028,7 +1074,8 @@ public class Event extends Observable implements Validable {
      * @param matchup un conjunto de jugadores a eliminar de la lista, si existe
      */
     public void removeMatchup(Matchup matchup) {
-        predefinedMatchups.remove(matchup);
+        if (predefinedMatchups.remove(matchup))
+            setChanged();
     }
 
     /**
@@ -1039,7 +1086,8 @@ public class Event extends Observable implements Validable {
      * @param players jugadores para los que se borrarán los enfrentamientos predefinidos entre sí
      */
     public void removeMatchup(Set<Player> players) {
-        predefinedMatchups.removeIf(m -> m.getPlayers().equals(players));
+        if (predefinedMatchups.removeIf(m -> m.getPlayers().equals(players)))
+            setChanged();
     }
 
     /**
@@ -1058,7 +1106,11 @@ public class Event extends Observable implements Validable {
      * Limpia el conjunto de enfrentamientos predefinidos.
      */
     public void clearPredefinedMatchups() {
-        predefinedMatchups.clear();
+        if (!predefinedMatchups.isEmpty()) {
+            predefinedMatchups.clear();
+
+            setChanged();
+        }
     }
 
     /**
@@ -1066,9 +1118,7 @@ public class Event extends Observable implements Validable {
      *
      * @return true si sobre el evento se han definido enfrentamientos fijos predefinidos, y false si no
      */
-    public boolean hasPredefinedMatchups() {
-        return !predefinedMatchups.isEmpty();
-    }
+    public boolean hasPredefinedMatchups() { return !predefinedMatchups.isEmpty(); }
 
     /**
      * Devuelve la lista no modificable de horas del evento que representan un break o descanso
@@ -1112,6 +1162,8 @@ public class Event extends Observable implements Validable {
         if (!breaks.contains(timeslotBreak)) {
             breaks.add(timeslotBreak);
             breaks.sort(Comparator.reverseOrder());
+
+            setChanged();
         }
     }
 
@@ -1149,14 +1201,19 @@ public class Event extends Observable implements Validable {
      * @param timeslotBreak una hora del evento
      */
     public void removeBreak(Timeslot timeslotBreak) {
-        breaks.remove(timeslotBreak);
+        if (breaks.remove(timeslotBreak))
+            setChanged();
     }
 
     /**
      * Limpia la lista de <i>timeslots</i> que son descansos o <i>breaks</i>.
      */
     public void clearBreaks() {
-        breaks.clear();
+        if (!breaks.isEmpty()) {
+            breaks.clear();
+
+            setChanged();
+        }
     }
 
     /**
@@ -1248,6 +1305,8 @@ public class Event extends Observable implements Validable {
             throw new IllegalArgumentException("Timeslot does not exist in this event");
 
         unavailableLocalizations.computeIfAbsent(localization, t -> new HashSet<>()).add(timeslot);
+
+        setChanged();
     }
 
     /**
@@ -1285,7 +1344,8 @@ public class Event extends Observable implements Validable {
      * @param localization localización perteneciente al conjunto de localizaciones del evento
      */
     public void removeUnavailableLocalization(Localization localization) {
-        unavailableLocalizations.remove(localization);
+        if (unavailableLocalizations.remove(localization) != null)
+            setChanged();
     }
 
     /**
@@ -1297,14 +1357,22 @@ public class Event extends Observable implements Validable {
      * @param timeslot     hora perteneciente al conjunto de horas en las que el evento discurre
      */
     public void removeUnavailableLocalizationTimeslot(Localization localization, Timeslot timeslot) {
-        unavailableLocalizations.computeIfPresent(localization, (l, t) -> t.remove(timeslot) && t.isEmpty() ? null : t);
+        if (unavailableLocalizations.computeIfPresent(
+                localization,
+                (l, t) -> t.remove(timeslot) && t.isEmpty() ? null : t
+        ) == null)
+            setChanged();
     }
 
     /**
      * Vacía el diccionario de localizaciones de juego no disponibles en <i>timeslots</i>.
      */
     public void clearUnavailableLocalizations() {
-        unavailableLocalizations.clear();
+        if (!unavailableLocalizations.isEmpty()) {
+            unavailableLocalizations.clear();
+
+            setChanged();
+        }
     }
 
     /**
@@ -1341,10 +1409,7 @@ public class Event extends Observable implements Validable {
     public void setPlayersInLocalizations(Map<Player, Set<Localization>> playersInLocalizations) {
         Objects.requireNonNull(playersInLocalizations);
 
-        playersInLocalizations.forEach((player, localizations) -> localizations.forEach(localization ->
-                addPlayerInLocalization(player,
-                localization
-        )));
+        playersInLocalizations.forEach((p, localizations) -> localizations.forEach(l -> addPlayerInLocalization(p, l)));
     }
 
     /**
@@ -1367,6 +1432,8 @@ public class Event extends Observable implements Validable {
             throw new IllegalArgumentException("Localization does not exist in this event");
 
         playersInLocalizations.computeIfAbsent(player, l -> new HashSet<>()).add(localization);
+
+        setChanged();
     }
 
     /**
@@ -1377,7 +1444,9 @@ public class Event extends Observable implements Validable {
      * @param localization localización cuya asignación al jugador se quiere eliminar
      */
     public void removePlayerInLocalization(Player player, Localization localization) {
-        playersInLocalizations.computeIfPresent(player, (p, l) -> l.remove(localization) && l.isEmpty() ? null : l);
+        if (playersInLocalizations.computeIfPresent(player, (p, l) -> l.remove(localization) && l.isEmpty() ? null :
+                l) == null)
+            setChanged();
     }
 
     /**
@@ -1385,7 +1454,11 @@ public class Event extends Observable implements Validable {
      * asociada donde sus partidos deban tener lugar.
      */
     public void clearPlayersInLocalizations() {
-        playersInLocalizations.clear();
+        if (!playersInLocalizations.isEmpty()) {
+            playersInLocalizations.clear();
+
+            setChanged();
+        }
     }
 
     /**
@@ -1479,6 +1552,8 @@ public class Event extends Observable implements Validable {
 
         if (timeslots.indexOf(timeslot) + nTimeslotsPerMatch <= timeslots.size())
             playersAtTimeslots.computeIfAbsent(player, t -> new HashSet<>()).add(timeslot);
+
+        setChanged();
     }
 
     /**
@@ -1517,7 +1592,8 @@ public class Event extends Observable implements Validable {
      * @param timeslot <i>timeslot</i> cuya asociación con el jugador se quiere eliminar
      */
     public void removePlayerAtTimeslot(Player player, Timeslot timeslot) {
-        playersAtTimeslots.computeIfPresent(player, (p, t) -> t.remove(timeslot) && t.isEmpty() ? null : t);
+        if (playersAtTimeslots.computeIfPresent(player, (p, t) -> t.remove(timeslot) && t.isEmpty() ? null : t) == null)
+            setChanged();
     }
 
     /**
@@ -1534,7 +1610,11 @@ public class Event extends Observable implements Validable {
      * <i>timeslot</i> donde sus partidos deban jugarse.
      */
     public void clearPlayersAtTimeslots() {
-        playersAtTimeslots.clear();
+        if (!playersAtTimeslots.isEmpty()) {
+            playersAtTimeslots.clear();
+
+            setChanged();
+        }
     }
 
     public MatchupMode getMatchupMode() {
@@ -1551,10 +1631,15 @@ public class Event extends Observable implements Validable {
     public void setMatchupMode(MatchupMode matchupMode) {
         Objects.requireNonNull(matchupMode);
 
+        if (matchupMode == this.matchupMode)
+            return;
+
         if (nMatchesPerPlayer > 1 && nPlayersPerMatch > 1)
             this.matchupMode = matchupMode;
         else
             this.matchupMode = MatchupMode.ANY;
+
+        setChanged();
     }
 
     /**
@@ -1654,7 +1739,8 @@ public class Event extends Observable implements Validable {
      * atributos.
      * <p>
      * Este método es invocado desde {@link Tournament#solve()} para indicar que los eventos de los que se compone el
-     * torneo están listos para modelar el problema en el proceso de resolución.
+     * torneo están listos para modelar el problema en el proceso de resolución. También es llamado desde el
+     * constructor de un torneo.
      */
     protected void setAsUnchanged() {
         clearChanged();

@@ -74,7 +74,7 @@ public class Tournament implements Validable {
     /**
      * El solver que obtendrá los horarios de cada categoría el torneo
      */
-    private final TournamentSolver solver;
+    private TournamentSolver solver;
 
     /**
      * Nombre del torneo
@@ -138,6 +138,8 @@ public class Tournament implements Validable {
                     .collect(Collectors.toList()));
 
             event.setTournament(this);
+
+            event.setAsUnchanged();
         }
 
         solver = new TournamentSolver(this);
@@ -174,6 +176,8 @@ public class Tournament implements Validable {
      */
     public boolean solve() throws ValidationException {
         validate();
+
+        solver = new TournamentSolver(this);
 
         boolean solved = solver.execute();
 

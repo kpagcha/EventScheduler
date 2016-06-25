@@ -632,4 +632,31 @@ public class TournamentTest {
     public void toStringTest() {
         assertEquals("Tournament", tournament.toString());
     }
+
+    @Test
+    public void modifiedEventAndNextSchedules() throws ValidationException {
+        List<Player> players = TournamentUtils.buildGenericPlayers(4, "Player");
+        List<Localization> localizations = TournamentUtils.buildGenericLocalizations(1, "Court");
+        List<Timeslot> timeslots = TournamentUtils.buildSimpleTimeslots(2);
+
+        Event event = new Event("Event", players, localizations, timeslots);
+        event.setTimeslotsPerMatch(1);
+        event.addMatchup(players.get(0), players.get(1));
+
+        tournament = new Tournament("Tournament", event);
+        tournament.getSolver().setSearchStrategy(SearchStrategy.MINDOM_UB);
+
+        tournament.solve();
+
+        event.addUnavailablePlayerAtTimeslot(players.get(0), timeslots.get(1));
+
+        try {
+            tournament.nextSchedules();
+            fail("IllegalStateException expected");
+        } catch (IllegalStateException e) {
+            assertEquals("An event has an inconsistent state", e.getMessage());
+        }
+
+        tournament.solve();
+    }
 }

@@ -335,6 +335,7 @@ public class TournamentSolver {
      */
     private void buildModel() {
         List<Event> events = tournament.getEvents();
+
         for (int e = 0; e < events.size(); e++) {
             Event event = events.get(e);
             int nPlayers = event.getPlayers().size();
