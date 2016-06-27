@@ -177,17 +177,10 @@ public class Tournament implements Validable {
     public boolean solve() throws ValidationException {
         validate();
 
-        solver = new TournamentSolver(this);
-
         boolean solved = solver.execute();
 
-        if (solved) {
-            currentSchedules = solver.getSolution().get();
-            schedule = new TournamentSchedule(this);
-        } else {
-            currentSchedules = null;
-            schedule = null;
-        }
+        currentSchedules = solver.getSolution();
+        schedule = currentSchedules == null ? null : new TournamentSchedule(this);
 
         events.forEach(Event::setAsUnchanged);
 
@@ -218,22 +211,13 @@ public class Tournament implements Validable {
         if (events.stream().anyMatch(Observable::hasChanged))
             throw new IllegalStateException("An event has an inconsistent state");
 
-        if (!solver.hasResolutionProcessFinished()) {
-            Optional<Map<Event, EventSchedule>> solution = solver.getSolution();
+        if (solver.hasResolutionProcessFinished())
+            return false;
 
-            boolean solutionFound = solution.isPresent();
-            if (solutionFound) {
-                currentSchedules = solution.get();
-                schedule = new TournamentSchedule(this);
-            } else {
-                currentSchedules = null;
-                schedule = null;
-            }
+        currentSchedules = solver.getSolution();
+        schedule = currentSchedules == null ? null : new TournamentSchedule(this);
 
-            return solutionFound;
-        }
-
-        return false;
+        return currentSchedules != null;
     }
 
     /**
@@ -430,7 +414,7 @@ public class Tournament implements Validable {
     public void addUnavailablePlayerAtTimeslotRange(Player player, Timeslot t1, Timeslot t2) {
         if (!allPlayers.contains(player))
             throw new IllegalArgumentException(String.format("Player (%s) does not exist in the list of players of "
-                    + "the tournament",
+                            + "the tournament",
                     player
             ));
 

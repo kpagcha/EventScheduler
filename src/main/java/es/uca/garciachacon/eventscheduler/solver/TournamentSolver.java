@@ -137,7 +137,7 @@ public class TournamentSolver {
     /**
      * Horarios calculados correspondientes a la solución actual
      */
-    private Optional<Map<Event, EventSchedule>> schedules;
+    private Map<Event, EventSchedule> schedules;
 
     /**
      * Estado del proceso de la resolución del problema
@@ -356,7 +356,7 @@ public class TournamentSolver {
     public boolean execute() {
         solver = new Solver("Tournament Solver");
 
-        schedules = Optional.empty();
+        schedules = null;
 
         resolutionState = ResolutionState.STARTED;
         foundSolutions = 0;
@@ -775,28 +775,30 @@ public class TournamentSolver {
 
     /**
      * Si no se ha intentado resolver el modelo, es decir, no se ha llamado a {@link TournamentSolver#execute()}, no
-     * habrá una solución disponible y se devolverá {@link Optional#empty()}.
+     * habrá una solución disponible y se devolverá <code>null</code>.
      * <p>
      * Si es la primera vez que se invoca a este método despues de iniciar el proceso de resolución, se contruye el
      * horario con esa primera solución y se devuelve.
      * <p>
      * Las subsiguientes invocaciones a este método calcularán la siguiente solución al problema, se construirá otro
      * horario alternativo diferente al anterior, sobreescribiendo su valor, y se devuelve este nuevo horario. Si no
-     * hay más soluciones disponibles, se devuelve el valor del horario a su estado inicial, es decir, se devuelve un
-     * objecto opcional vacío {@link Optional#empty()}, y se marca el proceso de resolución como finalizado.
+     * hay más soluciones disponibles, se devuelve el valor del horario a su estado inicial, es decir,
+     * <code>null </code>y se marca el proceso de resolución como finalizado.
      *
-     * @return los horarios de cada categoría del torneo envueltos en una clase {@link Optional}
+     * @return los horarios de cada categoría del torneo
      */
-    public Optional<Map<Event, EventSchedule>> getSolution() {
+    public Map<Event, EventSchedule> getSolution() {
         if (resolutionState == ResolutionState.STARTED) {
-            if (!schedules.isPresent() && foundSolutions == 1)
+            if (schedules == null && foundSolutions == 1) {
+                schedules = new HashMap<>(tournament.getEvents().size());
                 buildSchedules();
-            else if (solver.nextSolution()) {
+            } else if (solver.nextSolution()) {
+                schedules.clear();
                 buildSchedules();
                 foundSolutions++;
             } else {
                 LOGGER.log(Level.INFO, "All solutions found");
-                schedules = Optional.empty();
+                schedules = null;
                 resolutionState = ResolutionState.FINISHED;
             }
         }
@@ -808,13 +810,10 @@ public class TournamentSolver {
      */
     private void buildSchedules() {
         List<Event> events = tournament.getEvents();
-        Map<Event, EventSchedule> currentSchedules = new HashMap<>(events.size());
-
         for (int e = 0; e < events.size(); e++) {
             Event event = events.get(e);
-            currentSchedules.put(event, new EventSchedule(event, internalMatrixToInt(event, x[e])));
+            schedules.put(event, new EventSchedule(event, internalMatrixToInt(event, x[e])));
         }
-        schedules = Optional.of(currentSchedules);
     }
 
     /**
