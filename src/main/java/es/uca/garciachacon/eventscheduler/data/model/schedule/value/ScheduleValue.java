@@ -12,7 +12,7 @@ import java.util.List;
  * <p>
  * Cada elemento se corresponde a la participación de un jugador a una hora determinada.
  */
-public class PlayerScheduleValue extends AbstractScheduleValue {
+public class ScheduleValue extends AbstractScheduleValue {
 
     /**
      * El jugador juega en esta hora en una pista determinada
@@ -61,7 +61,7 @@ public class PlayerScheduleValue extends AbstractScheduleValue {
      *
      * @param val valor interno que especifica el hueco de horario
      */
-    public PlayerScheduleValue(Value val) {
+    public ScheduleValue(Value val) {
         super(val);
     }
 
@@ -85,7 +85,7 @@ public class PlayerScheduleValue extends AbstractScheduleValue {
     }
 
     public boolean equals(Object o) {
-        return o != null && o instanceof PlayerScheduleValue && ((PlayerScheduleValue) o).getValue().equals(value);
+        return o != null && o instanceof ScheduleValue && ((ScheduleValue) o).getValue().equals(value);
 
     }
 }

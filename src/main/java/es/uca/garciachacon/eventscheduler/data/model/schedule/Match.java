@@ -1,5 +1,6 @@
 package es.uca.garciachacon.eventscheduler.data.model.schedule;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.Localization;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.Player;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.Team;
@@ -12,6 +13,7 @@ import java.util.*;
  * Representa un partido o enfrentamiento. Un partido normalmente se compone de dos o más jugadores que se enfrentan
  * o compiten entre sí, aunque también puede ser compuesto por un solo jugador, para deportes o juegos individuales.
  */
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class Match {
     /**
      * Lista de jugadores que componen el enfrentamiento

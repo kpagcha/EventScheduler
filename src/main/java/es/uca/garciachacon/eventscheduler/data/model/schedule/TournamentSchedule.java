@@ -1,8 +1,8 @@
 package es.uca.garciachacon.eventscheduler.data.model.schedule;
 
 import es.uca.garciachacon.eventscheduler.data.model.schedule.value.AbstractScheduleValue;
-import es.uca.garciachacon.eventscheduler.data.model.schedule.value.PlayerScheduleValue;
-import es.uca.garciachacon.eventscheduler.data.model.schedule.value.PlayerScheduleValueOccupied;
+import es.uca.garciachacon.eventscheduler.data.model.schedule.value.ScheduleValue;
+import es.uca.garciachacon.eventscheduler.data.model.schedule.value.ScheduleValueOccupied;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.*;
 
 import java.util.List;
@@ -40,11 +40,11 @@ public class TournamentSchedule extends Schedule {
         localizations = tournament.getAllLocalizations();
         timeslots = tournament.getAllTimeslots();
 
-        schedule = new PlayerScheduleValue[players.size()][timeslots.size()];
+        schedule = new ScheduleValue[players.size()][timeslots.size()];
 
         for (int p = 0; p < players.size(); p++)
             for (int t = 0; t < timeslots.size(); t++)
-                schedule[p][t] = new PlayerScheduleValue(PlayerScheduleValue.NOT_IN_DOMAIN);
+                schedule[p][t] = new ScheduleValue(ScheduleValue.NOT_IN_DOMAIN);
 
         for (Event event : tournament.getEvents()) {
             AbstractScheduleValue[][] eventSchedule = schedules.get(event).getScheduleValues();
@@ -67,8 +67,8 @@ public class TournamentSchedule extends Schedule {
                     if (!schedule[playerIndex][timeslotIndex].isOccupied()) {
                         if (eventSchedule[p][t].isOccupied()) {
                             schedule[playerIndex][timeslotIndex] =
-                                    new PlayerScheduleValueOccupied(localizations.indexOf(eventLocalizations.get((
-                                            (PlayerScheduleValueOccupied) eventSchedule[p][t])
+                                    new ScheduleValueOccupied(localizations.indexOf(eventLocalizations.get((
+                                            (ScheduleValueOccupied) eventSchedule[p][t])
                                             .getLocalization())));
                         } else if (!schedule[playerIndex][timeslotIndex].isLimited())
                             schedule[playerIndex][timeslotIndex] = eventSchedule[p][t];

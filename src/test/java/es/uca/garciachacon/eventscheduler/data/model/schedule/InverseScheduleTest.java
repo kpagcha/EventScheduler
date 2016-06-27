@@ -1,8 +1,8 @@
 package es.uca.garciachacon.eventscheduler.data.model.schedule;
 
 import es.uca.garciachacon.eventscheduler.data.model.schedule.value.AbstractScheduleValue;
-import es.uca.garciachacon.eventscheduler.data.model.schedule.value.LocalizationScheduleValue;
-import es.uca.garciachacon.eventscheduler.data.model.schedule.value.LocalizationScheduleValueOccupied;
+import es.uca.garciachacon.eventscheduler.data.model.schedule.value.InverseScheduleValue;
+import es.uca.garciachacon.eventscheduler.data.model.schedule.value.InverseScheduleValueOccupied;
 import es.uca.garciachacon.eventscheduler.data.model.schedule.value.Value;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.*;
 import es.uca.garciachacon.eventscheduler.data.validation.validable.ValidationException;
@@ -19,10 +19,10 @@ import java.util.stream.Stream;
 import static org.junit.Assert.*;
 
 /**
- * Tests de la clase {@link LocalizationSchedule}, así como de los valores internos que utiliza,
- * {@link LocalizationScheduleValue}.
+ * Tests de la clase {@link InverseSchedule}, así como de los valores internos que utiliza,
+ * {@link InverseScheduleValue}.
  */
-public class LocalizationScheduleTest {
+public class InverseScheduleTest {
 
     private Tournament tournament;
     private Event single;
@@ -69,7 +69,7 @@ public class LocalizationScheduleTest {
 
     @Test
     public void constructorEventLocalizationScheduleTest() {
-        LocalizationSchedule schedule = new LocalizationSchedule(single);
+        InverseSchedule schedule = new InverseSchedule(single);
 
         List<AbstractScheduleValue> vals =
                 Stream.of(schedule.getScheduleValues()).flatMap(Arrays::stream).collect(Collectors.toList());
@@ -83,7 +83,7 @@ public class LocalizationScheduleTest {
         assertTrue(vals.stream().filter(AbstractScheduleValue::isUnavailable).count() <= nUnavailableTimeslots);
 
         try {
-            new LocalizationSchedule((Event) null);
+            new InverseSchedule((Event) null);
             fail("NullPointerException expected");
         } catch (NullPointerException e) {
         }
@@ -91,7 +91,7 @@ public class LocalizationScheduleTest {
 
     @Test
     public void constructorTournamentLocalizationScheduleTest() {
-        LocalizationSchedule schedule = new LocalizationSchedule(tournament);
+        InverseSchedule schedule = new InverseSchedule(tournament);
 
         List<AbstractScheduleValue> vals =
                 Stream.of(schedule.getScheduleValues()).flatMap(Arrays::stream).collect(Collectors.toList());
@@ -107,7 +107,7 @@ public class LocalizationScheduleTest {
         assertTrue(vals.stream().filter(AbstractScheduleValue::isUnavailable).count() <= nUnavailableTimeslots);
 
         try {
-            new LocalizationSchedule((Tournament) null);
+            new InverseSchedule((Tournament) null);
             fail("NullPointerException expected");
         } catch (NullPointerException e) {
         }
@@ -135,7 +135,7 @@ public class LocalizationScheduleTest {
         tournament = new Tournament("Tournament", event);
 
         try {
-            new LocalizationSchedule(tournament);
+            new InverseSchedule(tournament);
             fail("IllegalStateException expected for not calculated schedules");
         } catch (IllegalStateException e) {
             assertEquals("Tournament schedule not calculated", e.getMessage());
@@ -143,7 +143,7 @@ public class LocalizationScheduleTest {
 
         tournament.solve();
 
-        LocalizationSchedule schedule = new LocalizationSchedule(tournament);
+        InverseSchedule schedule = new InverseSchedule(tournament);
 
         assertEquals(tournament.getEvents()
                         .get(0)
@@ -161,7 +161,7 @@ public class LocalizationScheduleTest {
 
     @Test
     public void getTotalTimeslotsTest() {
-        LocalizationSchedule schedule = new LocalizationSchedule(tournament);
+        InverseSchedule schedule = new InverseSchedule(tournament);
 
         assertEquals(tournament.getAllLocalizations().size() * tournament.getAllTimeslots().size(),
                 schedule.getTotalTimeslots()
@@ -170,7 +170,7 @@ public class LocalizationScheduleTest {
 
     @Test
     public void getAvailableTimeslotsTest() {
-        LocalizationSchedule schedule = new LocalizationSchedule(tournament);
+        InverseSchedule schedule = new InverseSchedule(tournament);
         List<AbstractScheduleValue> vals =
                 Stream.of(schedule.getScheduleValues()).flatMap(Arrays::stream).collect(Collectors.toList());
 
@@ -181,7 +181,7 @@ public class LocalizationScheduleTest {
 
     @Test
     public void getOccupationTest() {
-        LocalizationSchedule schedule = new LocalizationSchedule(tournament);
+        InverseSchedule schedule = new InverseSchedule(tournament);
         List<AbstractScheduleValue> vals =
                 Stream.of(schedule.getScheduleValues()).flatMap(Arrays::stream).collect(Collectors.toList());
 
@@ -190,7 +190,7 @@ public class LocalizationScheduleTest {
 
     @Test
     public void toStringTest() {
-        LocalizationSchedule schedule = new LocalizationSchedule(tournament);
+        InverseSchedule schedule = new InverseSchedule(tournament);
         String scheduleStr = schedule.toString();
 
         assertThat(scheduleStr, StringContains.containsString("5,6"));
@@ -200,61 +200,61 @@ public class LocalizationScheduleTest {
 
     @Test
     public void localizationScheduleValueTest() {
-        LocalizationScheduleValue v = new LocalizationScheduleValue(LocalizationScheduleValue.FREE);
+        InverseScheduleValue v = new InverseScheduleValue(InverseScheduleValue.FREE);
         assertTrue(v.isFree());
         assertEquals("-", v.toString());
 
-        v = new LocalizationScheduleValue(LocalizationScheduleValue.LIMITED);
+        v = new InverseScheduleValue(InverseScheduleValue.LIMITED);
         assertTrue(v.isLimited());
         assertEquals("¬", v.toString());
 
-        v = new LocalizationScheduleValue(LocalizationScheduleValue.UNAVAILABLE);
+        v = new InverseScheduleValue(InverseScheduleValue.UNAVAILABLE);
         assertTrue(v.isUnavailable());
         assertEquals("*", v.toString());
 
-        v = new LocalizationScheduleValue(LocalizationScheduleValue.CONTINUATION);
+        v = new InverseScheduleValue(InverseScheduleValue.CONTINUATION);
         assertTrue(v.isContinuation());
         assertEquals("<", v.toString());
 
-        v = new LocalizationScheduleValueOccupied(new ArrayList<>(Arrays.asList(3, 4)));
+        v = new InverseScheduleValueOccupied(new ArrayList<>(Arrays.asList(3, 4)));
         assertTrue(v.isOccupied());
-        assertTrue(((LocalizationScheduleValueOccupied) v).getPlayers()
+        assertTrue(((InverseScheduleValueOccupied) v).getPlayers()
                 .containsAll(new ArrayList<>(Arrays.asList(3, 4))));
         assertEquals("3,4", v.toString());
 
-        v = new LocalizationScheduleValue(LocalizationScheduleValue.LIMITED);
-        assertTrue(v.equals(new LocalizationScheduleValue(LocalizationScheduleValue.LIMITED)));
-        assertFalse(v.equals(new LocalizationScheduleValue(LocalizationScheduleValue.CONTINUATION)));
+        v = new InverseScheduleValue(InverseScheduleValue.LIMITED);
+        assertTrue(v.equals(new InverseScheduleValue(InverseScheduleValue.LIMITED)));
+        assertFalse(v.equals(new InverseScheduleValue(InverseScheduleValue.CONTINUATION)));
         assertNotNull(v);
 
-        v = new LocalizationScheduleValueOccupied(new ArrayList<>(Arrays.asList(0, 2, 5, 6)));
-        assertTrue(v.equals(new LocalizationScheduleValueOccupied(new ArrayList<>(Arrays.asList(0, 2, 5, 6)))));
-        assertFalse(v.equals(new LocalizationScheduleValueOccupied(new ArrayList<>(Arrays.asList(0, 2, 5)))));
-        assertFalse(v.equals(new LocalizationScheduleValue(LocalizationScheduleValue.OCCUPIED)));
+        v = new InverseScheduleValueOccupied(new ArrayList<>(Arrays.asList(0, 2, 5, 6)));
+        assertTrue(v.equals(new InverseScheduleValueOccupied(new ArrayList<>(Arrays.asList(0, 2, 5, 6)))));
+        assertFalse(v.equals(new InverseScheduleValueOccupied(new ArrayList<>(Arrays.asList(0, 2, 5)))));
+        assertFalse(v.equals(new InverseScheduleValue(InverseScheduleValue.OCCUPIED)));
         assertNotNull(v);
 
         try {
-            new LocalizationScheduleValue(new Value("UNKNOWN"));
+            new InverseScheduleValue(new Value("UNKNOWN"));
             fail("IllegalArgumentException expected");
         } catch (IllegalArgumentException e) {
             assertEquals(e.getMessage(), "Illegal value");
         }
 
         try {
-            new LocalizationScheduleValueOccupied(null);
+            new InverseScheduleValueOccupied(null);
             fail("NullPointerException expected");
         } catch (NullPointerException e) {
         }
 
         try {
-            new LocalizationScheduleValueOccupied(new ArrayList<>(Arrays.asList(5, null, 6)));
+            new InverseScheduleValueOccupied(new ArrayList<>(Arrays.asList(5, null, 6)));
             fail("IllegalArgumentException expected");
         } catch (IllegalArgumentException e) {
             assertEquals(e.getMessage(), "Player index cannot be null");
         }
 
         try {
-            new LocalizationScheduleValueOccupied(new ArrayList<>(Arrays.asList(5, 5, 6)));
+            new InverseScheduleValueOccupied(new ArrayList<>(Arrays.asList(5, 5, 6)));
             fail("IllegalArgumentException expected");
         } catch (IllegalArgumentException e) {
             assertThat(e.getMessage(), StringContains.containsString("Player indices cannot be duplicated"));

@@ -7,7 +7,7 @@ import java.util.List;
  * Representa un valor de horario ocupado, donde un jugador concreto juega a una hora concreta en una localización
  * almacenada en instancias de esta clase.
  */
-public class PlayerScheduleValueOccupied extends PlayerScheduleValue {
+public class ScheduleValueOccupied extends ScheduleValue {
     /**
      * Valor que representa la localización de juego donde habrá de jugar el jugador a esta hora
      */
@@ -15,7 +15,7 @@ public class PlayerScheduleValueOccupied extends PlayerScheduleValue {
 
     protected static final List<Value> possibleValues = Collections.singletonList(OCCUPIED);
 
-    public PlayerScheduleValueOccupied(int localization) {
+    public ScheduleValueOccupied(int localization) {
         super(OCCUPIED);
         this.localization = localization;
     }
@@ -33,8 +33,8 @@ public class PlayerScheduleValueOccupied extends PlayerScheduleValue {
     }
 
     public boolean equals(Object o) {
-        return o != null && o instanceof PlayerScheduleValueOccupied &&
-                ((PlayerScheduleValueOccupied) o).getLocalization() == localization;
+        return o != null && o instanceof ScheduleValueOccupied &&
+                ((ScheduleValueOccupied) o).getLocalization() == localization;
 
     }
 }

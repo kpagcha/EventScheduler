@@ -1,5 +1,7 @@
 package es.uca.garciachacon.eventscheduler.data.model.schedule.value;
 
+import com.fasterxml.jackson.annotation.JsonValue;
+
 /**
  * Clase para la representación interna del valor de un hueco en un horario.
  */
@@ -10,14 +12,16 @@ public class Value {
     private final String name;
 
     /**
-     * Construye un valor con la cadena especificada
+     * Construye un valor con la cadena especificada, eliminando espacios en los extremos de la cadena y
+     * transformándola a mayúsculas.
      *
-     * @param name el valor interno
+     * @param name el valor interno de este valor de horario
      */
     public Value(String name) {
-        this.name = name;
+        this.name = name.trim().toUpperCase();
     }
 
+    @JsonValue
     public String getName() {
         return name;
     }

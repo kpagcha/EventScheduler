@@ -1,7 +1,7 @@
 package es.uca.garciachacon.eventscheduler.solver;
 
 import es.uca.garciachacon.eventscheduler.data.model.schedule.EventSchedule;
-import es.uca.garciachacon.eventscheduler.data.model.schedule.LocalizationSchedule;
+import es.uca.garciachacon.eventscheduler.data.model.schedule.InverseSchedule;
 import es.uca.garciachacon.eventscheduler.data.model.schedule.Match;
 import es.uca.garciachacon.eventscheduler.data.model.schedule.TournamentSchedule;
 import es.uca.garciachacon.eventscheduler.data.model.schedule.value.AbstractScheduleValue;
@@ -108,7 +108,7 @@ public class TournamentSolverTest {
                         .count()
         );
 
-        assertEquals(100, new Double(new LocalizationSchedule(tournament).getOccupationRatio() * 100).intValue());
+        assertEquals(100, new Double(new InverseSchedule(tournament).getOccupationRatio() * 100).intValue());
 
         solver.setResolutionTimeLimit(400);
         solver.setResolutionTimeLimit(0);
@@ -205,7 +205,7 @@ public class TournamentSolverTest {
         for (Match match : matches)
             assertEquals(4, match.getPlayers().size());
 
-        assertEquals(100, new Double(new LocalizationSchedule(tournament).getOccupationRatio() * 100).intValue());
+        assertEquals(100, new Double(new InverseSchedule(tournament).getOccupationRatio() * 100).intValue());
     }
 
     @Test
@@ -229,7 +229,7 @@ public class TournamentSolverTest {
         for (Match match : matches)
             assertEquals(1, match.getPlayers().size());
 
-        assertEquals(100, new Double(new LocalizationSchedule(tournament).getOccupationRatio() * 100).intValue());
+        assertEquals(100, new Double(new InverseSchedule(tournament).getOccupationRatio() * 100).intValue());
     }
 
     @Test
@@ -250,7 +250,7 @@ public class TournamentSolverTest {
         for (Player player : tournament.getAllPlayers())
             assertEquals(2, schedule.filterMatchesByPlayer(player).size());
 
-        assertEquals(80, new Double(new LocalizationSchedule(tournament).getOccupationRatio() * 100).intValue());
+        assertEquals(80, new Double(new InverseSchedule(tournament).getOccupationRatio() * 100).intValue());
     }
 
     @Test
@@ -524,7 +524,7 @@ public class TournamentSolverTest {
         assertTrue(schedule.filterMatchesByPlayer(kohlschreiber).get(0).getPlayers().contains(nadal));
         assertTrue(schedule.filterMatchesByPlayer(federer).get(0).getPlayers().contains(zverev));
 
-        LocalizationSchedule groupedSchedule = new LocalizationSchedule(tournament);
+        InverseSchedule groupedSchedule = new InverseSchedule(tournament);
         assertEquals(tournament.getNumberOfOccupiedTimeslots(), 2 * groupedSchedule.getOccupation());
     }
 
@@ -1289,7 +1289,7 @@ public class TournamentSolverTest {
                     Assert.assertNotEquals(matches.get(j).getLocalization(), matches.get(k).getLocalization());
         }
 
-        assertEquals(100, new Double(new LocalizationSchedule(tournament).getOccupationRatio() * 100).intValue());
+        assertEquals(100, new Double(new InverseSchedule(tournament).getOccupationRatio() * 100).intValue());
     }
 
     @Test

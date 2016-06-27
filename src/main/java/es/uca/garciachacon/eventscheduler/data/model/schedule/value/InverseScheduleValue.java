@@ -1,6 +1,6 @@
 package es.uca.garciachacon.eventscheduler.data.model.schedule.value;
 
-import es.uca.garciachacon.eventscheduler.data.model.schedule.LocalizationSchedule;
+import es.uca.garciachacon.eventscheduler.data.model.schedule.InverseSchedule;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -8,11 +8,11 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Valores que puede tener un elemento de un horario agrupado (clase {@link LocalizationSchedule}).
+ * Valores que puede tener un elemento de un horario agrupado (clase {@link InverseSchedule}).
  * <p>
  * Cada elemento corresponde a una hora en una pista
  */
-public class LocalizationScheduleValue extends AbstractScheduleValue {
+public class InverseScheduleValue extends AbstractScheduleValue {
 
     /**
      * En la localización comienza un partido a la hora correspondiente en el horario
@@ -56,7 +56,7 @@ public class LocalizationScheduleValue extends AbstractScheduleValue {
      *
      * @param val valor interno que especifica el hueco de horario
      */
-    public LocalizationScheduleValue(Value val) {
+    public InverseScheduleValue(Value val) {
         super(val);
     }
 
@@ -79,8 +79,8 @@ public class LocalizationScheduleValue extends AbstractScheduleValue {
     }
 
     public boolean equals(Object o) {
-        return o != null && o instanceof LocalizationScheduleValue &&
-                ((LocalizationScheduleValue) o).getValue().equals(value);
+        return o != null && o instanceof InverseScheduleValue &&
+                ((InverseScheduleValue) o).getValue().equals(value);
 
     }
 }

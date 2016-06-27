@@ -1,6 +1,6 @@
 package es.uca.garciachacon.eventscheduler.suites;
 
-import es.uca.garciachacon.eventscheduler.data.model.schedule.LocalizationScheduleTest;
+import es.uca.garciachacon.eventscheduler.data.model.schedule.InverseScheduleTest;
 import es.uca.garciachacon.eventscheduler.data.model.schedule.MatchTest;
 import es.uca.garciachacon.eventscheduler.data.model.schedule.ScheduleTest;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.*;
@@ -17,7 +17,7 @@ import org.junit.runners.Suite.SuiteClasses;
 
 @RunWith(Suite.class)
 @SuiteClasses({ EventTest.class, EntityTest.class, LocalizationTest.class, PlayerTest.class, TeamTest.class,
-        TimeslotTest.class, TournamentTest.class, ScheduleTest.class, MatchTest.class, LocalizationScheduleTest.class,
+        TimeslotTest.class, TournamentTest.class, ScheduleTest.class, MatchTest.class, InverseScheduleTest.class,
         ValidationTest.class, TournamentSolverTest.class, TournamentUtilsTest.class, MatchupTest.class,
         TimeslotSerializerTest.class, TournamentSerializerTest.class, TimeslotDeserializerTest.class,
         TournamentDeserializerTest.class

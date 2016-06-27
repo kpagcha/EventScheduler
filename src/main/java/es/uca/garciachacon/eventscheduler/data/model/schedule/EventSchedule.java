@@ -1,7 +1,7 @@
 package es.uca.garciachacon.eventscheduler.data.model.schedule;
 
-import es.uca.garciachacon.eventscheduler.data.model.schedule.value.PlayerScheduleValue;
-import es.uca.garciachacon.eventscheduler.data.model.schedule.value.PlayerScheduleValueOccupied;
+import es.uca.garciachacon.eventscheduler.data.model.schedule.value.ScheduleValue;
+import es.uca.garciachacon.eventscheduler.data.model.schedule.value.ScheduleValueOccupied;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.*;
 import es.uca.garciachacon.eventscheduler.solver.TournamentSolver;
 
@@ -22,7 +22,7 @@ public class EventSchedule extends Schedule {
      * {@link TournamentSolver}.
      * <p>
      * Este método procesa la matriz de enteros con la solución y construye el horario representado mediante una
-     * matriz bidimensional de {@link PlayerScheduleValue}.
+     * matriz bidimensional de {@link ScheduleValue}.
      *
      * @param event evento al que pertenece el horario que se va a construir
      * @param x     array de IntVar de tres dimensiones con los valores de la solución calculada por
@@ -40,22 +40,23 @@ public class EventSchedule extends Schedule {
         localizations = event.getLocalizations();
         timeslots = event.getTimeslots();
 
-        schedule = new PlayerScheduleValue[players.size()][timeslots.size()];
+        schedule = new ScheduleValue[players.size()][timeslots.size()];
+
         for (int p = 0; p < players.size(); p++) {
             for (int t = 0; t < timeslots.size(); t++) {
                 Timeslot timeslot = event.getTimeslots().get(t);
 
                 if (event.isBreak(timeslot))
-                    schedule[p][t] = new PlayerScheduleValue(PlayerScheduleValue.BREAK);
+                    schedule[p][t] = new ScheduleValue(ScheduleValue.BREAK);
                 else if (event.isPlayerUnavailable(event.getPlayers().get(p), timeslot)) {
-                    schedule[p][t] = new PlayerScheduleValue(PlayerScheduleValue.UNAVAILABLE);
+                    schedule[p][t] = new ScheduleValue(ScheduleValue.UNAVAILABLE);
                 } else {
-                    schedule[p][t] = new PlayerScheduleValue(PlayerScheduleValue.FREE);
+                    schedule[p][t] = new ScheduleValue(ScheduleValue.FREE);
 
                     boolean matchInCourt = false;
                     for (int c = 0; c < localizations.size(); c++) {
                         if (x[p][c][t] == 1) {
-                            schedule[p][t] = new PlayerScheduleValueOccupied(c);
+                            schedule[p][t] = new ScheduleValueOccupied(c);
                             matchInCourt = true;
                             break;
                         }
@@ -64,7 +65,7 @@ public class EventSchedule extends Schedule {
                     if (!matchInCourt) {
                         for (int c = 0; c < localizations.size(); c++) {
                             if (event.isLocalizationUnavailable(event.getLocalizations().get(c), timeslot)) {
-                                schedule[p][t] = new PlayerScheduleValue(PlayerScheduleValue.LIMITED);
+                                schedule[p][t] = new ScheduleValue(ScheduleValue.LIMITED);
                                 break;
                             }
                         }
@@ -88,17 +89,17 @@ public class EventSchedule extends Schedule {
         int matchDuration = event.getTimeslotsPerMatch();
 
         // Horario donde sólo se marcan los comienzos de partidos
-        PlayerScheduleValue[][] scheduleBeginnings = new PlayerScheduleValue[players.size()][timeslots.size()];
+        ScheduleValue[][] scheduleBeginnings = new ScheduleValue[players.size()][timeslots.size()];
         for (int p = 0; p < players.size(); p++) {
             for (int t = 0; t < timeslots.size(); t++) {
                 // si se juega un partido se marcan los siguientes de su rango como libres
                 if (schedule[p][t].isOccupied()) {
-                    scheduleBeginnings[p][t] = (PlayerScheduleValue) schedule[p][t];
+                    scheduleBeginnings[p][t] = (ScheduleValue) schedule[p][t];
                     for (int i = 1; i < matchDuration; i++)
-                        scheduleBeginnings[p][t + i] = new PlayerScheduleValue(PlayerScheduleValue.FREE);
+                        scheduleBeginnings[p][t + i] = new ScheduleValue(ScheduleValue.FREE);
                     t += matchDuration - 1;
                 } else {
-                    scheduleBeginnings[p][t] = (PlayerScheduleValue) schedule[p][t];
+                    scheduleBeginnings[p][t] = (ScheduleValue) schedule[p][t];
                 }
             }
         }
@@ -145,7 +146,7 @@ public class EventSchedule extends Schedule {
 
                     Match match = new Match(
                             playersInMatch,
-                            localizations.get(((PlayerScheduleValueOccupied) scheduleBeginnings[thisPlayer][t])
+                            localizations.get(((ScheduleValueOccupied) scheduleBeginnings[thisPlayer][t])
                                     .getLocalization()),
                             timeslots.get(t),
                             timeslots.get(t + matchDuration - 1),

@@ -1,6 +1,6 @@
 package es.uca.garciachacon.eventscheduler;
 
-import es.uca.garciachacon.eventscheduler.data.model.schedule.LocalizationSchedule;
+import es.uca.garciachacon.eventscheduler.data.model.schedule.InverseSchedule;
 import es.uca.garciachacon.eventscheduler.data.model.schedule.Match;
 import es.uca.garciachacon.eventscheduler.data.model.schedule.TournamentSchedule;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.Player;
@@ -95,7 +95,7 @@ public class Application {
                             System.out.println();
                         }
 
-                        LocalizationSchedule groupedSchedule = new LocalizationSchedule(tournament);
+                        InverseSchedule groupedSchedule = new InverseSchedule(tournament);
                         System.out.println("Combined schedule grouped by courts");
                         System.out.println(groupedSchedule);
 

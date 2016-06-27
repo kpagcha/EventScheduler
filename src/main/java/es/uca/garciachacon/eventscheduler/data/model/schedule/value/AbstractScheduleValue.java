@@ -1,5 +1,7 @@
 package es.uca.garciachacon.eventscheduler.data.model.schedule.value;
 
+import com.fasterxml.jackson.annotation.JsonValue;
+
 import java.util.List;
 
 /**
@@ -21,6 +23,11 @@ public abstract class AbstractScheduleValue {
         if (!getPossibleValues().contains(val))
             throw new IllegalArgumentException("Illegal value");
         value = val;
+    }
+
+    @JsonValue
+    public Value getValue() {
+        return value;
     }
 
     /**
@@ -92,10 +99,6 @@ public abstract class AbstractScheduleValue {
      * @return lista de posibles valores
      */
     protected abstract List<Value> getPossibleValues();
-
-    public Value getValue() {
-        return value;
-    }
 
     public boolean equals(Object o) {
         return o != null && o instanceof AbstractScheduleValue && ((AbstractScheduleValue) o).getValue().equals(value);

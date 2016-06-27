@@ -1,9 +1,13 @@
 package es.uca.garciachacon.eventscheduler.rest;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import es.uca.garciachacon.eventscheduler.data.model.schedule.EventSchedule;
+import es.uca.garciachacon.eventscheduler.data.model.schedule.InverseSchedule;
+import es.uca.garciachacon.eventscheduler.data.model.schedule.Schedule;
 import es.uca.garciachacon.eventscheduler.data.model.schedule.TournamentSchedule;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.Event;
-import es.uca.garciachacon.eventscheduler.data.model.tournament.Tournament;
+import es.uca.garciachacon.eventscheduler.data.model.tournament.*;
+import es.uca.garciachacon.eventscheduler.data.validation.validable.ValidationException;
 import es.uca.garciachacon.eventscheduler.rest.dao.ITournamentDao;
 import es.uca.garciachacon.eventscheduler.utils.TournamentUtils;
 
@@ -11,10 +15,7 @@ import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Servicio web REST que proporciona una API para el manejo de torneos, su tratamiento como recursos, el cálculo de
@@ -32,27 +33,6 @@ public class EventSchedulerService {
     @Inject
     public EventSchedulerService(ITournamentDao tournamentDao) {
         dao = tournamentDao;
-    }
-
-    public static void main(String[] args) throws JsonProcessingException {
-        Event e1 = new Event(
-                "Event",
-                TournamentUtils.buildGenericPlayers(4, "Player"),
-                TournamentUtils.buildGenericLocalizations(1, "Court"),
-                TournamentUtils.buildLocalTimeTimeslots(2)
-        );
-        e1.setTimeslotsPerMatch(1);
-        Tournament t1 = new Tournament("Another Tournament", e1);
-
-        Event e2 = new Event(
-                "Event",
-                TournamentUtils.buildGenericPlayers(8, "Player"),
-                TournamentUtils.buildGenericLocalizations(3, "Court"),
-                TournamentUtils.buildLocalTimeTimeslots(6)
-        );
-        Tournament t2 = new Tournament("Tournament", e2);
-
-        System.out.println(t1.toJson());
     }
 
     /**
@@ -132,10 +112,20 @@ public class EventSchedulerService {
         throw new NotFoundException();
     }
 
+    /**
+     * Petición GET para conseguir los horarios del torneo con el identificador especificado. Se devuelve
+     * <code>null</code> (respuesta 204) si no existe un horario asociado al torneo (no tiene solución, o ya se han
+     * encontrado todas ellas).
+     * <p>
+     * Si no hay un torneo con el identificado indicado la respuesta será 404.
+     *
+     * @param id el dientificador del torneo
+     * @return horaio del torneo, que puede ser <code>null</code> si no tiene
+     */
     @Path("/tournaments/{id}/schedule")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public TournamentSchedule getTournamentSchedule(@PathParam("id") String id) {
+    public Schedule getTournamentSchedule(@PathParam("id") String id) {
         if (!dao.getIds().contains(id))
             throw new NotFoundException();
 
@@ -144,5 +134,29 @@ public class EventSchedulerService {
             return schedule.get();
         else
             return null;
+    }
+
+    public static void main(String[] args) throws JsonProcessingException, ValidationException {
+        List<Player> players = TournamentUtils.buildGenericPlayers(4, "Player");
+        List<Localization> localizations = TournamentUtils.buildGenericLocalizations(2, "Court");
+        List<Timeslot> timeslots = TournamentUtils.buildSimpleTimeslots(2);
+
+        Event event = new Event("Event", players, localizations, timeslots);
+        event.setTimeslotsPerMatch(1);
+
+        Tournament tournament = new Tournament("Tournament", event);
+
+        tournament.solve();
+
+        TournamentSchedule schedule = tournament.getSchedule();
+        Map<Event, EventSchedule> currentSchedules = tournament.getCurrentSchedules();
+
+        InverseSchedule inverseSchedule = new InverseSchedule(event);
+
+        ObjectMapper mapper = new ObjectMapper();
+
+        String json = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(inverseSchedule);
+
+        System.out.println(json);
     }
 }

@@ -1,7 +1,7 @@
 package es.uca.garciachacon.eventscheduler.data.model.schedule;
 
-import es.uca.garciachacon.eventscheduler.data.model.schedule.value.LocalizationScheduleValue;
-import es.uca.garciachacon.eventscheduler.data.model.schedule.value.LocalizationScheduleValueOccupied;
+import es.uca.garciachacon.eventscheduler.data.model.schedule.value.InverseScheduleValue;
+import es.uca.garciachacon.eventscheduler.data.model.schedule.value.InverseScheduleValueOccupied;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.*;
 
 import java.util.*;
@@ -9,54 +9,52 @@ import java.util.stream.Collectors;
 
 /**
  * Representa un horario agrupado por localizaciones de juego y horas de juego mediante una matriz bidimensional de
- * {@link LocalizationScheduleValue}.
+ * {@link InverseScheduleValue}.
  */
-public class LocalizationSchedule extends Schedule {
-    /**
-     * Número de timeslots
-     */
-    private int occupation = -1;
-
-    /**
-     * Número de timeslots disponibles donde asignar partidos
-     */
-    private int availableTimeslots = -1;
+public class InverseSchedule extends Schedule {
 
     /**
      * Construye el horario agrupado de un evento, teniendo en cuenta los partidos del horario, los breaks y la
      * indisponibilidad de pistas
      *
-     * @param event evento no nulo
+     * @param event evento cuyo horario por localizaciones se quiere construir
+     * @throws NullPointerException  si el evento es <code>null</code>
+     * @throws IllegalStateException si los horarios del torneo al que el evento pertenece aún no se han calculados,
+     *                               o son <code>null</code> por otra razón, como que ya se hayan calculado todos ellos
      */
-    public LocalizationSchedule(Event event) {
+    public InverseSchedule(Event event) {
         Objects.requireNonNull(event);
+
+        Map<Event, EventSchedule> schedules = event.getTournament().getCurrentSchedules();
+
+        if (schedules == null)
+            throw new IllegalStateException("Tournament schedules not calculated");
 
         name = event.getName();
         players = event.getPlayers();
         localizations = event.getLocalizations();
         timeslots = event.getTimeslots();
-        matches = event.getTournament().getCurrentSchedules().get(event).getMatches();
+        matches = schedules.get(event).getMatches();
 
-        schedule = new LocalizationScheduleValue[localizations.size()][timeslots.size()];
+        schedule = new InverseScheduleValue[localizations.size()][timeslots.size()];
 
         List<Timeslot> breaks = event.getBreaks();
         Map<Localization, Set<Timeslot>> unavailableLocalizations = event.getUnavailableLocalizations();
 
         for (int i = 0; i < localizations.size(); i++)
             for (int j = 0; j < timeslots.size(); j++)
-                schedule[i][j] = new LocalizationScheduleValue(LocalizationScheduleValue.FREE);
+                schedule[i][j] = new InverseScheduleValue(InverseScheduleValue.FREE);
 
         for (Timeslot breakTimeslot : breaks)
             for (int i = 0; i < localizations.size(); i++)
                 schedule[i][timeslots.indexOf(breakTimeslot)] =
-                        new LocalizationScheduleValue(LocalizationScheduleValue.UNAVAILABLE);
+                        new InverseScheduleValue(InverseScheduleValue.UNAVAILABLE);
 
         for (Localization localization : unavailableLocalizations.keySet()) {
             Set<Timeslot> localizationTimeslots = unavailableLocalizations.get(localization);
             int c = localizations.indexOf(localization);
             for (Timeslot timeslot : localizationTimeslots)
-                schedule[c][timeslots.indexOf(timeslot)] =
-                        new LocalizationScheduleValue(LocalizationScheduleValue.UNAVAILABLE);
+                schedule[c][timeslots.indexOf(timeslot)] = new InverseScheduleValue(InverseScheduleValue.UNAVAILABLE);
         }
 
         int matchDuration = event.getTimeslotsPerMatch();
@@ -68,11 +66,11 @@ public class LocalizationSchedule extends Schedule {
             List<Integer> playersIndices = new ArrayList<>(players.size());
             playersIndices.addAll(matchPlayers.stream().map(players::indexOf).collect(Collectors.toList()));
 
-            schedule[c][t] = new LocalizationScheduleValueOccupied(playersIndices);
+            schedule[c][t] = new InverseScheduleValueOccupied(playersIndices);
 
             if (matchDuration > 1)
                 for (int i = 1; i < matchDuration; i++)
-                    schedule[c][i + t] = new LocalizationScheduleValue(LocalizationScheduleValue.CONTINUATION);
+                    schedule[c][i + t] = new InverseScheduleValue(InverseScheduleValue.CONTINUATION);
         }
     }
 
@@ -80,24 +78,24 @@ public class LocalizationSchedule extends Schedule {
      * Construye el horario agrupado de un torneo
      *
      * @param tournament torneo cuyo horario agrupado se va a construir
-     * @throws IllegalArgumentException si los parámetos son <code>null</code> o si el tamaño de la lista de
-     *                                  partidos no se corresponde por el esperado por el torneo
-     * @throws IllegalStateException    si los horarios del torneo aún no han sido calculados, o ya se han calculado
-     *                                  todos, es decir, que el horario sea <code>null</code>
+     * @throws NullPointerException  si el torneo es <code>null</code>
+     * @throws IllegalStateException si los horarios del torneo aún no han sido calculados, o ya se han calculado
+     *                               todos, es decir, que el horario sea <code>null</code>
      */
-    public LocalizationSchedule(Tournament tournament) {
+    public InverseSchedule(Tournament tournament) {
         Objects.requireNonNull(tournament);
 
-        if (tournament.getSchedule() == null)
+        TournamentSchedule schedule = tournament.getSchedule();
+        if (schedule == null)
             throw new IllegalStateException("Tournament schedule not calculated");
 
         name = tournament.getName();
         players = tournament.getAllPlayers();
         localizations = tournament.getAllLocalizations();
         timeslots = tournament.getAllTimeslots();
-        matches = tournament.getSchedule().getMatches();
+        matches = schedule.getMatches();
 
-        schedule = new LocalizationScheduleValue[localizations.size()][timeslots.size()];
+        this.schedule = new InverseScheduleValue[localizations.size()][timeslots.size()];
 
         int nTimeslots = timeslots.size();
         int nLocalization = localizations.size();
@@ -105,7 +103,7 @@ public class LocalizationSchedule extends Schedule {
         // Al principio se marca el horario entero como libre
         for (int i = 0; i < nLocalization; i++)
             for (int j = 0; j < nTimeslots; j++)
-                schedule[i][j] = new LocalizationScheduleValue(LocalizationScheduleValue.FREE);
+                this.schedule[i][j] = new InverseScheduleValue(InverseScheduleValue.FREE);
 
         List<Event> events = tournament.getEvents();
 
@@ -120,7 +118,7 @@ public class LocalizationSchedule extends Schedule {
                 for (Timeslot timeslot : eventBreaks) {
                     int t = timeslots.indexOf(timeslot);
                     for (int c = 0; c < nLocalization; c++)
-                        schedule[c][t] = new LocalizationScheduleValue(LocalizationScheduleValue.LIMITED);
+                        this.schedule[c][t] = new InverseScheduleValue(InverseScheduleValue.LIMITED);
                 }
                 breaks.put(event, eventBreaks);
             }
@@ -137,11 +135,11 @@ public class LocalizationSchedule extends Schedule {
                     // encuentra más adelante solamente funciona para un torneo con más de una categoría
                     for (Timeslot timeslot : unavailableLocalizationTimeslots)
                         if (events.size() > 1)
-                            schedule[c][timeslots.indexOf(timeslot)] =
-                                    new LocalizationScheduleValue(LocalizationScheduleValue.LIMITED);
+                            this.schedule[c][timeslots.indexOf(timeslot)] =
+                                    new InverseScheduleValue(InverseScheduleValue.LIMITED);
                         else
-                            schedule[c][timeslots.indexOf(timeslot)] =
-                                    new LocalizationScheduleValue(LocalizationScheduleValue.UNAVAILABLE);
+                            this.schedule[c][timeslots.indexOf(timeslot)] =
+                                    new InverseScheduleValue(InverseScheduleValue.UNAVAILABLE);
                 }
                 unavailableLocalizations.put(event, eventUnavailableLocalizations);
             }
@@ -165,7 +163,7 @@ public class LocalizationSchedule extends Schedule {
                     }
                 }
                 if (all)
-                    schedule[c][t] = new LocalizationScheduleValue(LocalizationScheduleValue.UNAVAILABLE);
+                    this.schedule[c][t] = new InverseScheduleValue(InverseScheduleValue.UNAVAILABLE);
             }
         }
 
@@ -203,7 +201,7 @@ public class LocalizationSchedule extends Schedule {
                         }
 
                         if (all)
-                            schedule[c][t] = new LocalizationScheduleValue(LocalizationScheduleValue.UNAVAILABLE);
+                            this.schedule[c][t] = new InverseScheduleValue(InverseScheduleValue.UNAVAILABLE);
                     }
                 }
             }
@@ -218,70 +216,13 @@ public class LocalizationSchedule extends Schedule {
             List<Integer> playersIndices = new ArrayList<>(players.size());
             playersIndices.addAll(matchPlayers.stream().map(players::indexOf).collect(Collectors.toList()));
 
-            schedule[c][t] = new LocalizationScheduleValueOccupied(playersIndices);
+            this.schedule[c][t] = new InverseScheduleValueOccupied(playersIndices);
 
             int matchDuration = match.getDuration();
             if (matchDuration > 1)
                 for (int i = 1; i < matchDuration; i++)
-                    schedule[c][i + t] = new LocalizationScheduleValue(LocalizationScheduleValue.CONTINUATION);
+                    this.schedule[c][i + t] = new InverseScheduleValue(InverseScheduleValue.CONTINUATION);
         }
-    }
-
-    /**
-     * Calcula el número total de <i>timeslots</i> del horario
-     *
-     * @return el número total de horas de juego (<i>timeslots</i>), no negativo
-     */
-    public int getTotalTimeslots() {
-        return localizations.size() * timeslots.size();
-    }
-
-    /**
-     * Devuelve el número de <i>timeslots</i> disponibles, es decir, donde partidos podrían tener lugar
-     *
-     * @return el número de <i>timeslots</i> disponibles, no negativo
-     */
-    public int getAvailableTimeslots() {
-        if (availableTimeslots < 0) {
-            availableTimeslots = 0;
-            for (int c = 0; c < localizations.size(); c++) {
-                for (int t = 0; t < timeslots.size(); t++) {
-                    LocalizationScheduleValue val = (LocalizationScheduleValue) schedule[c][t];
-                    if (val.isOccupied() || val.isContinuation() || val.isFree())
-                        availableTimeslots++;
-                }
-            }
-        }
-        return availableTimeslots;
-    }
-
-    /**
-     * Devuelve el número de huecos del horario ocupados para todas las pistas
-     *
-     * @return tasa de ocupación del horario
-     */
-    public int getOccupation() {
-        if (occupation < 0) {
-            occupation = 0;
-            for (int c = 0; c < localizations.size(); c++) {
-                for (int t = 0; t < timeslots.size(); t++) {
-                    LocalizationScheduleValue val = (LocalizationScheduleValue) schedule[c][t];
-                    if (val.isOccupied() || val.isContinuation()) {
-                        occupation++;
-                    }
-                }
-            }
-        }
-        return occupation;
-    }
-
-    /**
-     * Devuelve el ratio de ocupación de localizaciones de juego disponibles
-     *
-     * @return un decimal entre 0 y 1
-     */
-    public double getOccupationRatio() {
-        return getOccupation() / (double) getAvailableTimeslots();
     }
 
     public String toString() {

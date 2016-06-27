@@ -10,7 +10,7 @@ import java.util.Objects;
  * Representa un valor de horario agrupado por localizaciones ocupado, donde en una localización concreta a una hora
  * determinada un conjunto de jugadores especificado por el valor que esta clase almacena se enfrentan en un partido.
  */
-public class LocalizationScheduleValueOccupied extends LocalizationScheduleValue {
+public class InverseScheduleValueOccupied extends InverseScheduleValue {
     protected static final List<Value> possibleValues = Collections.singletonList(OCCUPIED);
 
     /**
@@ -18,7 +18,7 @@ public class LocalizationScheduleValueOccupied extends LocalizationScheduleValue
      */
     private List<Integer> playersIndices;
 
-    public LocalizationScheduleValueOccupied(List<Integer> playersIndices) {
+    public InverseScheduleValueOccupied(List<Integer> playersIndices) {
         super(OCCUPIED);
 
         Objects.requireNonNull(playersIndices);
@@ -48,8 +48,8 @@ public class LocalizationScheduleValueOccupied extends LocalizationScheduleValue
     }
 
     public boolean equals(Object o) {
-        return o != null && o instanceof LocalizationScheduleValueOccupied &&
-                ((LocalizationScheduleValueOccupied) o).getPlayers().equals(playersIndices);
+        return o != null && o instanceof InverseScheduleValueOccupied &&
+                ((InverseScheduleValueOccupied) o).getPlayers().equals(playersIndices);
 
     }
 }
