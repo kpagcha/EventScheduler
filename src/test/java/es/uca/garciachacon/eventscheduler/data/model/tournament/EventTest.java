@@ -301,14 +301,6 @@ public class EventTest {
     }
 
     @Test
-    public void setTournamentTwiceTest() {
-        Tournament tournament = new Tournament("Tournament", event);
-        expectedEx.expect(IllegalStateException.class);
-        expectedEx.expectMessage("Tournament has already been set");
-        event.setTournament(tournament);
-    }
-
-    @Test
     public void getPlayersTest() {
         expectedEx.expect(UnsupportedOperationException.class);
         event.getPlayers().add(new Player("New Player"));
@@ -517,16 +509,6 @@ public class EventTest {
         teams.add(new Team(players.get(0), players.get(1)));
         teams.add(null);
 
-        event.setTeams(teams);
-    }
-
-    @Test
-    public void setTeamsEmptyTest() {
-        event.setPlayersPerMatch(4);
-        List<Team> teams = new ArrayList<>();
-
-        expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("Teams cannot be empty");
         event.setTeams(teams);
     }
 

@@ -22,7 +22,6 @@ import java.util.logging.Logger;
  */
 public class TournamentSolver {
 
-
     /**
      * Modos de emparejamiento (para categorías con más de un partido por jugador).
      * <p>
@@ -201,6 +200,20 @@ public class TournamentSolver {
             x[e] = new IntVar[nPlayers][nLocalizations][nTimeslots];
             g[e] = new IntVar[nPlayers][nLocalizations][nTimeslots];
         }
+    }
+
+    /**
+     * Constructor de copia que crea una instancia de <i>solver</i> a partir de otro existente. Tendrá el mismo torneo
+     * que la copia, y además se reproducen propiedades de configuración como son la estrategia de búsqueda, la
+     * priorización de <i>timeslots</i> o jugadores, o el tiempo límite de resolución
+     *
+     * @param aSolver <i>solver</i> existente a partir del cual se va a crear una copia
+     */
+    public TournamentSolver(TournamentSolver aSolver) {
+        this(aSolver.getTournament());
+        searchStrategy = aSolver.getSearchStrategy();
+        fillTimeslotsFirst = aSolver.getFillTimeslotsFirst();
+        resolutionTimeLimit = aSolver.getResolutionTimeLimit();
     }
 
     /**

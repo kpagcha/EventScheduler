@@ -180,7 +180,7 @@ public class Tournament implements Validable {
         // Por algún problema de Choco es necesario crear un nuevo solver si hay cambios, porque si se utiliza la
         // instancia antigua se lanza NPE
         if (events.stream().anyMatch(Observable::hasChanged))
-            solver = new TournamentSolver(this);
+            solver = new TournamentSolver(solver);
 
         boolean solved = solver.execute();
 

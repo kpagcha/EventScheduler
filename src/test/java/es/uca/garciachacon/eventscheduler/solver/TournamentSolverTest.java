@@ -1934,7 +1934,6 @@ public class TournamentSolverTest {
 
         cat1.addPlayerAtTimeslot(players.get(0), timeslots.get(5));
         cat1.addPlayerAtTimeslot(players.get(2), timeslots.get(7));
-        cat1.addPlayerAtTimeslot(players.get(2), timeslots.get(8));
         cat1.addPlayerAtTimeslots(players.get(6),
                 new HashSet<>(Arrays.asList(timeslots.get(3), timeslots.get(4), timeslots.get(5), timeslots.get(6)))
         );

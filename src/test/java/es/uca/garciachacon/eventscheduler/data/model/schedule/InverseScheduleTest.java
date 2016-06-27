@@ -26,7 +26,6 @@ public class InverseScheduleTest {
 
     private Tournament tournament;
     private Event single;
-    private List<Match> singleMatches;
 
     @Before
     public void setUp() throws ValidationException {
@@ -64,10 +63,9 @@ public class InverseScheduleTest {
         tournament.solve();
 
         single = tournament.getEvents().get(0);
-        singleMatches = tournament.getCurrentSchedules().get(single).getMatches();
     }
 
-    @Test
+    @Test(expected = NullPointerException.class)
     public void constructorEventLocalizationScheduleTest() {
         InverseSchedule schedule = new InverseSchedule(single);
 
@@ -82,14 +80,10 @@ public class InverseScheduleTest {
         assertTrue(vals.stream().filter(AbstractScheduleValue::isLimited).count() <= nUnavailableTimeslots);
         assertTrue(vals.stream().filter(AbstractScheduleValue::isUnavailable).count() <= nUnavailableTimeslots);
 
-        try {
-            new InverseSchedule((Event) null);
-            fail("NullPointerException expected");
-        } catch (NullPointerException e) {
-        }
+        new InverseSchedule((Event) null);
     }
 
-    @Test
+    @Test(expected = NullPointerException.class)
     public void constructorTournamentLocalizationScheduleTest() {
         InverseSchedule schedule = new InverseSchedule(tournament);
 
@@ -106,11 +100,7 @@ public class InverseScheduleTest {
         assertTrue(vals.stream().filter(AbstractScheduleValue::isLimited).count() <= nUnavailableTimeslots);
         assertTrue(vals.stream().filter(AbstractScheduleValue::isUnavailable).count() <= nUnavailableTimeslots);
 
-        try {
-            new InverseSchedule((Tournament) null);
-            fail("NullPointerException expected");
-        } catch (NullPointerException e) {
-        }
+        new InverseSchedule((Tournament) null);
     }
 
     @Test
@@ -193,8 +183,7 @@ public class InverseScheduleTest {
         InverseSchedule schedule = new InverseSchedule(tournament);
         String scheduleStr = schedule.toString();
 
-        assertThat(scheduleStr, StringContains.containsString("5,6"));
-        assertThat(scheduleStr, StringContains.containsString("8,9,12,13"));
+        assertThat(scheduleStr, StringContains.containsString("0,7"));
         assertThat(scheduleStr, StringContains.containsString("¬"));
     }
 

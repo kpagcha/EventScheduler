@@ -735,9 +735,10 @@ public class Event extends Observable implements Validable {
      * su estado inicial de evento sin equipos.
      */
     public void clearTeams() {
+        nPlayersPerTeam = 0;
+
         if (!teams.isEmpty()) {
             teams.clear();
-            nPlayersPerTeam = 0;
 
             setChanged();
         }
