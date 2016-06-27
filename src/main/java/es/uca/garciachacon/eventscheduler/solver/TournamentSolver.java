@@ -75,6 +75,36 @@ public class TournamentSolver {
     }
 
     /**
+     * Estado del proceso de resolución
+     */
+    public enum ResolutionState {
+        /**
+         * Aún no ha comenzado
+         */
+        READY,
+
+        /**
+         * Está en progreso, y no se ha llegado a la última solución
+         */
+        STARTED,
+
+        /**
+         * Ha completado y se ha encontrado alguna solución
+         */
+        FINISHED,
+
+        /**
+         * Ha completado, pero no se ha encontrado ninguna solución
+         */
+        INFEASIBLE,
+
+        /**
+         * No se ha logrado completar el proceso por limitaciones del entorno
+         */
+        INCOMPLETE
+    }
+
+    /**
      * Logger del solver
      */
     private static final Logger LOGGER = Logger.getLogger(TournamentSolver.class.getName());
@@ -110,14 +140,9 @@ public class TournamentSolver {
     private Optional<Map<Event, EventSchedule>> schedules;
 
     /**
-     * Indica si ha comenzado el proceso de resolución
+     * Estado del proceso de la resolución del problema
      */
-    private boolean resolutionProcessStarted = false;
-
-    /**
-     * Indica si se ha encontrado la última solución
-     */
-    private boolean resolutionProcessFinished = false;
+    ResolutionState resolutionState = ResolutionState.READY;
 
     /**
      * Contador de soluciones encontradas
@@ -261,34 +286,48 @@ public class TournamentSolver {
     }
 
     /**
+     * Devuelve el estado del proceso de resolución: si ha comenzado, si está en progreso, si ha terminado y no hay
+     * solución o si ha terminado y se encontraron soluciones
+     *
+     * @return el estado actual del proceso de resolución
+     */
+    public ResolutionState getResolutionState() {
+        return resolutionState;
+    }
+
+    /**
      * Comprueba si el proceso de resolución ha comenzado, es decir, si ya se ha invocado a
      * {@link TournamentSolver#execute()}.
      *
      * @return <code>true</code> si ya ha comenzado el proceso de resolución, <code>false</code> si no
      */
     public boolean hasResolutionProcessStarted() {
-        return resolutionProcessStarted;
+        return resolutionState == ResolutionState.STARTED;
     }
 
     /**
      * Comprueba si el proceso de resolución ya ha terminado, es decir, se ha encontrado la última solución posible,
      * o si no se encontró ninguna solución al lanzar el proceso de resolución.
+     * <p>
+     * Si no se encontró resolución debido a las limitaciones del proceso, es decir, el estado es
+     * {@link ResolutionState#INCOMPLETE}, no se considera como proceso terminado, luego se devuelve <code>false</code>.
      *
      * @return <code>true</code> si ya ha terminado el proceso de resolución, <code>false</code> si no
      */
     public boolean hasResolutionProcessFinished() {
-        return resolutionProcessFinished;
+        return resolutionState == ResolutionState.FINISHED || resolutionState == ResolutionState.INFEASIBLE;
     }
 
     /**
      * Comprueba si el torneo tiene solución, es decir, si se ha encontrado al menos una. Si el proceso de resolución
-     * aún no ha comenzado, se devolverá <code>false</code>.
+     * aún no ha comenzado, se devolverá <code>false</code>. Si ha terminado y se encontraron soluciones, se
+     * devolverá <code>true</code>.
      *
      * @return <code>true</code> si el torneo tiene solución; <code>false</code> si no tiene, o si no ha comenzado el
      * proceso de resolución
      */
     public boolean hasSolutions() {
-        return resolutionProcessStarted && foundSolutions > 0;
+        return resolutionState == ResolutionState.STARTED || resolutionState == ResolutionState.FINISHED;
     }
 
     /**
@@ -319,8 +358,7 @@ public class TournamentSolver {
 
         schedules = Optional.empty();
 
-        resolutionProcessStarted = true;
-        resolutionProcessFinished = false;
+        resolutionState = ResolutionState.STARTED;
         foundSolutions = 0;
 
         buildModel();
@@ -715,10 +753,13 @@ public class TournamentSolver {
         resolutionData = new ResolutionData(solver, tournament, getSearchStrategyName(), solutionFound);
 
         if (!solutionFound) {
-            if (solver.isFeasible() == ESat.FALSE)
+            if (solver.isFeasible() == ESat.FALSE) {
                 LOGGER.log(Level.INFO, "Problem infeasible");
-            else if (solver.isFeasible() == ESat.UNDEFINED)
+                resolutionState = ResolutionState.INFEASIBLE;
+            } else if (solver.isFeasible() == ESat.UNDEFINED) {
                 LOGGER.log(Level.INFO, "Solution could not been found within given limits");
+                resolutionState = ResolutionState.INCOMPLETE;
+            }
         } else
             foundSolutions++;
 
@@ -747,7 +788,7 @@ public class TournamentSolver {
      * @return los horarios de cada categoría del torneo envueltos en una clase {@link Optional}
      */
     public Optional<Map<Event, EventSchedule>> getSolution() {
-        if (!resolutionProcessFinished) {
+        if (resolutionState == ResolutionState.STARTED) {
             if (!schedules.isPresent() && foundSolutions == 1)
                 buildSchedules();
             else if (solver.nextSolution()) {
@@ -756,7 +797,7 @@ public class TournamentSolver {
             } else {
                 LOGGER.log(Level.INFO, "All solutions found");
                 schedules = Optional.empty();
-                resolutionProcessFinished = true;
+                resolutionState = ResolutionState.FINISHED;
             }
         }
         return schedules;

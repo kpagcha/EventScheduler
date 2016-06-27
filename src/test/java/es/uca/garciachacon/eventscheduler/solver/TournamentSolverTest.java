@@ -113,11 +113,12 @@ public class TournamentSolverTest {
         solver.setResolutionTimeLimit(400);
         solver.setResolutionTimeLimit(0);
 
-        Thread thread = new Thread(() -> solver.stopResolutionProcess());
+        Thread thread = new Thread(solver::stopResolutionProcess);
         thread.start();
         thread.join();
 
         assertFalse(tournament.solve());
+        assertEquals(TournamentSolver.ResolutionState.INCOMPLETE, solver.getResolutionState());
     }
 
     @Test
@@ -132,14 +133,18 @@ public class TournamentSolverTest {
         TournamentSolver solver = tournament.getSolver();
         solver.setSearchStrategy(SearchStrategy.MINDOM_UB);
 
+        assertEquals(TournamentSolver.ResolutionState.READY, solver.getResolutionState());
+
         assertTrue(tournament.solve());
         assertNotNull(tournament.getSchedule());
         assertEquals(1, solver.getFoundSolutions());
+        assertEquals(TournamentSolver.ResolutionState.STARTED, solver.getResolutionState());
 
         assertFalse(tournament.nextSchedules());
         assertNull(tournament.getSchedule());
         assertEquals(1, solver.getFoundSolutions());
         assertTrue(solver.hasResolutionProcessFinished());
+        assertEquals(TournamentSolver.ResolutionState.FINISHED, solver.getResolutionState());
     }
 
     @Test
@@ -150,15 +155,18 @@ public class TournamentSolverTest {
                 TournamentUtils.buildDayOfWeekTimeslots(6)
         );
         tournament = new Tournament("Tournament", event);
-        tournament.getSolver().setSearchStrategy(SearchStrategy.MINDOM_UB);
+        TournamentSolver solver = tournament.getSolver();
+        solver.setSearchStrategy(SearchStrategy.MINDOM_UB);
 
         assertTrue(tournament.solve());
         assertNotNull(tournament.getSchedule());
-        assertEquals(1, tournament.getSolver().getFoundSolutions());
+        assertEquals(1, solver.getFoundSolutions());
 
         assertTrue(tournament.nextSchedules());
         assertNotNull(tournament.getSchedule());
-        assertEquals(2, tournament.getSolver().getFoundSolutions());
+        assertEquals(2, solver.getFoundSolutions());
+
+        assertEquals(TournamentSolver.ResolutionState.STARTED, solver.getResolutionState());
 
         while (tournament.nextSchedules()) {
             // bloque vacío
@@ -166,7 +174,7 @@ public class TournamentSolverTest {
 
         assertFalse(tournament.nextSchedules());
         assertNull(tournament.getSchedule());
-        assertEquals(5, tournament.getSolver().getFoundSolutions());
+        assertEquals(5, solver.getFoundSolutions());
     }
 
     @Test
@@ -177,11 +185,13 @@ public class TournamentSolverTest {
                 TournamentUtils.buildDayOfWeekTimeslots(7)
         );
         tournament = new Tournament("Tournament", event);
-        tournament.getSolver().setSearchStrategy(SearchStrategy.MINDOM_UB);
+        TournamentSolver solver = tournament.getSolver();
+        solver.setSearchStrategy(SearchStrategy.MINDOM_UB);
 
         assertFalse(tournament.solve());
         assertNull(tournament.getSchedule());
-        assertEquals(0, tournament.getSolver().getFoundSolutions());
+        assertEquals(0, solver.getFoundSolutions());
+        assertEquals(TournamentSolver.ResolutionState.INFEASIBLE, solver.getResolutionState());
     }
 
     @Test
