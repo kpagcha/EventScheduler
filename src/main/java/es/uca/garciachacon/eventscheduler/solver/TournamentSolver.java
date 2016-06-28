@@ -251,6 +251,12 @@ public class TournamentSolver {
         return searchStrategy;
     }
 
+    /**
+     * Establece la estrategia de búsqueda a emplear en el proceso de resolución. Una vez éste comience, si se cambia
+     * la estrategia de búsqueda no tendrá efecto hasta reiniciar el proceso.
+     *
+     * @param strategy estrategia de búsqueda para la resolución del problema
+     */
     public void setSearchStrategy(SearchStrategy strategy) {
         Objects.requireNonNull(strategy);
 
@@ -311,6 +317,9 @@ public class TournamentSolver {
     /**
      * Comprueba si el proceso de resolución ha comenzado, es decir, si ya se ha invocado a
      * {@link TournamentSolver#execute()}.
+     * <p>
+     * Si el proceso de resolución ha terminado, no ha encontrado solución o ha sido incompleto, devuelve
+     * <code>false</code>.
      *
      * @return <code>true</code> si ya ha comenzado el proceso de resolución, <code>false</code> si no
      */
@@ -367,7 +376,7 @@ public class TournamentSolver {
      * @return true si se ha encontrado una solución, false si no
      */
     public boolean execute() {
-        solver = new Solver("Tournament Solver");
+        solver = new Solver("Tournament Solver [" + tournament.getName() + "]");
 
         schedules = null;
 
@@ -727,31 +736,6 @@ public class TournamentSolver {
     }
 
     /**
-     * Devuelve el nombre de la estrategora de búsqueda empleada. Para domOverWDeg, el valor indicado entre
-     * paréntesis se trata de la semilla utilizada, siendo t obtenida mediante {@link System#currentTimeMillis()}.
-     *
-     * @return el nombre de la estrategia o estrategias de búsqueda empleadas
-     */
-    private String getSearchStrategyName() {
-        String searchStrategyStr;
-        switch (searchStrategy) {
-            case DOMOVERWDEG:
-                searchStrategyStr = "domOverWDeg(t)";
-                break;
-            case MINDOM_UB:
-                searchStrategyStr = "minDom_UB";
-                break;
-            case MINDOM_LB:
-                searchStrategyStr = "minDom_LB";
-                break;
-            default:
-                searchStrategyStr = "domOverWDeg(0)";
-                break;
-        }
-        return searchStrategyStr;
-    }
-
-    /**
      * Inicia el proceso de resolución y guarda datos del problema y de la resolución
      *
      * @return true si se ha encontrado una solución, y false si no
@@ -763,18 +747,19 @@ public class TournamentSolver {
         solver.addStopCriterion(() -> stop);
 
         boolean solutionFound = solver.findSolution();
-        resolutionData = new ResolutionData(solver, tournament, getSearchStrategyName(), solutionFound);
 
         if (!solutionFound) {
             if (solver.isFeasible() == ESat.FALSE) {
                 LOGGER.log(Level.INFO, "Problem infeasible");
                 resolutionState = ResolutionState.INFEASIBLE;
             } else if (solver.isFeasible() == ESat.UNDEFINED) {
-                LOGGER.log(Level.INFO, "Solution could not been found within given limits");
+                LOGGER.log(Level.INFO, "Solution could not be found within given limits");
                 resolutionState = ResolutionState.INCOMPLETE;
             }
         } else
             foundSolutions++;
+
+        resolutionData = new ResolutionData(this);
 
         return solutionFound;
     }
@@ -788,7 +773,7 @@ public class TournamentSolver {
 
     /**
      * Si no se ha intentado resolver el modelo, es decir, no se ha llamado a {@link TournamentSolver#execute()}, no
-     * habrá una solución disponible y se devolverá <code>null</code>.
+     * habrá una solución disponible y se devolverá un opcional vacío, {@link Optional#empty()}.
      * <p>
      * Si es la primera vez que se invoca a este método despues de iniciar el proceso de resolución, se contruye el
      * horario con esa primera solución y se devuelve.
@@ -796,11 +781,12 @@ public class TournamentSolver {
      * Las subsiguientes invocaciones a este método calcularán la siguiente solución al problema, se construirá otro
      * horario alternativo diferente al anterior, sobreescribiendo su valor, y se devuelve este nuevo horario. Si no
      * hay más soluciones disponibles, se devuelve el valor del horario a su estado inicial, es decir,
-     * <code>null </code>y se marca el proceso de resolución como finalizado.
+     * <code>null</code> y se marca el proceso de resolución como finalizado.
      *
-     * @return los horarios de cada categoría del torneo
+     * @return los horarios de cada categoría del torneo envueltos en un {@link Optional}; si los horarios son
+     * <code>null</code> se devuelve {@link Optional#empty()}
      */
-    public Map<Event, EventSchedule> getSolution() {
+    public Optional<Map<Event, EventSchedule>> getSolution() {
         if (resolutionState == ResolutionState.STARTED) {
             if (schedules == null && foundSolutions == 1) {
                 schedules = new HashMap<>(tournament.getEvents().size());
@@ -815,7 +801,7 @@ public class TournamentSolver {
                 resolutionState = ResolutionState.FINISHED;
             }
         }
-        return schedules;
+        return Optional.ofNullable(schedules);
     }
 
     /**

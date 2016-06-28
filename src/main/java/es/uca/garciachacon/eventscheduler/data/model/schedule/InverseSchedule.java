@@ -25,7 +25,7 @@ public class InverseSchedule extends Schedule {
     public InverseSchedule(Event event) {
         Objects.requireNonNull(event);
 
-        Map<Event, EventSchedule> schedules = event.getTournament().getCurrentSchedules();
+        Map<Event, EventSchedule> schedules = event.getTournament().getEventSchedules();
 
         if (schedules == null)
             throw new IllegalStateException("Tournament schedules not calculated");
@@ -35,6 +35,8 @@ public class InverseSchedule extends Schedule {
         localizations = event.getLocalizations();
         timeslots = event.getTimeslots();
         matches = schedules.get(event).getMatches();
+
+        tournament = event.getTournament();
 
         schedule = new InverseScheduleValue[localizations.size()][timeslots.size()];
 
@@ -94,6 +96,8 @@ public class InverseSchedule extends Schedule {
         localizations = tournament.getAllLocalizations();
         timeslots = tournament.getAllTimeslots();
         matches = schedule.getMatches();
+
+        this.tournament = tournament;
 
         this.schedule = new InverseScheduleValue[localizations.size()][timeslots.size()];
 

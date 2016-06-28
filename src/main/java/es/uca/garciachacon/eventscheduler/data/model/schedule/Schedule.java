@@ -6,6 +6,7 @@ import es.uca.garciachacon.eventscheduler.data.model.schedule.value.ScheduleValu
 import es.uca.garciachacon.eventscheduler.data.model.tournament.Localization;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.Player;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.Timeslot;
+import es.uca.garciachacon.eventscheduler.data.model.tournament.Tournament;
 import es.uca.garciachacon.eventscheduler.rest.serializer.ScheduleSerializer;
 
 import java.util.ArrayList;
@@ -57,6 +58,10 @@ public abstract class Schedule {
      */
     protected String name;
 
+    /**
+     * Torneo al que pertenece el horario
+     */
+    protected Tournament tournament;
 
     /**
      * Número de timeslots
@@ -98,6 +103,10 @@ public abstract class Schedule {
 
     public String getName() {
         return name;
+    }
+
+    public Tournament getTournament() {
+        return tournament;
     }
 
     /**

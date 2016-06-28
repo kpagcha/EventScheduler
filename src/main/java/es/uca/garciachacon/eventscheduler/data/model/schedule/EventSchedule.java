@@ -40,6 +40,8 @@ public class EventSchedule extends Schedule {
         localizations = event.getLocalizations();
         timeslots = event.getTimeslots();
 
+        tournament = event.getTournament();
+
         schedule = new ScheduleValue[players.size()][timeslots.size()];
 
         for (int p = 0; p < players.size(); p++) {

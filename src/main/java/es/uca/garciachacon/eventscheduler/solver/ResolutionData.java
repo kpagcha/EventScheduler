@@ -8,13 +8,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.Tournament;
-import org.apache.commons.lang3.StringUtils;
+import es.uca.garciachacon.eventscheduler.solver.TournamentSolver.ResolutionState;
+import es.uca.garciachacon.eventscheduler.solver.TournamentSolver.SearchStrategy;
 import org.chocosolver.solver.Solver;
 import org.chocosolver.solver.search.measure.IMeasures;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
 
 /**
  * Contiene información acerca de un problema que se ha modelado para representar un torneo deportivo cuyos horarios
@@ -23,29 +22,29 @@ import java.util.List;
  * tiempo de resolución del problema.
  */
 public class ResolutionData {
-    /**
-     * Solver cuya información y estadísticas contiene esta clase ResolutionData
-     */
-    @JsonIgnore
-    private final Solver solver;
 
     /**
      * Torneo al cual se le quiere calcular un horario
      */
     @JsonIgnore
     private final Tournament tournament;
+
+    /**
+     * Solver interno cuya información y estadísticas contiene esta clase ResolutionData
+     */
+    @JsonIgnore
+    private final Solver solver;
+
     /**
      * Se ha completado el proceso de resolución
      */
     private final boolean resolutionProcessCompleted;
+
     /**
-     * Nombres de las estrategias de búsqueda usadas para la resolución
+     * Estrategia de búsqueda usada para la resolución
      */
-    private final List<String> searchStrategies;
-    /**
-     * Nombre del solver
-     */
-    private String solverName;
+    private final SearchStrategy searchStrategy;
+
     /**
      * Número de variables del modelo
      */
@@ -55,6 +54,11 @@ public class ResolutionData {
      * Número de restricciones del modelo
      */
     private int constraints;
+
+    /**
+     * Estado de la resolución
+     */
+    private ResolutionState resolutionState;
 
     /**
      * Se ha utilizado la estrategia de búsqueda por defecto
@@ -106,32 +110,13 @@ public class ResolutionData {
      */
     private long restarts;
 
-    /**
-     * Construye un objeto con información del solver y del proceso de resolución.
-     *
-     * @param solver                     el solver al que pertenece la información que una instancia de esta clase
-     *                                   almacenará
-     * @param tournament                 el torneo al que pertenece la resolución
-     * @param searchStrategyName         nombres de las estrategias de búsqueda empleadas
-     * @param resolutionProcessCompleted true si se ha completado el proceso de resolución, false si no
-     */
-    public ResolutionData(Solver solver, Tournament tournament, String searchStrategyName,
-            boolean resolutionProcessCompleted) {
-        this.solver = solver;
-        this.tournament = tournament;
-        this.resolutionProcessCompleted = resolutionProcessCompleted;
+    public ResolutionData(TournamentSolver tournamentSolver) {
+        solver = tournamentSolver.getInternalSolver();
+        tournament = tournamentSolver.getTournament();
+        searchStrategy = tournamentSolver.getSearchStrategy();
+        resolutionState = tournamentSolver.getResolutionState();
+        resolutionProcessCompleted = resolutionState != ResolutionState.INCOMPLETE;
 
-        searchStrategies = Arrays.asList(searchStrategyName.split(","));
-
-        update();
-    }
-
-    /**
-     * Actualiza los valores, incluidos los que concierten a información sobre la resolución completa, si en efecto
-     * el proceso de resolución ha terminado
-     */
-    public void update() {
-        solverName = solver.getName();
         variables = solver.getNbVars();
         constraints = solver.getNbCstrs();
         isDeafultSearchUsed = solver.getSearchLoop().isDefaultSearchUsed();
@@ -159,15 +144,15 @@ public class ResolutionData {
     }
 
     public String getSolverName() {
-        return solverName;
+        return solver.getName();
     }
 
     public boolean getResolutionProcessCompleted() {
         return resolutionProcessCompleted;
     }
 
-    public List<String> getSearchStrategies() {
-        return searchStrategies;
+    public SearchStrategy getSearchStrategy() {
+        return searchStrategy;
     }
 
     public int getVariables() {
@@ -185,6 +170,8 @@ public class ResolutionData {
     public boolean isSearchCompleted() {
         return isSearchCompleted;
     }
+
+    public ResolutionState getResolutionState() { return resolutionState; }
 
     public long getSolutions() {
         return solutions;
@@ -222,22 +209,23 @@ public class ResolutionData {
         StringBuilder sb = new StringBuilder();
 
         sb.append(String.format(
-                "Solver [%s] features:\n\tVariables: %,d\n\tConstraints: %,d\n\tDefault search strategy: " +
-                        "%s\n\tCompleted search strategy: %s\n" +
-                        "\tSearch strategy: %s\n",
-                solverName,
+                "Solver [%s] features:\n\tTournament: %s\n\tVariables: %,d\n\tConstraints:%,d\n\t" +
+                        "Default search strategy: %s\n\tCompleted search strategy: %s" +
+                        "\n\tSearch strategy: %s\n\tResolution state: %s\n",
+                getSolverName(),
+                tournament.getName(),
                 variables,
                 constraints,
                 isDeafultSearchUsed ? "Yes" : "No",
                 isSearchCompleted ? "Yes" : "No",
-                StringUtils.join(searchStrategies, ", ")
+                searchStrategy,
+                resolutionState
         ));
 
         if (resolutionProcessCompleted)
             sb.append(String.format(
                     "Search features:\n\tSolutions: %d\n\tBuilding time: %,.3fs \n\tResolution time: %,.3fs\n\tNodes:" +
-                            " %,d (%,.1f n/s)" +
-                            "\n\tBacktracks: %,d\n\tFails: %,d\n\tRestarts: %,d\n",
+                            " %,d (%,.1f n/s)\n\tBacktracks: %,d\n\tFails: %,d\n\tRestarts: %,d\n",
                     solutions,
                     buildingTime,
                     resolutionTime,
@@ -251,33 +239,22 @@ public class ResolutionData {
         return sb.toString();
     }
 
-    public String toJson() {
+    public String toJson() throws JsonProcessingException {
         return toJson(false);
     }
 
-    public String toJsonPretty() {
-
+    public String toJsonPretty() throws JsonProcessingException {
         return toJson(true);
     }
 
-    private String toJson(boolean pretty) {
-        String jsonStr = null;
-
+    private String toJson(boolean pretty) throws JsonProcessingException {
         ObjectMapper mapper = new ObjectMapper();
         SimpleModule module = new SimpleModule();
         module.addSerializer(ResolutionData.class, new ResolutionDataSerializer());
         mapper.registerModule(module);
 
-        try {
-            if (pretty)
-                jsonStr = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(this);
-            else
-                jsonStr = mapper.writeValueAsString(this);
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        }
-
-        return jsonStr;
+        return pretty ? mapper.writerWithDefaultPrettyPrinter().writeValueAsString(this) :
+                mapper.writeValueAsString(this);
     }
 
     class ResolutionDataSerializer extends JsonSerializer<ResolutionData> {
@@ -286,16 +263,14 @@ public class ResolutionData {
             jgen.writeStartObject();
 
             jgen.writeStringField("tournament", tournament.getName());
-            jgen.writeStringField("solver", solverName);
+            jgen.writeStringField("solver", solver.getName());
             jgen.writeNumberField("variables", variables);
             jgen.writeNumberField("constraints", constraints);
             jgen.writeBooleanField("deafultSearchUsed", isDeafultSearchUsed);
             jgen.writeBooleanField("searchCompleted", isSearchCompleted);
-            jgen.writeArrayFieldStart("searchStrategies");
-            for (String searchStrategy : searchStrategies)
-                jgen.writeString(searchStrategy);
-            jgen.writeEndArray();
+            jgen.writeStringField("searchStrategy", searchStrategy.toString());
             jgen.writeNumberField("solutions", solutions);
+            jgen.writeStringField("resolutionState", resolutionState.toString());
 
             jgen.writeBooleanField("resolutionProcessCompleted", resolutionProcessCompleted);
 

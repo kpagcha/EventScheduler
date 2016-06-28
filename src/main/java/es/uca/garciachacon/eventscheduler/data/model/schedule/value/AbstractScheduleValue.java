@@ -1,12 +1,13 @@
 package es.uca.garciachacon.eventscheduler.data.model.schedule.value;
 
-import com.fasterxml.jackson.annotation.JsonValue;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 
 import java.util.List;
 
 /**
  * Representa el valor que tiene un hueco de un horario.
  */
+@JsonAutoDetect(isGetterVisibility = JsonAutoDetect.Visibility.NONE)
 public abstract class AbstractScheduleValue {
     /**
      * Valor del elemento del horario
@@ -25,7 +26,6 @@ public abstract class AbstractScheduleValue {
         value = val;
     }
 
-    @JsonValue
     public Value getValue() {
         return value;
     }

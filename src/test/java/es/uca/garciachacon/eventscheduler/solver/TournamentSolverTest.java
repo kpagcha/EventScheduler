@@ -1,5 +1,6 @@
 package es.uca.garciachacon.eventscheduler.solver;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import es.uca.garciachacon.eventscheduler.data.model.schedule.EventSchedule;
 import es.uca.garciachacon.eventscheduler.data.model.schedule.InverseSchedule;
 import es.uca.garciachacon.eventscheduler.data.model.schedule.Match;
@@ -1106,7 +1107,7 @@ public class TournamentSolverTest {
 
         assertFalse(tournament.solve());
         assertNull(tournament.getSchedule());
-        assertNull(tournament.getCurrentSchedules());
+        assertNull(tournament.getEventSchedules());
         assertEquals(0, tournament.getSolver().getFoundSolutions());
     }
 
@@ -1134,7 +1135,7 @@ public class TournamentSolverTest {
 
         assertFalse(tournament.solve());
         assertNull(tournament.getSchedule());
-        assertNull(tournament.getCurrentSchedules());
+        assertNull(tournament.getEventSchedules());
         assertEquals(0, tournament.getSolver().getFoundSolutions());
     }
 
@@ -1157,7 +1158,7 @@ public class TournamentSolverTest {
 
         assertFalse(tournament.solve());
         assertNull(tournament.getSchedule());
-        assertNull(tournament.getCurrentSchedules());
+        assertNull(tournament.getEventSchedules());
         assertEquals(0, tournament.getSolver().getFoundSolutions());
     }
 
@@ -1188,7 +1189,7 @@ public class TournamentSolverTest {
 
         assertFalse(tournament.solve());
         assertNull(tournament.getSchedule());
-        assertNull(tournament.getCurrentSchedules());
+        assertNull(tournament.getEventSchedules());
         assertEquals(0, tournament.getSolver().getFoundSolutions());
     }
 
@@ -1221,7 +1222,7 @@ public class TournamentSolverTest {
 
         assertFalse(tournament.solve());
         assertNull(tournament.getSchedule());
-        assertNull(tournament.getCurrentSchedules());
+        assertNull(tournament.getEventSchedules());
         assertEquals(0, tournament.getSolver().getFoundSolutions());
     }
 
@@ -1282,7 +1283,7 @@ public class TournamentSolverTest {
 
         assertEquals(1, tournament.getSolver().getFoundSolutions());
 
-        Map<Event, EventSchedule> schedules = tournament.getCurrentSchedules();
+        Map<Event, EventSchedule> schedules = tournament.getEventSchedules();
         assertEquals(4, schedules.get(cat1).getMatches().size());
         assertEquals(4, schedules.get(cat2).getMatches().size());
         assertEquals(4, schedules.get(cat3).getMatches().size());
@@ -1325,7 +1326,7 @@ public class TournamentSolverTest {
         assertEquals(11, tournament.getSolver().getFoundSolutions());
 
         assertFalse(tournament.nextSchedules());
-        assertNull(tournament.getCurrentSchedules());
+        assertNull(tournament.getEventSchedules());
         assertNull(tournament.getSchedule());
     }
 
@@ -1348,7 +1349,7 @@ public class TournamentSolverTest {
 
         assertTrue(tournament.solve());
 
-        Map<Event, EventSchedule> schedules = tournament.getCurrentSchedules();
+        Map<Event, EventSchedule> schedules = tournament.getEventSchedules();
         for (Localization court : cat1.getLocalizations())
             assertTrue(schedules.get(cat2).filterMatchesByLocalization(court).isEmpty());
 
@@ -1378,7 +1379,7 @@ public class TournamentSolverTest {
         assertTrue(tournament.solve());
 
         List<Event> events = tournament.getEvents();
-        Map<Event, EventSchedule> schedules = tournament.getCurrentSchedules();
+        Map<Event, EventSchedule> schedules = tournament.getEventSchedules();
         for (Player player : players) {
             for (Event event : events) {
                 List<Match> playerMatches = schedules.get(event).filterMatchesByPlayer(player);
@@ -1434,7 +1435,7 @@ public class TournamentSolverTest {
 
         assertTrue(tournament.solve());
 
-        Map<Event, EventSchedule> schedules = tournament.getCurrentSchedules();
+        Map<Event, EventSchedule> schedules = tournament.getEventSchedules();
 
         assertTrue(schedules.get(cat1).filterMatchesByLocalization(courts.get(2)).isEmpty());
         assertTrue(schedules.get(cat2).filterMatchesByLocalization(courts.get(0)).isEmpty());
@@ -1457,7 +1458,7 @@ public class TournamentSolverTest {
 
         assertTrue(tournament.solve());
 
-        Map<Event, EventSchedule> schedules = tournament.getCurrentSchedules();
+        Map<Event, EventSchedule> schedules = tournament.getEventSchedules();
 
         assertNull(schedules.get(cat1).filterMatchesDuringTimeslotRange(timeslots.get(4), timeslots.get(6)));
         assertEquals(4,
@@ -1489,7 +1490,7 @@ public class TournamentSolverTest {
 
         assertTrue(tournament.solve());
 
-        Map<Event, EventSchedule> schedules = tournament.getCurrentSchedules();
+        Map<Event, EventSchedule> schedules = tournament.getEventSchedules();
 
         assertNull(schedules.get(cat1).filterMatchesDuringTimeslotRange(timeslots.get(4), timeslots.get(6)));
         assertEquals(4,
@@ -1523,7 +1524,7 @@ public class TournamentSolverTest {
 
         assertFalse(tournament.solve());
         assertNull(tournament.getSchedule());
-        assertNull(tournament.getCurrentSchedules());
+        assertNull(tournament.getEventSchedules());
         assertEquals(0, tournament.getSolver().getFoundSolutions());
     }
 
@@ -1541,7 +1542,7 @@ public class TournamentSolverTest {
 
         assertTrue(tournament.solve());
 
-        Map<Event, EventSchedule> schedules = tournament.getCurrentSchedules();
+        Map<Event, EventSchedule> schedules = tournament.getEventSchedules();
 
         for (Match match : schedules.get(cat1).getMatches())
             assertEquals(2, match.getPlayers().size());
@@ -1569,7 +1570,7 @@ public class TournamentSolverTest {
 
         assertTrue(tournament.solve());
 
-        Map<Event, EventSchedule> schedules = tournament.getCurrentSchedules();
+        Map<Event, EventSchedule> schedules = tournament.getEventSchedules();
         for (Event event : tournament.getEvents())
             assertEquals(event.getNumberOfMatches(), schedules.get(event).getMatches().size());
     }
@@ -1589,7 +1590,7 @@ public class TournamentSolverTest {
 
         assertTrue(tournament.solve());
 
-        Map<Event, EventSchedule> schedules = tournament.getCurrentSchedules();
+        Map<Event, EventSchedule> schedules = tournament.getEventSchedules();
 
         for (Match match : schedules.get(cat1).getMatches())
             assertEquals(2, match.getDuration());
@@ -1650,7 +1651,7 @@ public class TournamentSolverTest {
 
         assertTrue(tournament.solve());
 
-        Map<Event, EventSchedule> schedules = tournament.getCurrentSchedules();
+        Map<Event, EventSchedule> schedules = tournament.getEventSchedules();
 
         for (Event event : tournament.getEvents())
             for (Match match : schedules.get(event).getMatches())
@@ -1745,7 +1746,7 @@ public class TournamentSolverTest {
 
         assertTrue(tournament.solve());
 
-        Map<Event, EventSchedule> schedules = tournament.getCurrentSchedules();
+        Map<Event, EventSchedule> schedules = tournament.getEventSchedules();
 
         do {
             assertFalse(schedules.get(cat1)
@@ -1839,7 +1840,7 @@ public class TournamentSolverTest {
 
         assertTrue(tournament.solve());
 
-        Map<Event, EventSchedule> schedules = tournament.getCurrentSchedules();
+        Map<Event, EventSchedule> schedules = tournament.getEventSchedules();
         for (Match match : schedules.get(cat1).filterMatchesByLocalization(courts.get(0)))
             assertFalse(match.during(timeslots.get(0), timeslots.get(2)));
 
@@ -1864,7 +1865,7 @@ public class TournamentSolverTest {
 
         assertTrue(tournament.solve());
 
-        Map<Event, EventSchedule> schedules = tournament.getCurrentSchedules();
+        Map<Event, EventSchedule> schedules = tournament.getEventSchedules();
         Match match = schedules.get(cat2).filterMatchesByPlayer(players.get(0)).get(0);
         assertFalse(schedules.get(cat1)
                 .filterMatchesByPlayer(players.get(0))
@@ -1893,7 +1894,7 @@ public class TournamentSolverTest {
 
         assertTrue(tournament.solve());
 
-        Map<Event, EventSchedule> schedules = tournament.getCurrentSchedules();
+        Map<Event, EventSchedule> schedules = tournament.getEventSchedules();
         Assert.assertEquals(
                 courts.get(1),
                 schedules.get(cat1).filterMatchesByPlayer(players.get(3)).get(0).getLocalization()
@@ -1944,7 +1945,7 @@ public class TournamentSolverTest {
 
         assertTrue(tournament.solve());
 
-        Map<Event, EventSchedule> schedules = tournament.getCurrentSchedules();
+        Map<Event, EventSchedule> schedules = tournament.getEventSchedules();
         Assert.assertEquals(
                 timeslots.get(5),
                 schedules.get(cat1).filterMatchesByPlayer(players.get(0)).get(0).getStartTimeslot()
@@ -1986,7 +1987,7 @@ public class TournamentSolverTest {
 
         assertTrue(tournament.solve());
 
-        Map<Event, EventSchedule> schedules = tournament.getCurrentSchedules();
+        Map<Event, EventSchedule> schedules = tournament.getEventSchedules();
         for (Player player : players)
             for (Event event : tournament.getEvents())
                 for (Match match : schedules.get(event).filterMatchesByPlayer(player))
@@ -2094,7 +2095,7 @@ public class TournamentSolverTest {
             assertEquals(nMatches, playerMatches.size());
         }
 
-        Map<Event, EventSchedule> schedules = tournament.getCurrentSchedules();
+        Map<Event, EventSchedule> schedules = tournament.getEventSchedules();
         for (Player player : cat1.getPlayers()) {
             List<Match> playerMatches = schedules.get(cat1).filterMatchesByPlayer(player);
             for (int i = 0; i < playerMatches.size() - 1; i++)
@@ -2111,7 +2112,7 @@ public class TournamentSolverTest {
     }
 
     @Test
-    public void resolutionDataTest() throws ValidationException {
+    public void resolutionDataTest() throws ValidationException, JsonProcessingException {
         Tournament tournament = new Tournament("Tournament", new Event("Event",
                 TournamentUtils.buildGenericPlayers(32, "Pl"),
                 TournamentUtils.buildGenericLocalizations(2, "Court"),
@@ -2131,9 +2132,10 @@ public class TournamentSolverTest {
 
         assertEquals(tournament.getSolver().getInternalSolver(), data.getSolver());
         assertEquals(tournament, data.getTournament());
-        assertEquals("Tournament Solver", data.getSolverName());
+        assertEquals("Tournament Solver [Tournament]", data.getSolverName());
         assertTrue(data.getResolutionProcessCompleted());
-        assertTrue(data.getSearchStrategies().contains("minDom_UB"));
+        assertEquals("MINDOM_UB", data.getSearchStrategy().toString());
+        assertEquals("STARTED", data.getResolutionState().toString());
         assertEquals(1845, data.getVariables());
         assertEquals(1394, data.getConstraints());
         assertFalse(data.isDeafultSearchUsed());
@@ -2151,21 +2153,22 @@ public class TournamentSolverTest {
         System.setOut(new PrintStream(out));
 
         System.out.print(data);
-        assertThat(out.toString(), StringContains.containsString("Solver [Tournament Solver] features:"));
+        assertThat(out.toString(), StringContains.containsString("Solver [Tournament Solver [Tournament]] features:"));
         assertThat(out.toString(), StringContains.containsString("Variables: 1.845"));
-        assertThat(out.toString(), StringContains.containsString("Search strategy: minDom_UB"));
+        assertThat(out.toString(), StringContains.containsString("Search strategy: MINDOM_UB"));
         assertThat(out.toString(), StringContains.containsString("Nodes: 29"));
 
         out.reset();
         System.out.print(data.toJson());
         assertThat(out.toString(), StringContains.containsString("\"constraints\":1394"));
         assertThat(out.toString(),
-                StringContains.containsString("\"solutions\":1,\"resolutionProcessCompleted\":true")
+                StringContains.containsString("\"solutions\":1," +
+                        "\"resolutionState\":\"STARTED\",\"resolutionProcessCompleted\":true")
         );
 
         out.reset();
         System.out.print(data.toJsonPretty());
-        assertThat(out.toString(), StringContains.containsString("\"searchStrategies\" : [ \"minDom_UB\" ]"));
+        assertThat(out.toString(), StringContains.containsString("\"searchStrategy\" : \"MINDOM_UB\""));
         assertThat(out.toString(), StringContains.containsString("\"tournament\" : \"Tournament\""));
     }
 }

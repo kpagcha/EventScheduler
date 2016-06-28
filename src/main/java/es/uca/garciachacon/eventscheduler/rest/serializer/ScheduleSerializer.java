@@ -22,20 +22,7 @@ public class ScheduleSerializer extends JsonSerializer<Schedule> {
 
         gen.writeStringField("name", schedule.getName());
 
-        gen.writeArrayFieldStart("matches");
-        for (Match match : schedule.getMatches())
-            gen.writeObject(match);
-        gen.writeEndArray();
-
-        AbstractScheduleValue[][] values = schedule.getScheduleValues();
-        gen.writeArrayFieldStart("scheduleValues");
-        for (AbstractScheduleValue[] valueRow : values) {
-            gen.writeStartArray();
-            for (AbstractScheduleValue value : valueRow)
-                gen.writeObject(value);
-            gen.writeEndArray();
-        }
-        gen.writeEndArray();
+        gen.writeStringField("tournament", schedule.getTournament().getName());
 
         gen.writeArrayFieldStart("players");
         for (Player player : schedule.getPlayers())
@@ -50,6 +37,21 @@ public class ScheduleSerializer extends JsonSerializer<Schedule> {
         gen.writeArrayFieldStart("timeslots");
         for (Timeslot timeslot : schedule.getTimeslots())
             gen.writeObject(timeslot);
+        gen.writeEndArray();
+
+        gen.writeArrayFieldStart("matches");
+        for (Match match : schedule.getMatches())
+            gen.writeObject(match);
+        gen.writeEndArray();
+
+        AbstractScheduleValue[][] values = schedule.getScheduleValues();
+        gen.writeArrayFieldStart("scheduleValues");
+        for (AbstractScheduleValue[] valueRow : values) {
+            gen.writeStartArray();
+            for (AbstractScheduleValue value : valueRow)
+                gen.writeObject(value);
+            gen.writeEndArray();
+        }
         gen.writeEndArray();
 
         gen.writeNumberField("totalTimeslots", schedule.getTotalTimeslots());

@@ -82,7 +82,7 @@ public class Application {
                     System.out.println(tournament + "\n");
                     tournament.printCurrentSchedules(printMatches);
 
-                    if (tournament.getCurrentSchedules() != null) {
+                    if (tournament.getEventSchedules() != null) {
                         TournamentSchedule combinedSchedule = tournament.getSchedule();
 
                         System.out.println("All schedules combined in one");

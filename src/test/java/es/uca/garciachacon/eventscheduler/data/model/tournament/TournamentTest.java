@@ -232,7 +232,7 @@ public class TournamentTest {
 
         try {
             assertNull(tournament.getSchedule());
-            assertNull(tournament.getCurrentSchedules());
+            assertNull(tournament.getEventSchedules());
 
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             System.setOut(new PrintStream(out));
@@ -245,7 +245,7 @@ public class TournamentTest {
             assertTrue(tournament.solve());
 
             TournamentSchedule tournamentSchedule = tournament.getSchedule();
-            Map<Event, EventSchedule> schedules = new HashMap<>(tournament.getCurrentSchedules());
+            Map<Event, EventSchedule> schedules = new HashMap<>(tournament.getEventSchedules());
 
             assertNotNull(tournamentSchedule);
             assertNotNull(schedules);
@@ -267,15 +267,15 @@ public class TournamentTest {
             assertThat(out.toString(), not(StringContains.containsString("start=MONDAY")));
 
             assertNotEquals(tournamentSchedule, tournament.getSchedule());
-            for (Event e : tournament.getCurrentSchedules().keySet())
+            for (Event e : tournament.getEventSchedules().keySet())
                 assertNotEquals(schedules.get(e).getMatches().get(0).getStartTimeslot(),
-                        tournament.getCurrentSchedules().get(e).getMatches().get(0).getStartTimeslot()
+                        tournament.getEventSchedules().get(e).getMatches().get(0).getStartTimeslot()
                 );
 
             assertFalse(tournament.nextSchedules());
 
             assertNull(tournament.getSchedule());
-            assertNull(tournament.getCurrentSchedules());
+            assertNull(tournament.getEventSchedules());
             assertFalse(tournament.hasSchedule());
 
             out.reset();

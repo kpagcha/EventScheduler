@@ -63,10 +63,10 @@ public class ScheduleTest {
 
     @Test
     public void eventScheduleTest() throws ValidationException {
-        assertNull(tournament.getCurrentSchedules());
+        assertNull(tournament.getEventSchedules());
 
         tournament.solve();
-        Map<Event, EventSchedule> schedules = tournament.getCurrentSchedules();
+        Map<Event, EventSchedule> schedules = tournament.getEventSchedules();
 
         assertNotNull(schedules);
 
@@ -111,7 +111,7 @@ public class ScheduleTest {
 
     @Test(expected = NullPointerException.class)
     public void tournamentScheduleTest() throws ValidationException {
-        assertNull(tournament.getCurrentSchedules());
+        assertNull(tournament.getEventSchedules());
 
         try {
             new TournamentSchedule(tournament);
@@ -164,7 +164,7 @@ public class ScheduleTest {
         List<Player> sPlayers = tournament.getEvents().get(0).getPlayers();
         List<Player> dPlayers = tournament.getEvents().get(1).getPlayers();
         List<Timeslot> timeslots = tournament.getAllTimeslots();
-        Map<Event, EventSchedule> schedules = tournament.getCurrentSchedules();
+        Map<Event, EventSchedule> schedules = tournament.getEventSchedules();
         TournamentSchedule schedule = tournament.getSchedule();
 
         List<Match> matches = schedules.get(events.get(0)).filterMatchesByPlayer(sPlayers.get(3));
@@ -228,7 +228,7 @@ public class ScheduleTest {
     public void toStringTest() throws ValidationException {
         tournament.solve();
 
-        Map<Event, EventSchedule> schedules = tournament.getCurrentSchedules();
+        Map<Event, EventSchedule> schedules = tournament.getEventSchedules();
         TournamentSchedule schedule = tournament.getSchedule();
 
         assertThat(schedule.toString(), StringContains.containsString("x"));

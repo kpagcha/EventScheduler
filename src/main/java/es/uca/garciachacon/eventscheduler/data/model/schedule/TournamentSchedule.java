@@ -14,10 +14,6 @@ import java.util.stream.Collectors;
  * Horario de un torneo formado por la combinación de los horarios de cada categoría que lo compone
  */
 public class TournamentSchedule extends Schedule {
-    /**
-     * Torneo al que el horario combinado pertenece
-     */
-    private Tournament tournament;
 
     /**
      * Construye un horario combinado a partir de los horarios de cada categoría del torneo
@@ -29,7 +25,7 @@ public class TournamentSchedule extends Schedule {
 
         this.tournament = tournament;
 
-        Map<Event, EventSchedule> schedules = tournament.getCurrentSchedules();
+        Map<Event, EventSchedule> schedules = tournament.getEventSchedules();
 
         if (schedules == null)
             throw new IllegalStateException("Tournament schedules not calculated");
@@ -77,15 +73,11 @@ public class TournamentSchedule extends Schedule {
             }
         }
 
-        matches = tournament.getCurrentSchedules()
+        matches = tournament.getEventSchedules()
                 .values()
                 .stream()
                 .flatMap(l -> l.getMatches().stream())
                 .sorted((m1, m2) -> -m1.getStartTimeslot().compareTo(m2.getStartTimeslot()))
                 .collect(Collectors.toList());
-    }
-
-    public Tournament getTournament() {
-        return tournament;
     }
 }

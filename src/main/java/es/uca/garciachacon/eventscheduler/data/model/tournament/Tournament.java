@@ -84,7 +84,7 @@ public class Tournament implements Validable {
     /**
      * Horarios para cada categoría
      */
-    private Map<Event, EventSchedule> currentSchedules;
+    private Map<Event, EventSchedule> eventSchedules;
 
     /**
      * Horario del torneo que combina los horarios de todas las categorías en uno solo
@@ -184,8 +184,14 @@ public class Tournament implements Validable {
 
         boolean solved = solver.execute();
 
-        currentSchedules = solver.getSolution();
-        schedule = currentSchedules == null ? null : new TournamentSchedule(this);
+        Optional<Map<Event, EventSchedule>> optSchedules = solver.getSolution();
+        if (optSchedules.isPresent()) {
+            eventSchedules = optSchedules.get();
+            schedule = new TournamentSchedule(this);
+        } else {
+            eventSchedules = null;
+            schedule = null;
+        }
 
         events.forEach(Event::setAsUnchanged);
 
@@ -195,6 +201,8 @@ public class Tournament implements Validable {
     /**
      * Actualiza el valor de los horarios con la nueva solución combinada. Si se ha llegado a la última solución y se
      * llama a este método se establece el valor de los horarios a <code>null</code>.
+     * <p>
+     * Si el proceso de resolución aún no ha comenzado, se devuelve <code>false</code>.
      * <p>
      * Además, se recalcula el horario combinado, o se le asigna <code>null</code> si no hay más soluciones.
      * <p>
@@ -206,7 +214,7 @@ public class Tournament implements Validable {
      * configuración. Esta situación se debe evitar.
      *
      * @return <code>true</code> si se han actualizado los horarios con una nueva solución, y <code>false</code> si ya
-     * se ha alcanzado la última solución
+     * se ha alcanzado la última solución o si el proceso de resolución aún no ha comenzado
      * @throws IllegalStateException si algún evento se encuentra en un estado inconsistente, es decir, se modificado
      *                               alguna de sus propiedades o configuraciones, por lo tanto es necesario
      *                               reconstruir el modelo del torneo y reiniciar el proceso de resolución llamando a
@@ -216,29 +224,40 @@ public class Tournament implements Validable {
         if (events.stream().anyMatch(Observable::hasChanged))
             throw new IllegalStateException("An event has an inconsistent state");
 
-        if (solver.hasResolutionProcessFinished())
+        if (!solver.hasResolutionProcessStarted())
             return false;
 
-        currentSchedules = solver.getSolution();
-        schedule = currentSchedules == null ? null : new TournamentSchedule(this);
+        Optional<Map<Event, EventSchedule>> optSchedules = solver.getSolution();
+        if (optSchedules.isPresent()) {
+            eventSchedules = optSchedules.get();
+            schedule = new TournamentSchedule(this);
+        } else {
+            eventSchedules = null;
+            schedule = null;
+        }
 
-        return currentSchedules != null;
+        return eventSchedules != null;
     }
 
     /**
-     * Devuelve los horarios de cada categoría con el valor actual. Si no se ha actualizado el valor llamando
-     * al método {@link Tournament#nextSchedules} o si el solver ha alcanzado la última solución y se ha llamado
-     * seguidamente a este último, devuelve <code>null</code>.
+     * Devuelve los horarios actuales de cada categoría del torneo. El valor actual viene dado por el cálculo de la
+     * solución del problema, ya sea al lanzar el proceso de resolución mediante {@link Tournament#solve()}, o bien
+     * mediante la actualización de los horarios con el valor de la siguiente solución mediante
+     * {@link Tournament#nextSchedules()}.
+     * <p>
+     * Si el torneo no tiene ninguna solución, o si ya se han explorado todas las soluciones posibles, el valor de
+     * los horarios, que será el que este método devuelva, será <code>null</code>.
      *
-     * @return los horarios de cada categoría
+     * @return los horarios de cada categoría; o <code>null</code> si el torneo no posee una solución o si ya se han
+     * explorado todas ellas
      */
-    public Map<Event, EventSchedule> getCurrentSchedules() {
-        return currentSchedules;
+    public Map<Event, EventSchedule> getEventSchedules() {
+        return eventSchedules;
     }
 
     /**
      * Devuelve un único horario combinado del torneo que include todos los jugadores, todas las localizaciones de
-     * juego y todas las horas o timeslots de los que compone.
+     * juego y todas las horas o <i>timeslots</i> de los que compone.
      * <p>
      * Si aún no se ha calculado un horario para este torneo mediante {@link Tournament#solve()}, o si ya se han
      * calculado todos los horarios posibles, o si el torneo no posee ningún horario posible, se devolverá
@@ -261,17 +280,6 @@ public class Tournament implements Validable {
      */
     public boolean hasSchedule() {
         return schedule != null;
-    }
-
-    /**
-     * Comprueba si se han alcanzado todas las soluciones del problema del torneo, es decir, se han obtenido todos
-     * los horarios del mismo mediante sucesivas llamadas a {@link Tournament#nextSchedules}, hasta agotar el proceso
-     * de resolución.
-     *
-     * @return <code>true</code> si se han explorado todos los horarios posibles, <code>false</code> si no
-     */
-    public boolean allSolutionsReached() {
-        return schedule == null && solver.getFoundSolutions() > 0;
     }
 
     public String getName() {
@@ -419,7 +427,7 @@ public class Tournament implements Validable {
     public void addUnavailablePlayerAtTimeslotRange(Player player, Timeslot t1, Timeslot t2) {
         if (!allPlayers.contains(player))
             throw new IllegalArgumentException(String.format("Player (%s) does not exist in the list of players of "
-                            + "the tournament",
+                    + "the tournament",
                     player
             ));
 
@@ -610,11 +618,11 @@ public class Tournament implements Validable {
     public void printCurrentSchedules(boolean printMatches) {
         StringBuilder sb = new StringBuilder();
 
-        if (currentSchedules == null)
+        if (eventSchedules == null)
             sb.append("Empty schedule.\n");
         else {
             for (Event event : events) {
-                EventSchedule schedule = currentSchedules.get(event);
+                EventSchedule schedule = eventSchedules.get(event);
 
                 sb.append(schedule.toString()).append("\n");
 

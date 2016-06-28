@@ -1,13 +1,13 @@
 package es.uca.garciachacon.eventscheduler.rest.dao;
 
+import es.uca.garciachacon.eventscheduler.data.model.schedule.EventSchedule;
 import es.uca.garciachacon.eventscheduler.data.model.schedule.TournamentSchedule;
+import es.uca.garciachacon.eventscheduler.data.model.tournament.Event;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.Tournament;
 import es.uca.garciachacon.eventscheduler.data.validation.validable.ValidationException;
+import es.uca.garciachacon.eventscheduler.solver.TournamentSolver.ResolutionState;
 
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -39,7 +39,7 @@ public class TournamentDao implements ITournamentDao {
     /**
      * Indica si se activará un período de expiración para cada inserción de un nuevo torneo
      */
-    private boolean expire = false;
+    private boolean expirationFlag = false;
 
     /**
      * Devuelve el período de expiración de la inserción de un nuevo torneo, en milisegundos.
@@ -52,7 +52,7 @@ public class TournamentDao implements ITournamentDao {
 
     /**
      * Fija el valor del período de expiración de creación de un torneo en milisegundos. Para que tenga efecto, se
-     * debe activar la función de expiración mediante {@link TournamentDao#setExpire(boolean)}.
+     * debe activar la función de expiración mediante {@link TournamentDao#setExpirationFlag(boolean)}.
      *
      * @param delay cantidad positiva de milisegundos tras los que se borrará cada nuevo torneo creado
      * @throws IllegalArgumentException si <code>delay</code> no es positivo
@@ -69,17 +69,17 @@ public class TournamentDao implements ITournamentDao {
      *
      * @return <code>true</code> si está activado; <code>false</code> si no
      */
-    public boolean getExpire() {
-        return expire;
+    public boolean getExpirationFlag() {
+        return expirationFlag;
     }
 
     /**
      * Activa o desactiva el sistema de expiración.
      *
-     * @param expire <code>true</code> para activarlo, <code>false</code> para desactivarlo.
+     * @param expirationFlag <code>true</code> para activarlo, <code>false</code> para desactivarlo.
      */
-    public void setExpire(boolean expire) {
-        this.expire = expire;
+    public void setExpirationFlag(boolean expirationFlag) {
+        this.expirationFlag = expirationFlag;
     }
 
     /**
@@ -101,6 +101,17 @@ public class TournamentDao implements ITournamentDao {
     }
 
     /**
+     * Devuelve un torneo con el identificador especificado.
+     *
+     * @param id identificador del torneo que se quiere obtener
+     * @return si existe un torneo con el <code>id</code> especificado se devuelve envuelto en un {@link Optional};
+     * si no existe, se devuelve {@link Optional#empty()}
+     */
+    public synchronized Optional<Tournament> get(String id) {
+        return Optional.of(tournaments.get(id));
+    }
+
+    /**
      * Añade un torneo a la colección. El identificador único es generado automáticamente mediante
      * {@link UUID#randomUUID()} y asociado al nuevo torneo
      *
@@ -111,23 +122,10 @@ public class TournamentDao implements ITournamentDao {
         String id = randomUUID().toString();
         tournaments.put(id, tournament);
 
-        if (expire)
+        if (expirationFlag)
             Executors.newScheduledThreadPool(1).schedule(() -> tournaments.remove(id), delay, TimeUnit.MILLISECONDS);
 
         return id;
-    }
-
-    /**
-     * Devuelve un torneo con el identificador especificado.
-     *
-     * @param id identificador del torneo que se quiere obtener
-     * @return si existe un torneo con el <code>id</code> especificado se devuelve envuelto en un {@link Optional};
-     * si no existe, se devuelve {@link Optional#empty()}
-     */
-    public synchronized Optional<Tournament> get(String id) {
-        if (tournaments.containsKey(id))
-            return Optional.of(tournaments.get(id));
-        return Optional.empty();
     }
 
     /**
@@ -151,31 +149,74 @@ public class TournamentDao implements ITournamentDao {
      * o el horario
      */
     @Override
-    public Optional<TournamentSchedule> getSchedule(String id) {
-        Optional<TournamentSchedule> optSchedule = Optional.empty();
+    public Optional<TournamentSchedule> getSchedule(String id) throws ValidationException {
+        if (!tournaments.containsKey(id))
+            return Optional.empty();
 
-        if (tournaments.containsKey(id)) {
-            Tournament tournament = tournaments.get(id);
+        Tournament tournament = tournaments.get(id);
+        tournament.solve();
 
-            if (!tournament.allSolutionsReached()) {
-                TournamentSchedule schedule = tournament.getSchedule();
+        return Optional.ofNullable(tournament.getSchedule());
+    }
 
-                // Aún no se ha iniciado el proceso de resolución, entonces se inicia. También puede ser que sí se
-                // haya iniciado anteriormente, pero el torneo no tiene horario posible; esta distinción de casos es
-                // imposibles por el momento, y es responsabilidad de la clase Tournament
-                if (schedule == null) {
-                    try {
-                        if (tournament.solve())
-                            optSchedule = Optional.of(tournament.getSchedule());
-                    } catch (ValidationException e) {
-                        e.printStackTrace();
-                    }
-                } else {
-                    if (tournament.nextSchedules())
-                        optSchedule = Optional.of(tournament.getSchedule());
-                }
-            }
-        }
+    /**
+     * Devuelve el siguiente horario del torneo. Si no hay más, se devuelve un opcional vacío.
+     * <p>
+     * Si no se ha iniciado aún el proceso de resolución, este método lo hará, llamando a
+     * {@link TournamentDao#getSchedule(String)}.
+     *
+     * @param id identificador del torneo cuyo horario se quiere obtener
+     * @return siguiente horario del torneo, u opcional vacío si no existe el torneo o no tiene horario
+     */
+    @Override
+    public Optional<TournamentSchedule> getNextSchedule(String id) throws ValidationException {
+        if (!tournaments.containsKey(id))
+            return Optional.empty();
+
+        Tournament tournament = tournaments.get(id);
+        if (tournament.getSolver().getResolutionState() == ResolutionState.READY)
+            tournament.solve();
+        else
+            tournament.nextSchedules();
+
+        return Optional.ofNullable(tournament.getSchedule());
+    }
+
+    /**
+     * Devuelve los horarios de los eventos del torneo.
+     *
+     * @param id el identificador del torneo
+     * @return horarios de cada evento del torneo, o un opcional vacío
+     */
+    @Override
+    public Optional<Map<Event, EventSchedule>> getEventSchedules(String id) {
+        if (!tournaments.containsKey(id))
+            return Optional.empty();
+
+        return Optional.ofNullable(tournaments.get(id).getEventSchedules());
+    }
+
+    /**
+     * Devuelve el horario del evento especificado del torneo con el identificador que se indica.
+     *
+     * @param id       identificador del torneo al que pertenece el evento
+     * @param position posición del evento en la lista de eventos del torneo
+     * @return el horario del evento, o un opcional vacío si no procede
+     */
+    @Override
+    public Optional<EventSchedule> getEventSchedule(String id, int position) {
+        Optional<EventSchedule> optSchedule = Optional.empty();
+
+        if (!tournaments.containsKey(id))
+            return optSchedule;
+
+        Tournament tournament = tournaments.get(id);
+        List<Event> events = tournament.getEvents();
+
+        Map<Event, EventSchedule> schedules = tournament.getEventSchedules();
+        if (position >= 1 && position <= events.size() && schedules != null)
+            optSchedule = Optional.of(schedules.get(events.get(position - 1)));
+
         return optSchedule;
     }
 }
