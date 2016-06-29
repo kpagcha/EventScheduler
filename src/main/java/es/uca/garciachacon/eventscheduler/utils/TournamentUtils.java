@@ -123,7 +123,7 @@ public class TournamentUtils {
                 veterano
         );
 
-        zarlon.getSolver().setFillTimeslotsFirst(false);
+        zarlon.getSolver().prioritizeTimeslots(false);
 
         // Duración de un partido: 3 timeslots
         for (Event event : zarlon.getEvents())

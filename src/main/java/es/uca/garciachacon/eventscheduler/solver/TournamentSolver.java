@@ -95,12 +95,17 @@ public class TournamentSolver {
         /**
          * Ha completado, pero no se ha encontrado ninguna solución
          */
-        INFEASIBLE,
+        UNFEASIBLE,
 
         /**
          * No se ha logrado completar el proceso por limitaciones del entorno
          */
-        INCOMPLETE
+        INCOMPLETE,
+
+        /**
+         * Se está computando la solución
+         */
+        COMPUTING
     }
 
     /**
@@ -154,10 +159,10 @@ public class TournamentSolver {
     private SearchStrategy searchStrategy = SearchStrategy.DOMOVERWDEG;
 
     /**
-     * Para las estrategias de búsqueda minDom_UB y minDom_LB indicar si priorizar timeslots (true) o pistas (false)
-     * a la hora de hacer las asignaciones
+     * Para las estrategias de búsqueda minDom_UB y minDom_LB indicar si priorizar <i>timeslots</i>
+     * (<code>true</code>) o localizaciones (<code>false</code>) a la hora de hacer las asignaciones de horario
      */
-    private boolean fillTimeslotsFirst = true;
+    private boolean prioritizeTimeslots = true;
 
     /**
      * Tiempo máximo de resolución en milisegundos. 0 significa sin límite
@@ -182,7 +187,7 @@ public class TournamentSolver {
     public TournamentSolver(Tournament tournament) {
         this.tournament = tournament;
 
-        LOGGER.setLevel(Level.WARNING);
+        LOGGER.setLevel(Level.INFO);
 
         List<Event> events = tournament.getEvents();
 
@@ -212,7 +217,7 @@ public class TournamentSolver {
     public TournamentSolver(TournamentSolver aSolver) {
         this(aSolver.getTournament());
         searchStrategy = aSolver.getSearchStrategy();
-        fillTimeslotsFirst = aSolver.getFillTimeslotsFirst();
+        prioritizeTimeslots = aSolver.getPrioritizeTimeslots();
         resolutionTimeLimit = aSolver.getResolutionTimeLimit();
     }
 
@@ -270,8 +275,8 @@ public class TournamentSolver {
      *
      * @return <code>true</code> si se priorizan <i>timeslots</i>; <code>false</code> si se priorizan localizaciones
      */
-    public boolean getFillTimeslotsFirst() {
-        return fillTimeslotsFirst;
+    public boolean getPrioritizeTimeslots() {
+        return prioritizeTimeslots;
     }
 
     /**
@@ -279,10 +284,11 @@ public class TournamentSolver {
      * tiene efecto si la estrategia de búsqueda configurada es {@link SearchStrategy#MINDOM_UB} o
      * {@link SearchStrategy#MINDOM_LB}.
      *
-     * @param fillFirst <code>true</code> para priorizar <i>timeslots</i>, y <code>false</code> para priorizar jugadores
+     * @param prioritize <code>true</code> para priorizar <i>timeslots</i>, y <code>false</code> para priorizar
+     *                   jugadores
      */
-    public void setFillTimeslotsFirst(boolean fillFirst) {
-        fillTimeslotsFirst = fillFirst;
+    public void prioritizeTimeslots(boolean prioritize) {
+        prioritizeTimeslots = prioritize;
     }
 
     /**
@@ -315,7 +321,7 @@ public class TournamentSolver {
     }
 
     /**
-     * Comprueba si el proceso de resolución ha comenzado, es decir, si ya se ha invocado a
+     * Comprueba si el proceso de resolución ha comenzado, es decir, si ya se ha invocado
      * {@link TournamentSolver#execute()}.
      * <p>
      * Si el proceso de resolución ha terminado, no ha encontrado solución o ha sido incompleto, devuelve
@@ -324,7 +330,7 @@ public class TournamentSolver {
      * @return <code>true</code> si ya ha comenzado el proceso de resolución, <code>false</code> si no
      */
     public boolean hasResolutionProcessStarted() {
-        return resolutionState == ResolutionState.STARTED;
+        return resolutionState == ResolutionState.STARTED || resolutionState == ResolutionState.COMPUTING;
     }
 
     /**
@@ -337,7 +343,7 @@ public class TournamentSolver {
      * @return <code>true</code> si ya ha terminado el proceso de resolución, <code>false</code> si no
      */
     public boolean hasResolutionProcessFinished() {
-        return resolutionState == ResolutionState.FINISHED || resolutionState == ResolutionState.INFEASIBLE;
+        return resolutionState == ResolutionState.FINISHED || resolutionState == ResolutionState.UNFEASIBLE;
     }
 
     /**
@@ -382,6 +388,7 @@ public class TournamentSolver {
 
         resolutionState = ResolutionState.STARTED;
         foundSolutions = 0;
+        stop = false;
 
         buildModel();
 
@@ -691,7 +698,7 @@ public class TournamentSolver {
         IntVar[][] vars = new IntVar[nCategories][];
 
         if ((searchStrategy == SearchStrategy.MINDOM_LB || searchStrategy == SearchStrategy.MINDOM_UB) &&
-                !fillTimeslotsFirst) {
+                !prioritizeTimeslots) {
             IntVar[][][][] v = new IntVar[nCategories][][][];
             for (int e = 0; e < nCategories; e++) {
                 Event event = events.get(e);
@@ -746,18 +753,22 @@ public class TournamentSolver {
 
         solver.addStopCriterion(() -> stop);
 
+        resolutionState = ResolutionState.COMPUTING;
+
         boolean solutionFound = solver.findSolution();
 
-        if (!solutionFound) {
+        if (solutionFound) {
+            resolutionState = ResolutionState.STARTED;
+            foundSolutions++;
+        } else {
             if (solver.isFeasible() == ESat.FALSE) {
-                LOGGER.log(Level.INFO, "Problem infeasible");
-                resolutionState = ResolutionState.INFEASIBLE;
+                LOGGER.log(Level.INFO, "Problem unfeasible");
+                resolutionState = ResolutionState.UNFEASIBLE;
             } else if (solver.isFeasible() == ESat.UNDEFINED) {
                 LOGGER.log(Level.INFO, "Solution could not be found within given limits");
                 resolutionState = ResolutionState.INCOMPLETE;
             }
-        } else
-            foundSolutions++;
+        }
 
         resolutionData = new ResolutionData(this);
 
@@ -765,10 +776,13 @@ public class TournamentSolver {
     }
 
     /**
-     * Para el proceso de resolución, dejándolo incompleto y no habiéndose encontrado la solución.
+     * Para el proceso de resolución, dejándolo en estado incompleto y quedando la solución en estado desconocido,
+     * pudiendo haber sido calculada si se hubiese empleado más tiempo de computación, o bien puede ocurrir que no
+     * hubiera solución posible.
      */
     public void stopResolutionProcess() {
         stop = true;
+        resolutionState = ResolutionState.INCOMPLETE;
     }
 
     /**

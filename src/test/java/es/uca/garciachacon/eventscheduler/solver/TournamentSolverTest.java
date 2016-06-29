@@ -41,7 +41,7 @@ public class TournamentSolverTest {
 
         TournamentSolver solver = new TournamentSolver(tournament);
         solver.setSearchStrategy(SearchStrategy.DOMOVERWDEG);
-        solver.setFillTimeslotsFirst(true);
+        solver.prioritizeTimeslots(true);
         solver.setResolutionTimeLimit(0);
 
         assertNull(solver.getInternalSolver());
@@ -59,7 +59,7 @@ public class TournamentSolverTest {
 
         assertEquals(SearchStrategy.DOMOVERWDEG, solver.getSearchStrategy());
         assertNull(solver.getResolutionData());
-        assertTrue(solver.getFillTimeslotsFirst());
+        assertTrue(solver.getPrioritizeTimeslots());
 
         assertEquals(0, solver.getResolutionTimeLimit());
 
@@ -111,8 +111,7 @@ public class TournamentSolverTest {
 
         assertEquals(100, new Double(new InverseSchedule(tournament).getOccupationRatio() * 100).intValue());
 
-        solver.setResolutionTimeLimit(400);
-        solver.setResolutionTimeLimit(0);
+        solver.setResolutionTimeLimit(1);
 
         Thread thread = new Thread(solver::stopResolutionProcess);
         thread.start();
@@ -192,7 +191,7 @@ public class TournamentSolverTest {
         assertFalse(tournament.solve());
         assertNull(tournament.getSchedule());
         assertEquals(0, solver.getFoundSolutions());
-        assertEquals(TournamentSolver.ResolutionState.INFEASIBLE, solver.getResolutionState());
+        assertEquals(TournamentSolver.ResolutionState.UNFEASIBLE, solver.getResolutionState());
     }
 
     @Test
@@ -1237,7 +1236,7 @@ public class TournamentSolverTest {
                 2
         ));
         tournament.getSolver().setSearchStrategy(SearchStrategy.MINDOM_UB);
-        tournament.getSolver().setFillTimeslotsFirst(true);
+        tournament.getSolver().prioritizeTimeslots(true);
 
         assertTrue(tournament.solve());
 
@@ -1252,7 +1251,7 @@ public class TournamentSolverTest {
             Assert.assertEquals(court1, matches.get(0).getLocalization());
         }
 
-        tournament.getSolver().setFillTimeslotsFirst(false);
+        tournament.getSolver().prioritizeTimeslots(false);
 
         assertTrue(tournament.solve());
 
@@ -2031,7 +2030,7 @@ public class TournamentSolverTest {
         Tournament tournament = new Tournament("Basketball League", event);
 
         tournament.getSolver().setSearchStrategy(SearchStrategy.MINDOM_UB);
-        tournament.getSolver().setFillTimeslotsFirst(false);
+        tournament.getSolver().prioritizeTimeslots(false);
 
         assertTrue(tournament.solve());
 

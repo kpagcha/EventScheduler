@@ -1,7 +1,6 @@
 package es.uca.garciachacon.eventscheduler.rest;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import es.uca.garciachacon.eventscheduler.data.model.schedule.EventSchedule;
 import es.uca.garciachacon.eventscheduler.data.model.schedule.InverseSchedule;
 import es.uca.garciachacon.eventscheduler.data.model.schedule.Schedule;
@@ -120,25 +119,6 @@ public class EventSchedulerService {
     }
 
     /**
-     * Petición GET para consultar el estado del proceso de la resolución del torneo cuyo identificador se incluye en
-     * la ruta. Si no existe un torneo con ese identificador, se responde con código 404.
-     *
-     * @param id el identificador del torneo
-     * @return el estado del proceso de resolución
-     */
-    @Path("/{id}/schedule/resolution-state")
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    public ResolutionState getResolutionState(@PathParam("id") String id) {
-        Optional<Tournament> optTournament = dao.get(id);
-
-        if (optTournament.isPresent())
-            return optTournament.get().getSolver().getResolutionState();
-
-        throw new NotFoundException();
-    }
-
-    /**
      * Petición GET para consultar el número de soluciones (distintos horarios) encontradas hasta el momento.
      * <p>
      * Si no existe un torneo con ese identificador, se responde con código 404.
@@ -158,6 +138,25 @@ public class EventSchedulerService {
     }
 
     /**
+     * Petición GET para consultar el estado del proceso de la resolución del torneo cuyo identificador se incluye en
+     * la ruta. Si no existe un torneo con ese identificador, se responde con código 404.
+     *
+     * @param id el identificador del torneo
+     * @return el estado del proceso de resolución
+     */
+    @Path("/{id}/schedule/resolution-state")
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    public ResolutionState getResolutionState(@PathParam("id") String id) {
+        Optional<Tournament> optTournament = dao.get(id);
+
+        if (optTournament.isPresent())
+            return optTournament.get().getSolver().getResolutionState();
+
+        throw new NotFoundException();
+    }
+
+    /**
      * Petición GET para consultar las estadísticas del proceso de resolución del torneo especificado.
      * <p>
      * Si no existe un torneo con ese identificador, se responde con código 404.
@@ -165,7 +164,7 @@ public class EventSchedulerService {
      * @param id el identificador del torneo
      * @return estadísticas del proceso de resolución del torneo
      */
-    @Path("{id}/schedule/resolution-data")
+    @Path("/{id}/schedule/resolution-data")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public ResolutionData getResolutionData(@PathParam("id") String id) {
@@ -173,6 +172,35 @@ public class EventSchedulerService {
 
         if (optTournament.isPresent())
             return optTournament.get().getSolver().getResolutionData();
+
+        throw new NotFoundException();
+    }
+
+    /**
+     * Petición GET que para la computación del proceso de resolución del torneo indicado, si éste esta siendo
+     * ejecutado en el momento de la petición. Si no, no se producirá ninguna modificación y se devolverá el estado
+     * de la resolución actual.
+     * <p>
+     * Si la resolución es parada de forma satisfactoria, se devolverá
+     * {@link es.uca.garciachacon.eventscheduler.solver.TournamentSolver.ResolutionState#INCOMPLETE}.
+     * <p>
+     * Si no existe un torneo con el identificador especificado se responderá con código 404.
+     *
+     * @param id el identificador del torneo
+     * @return estado de la resolución
+     */
+    @Path("/{id}/schedule/stop-resolution")
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    public ResolutionState stopResolutionProcess(@PathParam("id") String id) {
+        Optional<Tournament> optTournament = dao.get(id);
+
+        if (optTournament.isPresent()) {
+            TournamentSolver solver = optTournament.get().getSolver();
+            if (solver.getResolutionState() == ResolutionState.COMPUTING)
+                solver.stopResolutionProcess();
+            return solver.getResolutionState();
+        }
 
         throw new NotFoundException();
     }
@@ -202,11 +230,11 @@ public class EventSchedulerService {
      * Los siguientes parámetros de URL opcionales permiten configurar opciones del proceso de resolución. Nótese que
      * al reiniciar el proceso mediante el método anteriormente descrito (parámetro <i>restart</i>), esta
      * configuración persistirá, y si se desea deshacer debe ser de forma explícita, por ejemplo,
-     * <i>priorizeTimeslots=false</i>.
+     * <i>prioritizeTimeslots=false</i>.
      * <ul>
      * <li><i>searchStrategy</i> permite elegir la estrategia de búsqueda a emplear, siendo las opciones
      * <i>DOMOVERWDEG</i>, <i>MINDOM_UB</i> y <i>MINDOM_LB</i>.</li>
-     * <li><i>priorizeTimeslots</i> permite priorizar la asignación de partidos sobre <i>timeslots</i> antes
+     * <li><i>prioritizeTimeslots</i> permite priorizar la asignación de partidos sobre <i>timeslots</i> antes
      * que sobre localizaciones, es decir, si su valor es <i>true</i> se intentará hacer uso antes de los
      * <i>timeslots</i> disponibles que de las localizaciones, mientras que si es <i>false</i> será lo
      * contrario. Esto solamente tiene efecto si la estrategia de búsqueda empleada es <i>MINDOM_UB</i> o
@@ -231,7 +259,7 @@ public class EventSchedulerService {
             @QueryParam("onlyGet") Boolean onlyGet,
             @QueryParam("byLocalizations") Boolean byLocalizations,
             @QueryParam("searchStrategy") String searchStrategy,
-            @QueryParam("priorizeTimeslots") Boolean priorizeTimeslots,
+            @QueryParam("prioritizeTimeslots") Boolean prioritizeTimeslots,
             @QueryParam("limit") Long resolutionTimeLimit) throws ValidationException {
 
         Optional<Tournament> optTournament = dao.get(id);
@@ -253,8 +281,8 @@ public class EventSchedulerService {
                 }
             }
 
-            if (priorizeTimeslots != null)
-                solver.setFillTimeslotsFirst(priorizeTimeslots);
+            if (prioritizeTimeslots != null)
+                solver.prioritizeTimeslots(prioritizeTimeslots);
 
             if (resolutionTimeLimit != null)
                 solver.setResolutionTimeLimit(resolutionTimeLimit);
@@ -356,19 +384,46 @@ public class EventSchedulerService {
 
     public static void main(String[] args) throws JsonProcessingException, ValidationException {
 
-        List<Player> players = TournamentUtils.buildGenericPlayers(4, "Player");
-        List<Localization> localizations = TournamentUtils.buildGenericLocalizations(2, "Court");
-        List<Timeslot> timeslots = TournamentUtils.buildSimpleTimeslots(2);
-        Event event = new Event("Event", players, localizations, timeslots);
+        List<Player> players = TournamentUtils.buildGenericPlayers(32, "Player");
+        List<Localization> localizations = TournamentUtils.buildGenericLocalizations(5, "Court");
+        List<Timeslot> timeslots = TournamentUtils.buildSimpleTimeslots(12);
 
-        Tournament tournament = new Tournament("Tournament", event);
+        Event event1 = new Event("Event 1", players, localizations, timeslots);
+        Event event2 = new Event("Event 2", players.subList(0, 8), localizations.subList(2, 4), timeslots);
 
-        TournamentSchedule schedule = tournament.getSchedule();
-        Map<Event, EventSchedule> currentSchedules = tournament.getEventSchedules();
-        InverseSchedule inverseSchedule = new InverseSchedule(event);
+        event2.setMatchesPerPlayer(3);
 
-        ObjectMapper mapper = new ObjectMapper();
+        Tournament tournament = new Tournament("Tournament", event1, event2);
+        tournament.getSolver().setSearchStrategy(SearchStrategy.MINDOM_UB);
+        tournament.getSolver().setResolutionTimeLimit(2000);
 
-        String json = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(inverseSchedule);
+        //System.out.println(tournament.toJson());
+
+        System.out.println("solved? " + tournament.solve());
+        System.out.println(tournament.getSolver().getResolutionState());
+        System.out.println(tournament.getSolver().getResolutionData().getResolutionTime());
+
+        tournament.getSolver().setResolutionTimeLimit(2000);
+
+        System.out.println("\nsolved? " + tournament.solve());
+        System.out.println(tournament.getSolver().getResolutionState());
+        System.out.println(tournament.getSolver().getResolutionData().getResolutionTime());
+
+        //System.out.println(tournament.getSchedule());
+
+        //System.out.println(tournament.getSolver().getResolutionData().getResolutionTime());
+
+        //ObjectMapper mapper = new ObjectMapper();
+        //String json = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(schedule);
+
+        /*Event event = new Event("Event",
+                TournamentUtils.buildGenericPlayers(18, "Player"),
+                TournamentUtils.buildGenericLocalizations(1, "Court"),
+                TournamentUtils.buildSimpleTimeslots(6)
+        );
+        event.setPlayersPerMatch(6);
+        event.setPlayersPerTeam(3);
+
+        tournament = new Tournament("Tournament", event);*/
     }
 }
