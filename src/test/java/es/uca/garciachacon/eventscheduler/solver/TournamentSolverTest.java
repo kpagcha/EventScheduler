@@ -582,22 +582,19 @@ public class TournamentSolverTest {
         List<Timeslot> timeslots = TournamentUtils.buildSimpleTimeslots(15);
         Event event = new Event("Event", players, localizations, timeslots, 1, 3, 2);
 
-        event.addMatchup(new Matchup(event,
-                new HashSet<>(Arrays.asList(djokovic, robert)),
+        event.addMatchup(new Matchup(new HashSet<>(Arrays.asList(djokovic, robert)),
                 new HashSet<>(Arrays.asList(localizations.get(0))),
                 new HashSet<>(timeslots.subList(0, 6)),
                 1
         ));
-        event.addMatchup(new Matchup(event,
-                new HashSet<>(Arrays.asList(mahut, belucci)),
+        event.addMatchup(new Matchup(new HashSet<>(Arrays.asList(mahut, belucci)),
                 new HashSet<>(Arrays.asList(localizations.get(1), localizations.get(2))),
                 new HashSet<>(timeslots.subList(3, 10)),
                 1
         ));
-        event.addMatchup(new Matchup(event,
-                new HashSet<>(Arrays.asList(raonic, kyrgios)),
+        event.addMatchup(new Matchup(new HashSet<>(Arrays.asList(raonic, kyrgios)),
                 new HashSet<>(Arrays.asList(localizations.get(1))),
-                new HashSet<>(timeslots.subList(12, 15)),
+                new HashSet<>(timeslots.subList(12, 13)),
                 1
         ));
         event.addMatchup(kohlschreiber, nadal);
@@ -657,22 +654,19 @@ public class TournamentSolverTest {
         );
         event.setMatchupMode(MatchupMode.CUSTOM);
 
-        event.addMatchup(new Matchup(event,
-                new HashSet<>(Arrays.asList(djokovic, nadal)),
+        event.addMatchup(new Matchup(new HashSet<>(Arrays.asList(djokovic, nadal)),
                 new HashSet<>(Arrays.asList(mainCourt)),
                 new HashSet<>(Arrays.asList(timeslots.get(0))),
                 1
         ));
 
-        event.addMatchup(new Matchup(event,
-                new HashSet<>(Arrays.asList(federer, nadal)),
+        event.addMatchup(new Matchup(new HashSet<>(Arrays.asList(federer, nadal)),
                 new HashSet<>(Arrays.asList(mainCourt)),
                 new HashSet<>(Arrays.asList(timeslots.get(3), timeslots.get(10))),
                 2
         ));
 
-        event.addMatchup(new Matchup(event,
-                new HashSet<>(Arrays.asList(ferrer, berdych)),
+        event.addMatchup(new Matchup(new HashSet<>(Arrays.asList(ferrer, berdych)),
                 new HashSet<>(Arrays.asList(court1, court2)),
                 new HashSet<>(Arrays.asList(timeslots.get(0), timeslots.get(3), timeslots.get(6))),
                 2
@@ -747,8 +741,7 @@ public class TournamentSolverTest {
         Player player = event.getPlayers().get(4);
         Timeslot timeslot = event.getTimeslots().get(3);
         event.addPlayerAtTimeslot(player, timeslot);
-        event.addMatchup(new Matchup(event,
-                new HashSet<>(Arrays.asList(player, event.getPlayers().get(2))),
+        event.addMatchup(new Matchup(new HashSet<>(Arrays.asList(player, event.getPlayers().get(2))),
                 new HashSet<>(Arrays.asList(event.getLocalizations().get(1))),
                 new HashSet<>(Arrays.asList(timeslot)),
                 1
@@ -767,10 +760,9 @@ public class TournamentSolverTest {
                 TournamentUtils.buildGenericLocalizations(2, "Court"),
                 TournamentUtils.buildSimpleTimeslots(2)
         );
-        event.addMatchup(new Matchup(event,
-                new HashSet<>(Arrays.asList(event.getPlayers().get(0), event.getPlayers().get(1))),
+        event.addMatchup(new Matchup(new HashSet<>(Arrays.asList(event.getPlayers().get(0), event.getPlayers().get(1))),
                 new HashSet<>(Arrays.asList(event.getLocalizations().get(0))),
-                new HashSet<>(event.getTimeslots()),
+                new HashSet<>(),
                 1
         ));
         event.addPlayerInLocalization(event.getPlayers().get(2), event.getLocalizations().get(0));
@@ -1135,20 +1127,10 @@ public class TournamentSolverTest {
 
         Set<Player> matchup1Players =
                 Stream.concat(team1.getPlayers().stream(), team2.getPlayers().stream()).collect(Collectors.toSet());
-        event.addMatchup(new Matchup(event,
-                matchup1Players,
-                new HashSet<>(event.getLocalizations()),
-                new HashSet<>(event.getTimeslots()),
-                1
-        ));
+        event.addMatchup(new Matchup(matchup1Players));
         Set<Player> matchup2Players =
                 Stream.concat(team3.getPlayers().stream(), team4.getPlayers().stream()).collect(Collectors.toSet());
-        event.addMatchup(new Matchup(event,
-                matchup2Players,
-                new HashSet<>(event.getLocalizations()),
-                new HashSet<>(event.getTimeslots()),
-                2
-        ));
+        event.addMatchup(new Matchup(matchup2Players, new HashSet<>(), new HashSet<>(), 2));
 
         tournament = new Tournament("Tournament", event);
         tournament.getSolver().setSearchStrategy(SearchStrategy.MINDOM_UB);

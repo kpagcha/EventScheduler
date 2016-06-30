@@ -1,8 +1,9 @@
 package es.uca.garciachacon.eventscheduler.data.model.tournament;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.Comparator;
+import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -25,12 +26,6 @@ import java.util.stream.Collectors;
  * ocurrencias especificado.
  */
 public class Matchup {
-
-    /**
-     * Evento al que pertenece el enfrentamiento
-     */
-    @JsonBackReference
-    private Event event;
 
     /**
      * Jugadores que componen el enfrentamiento
@@ -56,96 +51,68 @@ public class Matchup {
      * Construye un enfrentamiento (o tantos como se especifique en el número de ocurrencias) perteneciente a un
      * evento, entre jugadores del mismo, en una de las posibles localizaciones de juego indicadas y <i>timeslots</i>
      * indicados.
-     * <p>Se filtrará el agumento <i>timeslots</i> eliminando comienzos de partidos imposibles, por ejemplo, intentar
-     * definir el comienzo de un enfrentamiento en el último <i>timeslot</i> de un evento con partidos de una
-     * duración de dos timeslots, lo cual sería inválido porque el encuentro nunca podría tener lugar.</p>
+     * <p>
+     * Si el conjunto de localizaciones está vacío, quiere decir que el enfrentamiento puede ocurrir en cualquiera de
+     * las disponibles. Lo mismo para el conjunto de <i>timeslots</i>.
      *
-     * @param event         event al que pertenece el enfrentamiento
      * @param players       conjunto de al menos dos jugadores y pertenecientes al evento
      * @param localizations conjunto de al menos una localización y perteneciente al evento
      * @param timeslots     conjunto de al menos un <i>timeslot</i>
      * @param occurrences   número de veces que el enfrentamiento tendrá lugar, el valor estará entre 1 y el número de
      *                      partidos por jugador que defina el evento (ver {@link Event#getMatchesPerPlayer()}
      * @throws NullPointerException     si alguno de los argumentos es <code>null</code>
-     * @throws IllegalArgumentException si <code>players</code> tiene un número de jugadores distinto del número de
-     *                                  jugadores por partido que especifica el evento, o si alguno de éstos es
-     *                                  <code>null</code> o no pertenece al
-     *                                  evento
-     * @throws IllegalArgumentException si <code>localizations</code> o está vacío, o si alguna de las localizaciones
-     *                                  es <code>null</code> o no pertenece al evento
-     * @throws IllegalArgumentException si <code>timeslots</code> está vacío, o si alguno de estos <i>timeslots</i>
-     *                                  es <code>null</code> o no pertenece al evento
-     * @throws IllegalArgumentException si <code>occurrences</code> es menor que 1 o mayor que el número de partidos
-     *                                  por jugador que el evento define
-     * @throws IllegalStateException    si se superase el número máximo de partidos que un jugar en particular pueda
-     *                                  jugar
+     * @throws IllegalArgumentException si el conjunto de jugadores está vacío o contiene <code>null</code>
+     * @throws IllegalArgumentException si el conjunto de localizaciones contiene <code>null</code>
+     * @throws IllegalArgumentException si el conjunto de <i>timeslots</i> contiene <code>null</code>
+     * @throws IllegalArgumentException si el número de ocurrencias es menor que 1
      */
-    public Matchup(Event event, Set<Player> players, Set<Localization> localizations, Set<Timeslot> timeslots,
-                   int occurrences) {
-        Objects.requireNonNull(event);
+    public Matchup(Set<Player> players, Set<Localization> localizations, Set<Timeslot> timeslots, int occurrences) {
         Objects.requireNonNull(players);
         Objects.requireNonNull(localizations);
         Objects.requireNonNull(timeslots);
 
-        if (players.size() != event.getPlayersPerMatch())
-            throw new IllegalArgumentException(String.format("Players cannot contain a number of players (%d) " +
-                            "different than the number of players per match the event specifies (%d)",
-                    players.size(),
-                    event.getPlayersPerMatch()
-            ));
+        if (players.isEmpty())
+            throw new IllegalArgumentException("Players cannot be empty");
 
         if (players.contains(null))
             throw new IllegalArgumentException("Players cannot contain null");
 
-        if (!event.getPlayers().containsAll(players))
-            throw new IllegalArgumentException("Not all players belong to the domain of the event");
-
-        if (localizations.isEmpty())
-            throw new IllegalArgumentException("Localizations cannot be empty");
-
         if (localizations.contains(null))
             throw new IllegalArgumentException("Localizations cannot contain null");
-
-        if (!event.getLocalizations().containsAll(localizations))
-            throw new IllegalArgumentException("Not all localizations belong to the domain of the event");
-
-        timeslots.removeIf(t -> event.getTimeslots().indexOf(t) + event.getTimeslotsPerMatch() >
-                event.getTimeslots().size());
-
-        if (timeslots.isEmpty())
-            throw new IllegalArgumentException("Timeslots cannot be empty");
 
         if (timeslots.contains(null))
             throw new IllegalArgumentException("Timeslots cannot contain null");
 
-        if (!event.getTimeslots().containsAll(timeslots))
-            throw new IllegalArgumentException("Not all timeslots belong to the domain of the event");
+        if (occurrences < 1)
+            throw new IllegalArgumentException("Occurrences cannot be less than 1");
 
-        for (Player player : players) {
-            long resultingCount = event.getPredefinedMatchups()
-                    .stream()
-                    .filter(m -> m.getPlayers().contains(player))
-                    .mapToInt(Matchup::getOccurrences)
-                    .sum() + occurrences;
-
-            if (resultingCount > event.getMatchesPerPlayer())
-                throw new IllegalStateException(String.format(
-                        "Player's (%s) number of predefined matchups (%d) would exceed the limit (%d)",
-                        player,
-                        resultingCount,
-                        event.getMatchesPerPlayer()
-                ));
-        }
-
-        this.event = event;
         this.players = players;
         this.localizations = localizations;
         this.timeslots = timeslots;
         this.occurrences = occurrences;
     }
 
-    public Event getEvent() {
-        return event;
+    /**
+     * Constructor de un enfrentamiento predeterminado que invoca al constructor
+     * {@link Matchup#Matchup(Set, Set, Set, int)} con el valor de ocurrencias igual a 1.
+     *
+     * @param players       conjunto de al menos dos jugadores y pertenecientes al evento
+     * @param localizations conjunto de al menos una localización y perteneciente al evento
+     * @param timeslots     conjunto de al menos un <i>timeslot</i>
+     */
+    public Matchup(Set<Player> players, Set<Localization> localizations, Set<Timeslot> timeslots) {
+        this(players, localizations, timeslots, 1);
+    }
+
+    /**
+     * Constructor de un enfrentamiento predeterminado que invoca al constructor
+     * {@link Matchup#Matchup(Set, Set, Set, int)} con el valor de ocurrencias igual a 1, y con conjuntos de
+     * localizaciones y <i>timeslots</i> vacíos.
+     *
+     * @param players conjunto de al menos dos jugadores y pertenecientes al evento
+     */
+    public Matchup(Set<Player> players) {
+        this(players, new HashSet<>(), new HashSet<>(), 1);
     }
 
     public Set<Player> getPlayers() {
@@ -165,10 +132,13 @@ public class Matchup {
     }
 
     public String toString() {
-        return String.format("[Players=[%s], Localizations=[%s], Timeslots=[%s], Occurrences=%d]",
+        return String.format(
+                "Matchup {Players=[%s], Localizations=[%s], Timeslots=[%s], Occurrences=%d}",
                 StringUtils.join(players, ","),
                 StringUtils.join(localizations, ","),
-                StringUtils.join(timeslots.stream().sorted(Timeslot::compareTo).collect(Collectors.toList()), ","),
+                StringUtils.join(timeslots.stream().sorted(Comparator.reverseOrder()).collect(Collectors
+                        .toList()),
+                        ","),
                 occurrences
         );
     }

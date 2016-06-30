@@ -1,6 +1,5 @@
 package es.uca.garciachacon.eventscheduler.rest;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import es.uca.garciachacon.eventscheduler.data.model.schedule.EventSchedule;
 import es.uca.garciachacon.eventscheduler.data.model.schedule.InverseSchedule;
 import es.uca.garciachacon.eventscheduler.data.model.schedule.Schedule;
@@ -13,7 +12,6 @@ import es.uca.garciachacon.eventscheduler.solver.ResolutionData;
 import es.uca.garciachacon.eventscheduler.solver.TournamentSolver;
 import es.uca.garciachacon.eventscheduler.solver.TournamentSolver.ResolutionState;
 import es.uca.garciachacon.eventscheduler.solver.TournamentSolver.SearchStrategy;
-import es.uca.garciachacon.eventscheduler.utils.TournamentUtils;
 
 import javax.inject.Inject;
 import javax.ws.rs.*;
@@ -388,62 +386,5 @@ public class EventSchedulerService {
         }
 
         return null;
-    }
-
-    public static void main(String[] args) throws JsonProcessingException, ValidationException {
-
-        /*List<Player> players = TournamentUtils.buildGenericPlayers(32, "Player");
-        List<Localization> localizations = TournamentUtils.buildGenericLocalizations(5, "Court");
-        List<Timeslot> timeslots = TournamentUtils.buildSimpleTimeslots(13);
-
-        Event event1 = new Event("Event 1", players, localizations, timeslots);
-        Event event2 = new Event("Event 2", players.subList(0, 8), localizations.subList(2, 4), timeslots);
-
-        event2.setMatchesPerPlayer(3);
-
-        Tournament tournament = new Tournament("Tournament", event1, event2);
-        TournamentSolver solver = tournament.getSolver();
-        solver.setSearchStrategy(SearchStrategy.MINDOM_UB);
-        solver.setResolutionTimeLimit(100);
-
-        tournament.solve();
-
-        int tries = 0;
-        while (solver.getResolutionState() == ResolutionState.INCOMPLETE) {
-            tournament.solve();
-            System.out.println(++tries);
-        }
-
-        System.out.println(solver.getResolutionState());*/
-
-        //System.out.println(tournament.getSolver().getResolutionData().getResolutionTime());
-
-        //ObjectMapper mapper = new ObjectMapper();
-        //String json = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(schedule);
-
-        Event event = new Event("Event",
-                TournamentUtils.buildGenericPlayers(18, "Player"),
-                TournamentUtils.buildGenericLocalizations(1, "Court"),
-                TournamentUtils.buildSimpleTimeslots(6)
-        );
-        event.setPlayersPerMatch(6);
-        event.setPlayersPerTeam(3);
-
-        Tournament tournament = new Tournament("Tournament", event);
-        TournamentSolver solver = tournament.getSolver();
-        //solver.setSearchStrategy(SearchStrategy.MINDOM_UB);
-        solver.setResolutionTimeLimit(100);
-
-        tournament.solve();
-
-        // ESTE ULTIMO TORNEO POR EQUIPOS AL HACER EL BUCLE DE ABAJO A VECES DA UNFEASIBLE Y OTRAS ENCUENTRA SOLUCION
-        // ?????????????????????
-        int tries = 0;
-        while (solver.getResolutionState() == ResolutionState.INCOMPLETE) {
-            tournament.solve();
-            System.out.println(++tries);
-        }
-
-        System.out.println(solver.getResolutionState());
     }
 }

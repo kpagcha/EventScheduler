@@ -245,7 +245,6 @@ public class TournamentSerializerTest {
         List<Localization> localizations = event.getLocalizations();
         List<Timeslot> timeslots = event.getTimeslots();
         event.addMatchup(new Matchup(
-                event,
                 new HashSet<>(Arrays.asList(players.get(2), players.get(3))),
                 new HashSet<>(Arrays.asList(localizations.get(0))),
                 new HashSet<>(Arrays.asList(timeslots.get(3), timeslots.get(4))),

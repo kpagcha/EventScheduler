@@ -6,6 +6,8 @@ import es.uca.garciachacon.eventscheduler.utils.TournamentUtils;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 
 import static org.junit.Assert.assertTrue;
@@ -55,6 +57,8 @@ public class ValidationTest {
         event.addPlayerAtTimeslot(players.get(4), timeslots.get(5));
         event.addPlayerAtTimeslot(players.get(4), timeslots.get(6));
         event.addPlayerAtTimeslot(players.get(5), timeslots.get(5));
+
+        event.addMatchup(new HashSet<>(Arrays.asList(players.get(1), players.get(3), players.get(4), players.get(5))));
     }
 
     @Test

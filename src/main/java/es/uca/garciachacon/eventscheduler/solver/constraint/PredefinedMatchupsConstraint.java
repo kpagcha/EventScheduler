@@ -7,6 +7,7 @@ import org.chocosolver.solver.variables.IntVar;
 import org.chocosolver.solver.variables.VariableFactory;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -14,6 +15,9 @@ import java.util.Set;
  * Aplica las restricciones que aseguran que los partidos predefinidos tendrán lugar. Según el modo de juego, cada
  * enfrentamiento tendrá lugar una sola vez si el modo es "todos diferentes", tantas veces como número de partidos
  * por jugador defina el evento si el modo es "todos iguales" o al menos una vez si es "cualquiera".
+ * <p>
+ * Si un enfrentamiento no define ninguna localización o <i>timeslot</i> donde deba tener lugar, se tomarán
+ * cualquiera de las disponibles.
  */
 public class PredefinedMatchupsConstraint extends EventConstraint {
 
@@ -30,6 +34,14 @@ public class PredefinedMatchupsConstraint extends EventConstraint {
         for (Matchup matchup : event.getPredefinedMatchups()) {
             Set<Localization> matchupLocalizations = matchup.getLocalizations();
             Set<Timeslot> matchupTimeslots = matchup.getTimeslots();
+
+            if (matchupLocalizations.isEmpty())
+                matchupLocalizations = new HashSet<>(localizations);
+
+            if (matchupTimeslots.isEmpty())
+                matchupTimeslots =
+                        new HashSet<>(timeslots.subList(0, timeslots.size() - event.getTimeslotsPerMatch() + 1));
+
             int nLocalizations = matchupLocalizations.size();
             int nTimeslots = matchupTimeslots.size();
 
@@ -62,15 +74,13 @@ public class PredefinedMatchupsConstraint extends EventConstraint {
                     break;
 
                 case ALL_EQUAL:
-                    constraints.add(IntConstraintFactory.sum(
-                            possibleMatchups,
+                    constraints.add(IntConstraintFactory.sum(possibleMatchups,
                             VariableFactory.fixed(nMatchesPerPlayer, solver)
                     ));
                     break;
 
                 case ANY:
-                    constraints.add(IntConstraintFactory.sum(
-                            possibleMatchups,
+                    constraints.add(IntConstraintFactory.sum(possibleMatchups,
                             VariableFactory.bounded("NMatches", 1, nMatchesPerPlayer, solver)
                     ));
                     break;

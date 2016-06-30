@@ -343,8 +343,13 @@ public class Event extends Observable implements Validable {
      *                                  <i>timeslot</i> que precede estrictamente al siguiente, es decir, que al
      *                                  compararlos son iguales
      */
-    public Event(String name, List<Player> players, List<Localization> localizations, List<Timeslot> timeslots,
-            int matchesPerPlayer, int timeslotsPerMatch, int playersPerMatch) {
+    public Event(String name,
+            List<Player> players,
+            List<Localization> localizations,
+            List<Timeslot> timeslots,
+            int matchesPerPlayer,
+            int timeslotsPerMatch,
+            int playersPerMatch) {
         Objects.requireNonNull(name);
         Objects.requireNonNull(players);
         Objects.requireNonNull(localizations);
@@ -925,50 +930,12 @@ public class Event extends Observable implements Validable {
      * tener lugar, se le asignarán todas las localizaciones y/u horas de juego existentes en los dominios del evento.
      *
      * @param matchups una lista de múltiples enfrentamientos no repetidos entre jugadores del evento
-     * @throws NullPointerException     si <code>matchups</code> es <code>null</code>
-     * @throws IllegalArgumentException si el número de enfrentamientos de un jugador en particular supera el máximo
-     *                                  posible, es decir, el número de partidos por jugador que este evento define
+     * @throws NullPointerException si <code>matchups</code> es <code>null</code>
      */
     public void setPredefinedMatchups(Set<Matchup> matchups) {
         Objects.requireNonNull(matchups);
 
-        if (matchups.isEmpty())
-            return;
-
-        for (Matchup matchup : matchups) {
-            for (Player player : matchup.getPlayers()) {
-                long count = matchups.stream()
-                        .filter(m -> m.getPlayers().contains(player))
-                        .mapToInt(Matchup::getOccurrences)
-                        .sum();
-
-                if (count > nMatchesPerPlayer)
-                    throw new IllegalArgumentException(String.format(
-                            "Player's (%s) number of predefined matchups (%d) exceeds the limit (%d)",
-                            player,
-                            count,
-                            nMatchesPerPlayer
-                    ));
-
-                Set<Localization> assignedLocalizations = matchup.getLocalizations();
-                Set<Timeslot> assignedTimeslots = matchup.getTimeslots();
-
-                if (nMatchesPerPlayer > 1) {
-                    if (!playersInLocalizations.containsKey(player))
-                        assignedLocalizations = new HashSet<>(localizations);
-                    if (!playersAtTimeslots.containsKey(player))
-                        assignedTimeslots =
-                                new HashSet<>(timeslots.subList(0, timeslots.size() - nTimeslotsPerMatch + 1));
-                }
-
-                playersInLocalizations.computeIfAbsent(player, l -> new HashSet<>()).addAll(assignedLocalizations);
-                playersAtTimeslots.computeIfAbsent(player, l -> new HashSet<>()).addAll(assignedTimeslots);
-            }
-        }
-
-        this.predefinedMatchups = matchups;
-
-        setChanged();
+        matchups.forEach(this::addMatchup);
     }
 
     /**
@@ -981,29 +948,80 @@ public class Event extends Observable implements Validable {
      * Si el evento especifica más de un partido por jugador, para cada jugador que compone el enfrentamiento, si al
      * jugador no se le han asignado localizaciones de juego u horas de juego concretas donde sus partidos deban tener
      * lugar, se le asignarán todas las localizaciones y/u horas de juego existentes en los dominios del evento.
+     * <p>
+     * Si el enfrentamiento no tiene ninguna localización o <i>timeslot</i> definidos donde deba transcurrir, se
+     * asignarán automáticamente los disponibles (si el evento tiene más de un partido por jugador).
      *
      * @param matchup emparejamiento no <code>null</code> a añadir a los emparejamientos predefinidos del evento
-     * @throws NullPointerException si <code>matchup</code> es <code>null</code>
+     * @throws NullPointerException     si <code>matchup</code> es <code>null</code>
+     * @throws IllegalArgumentException si el conjunto de jugadores de enfrentamiento tiene un número de jugadores
+     *                                  distinto del número de jugadores por partido que especifica el evento, o si
+     *                                  alguno de éstos es no pertenece al evento
+     * @throws IllegalArgumentException si alguna de las localizaciones no pertenece al evento
+     * @throws IllegalArgumentException si algún <i>timeslots</i> del enfrentamiento no pertenece al evento, o indica
+     *                                  un posible comienzo del enfrentamiento fuera de rango
+     * @throws IllegalArgumentException si se superase el número máximo de partidos que un jugar en particular pueda
+     *                                  jugar
      */
     public void addMatchup(Matchup matchup) {
         Objects.requireNonNull(matchup);
 
+        if (matchup.getPlayers().size() != nPlayersPerMatch)
+            throw new IllegalArgumentException(String.format("Players cannot contain a number of players (%d) " +
+                            "different than the number of players per match the event specifies (%d)",
+                    matchup.getPlayers().size(),
+                    nPlayersPerMatch
+            ));
+
+        if (!players.containsAll(matchup.getPlayers()))
+            throw new IllegalArgumentException("Nonexisting players are contained in the matchup");
+
+        if (!localizations.containsAll(matchup.getLocalizations()))
+            throw new IllegalArgumentException("Nonexisting localizations are contained in the matchup");
+
+        if (matchup.getTimeslots().stream().anyMatch(t -> timeslots.indexOf(t) + nTimeslotsPerMatch > timeslots.size()))
+            throw new IllegalArgumentException("Starting timeslot out of range");
+
+        if (!timeslots.containsAll(matchup.getTimeslots()))
+            throw new IllegalArgumentException("Nonexisting timeslots are contained in the matchup");
+
+        for (Player player : matchup.getPlayers()) {
+            long playerAssignedMatchups = predefinedMatchups.stream()
+                    .filter(m -> m.getPlayers().contains(player))
+                    .mapToInt(Matchup::getOccurrences)
+                    .sum() + matchup.getOccurrences();
+
+            if (playerAssignedMatchups > nMatchesPerPlayer)
+                throw new IllegalArgumentException(String.format(
+                        "Player's (%s) number of predefined matchups (%d) would exceed the limit (%d)",
+                        player,
+                        playerAssignedMatchups,
+                        nMatchesPerPlayer
+                ));
+        }
+
         predefinedMatchups.add(matchup);
 
-        matchup.getPlayers().forEach(player -> {
+        for (Player player : matchup.getPlayers()) {
             Set<Localization> assignedLocalizations = matchup.getLocalizations();
             Set<Timeslot> assignedTimeslots = matchup.getTimeslots();
 
             if (nMatchesPerPlayer > 1) {
-                if (!playersInLocalizations.containsKey(player))
+                if (!playersInLocalizations.containsKey(player) ||
+                        (!playersInLocalizations.containsKey(player) && assignedLocalizations.isEmpty()))
                     assignedLocalizations = new HashSet<>(localizations);
-                if (!playersAtTimeslots.containsKey(player))
+
+                if (!playersAtTimeslots.containsKey(player) ||
+                        (!playersAtTimeslots.containsKey(player) && assignedTimeslots.isEmpty()))
                     assignedTimeslots = new HashSet<>(timeslots.subList(0, timeslots.size() - nTimeslotsPerMatch + 1));
             }
 
-            playersInLocalizations.computeIfAbsent(player, l -> new HashSet<>()).addAll(assignedLocalizations);
-            playersAtTimeslots.computeIfAbsent(player, l -> new HashSet<>()).addAll(assignedTimeslots);
-        });
+            if (!assignedLocalizations.isEmpty())
+                playersInLocalizations.computeIfAbsent(player, l -> new HashSet<>()).addAll(assignedLocalizations);
+
+            if (!assignedTimeslots.isEmpty())
+                playersAtTimeslots.computeIfAbsent(player, l -> new HashSet<>()).addAll(assignedTimeslots);
+        }
 
         setChanged();
     }
@@ -1019,24 +1037,7 @@ public class Event extends Observable implements Validable {
      * @param players conjunto de jugadores entre los que ocurrirá un enfrentamiento predefinido
      */
     public void addMatchup(Set<Player> players) {
-        Set<Localization> assignedLocalizations = new HashSet<>();
-        Set<Timeslot> assignedTimeslots = new HashSet<>();
-
-        players.forEach(player -> {
-            if (playersInLocalizations.containsKey(player))
-                assignedLocalizations.addAll(playersInLocalizations.get(player));
-
-            if (playersAtTimeslots.containsKey(player))
-                assignedTimeslots.addAll(playersAtTimeslots.get(player));
-        });
-
-        if (assignedLocalizations.isEmpty())
-            assignedLocalizations.addAll(localizations);
-
-        if (assignedTimeslots.isEmpty())
-            assignedTimeslots.addAll(timeslots);
-
-        addMatchup(new Matchup(this, players, assignedLocalizations, assignedTimeslots, 1));
+        addMatchup(new Matchup(players));
     }
 
     /**
@@ -1050,7 +1051,7 @@ public class Event extends Observable implements Validable {
      * @param players jugadores entre los que tendrá lugar el enfrentamiento
      */
     public void addMatchup(Player... players) {
-        addMatchup(new HashSet<>(Arrays.asList(players)));
+        addMatchup(new Matchup(new HashSet<>(Arrays.asList(players))));
     }
 
     /**
@@ -1064,7 +1065,10 @@ public class Event extends Observable implements Validable {
      * @param teams conjunto de equipos entre los que ocurrirá un enfrentamiento predefinido
      */
     public void addTeamMatchup(Set<Team> teams) {
-        addMatchup(teams.stream().map(Team::getPlayers).flatMap(Collection::stream).collect(Collectors.toSet()));
+        addMatchup(new Matchup(teams.stream()
+                .map(Team::getPlayers)
+                .flatMap(Collection::stream)
+                .collect(Collectors.toSet())));
     }
 
     /**
@@ -1358,8 +1362,7 @@ public class Event extends Observable implements Validable {
      * @param timeslot     hora perteneciente al conjunto de horas en las que el evento discurre
      */
     public void removeUnavailableLocalizationTimeslot(Localization localization, Timeslot timeslot) {
-        if (unavailableLocalizations.computeIfPresent(
-                localization,
+        if (unavailableLocalizations.computeIfPresent(localization,
                 (l, t) -> t.remove(timeslot) && t.isEmpty() ? null : t
         ) == null)
             setChanged();
@@ -1445,8 +1448,9 @@ public class Event extends Observable implements Validable {
      * @param localization localización cuya asignación al jugador se quiere eliminar
      */
     public void removePlayerInLocalization(Player player, Localization localization) {
-        if (playersInLocalizations.computeIfPresent(player, (p, l) -> l.remove(localization) && l.isEmpty() ? null :
-                l) == null)
+        if (playersInLocalizations.computeIfPresent(player,
+                (p, l) -> l.remove(localization) && l.isEmpty() ? null : l
+        ) == null)
             setChanged();
     }
 

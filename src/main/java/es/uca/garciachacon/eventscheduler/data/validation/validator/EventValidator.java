@@ -578,22 +578,12 @@ public class EventValidator implements Validator<Event> {
                             "event; localization (%s) does not", localization));
                 }
 
-            if (matchup.getLocalizations().isEmpty()) {
-                isValid = false;
-                messages.add("Matchups localizations cannot be empty, there must be at least one");
-            }
-
             for (Timeslot timeslot : matchup.getTimeslots())
                 if (!event.getTimeslots().contains(timeslot)) {
                     isValid = false;
                     messages.add(String.format("All timeslots must exist in the list of timeslots of the " +
                             "event; localization (%s) does not", timeslot));
                 }
-
-            if (matchup.getTimeslots().isEmpty()) {
-                isValid = false;
-                messages.add("Matchups timeslots cannot be empty, there must be at least one");
-            }
 
             for (Player player : matchup.getPlayers()) {
                 long count = event.getPredefinedMatchups()

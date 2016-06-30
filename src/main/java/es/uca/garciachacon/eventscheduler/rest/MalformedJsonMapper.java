@@ -18,6 +18,8 @@ import javax.ws.rs.ext.Provider;
 public class MalformedJsonMapper implements ExceptionMapper<MalformedJsonException> {
     @Override
     public Response toResponse(MalformedJsonException exception) {
-        return Response.status(Response.Status.BAD_REQUEST).entity(exception.getMessage()).build();
+        return Response.status(Response.Status.BAD_REQUEST)
+                .entity("HTTP State 400: Bad Request\n" + exception.getMessage())
+                .build();
     }
 }

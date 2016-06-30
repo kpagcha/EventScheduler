@@ -40,7 +40,6 @@ public class ScheduleSerializerTest {
                 new Event("Small Event", players.subList(2, 6), localizations.subList(0, 2), timeslots.subList(3, 8));
 
         smallEvent.addMatchup(new Matchup(
-                smallEvent,
                 new HashSet<>(Arrays.asList(players.get(2), players.get(3))),
                 new HashSet<>(Arrays.asList(localizations.get(0))),
                 new HashSet<>(Arrays.asList(timeslots.get(3))),

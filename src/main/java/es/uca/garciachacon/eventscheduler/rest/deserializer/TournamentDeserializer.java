@@ -713,7 +713,7 @@ public class TournamentDeserializer extends JsonDeserializer<Tournament> {
 
                 int occurrences = ocurrencesNode.asInt();
 
-                matchups.add(new Matchup(event, matchupPlayers, matchupLocalizations, matchupTimeslots, occurrences));
+                matchups.add(new Matchup(matchupPlayers, matchupLocalizations, matchupTimeslots, occurrences));
             }
 
             event.setPredefinedMatchups(matchups);

@@ -972,7 +972,6 @@ public class TournamentDeserializerTest {
         List<Timeslot> timeslots = event.getTimeslots();
         event.addMatchup(players.get(2), players.get(5));
         event.addMatchup(new Matchup(
-                event,
                 new HashSet<>(Arrays.asList(players.get(4), players.get(1))),
                 new HashSet<>(Arrays.asList(localizations.get(0), localizations.get(2))),
                 new HashSet<>(Arrays.asList(timeslots.get(1), timeslots.get(4))),
@@ -998,11 +997,8 @@ public class TournamentDeserializerTest {
 
         assertTrue(firstMatchup.getPlayers().contains(players.get(2)));
         assertTrue(firstMatchup.getPlayers().contains(players.get(5)));
-        assertEquals(new HashSet<>(localizations), new HashSet<>(firstMatchup.getLocalizations()));
-        assertEquals(
-                new HashSet<>(timeslots.subList(0, timeslots.size() - e.getTimeslotsPerMatch() + 1)),
-                new HashSet<>(firstMatchup.getTimeslots())
-        );
+        assertTrue(firstMatchup.getLocalizations().isEmpty());
+        assertTrue(firstMatchup.getTimeslots().isEmpty());
 
         assertTrue(secondMatchup.getPlayers().contains(players.get(4)));
         assertTrue(secondMatchup.getPlayers().contains(players.get(1)));
