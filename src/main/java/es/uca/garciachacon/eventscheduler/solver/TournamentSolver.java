@@ -146,7 +146,7 @@ public class TournamentSolver {
     /**
      * Estado del proceso de la resolución del problema
      */
-    ResolutionState resolutionState = ResolutionState.READY;
+    private volatile ResolutionState resolutionState = ResolutionState.READY;
 
     /**
      * Contador de soluciones encontradas
@@ -187,7 +187,7 @@ public class TournamentSolver {
     public TournamentSolver(Tournament tournament) {
         this.tournament = tournament;
 
-        LOGGER.setLevel(Level.INFO);
+        LOGGER.setLevel(Level.WARNING);
 
         List<Event> events = tournament.getEvents();
 
@@ -219,6 +219,10 @@ public class TournamentSolver {
         searchStrategy = aSolver.getSearchStrategy();
         prioritizeTimeslots = aSolver.getPrioritizeTimeslots();
         resolutionTimeLimit = aSolver.getResolutionTimeLimit();
+    }
+
+    public void setLoggerLevel(Level level) {
+        LOGGER.setLevel(level);
     }
 
     /**
@@ -743,11 +747,20 @@ public class TournamentSolver {
     }
 
     /**
-     * Inicia el proceso de resolución y guarda datos del problema y de la resolución
+     * Lanza por primera vez el proceso de resolución para buscar una solución al problema modelado.
+     * <p>
+     * Si se encuentra una solución se actualiza el modelo con la solución y se devuelve <code>true</code>. Si no hay
+     * una posible solución (el problema no es factible), o se ha alcanzado el tiempo límite de resolución se devuelve
+     * <code>false</code>.
      *
-     * @return true si se ha encontrado una solución, y false si no
+     * @return <code>true</code> si se encuentra una solución, o <code>false</code> si no se ha encontrado o no se ha
+     * podido encontrar bajo los límites configurados
+     * @throws IllegalStateException si el proceso de resolución ya ha sido lanzado (desde otro hilo)
      */
     private boolean solve() {
+        if (resolutionState == ResolutionState.COMPUTING)
+            throw new IllegalStateException("Resolution process has already been launched");
+
         if (resolutionTimeLimit > 0)
             SearchMonitorFactory.limitTime(solver, resolutionTimeLimit);
 
@@ -779,8 +792,13 @@ public class TournamentSolver {
      * Para el proceso de resolución, dejándolo en estado incompleto y quedando la solución en estado desconocido,
      * pudiendo haber sido calculada si se hubiese empleado más tiempo de computación, o bien puede ocurrir que no
      * hubiera solución posible.
+     * <p>
+     * Solamente tiene efecto si el cómputo de la solución se está llevando a cabo en este momento.
      */
     public void stopResolutionProcess() {
+        if (resolutionState != ResolutionState.COMPUTING)
+            return;
+
         stop = true;
         resolutionState = ResolutionState.INCOMPLETE;
     }
@@ -799,8 +817,12 @@ public class TournamentSolver {
      *
      * @return los horarios de cada categoría del torneo envueltos en un {@link Optional}; si los horarios son
      * <code>null</code> se devuelve {@link Optional#empty()}
+     * @throws IllegalStateException si la solución aún está siendo calculada
      */
     public Optional<Map<Event, EventSchedule>> getSolution() {
+        if (resolutionState == ResolutionState.COMPUTING)
+            throw new IllegalStateException("Solution is still being computed");
+
         if (resolutionState == ResolutionState.STARTED) {
             if (schedules == null && foundSolutions == 1) {
                 schedules = new HashMap<>(tournament.getEvents().size());

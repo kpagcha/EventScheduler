@@ -14,6 +14,7 @@ import es.uca.garciachacon.eventscheduler.data.validation.validator.Validator;
 import es.uca.garciachacon.eventscheduler.rest.deserializer.TournamentDeserializer;
 import es.uca.garciachacon.eventscheduler.rest.serializer.TournamentSerializer;
 import es.uca.garciachacon.eventscheduler.solver.TournamentSolver;
+import es.uca.garciachacon.eventscheduler.solver.TournamentSolver.ResolutionState;
 
 import java.io.IOException;
 import java.util.*;
@@ -166,7 +167,8 @@ public class Tournament implements Validable {
      * Si se realizan modificaciones sobre la configuración del torneo, es decir, sobre alguno de los elementos
      * configurables de los eventos que lo componen, se debe hacer uso de este método para iniciar el proceso de
      * resolución sobre la nueva configuración. Si se intenta hacer uso de {@link Tournament#nextSchedules}, habrá
-     * resultados inesperados y probablemente errores, porque el modelo ha cambiado.
+     * resultados inesperados y probablemente errores, porque el modelo ha cambiado. En este caso, la instancia del
+     * <i>solver</i> cambiará y será una nueva.
      * <p>
      * Cuando se llama a este método se restablece el estado de <i>cambiado</i> de todos los eventos que lo componen,
      * indicando que están en un estado consistente y final para el proceso de resolución que ha comenzado.
@@ -175,6 +177,9 @@ public class Tournament implements Validable {
      * @throws ValidationException si la validación del torneo falla
      */
     public boolean solve() throws ValidationException {
+        if (solver.getResolutionState() == ResolutionState.COMPUTING)
+            throw new IllegalStateException("Solver is already computing the solution");
+
         validate();
 
         // Por algún problema de Choco es necesario crear un nuevo solver si hay cambios, porque si se utiliza la
@@ -212,6 +217,10 @@ public class Tournament implements Validable {
      * sin reiniciar el proceso anteriormente, probablemente se obtengan resultados inesperados y errores porque la
      * resolución se aplica sobre el modelo antiguo del problema, el modelo previo a las modificaciones sobre la
      * configuración. Esta situación se debe evitar.
+     * <p>
+     * Si el <i>solver</i> aún está calculando la solución, se devuelve <code>false</code> y se deberá esperar a que
+     * el proceso termine para calcular los siguientes horarios. Este método solamente calculará los siguientes
+     * horarios si el estado de la resolución es {@link ResolutionState#STARTED}.
      *
      * @return <code>true</code> si se han actualizado los horarios con una nueva solución, y <code>false</code> si ya
      * se ha alcanzado la última solución o si el proceso de resolución aún no ha comenzado
@@ -220,11 +229,11 @@ public class Tournament implements Validable {
      *                               reconstruir el modelo del torneo y reiniciar el proceso de resolución llamando a
      *                               {@link Tournament#solve()}
      */
-    public boolean nextSchedules() {
+    public synchronized boolean nextSchedules() {
         if (events.stream().anyMatch(Observable::hasChanged))
             throw new IllegalStateException("An event has an inconsistent state");
 
-        if (!solver.hasResolutionProcessStarted())
+        if (solver.getResolutionState() != ResolutionState.STARTED)
             return false;
 
         Optional<Map<Event, EventSchedule>> optSchedules = solver.getSolution();

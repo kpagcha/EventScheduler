@@ -72,7 +72,7 @@ public class TournamentSolverTest {
     }
 
     @Test
-    public void tournamentCaseTest() throws ValidationException, InterruptedException {
+    public void tournamentCaseTest() throws ValidationException {
         Event event = new Event("Event",
                 TournamentUtils.buildGenericPlayers(8, "Player"),
                 TournamentUtils.buildGenericLocalizations(1, "Court"),
@@ -110,15 +110,110 @@ public class TournamentSolverTest {
         );
 
         assertEquals(100, new Double(new InverseSchedule(tournament).getOccupationRatio() * 100).intValue());
+    }
+
+    @Test
+    public void resolutionTimeLimitTest() throws ValidationException {
+        Event event = new Event("Event",
+                TournamentUtils.buildGenericPlayers(32, "Player"),
+                TournamentUtils.buildGenericLocalizations(6, "Court"),
+                TournamentUtils.buildSimpleTimeslots(10)
+        );
+        event.setMatchesPerPlayer(2);
+
+        tournament = new Tournament("Tournament", event);
+        TournamentSolver solver = tournament.getSolver();
 
         solver.setResolutionTimeLimit(1);
 
-        Thread thread = new Thread(solver::stopResolutionProcess);
-        thread.start();
-        thread.join();
-
         assertFalse(tournament.solve());
         assertEquals(TournamentSolver.ResolutionState.INCOMPLETE, solver.getResolutionState());
+    }
+
+    @Test
+    public void stopResolutionProcessTest() throws InterruptedException {
+        Event event = new Event("Event",
+                TournamentUtils.buildGenericPlayers(32, "Player"),
+                TournamentUtils.buildGenericLocalizations(6, "Court"),
+                TournamentUtils.buildSimpleTimeslots(10)
+        );
+        event.setMatchesPerPlayer(2);
+
+        tournament = new Tournament("Tournament", event);
+
+        TournamentSolver solver = tournament.getSolver();
+        solver.setSearchStrategy(SearchStrategy.MINDOM_UB);
+
+        Thread solveThread = new Thread(() -> {
+            try {
+                assertFalse(tournament.solve());
+            } catch (ValidationException e) {
+                fail("Unexpected ValidationException");
+            }
+        });
+        solveThread.start();
+
+        while (solver.getResolutionState() != TournamentSolver.ResolutionState.COMPUTING) {
+            // por si el cómputo de la solución aún no ha empezado
+        }
+
+        Thread stopThread = new Thread(solver::stopResolutionProcess);
+        stopThread.start();
+
+        solveThread.join();
+        stopThread.join();
+
+        assertEquals(TournamentSolver.ResolutionState.INCOMPLETE, solver.getResolutionState());
+    }
+
+    @Test
+    public void launchMultipleResolutionProcessesTest() throws InterruptedException, ValidationException {
+        Event event = new Event("Event",
+                TournamentUtils.buildGenericPlayers(64, "Player"),
+                TournamentUtils.buildGenericLocalizations(1, "Court"),
+                TournamentUtils.buildDayOfWeekTimeslots(14)
+        );
+        tournament = new Tournament("Tournament", event);
+        TournamentSolver solver = tournament.getSolver();
+        solver.setSearchStrategy(SearchStrategy.MINDOM_UB);
+
+        Thread firstSolveThread = new Thread(() -> {
+            try {
+                tournament.solve();
+            } catch (ValidationException e) {
+                fail("Unexpected ValidationException");
+            }
+        });
+
+        Thread secondSolveThread = new Thread(() -> {
+            try {
+                tournament.solve();
+                while (solver.getResolutionState() == TournamentSolver.ResolutionState.COMPUTING) {
+                    // espera hasta que deje de este corriendo el proceso de resolución del otro hilo
+                }
+                fail("Expected IllegalStateException");
+            } catch (ValidationException e) {
+                fail("Unexpected ValidationException");
+            } catch (IllegalStateException e) {
+                assertEquals("Solver is already computing the solution", e.getMessage());
+            }
+        });
+
+        firstSolveThread.start();
+
+        while (solver.getResolutionState() != TournamentSolver.ResolutionState.COMPUTING) {
+            // por si el cómputo de la solución aún no ha empezado
+        }
+
+        secondSolveThread.start();
+
+        Thread stopThread = new Thread(solver::stopResolutionProcess);
+
+        stopThread.start();
+
+        firstSolveThread.join();
+        secondSolveThread.join();
+        stopThread.join();
     }
 
     @Test
@@ -328,8 +423,7 @@ public class TournamentSolverTest {
 
     @Test
     public void tournamentWithPredefinedTeamsCaseTest() throws ValidationException {
-        Event event = new Event(
-                "Event",
+        Event event = new Event("Event",
                 TournamentUtils.buildGenericPlayers(8, "Player"),
                 TournamentUtils.buildGenericLocalizations(1, "Court"),
                 TournamentUtils.buildSimpleTimeslots(4),
@@ -622,8 +716,7 @@ public class TournamentSolverTest {
         match = matches.get(1);
         assertEquals(new HashSet<>(Arrays.asList(nadal, federer)), new HashSet<>(match.getPlayers()));
         Assert.assertEquals(mainCourt, match.getLocalization());
-        Assert.assertEquals(
-                matchStart == timeslots.get(3) ? timeslots.get(10) : timeslots.get(3),
+        Assert.assertEquals(matchStart == timeslots.get(3) ? timeslots.get(10) : timeslots.get(3),
                 match.getStartTimeslot()
         );
 
@@ -879,8 +972,7 @@ public class TournamentSolverTest {
     @Test
     public void tournamentWithAllDifferentMatchupModeAndTeamsCaseTest() throws ValidationException {
         List<Player> players = TournamentUtils.buildGenericPlayers(16, "Player");
-        Event event = new Event(
-                "Event",
+        Event event = new Event("Event",
                 players,
                 TournamentUtils.buildGenericLocalizations(2, "Court"),
                 TournamentUtils.buildSimpleTimeslots(8)
@@ -911,12 +1003,10 @@ public class TournamentSolverTest {
         for (Match match : schedule.getMatches())
             assertEquals(2, match.getTeams().size());
 
-        assertEquals(
-                2,
+        assertEquals(2,
                 schedule.filterMatchesByPlayers(new ArrayList<>(Arrays.asList(players.get(0), players.get(1)))).size()
         );
-        assertEquals(
-                2,
+        assertEquals(2,
                 schedule.filterMatchesByPlayers(new ArrayList<>(Arrays.asList(players.get(2), players.get(3)))).size()
         );
     }
@@ -924,8 +1014,7 @@ public class TournamentSolverTest {
     @Test
     public void tournamentWithAllEqualMatchupModeAndTeamsCaseTest() throws ValidationException {
         List<Player> players = TournamentUtils.buildGenericPlayers(16, "Player");
-        Event event = new Event(
-                "Event",
+        Event event = new Event("Event",
                 players,
                 TournamentUtils.buildGenericLocalizations(2, "Court"),
                 TournamentUtils.buildSimpleTimeslots(8)
@@ -961,16 +1050,13 @@ public class TournamentSolverTest {
         for (Match match : schedule.getMatches())
             assertEquals(2, match.getTeams().size());
 
-        assertEquals(
-                2,
+        assertEquals(2,
                 schedule.filterMatchesByPlayers(new ArrayList<>(Arrays.asList(players.get(0), players.get(1)))).size()
         );
-        assertEquals(
-                2,
+        assertEquals(2,
                 schedule.filterMatchesByPlayers(new ArrayList<>(Arrays.asList(players.get(2), players.get(3)))).size()
         );
-        assertEquals(
-                2,
+        assertEquals(2,
                 schedule.filterMatchesByPlayers(new ArrayList<>(Arrays.asList(players.get(10), players.get(13)))).size()
         );
     }
@@ -978,8 +1064,7 @@ public class TournamentSolverTest {
     @Test
     public void tournamentWithAnyMatchupModeAndTeamsCaseTest() throws ValidationException {
         List<Player> players = TournamentUtils.buildGenericPlayers(16, "Player");
-        Event event = new Event(
-                "Event",
+        Event event = new Event("Event",
                 players,
                 TournamentUtils.buildGenericLocalizations(2, "Court"),
                 TournamentUtils.buildSimpleTimeslots(8)
@@ -1015,16 +1100,13 @@ public class TournamentSolverTest {
         for (Match match : schedule.getMatches())
             assertEquals(2, match.getTeams().size());
 
-        assertEquals(
-                2,
+        assertEquals(2,
                 schedule.filterMatchesByPlayers(new ArrayList<>(Arrays.asList(players.get(0), players.get(1)))).size()
         );
-        assertEquals(
-                2,
+        assertEquals(2,
                 schedule.filterMatchesByPlayers(new ArrayList<>(Arrays.asList(players.get(2), players.get(3)))).size()
         );
-        assertEquals(
-                2,
+        assertEquals(2,
                 schedule.filterMatchesByPlayers(new ArrayList<>(Arrays.asList(players.get(6), players.get(9)))).size()
         );
     }
@@ -1032,8 +1114,7 @@ public class TournamentSolverTest {
     @Test
     public void tournamentWithCustomMatchupModeAndTeamsCaseTest() throws ValidationException {
         List<Player> players = TournamentUtils.buildGenericPlayers(16, "Pl");
-        Event event = new Event(
-                "Event",
+        Event event = new Event("Event",
                 players,
                 TournamentUtils.buildGenericLocalizations(2, "Court"),
                 TournamentUtils.buildSimpleTimeslots(8)
@@ -1054,8 +1135,7 @@ public class TournamentSolverTest {
 
         Set<Player> matchup1Players =
                 Stream.concat(team1.getPlayers().stream(), team2.getPlayers().stream()).collect(Collectors.toSet());
-        event.addMatchup(new Matchup(
-                event,
+        event.addMatchup(new Matchup(event,
                 matchup1Players,
                 new HashSet<>(event.getLocalizations()),
                 new HashSet<>(event.getTimeslots()),
@@ -1063,8 +1143,7 @@ public class TournamentSolverTest {
         ));
         Set<Player> matchup2Players =
                 Stream.concat(team3.getPlayers().stream(), team4.getPlayers().stream()).collect(Collectors.toSet());
-        event.addMatchup(new Matchup(
-                event,
+        event.addMatchup(new Matchup(event,
                 matchup2Players,
                 new HashSet<>(event.getLocalizations()),
                 new HashSet<>(event.getTimeslots()),
@@ -1894,28 +1973,22 @@ public class TournamentSolverTest {
         assertTrue(tournament.solve());
 
         Map<Event, EventSchedule> schedules = tournament.getEventSchedules();
-        Assert.assertEquals(
-                courts.get(1),
+        Assert.assertEquals(courts.get(1),
                 schedules.get(cat1).filterMatchesByPlayer(players.get(3)).get(0).getLocalization()
         );
-        Assert.assertEquals(
-                courts.get(1),
+        Assert.assertEquals(courts.get(1),
                 schedules.get(cat1).filterMatchesByPlayer(players.get(5)).get(0).getLocalization()
         );
-        Assert.assertEquals(
-                courts.get(0),
+        Assert.assertEquals(courts.get(0),
                 schedules.get(cat1).filterMatchesByPlayer(players.get(1)).get(0).getLocalization()
         );
-        Assert.assertEquals(
-                courts.get(1),
+        Assert.assertEquals(courts.get(1),
                 schedules.get(cat2).filterMatchesByPlayer(players.get(2)).get(0).getLocalization()
         );
-        Assert.assertEquals(
-                courts.get(0),
+        Assert.assertEquals(courts.get(0),
                 schedules.get(cat2).filterMatchesByPlayer(players.get(0)).get(0).getLocalization()
         );
-        Assert.assertEquals(
-                courts.get(0),
+        Assert.assertEquals(courts.get(0),
                 schedules.get(cat2).filterMatchesByPlayer(players.get(7)).get(0).getLocalization()
         );
     }
@@ -1945,12 +2018,10 @@ public class TournamentSolverTest {
         assertTrue(tournament.solve());
 
         Map<Event, EventSchedule> schedules = tournament.getEventSchedules();
-        Assert.assertEquals(
-                timeslots.get(5),
+        Assert.assertEquals(timeslots.get(5),
                 schedules.get(cat1).filterMatchesByPlayer(players.get(0)).get(0).getStartTimeslot()
         );
-        Assert.assertEquals(
-                timeslots.get(7),
+        Assert.assertEquals(timeslots.get(7),
                 schedules.get(cat1).filterMatchesByPlayer(players.get(2)).get(0).getStartTimeslot()
         );
         assertTrue(schedules.get(cat1)
@@ -2161,8 +2232,8 @@ public class TournamentSolverTest {
         System.out.print(data.toJson());
         assertThat(out.toString(), StringContains.containsString("\"constraints\":1394"));
         assertThat(out.toString(),
-                StringContains.containsString("\"solutions\":1," +
-                        "\"resolutionState\":\"STARTED\",\"resolutionProcessCompleted\":true")
+                StringContains.containsString(
+                        "\"solutions\":1," + "\"resolutionState\":\"STARTED\",\"resolutionProcessCompleted\":true")
         );
 
         out.reset();

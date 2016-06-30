@@ -1,5 +1,7 @@
 package es.uca.garciachacon.eventscheduler.data.model.schedule;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import es.uca.garciachacon.eventscheduler.data.model.schedule.value.AbstractScheduleValue;
 import es.uca.garciachacon.eventscheduler.data.model.schedule.value.ScheduleValue;
@@ -16,14 +18,13 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * Representa un horario mediante una matriz bidimensional de
- * {@link ScheduleValue} que dota de significado a cada elemento.
+ * Representa un horario mediante una matriz bidimensional de {@link ScheduleValue} que dota de significado a cada
+ * elemento.
  * <p>
- * La primera dimensión de la matriz (filas) corresponde a los jugadores y la
- * segunda dimensión (columnas) corresponde con las horas de juego
+ * La primera dimensión de la matriz (filas) corresponde a los jugadores y la segunda dimensión (columnas)
+ * corresponde con las horas de juego.
  * <p>
- * Además, mantiene una lista de partidos (ver {@link Match}) que se extraen del
- * procesamiento de la matriz mencionada.
+ * Además, mantiene una lista de partidos (ver {@link Match}) que se extraen del procesamiento de la matriz mencionada.
  */
 @JsonSerialize(using = ScheduleSerializer.class)
 public abstract class Schedule {
@@ -266,7 +267,7 @@ public abstract class Schedule {
     }
 
     /**
-     * Devuelve el número de huecos del horario ocupados para todas las pistas
+     * Devuelve el número de huecos del horario ocupados por partidos, para todas las pistas
      *
      * @return tasa de ocupación del horario
      */
@@ -315,5 +316,15 @@ public abstract class Schedule {
         }
 
         return sb.toString();
+    }
+
+    /**
+     * Devuelve una cadena con la representación en JSON del horario. La serialización es llevada a cabo por
+     * {@link ScheduleSerializer}.
+     *
+     * @return cadenad JSON del horario
+     */
+    public String toJson() throws JsonProcessingException {
+        return new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(this);
     }
 }
