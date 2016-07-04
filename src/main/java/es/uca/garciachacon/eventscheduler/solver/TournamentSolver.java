@@ -431,7 +431,7 @@ public class TournamentSolver {
         markBreaks();
 
         setupConstraints();
-        postAllConstraints();
+        postConstraints();
     }
 
     /**
@@ -686,14 +686,14 @@ public class TournamentSolver {
     }
 
     /**
-     * Publica todas las restricciones del el modelo
+     * Publica todas las restricciones del modelo.
      */
-    private void postAllConstraints() {
+    private void postConstraints() {
         solver.post(constraints.toArray(new Constraint[constraints.size()]));
     }
 
     /**
-     * Configura la estrategia de búsqueda
+     * Configura la estrategia de búsqueda a emplear durante el proceso de resolución.
      */
     private void configureSearch() {
         List<Event> events = tournament.getEvents();
