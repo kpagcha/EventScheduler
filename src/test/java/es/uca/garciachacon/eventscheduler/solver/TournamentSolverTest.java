@@ -189,7 +189,7 @@ public class TournamentSolverTest {
             try {
                 tournament.solve();
                 while (solver.getResolutionState() == TournamentSolver.ResolutionState.COMPUTING) {
-                    // espera hasta que deje de este corriendo el proceso de resolución del otro hilo
+                    // espera hasta que deje de estar ejecutándose el proceso de resolución del otro hilo
                 }
                 fail("Expected IllegalStateException");
             } catch (ValidationException e) {

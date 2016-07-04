@@ -232,7 +232,9 @@ public class InverseSchedule extends Schedule {
     public String toString() {
         StringBuilder sb = new StringBuilder(name);
 
-        sb.append(String.format("\n\n%8s", " "));
+        int w = 12;
+
+        sb.append(String.format("\n\n%" + w + "s", " "));
 
         int maxPlayersPerMatch = 0;
         for (Match match : matches) {
@@ -250,7 +252,11 @@ public class InverseSchedule extends Schedule {
         sb.append("\n");
 
         for (int c = 0; c < nLocalizations; c++) {
-            sb.append(String.format("%8s", localizations.get(c)));
+            String localizationStr = localizations.get(c).toString();
+            if (localizationStr.length() > w)
+                localizationStr = localizationStr.substring(0, w);
+
+            sb.append(String.format("%" + w + "s", localizationStr));
             for (int t = 0; t < nTimeslots; t++) {
                 sb.append(String.format("%" + padding + "s", schedule[c][t]));
             }

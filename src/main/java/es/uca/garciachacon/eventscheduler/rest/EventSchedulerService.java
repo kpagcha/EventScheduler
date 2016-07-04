@@ -17,7 +17,6 @@ import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -51,10 +50,10 @@ public class EventSchedulerService {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Map<String, String> getTournaments() {
-        Map<String, String> tournaments = new HashMap<>();
-        dao.getAll().forEach((id, t) -> tournaments.put(id, t.getName()));
-
-        return tournaments;
+        return dao.getAll()
+                .entrySet()
+                .stream()
+                .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().getName()));
     }
 
     /**
@@ -80,7 +79,7 @@ public class EventSchedulerService {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Set<String> getIds() {
-        return dao.getIds();
+        return dao.getAll().keySet();
     }
 
     /**
@@ -295,11 +294,7 @@ public class EventSchedulerService {
         if (Boolean.TRUE.equals(onlyGet))
             optSchedule = Optional.ofNullable(tournament.getSchedule());
         else if (Boolean.TRUE.equals(restart))
-            try {
-                optSchedule = dao.getSchedule(id);
-            } catch (IllegalStateException e) {
-                throw new BadRequestException(e.getMessage());
-            }
+            optSchedule = dao.getSchedule(id);
         else
             optSchedule = dao.getNextSchedule(id);
 

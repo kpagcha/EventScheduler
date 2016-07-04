@@ -7,7 +7,10 @@ import es.uca.garciachacon.eventscheduler.data.model.tournament.Tournament;
 import es.uca.garciachacon.eventscheduler.data.validation.validable.ValidationException;
 import es.uca.garciachacon.eventscheduler.solver.TournamentSolver.ResolutionState;
 
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -92,15 +95,6 @@ public class TournamentDao implements ITournamentDao {
     }
 
     /**
-     * Devuelve la lista de identificadores correspondientes a los torneos existentes.
-     *
-     * @return conjunto de identificadores de torneo únicos
-     */
-    public synchronized Set<String> getIds() {
-        return tournaments.keySet();
-    }
-
-    /**
      * Devuelve un torneo con el identificador especificado.
      *
      * @param id identificador del torneo que se quiere obtener
@@ -108,7 +102,7 @@ public class TournamentDao implements ITournamentDao {
      * si no existe, se devuelve {@link Optional#empty()}
      */
     public synchronized Optional<Tournament> get(String id) {
-        return Optional.of(tournaments.get(id));
+        return Optional.ofNullable(tournaments.get(id));
     }
 
     /**

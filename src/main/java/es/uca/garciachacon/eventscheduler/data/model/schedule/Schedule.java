@@ -298,7 +298,9 @@ public abstract class Schedule {
     public String toString() {
         StringBuilder sb = new StringBuilder(name);
 
-        sb.append(String.format("\n\n%9s", " "));
+        int w = 9;
+
+        sb.append(String.format("\n\n%" + w + "s", " "));
 
         for (int t = 0; t < timeslots.size(); t++)
             sb.append(String.format("%4s", "t" + t));
@@ -306,10 +308,10 @@ public abstract class Schedule {
 
         for (int p = 0; p < players.size(); p++) {
             String playerStr = players.get(p).toString();
-            if (playerStr.length() > 9)
-                playerStr = playerStr.substring(0, 9);
+            if (playerStr.length() > w)
+                playerStr = playerStr.substring(0, w);
 
-            sb.append(String.format("%9s", playerStr));
+            sb.append(String.format("%" + w + "s", playerStr));
             for (int t = 0; t < timeslots.size(); t++)
                 sb.append(String.format("%4s", schedule[p][t]));
             sb.append("\n");

@@ -250,7 +250,8 @@ import java.util.*;
  * posiciones de los jugadores que componen el enfrentamiento, <code>"localizations"</code> con las posiciones de las
  * posibles localizaciones del enfrentamiento, <code>"timeslots"</code> con una lista de los <i>timeslots</i> en los
  * que podrá comenzar y <code>"occurrences"</code> asociado al número de ocurrencias del enfrentamiento, un valor
- * entero y positivo.
+ * entero y positivo. Las posiciones de los elementos son con respecto a las listas de dominios del torneo, no del
+ * evento.
  * <p>
  * <pre>
  * "predefinedMatchups" : [ {
@@ -347,22 +348,22 @@ public class TournamentDeserializer extends JsonDeserializer<Tournament> {
 
             parsePlayersPerTeam(eventNode, event);
 
-            parseTeams(eventNode, players, event);
+            parseTeams(eventNode, allPlayers, event);
 
-            parseBreaks(eventNode, timeslots, event);
+            parseBreaks(eventNode, allTimeslots, event);
 
-            parseUnavailablePlayers(eventNode, players, timeslots, event);
+            parseUnavailablePlayers(eventNode, allPlayers, allTimeslots, event);
 
-            parseUnavailableLocalizations(eventNode, localizations, timeslots, event);
+            parseUnavailableLocalizations(eventNode, allLocalizations, allTimeslots, event);
 
-            parsePlayersInLocalizations(eventNode, players, localizations, event);
+            parsePlayersInLocalizations(eventNode, allPlayers, allLocalizations, event);
 
-            parsePlayersAtTimeslots(eventNode, players, timeslots, event);
+            parsePlayersAtTimeslots(eventNode, allPlayers, allTimeslots, event);
 
             // Se aplica después de configurar las localizaciones y horas asignadas para evitar comportamiento
             // indeseado debido a la asignación automática de localizaciones y horas del método que establece
             // los enfrentamientos predefinidos del evento
-            parsePredefinedMatchups(eventNode, players, localizations, timeslots, event);
+            parsePredefinedMatchups(eventNode, allPlayers, allLocalizations, allTimeslots, event);
 
             parseMatchupMode(eventNode, event);
 

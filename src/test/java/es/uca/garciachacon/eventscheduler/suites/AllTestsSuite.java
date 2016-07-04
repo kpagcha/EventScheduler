@@ -5,6 +5,7 @@ import es.uca.garciachacon.eventscheduler.data.model.schedule.MatchTest;
 import es.uca.garciachacon.eventscheduler.data.model.schedule.ScheduleTest;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.*;
 import es.uca.garciachacon.eventscheduler.data.validation.ValidationTest;
+import es.uca.garciachacon.eventscheduler.rest.EventSchedulerServiceTest;
 import es.uca.garciachacon.eventscheduler.rest.deserializer.TimeslotDeserializerTest;
 import es.uca.garciachacon.eventscheduler.rest.deserializer.TournamentDeserializerTest;
 import es.uca.garciachacon.eventscheduler.rest.serializer.ScheduleSerializerTest;
@@ -21,7 +22,7 @@ import org.junit.runners.Suite.SuiteClasses;
         TimeslotTest.class, TournamentTest.class, ScheduleTest.class, MatchTest.class, InverseScheduleTest.class,
         ValidationTest.class, TournamentSolverTest.class, TournamentUtilsTest.class, MatchupTest.class,
         TimeslotSerializerTest.class, TournamentSerializerTest.class, ScheduleSerializerTest.class,
-        TimeslotDeserializerTest.class, TournamentDeserializerTest.class
+        TimeslotDeserializerTest.class, TournamentDeserializerTest.class, EventSchedulerServiceTest.class
 })
 public class AllTestsSuite {
     // clase vacía, solamente se usa para las anotaciones de arriba

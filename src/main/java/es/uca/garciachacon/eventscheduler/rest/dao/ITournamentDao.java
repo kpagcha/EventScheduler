@@ -8,7 +8,6 @@ import es.uca.garciachacon.eventscheduler.data.validation.validable.ValidationEx
 
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 
 /**
  * DAO <i>Data Access Object</i> para la abstracción, acceso y manipulación de entidades de tipo torneo almacenadas
@@ -28,17 +27,6 @@ public interface ITournamentDao {
      * @return diccionario de identificadores y torneos
      */
     Map<String, Tournament> getAll();
-
-    /**
-     * Devuelve con conjunto de identificadores únicos de tipo {@link String} correspondientes a cada torneo
-     * existente en la colección. Es similar a {@link ITournamentDao#getAll()}, excepto que solamente
-     * se obtienen los identificadores.
-     * <p>
-     * Si no existe ningún torneo, se devuelve un conjunto vacío.
-     *
-     * @return lista de identificadores de todos los torneos almacenados
-     */
-    Set<String> getIds();
 
     /**
      * Devuelve un torneo con el identificador asociado, encapsulado por la clase {@link Optional}. Si no existe un
