@@ -186,6 +186,38 @@ public class TournamentUtils {
         return zarlon;
     }
 
+    /**
+     * LIGA
+     */
+    public static Tournament getLeague() {
+        int n = 6;
+        List<Player> players = buildGenericPlayers(n, "Team");
+        List<Localization> fields = buildGenericLocalizations(n, "Stadium");
+        List<Timeslot> timeslots = buildSimpleTimeslots(n);
+
+        Event event = new Event("Sample League", players, fields, timeslots);
+        event.setTimeslotsPerMatch(1);
+        event.setMatchesPerPlayer(n - 1);
+        event.setMatchupMode(MatchupMode.ALL_DIFFERENT);
+
+        for (int i = 0; i < n - 1; i++) {
+            for (int j = i + 1; j < n; j++) {
+                Player p1 = players.get(i);
+                Player p2 = players.get(j);
+                Localization field1 = fields.get(i);
+                Localization field2 = fields.get(j);
+
+                Matchup matchup = new Matchup(new HashSet<>(Arrays.asList(p1, p2)),
+                        new HashSet<>(Arrays.asList(field1, field2)),
+                        new HashSet<>()
+                );
+                event.addMatchup(matchup);
+            }
+        }
+
+        return new Tournament("Tournament with League", event);
+    }
+
     private static Player findPlayerByName(String name, List<Player> players) {
         for (Player player : players)
             if (StringUtils.containsIgnoreCase(player.getName(), name))

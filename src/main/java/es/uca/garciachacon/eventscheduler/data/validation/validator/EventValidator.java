@@ -202,15 +202,6 @@ public class EventValidator implements Validator<Event> {
                     ));
                 }
 
-        if (players.size() % e.getPlayersPerMatch() != 0) {
-            isValid = false;
-            messages.add(String.format(
-                    "Number of players (%d) must be a multiple of the specified number of players per match (%d)",
-                    players.size(),
-                    e.getPlayersPerMatch()
-            ));
-        }
-
         return isValid;
     }
 
@@ -323,15 +314,6 @@ public class EventValidator implements Validator<Event> {
         if (nPlayersPerMatch < 1) {
             isValid = false;
             messages.add(String.format("Number of players (%d) per match must be greater than 0", nPlayersPerMatch));
-        }
-
-        if (event.getPlayers().size() % nPlayersPerMatch != 0) {
-            isValid = false;
-            messages.add(String.format(
-                    "Number of players per match (%d) must be a multiple of the total number of players (%d)",
-                    nPlayersPerMatch,
-                    event.getPlayers().size()
-            ));
         }
 
         return isValid;

@@ -364,13 +364,6 @@ public class Event extends Observable implements Validable {
         if (playersPerMatch < 1)
             throw new IllegalArgumentException("Number of players per match cannot be less than 1");
 
-        if (players.size() % playersPerMatch != 0)
-            throw new IllegalArgumentException(String.format(
-                    "Number of players (%d) is not coherent to the number of" + " players per match (%d)",
-                    players.size(),
-                    playersPerMatch
-            ));
-
         if (new HashSet<>(players).size() < players.size())
             throw new IllegalArgumentException("Players cannot contain duplicates");
 

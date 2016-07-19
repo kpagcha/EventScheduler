@@ -137,15 +137,6 @@ public class EventTest {
         event = new Event("Event", players, localizations, timeslots);
     }
 
-    @Test
-    public void constructorDefaultPlayerPerMatchTest() {
-        players.add(new Player("Extra Player"));
-
-        expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("Number of players (9) is not coherent to the number of players per match (2)");
-        event = new Event("Event", players, localizations, timeslots);
-    }
-
     @Test(expected = NullPointerException.class)
     public void constructorNullLocalizationsTest() {
         event = new Event("Event", players, null, timeslots);
@@ -226,22 +217,6 @@ public class EventTest {
 
         expectedEx.expect(IllegalArgumentException.class);
         expectedEx.expectMessage("Number of players per match cannot be less than 1");
-        event = new Event("Event",
-                players,
-                localizations,
-                timeslots,
-                nMatchesPerPlayer,
-                nTimeslotsPerMatch,
-                nPlayersPerMatch
-        );
-    }
-
-    @Test
-    public void constructorPlayerPerMatchDivisorOfNumberOfPlayersTest() {
-        nPlayersPerMatch = 3;
-
-        expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("Number of players (8) is not coherent to the number of players per match (3)");
         event = new Event("Event",
                 players,
                 localizations,
