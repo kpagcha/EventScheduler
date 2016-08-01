@@ -76,11 +76,25 @@ public class EventSchedule extends Schedule {
             }
         }
 
+        calculateOccupation();
+
         calculateMatches();
     }
 
     public Event getEvent() {
         return event;
+    }
+
+    /**
+     * Devuelve el número de <i>timeslots</i> disponibles, es decir, el número total de huecos disponibles en el
+     * total de localizaciones de juego donde partidos pueden tener lugar.
+     *
+     * @return el número de <i>timeslots</i> disponibles, no negativo
+     */
+    public int getAvailableTimeslots() {
+        if (availableTimeslots == -1)
+            calculateAvailableTimeslots();
+        return availableTimeslots;
     }
 
     /**
@@ -193,6 +207,25 @@ public class EventSchedule extends Schedule {
                 }
             }
         }
+    }
+
+    /**
+     * Calcula el número de <i>timeslots</i> disponibles.
+     *
+     */
+    protected void calculateAvailableTimeslots() {
+        availableTimeslots = new InverseSchedule(event).getAvailableTimeslots();
+    }
+
+    /**
+     * Calcula la ocupación de timeslots. Corrige el valor teniendo el cuenta el número de jugadores por partido, ya
+     * que el horario de esta clase se trata de jugadores por timeslots, mientras que la ocupación hace referencia a
+     * la relación de partidos y timeslots.
+     *
+     */
+    protected void calculateOccupation() {
+        super.calculateOccupation();
+        occupation /= event.getPlayersPerMatch();
     }
 
 }

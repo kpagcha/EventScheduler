@@ -1,5 +1,6 @@
 package es.uca.garciachacon.eventscheduler.data.model.schedule;
 
+import es.uca.garciachacon.eventscheduler.data.model.schedule.value.AbstractScheduleValue;
 import es.uca.garciachacon.eventscheduler.data.model.schedule.value.InverseScheduleValue;
 import es.uca.garciachacon.eventscheduler.data.model.schedule.value.InverseScheduleValueOccupied;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.*;
@@ -74,6 +75,9 @@ public class InverseSchedule extends Schedule {
                 for (int i = 1; i < matchDuration; i++)
                     schedule[c][i + t] = new InverseScheduleValue(InverseScheduleValue.CONTINUATION);
         }
+
+        calculateAvailableTimeslots();
+        calculateOccupation();
     }
 
     /**
@@ -104,7 +108,7 @@ public class InverseSchedule extends Schedule {
         int nTimeslots = timeslots.size();
         int nLocalization = localizations.size();
 
-        // Al principio se marca el horario entero como libre
+        // Como punto de partida se marca el horario entero como libre
         for (int i = 0; i < nLocalization; i++)
             for (int j = 0; j < nTimeslots; j++)
                 this.schedule[i][j] = new InverseScheduleValue(InverseScheduleValue.FREE);
@@ -172,7 +176,7 @@ public class InverseSchedule extends Schedule {
         }
 
         // Si todos los eventos tienen la pista no disponible a la misma hora se marca como no disponible,
-        // sobreescribiendo las marcadas como limitadas anteriormente, si se da el caso
+        // sobreescribiendo las marcadas como limitadas anteriormente (si se da el caso)
         for (int i = 0; i < events.size() - 1; i++) {
             Event thisEvent = events.get(i);
 
@@ -227,6 +231,19 @@ public class InverseSchedule extends Schedule {
                 for (int i = 1; i < matchDuration; i++)
                     this.schedule[c][i + t] = new InverseScheduleValue(InverseScheduleValue.CONTINUATION);
         }
+
+        calculateAvailableTimeslots();
+        calculateOccupation();
+    }
+
+    /**
+     * Calcula el número de timeslots disponibles.
+     */
+    protected void calculateAvailableTimeslots() {
+        availableTimeslots = Math.toIntExact(Arrays.stream(schedule)
+                .flatMap(Arrays::stream)
+                .filter(AbstractScheduleValue::isPlayable)
+                .count());
     }
 
     public String toString() {

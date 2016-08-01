@@ -11,10 +11,7 @@ import es.uca.garciachacon.eventscheduler.data.model.tournament.Timeslot;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.Tournament;
 import es.uca.garciachacon.eventscheduler.rest.serializer.ScheduleSerializer;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -67,12 +64,12 @@ public abstract class Schedule {
     /**
      * Número de timeslots
      */
-    private int occupation = -1;
+    protected int occupation;
 
     /**
      * Número de timeslots disponibles donde asignar partidos
      */
-    private int availableTimeslots = -1;
+    protected int availableTimeslots = -1;
 
     /**
      * Devuelve la matriz bidimensional con la representación del horario
@@ -248,21 +245,12 @@ public abstract class Schedule {
     }
 
     /**
-     * Devuelve el número de <i>timeslots</i> disponibles, es decir, donde partidos podrían tener lugar
+     * Devuelve el número de <i>timeslots</i> disponibles, es decir, el número total de huecos disponibles en el
+     * total de localizaciones de juego donde partidos pueden tener lugar.
      *
      * @return el número de <i>timeslots</i> disponibles, no negativo
      */
     public int getAvailableTimeslots() {
-        if (availableTimeslots < 0) {
-            availableTimeslots = 0;
-            for (int c = 0; c < localizations.size(); c++) {
-                for (int t = 0; t < timeslots.size(); t++) {
-                    AbstractScheduleValue val = schedule[c][t];
-                    if (val.isOccupied() || val.isContinuation() || val.isFree())
-                        availableTimeslots++;
-                }
-            }
-        }
         return availableTimeslots;
     }
 
@@ -272,17 +260,6 @@ public abstract class Schedule {
      * @return tasa de ocupación del horario
      */
     public int getOccupation() {
-        if (occupation < 0) {
-            occupation = 0;
-            for (int c = 0; c < localizations.size(); c++) {
-                for (int t = 0; t < timeslots.size(); t++) {
-                    AbstractScheduleValue val = schedule[c][t];
-                    if (val.isOccupied() || val.isContinuation()) {
-                        occupation++;
-                    }
-                }
-            }
-        }
         return occupation;
     }
 
@@ -293,6 +270,21 @@ public abstract class Schedule {
      */
     public double getOccupationRatio() {
         return getOccupation() / (double) getAvailableTimeslots();
+    }
+
+    /**
+     * Calcula el número de timeslots disponibles
+     */
+    protected abstract void calculateAvailableTimeslots();
+
+    /**
+     * Calcula la ocupación del horario
+     */
+    protected void calculateOccupation() {
+        occupation = Math.toIntExact(Arrays.stream(schedule)
+                .flatMap(Arrays::stream)
+                .filter(val -> val.isOccupied() || val.isContinuation())
+                .count());
     }
 
     public String toString() {

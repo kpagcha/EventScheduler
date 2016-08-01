@@ -67,8 +67,8 @@ public class ScheduleSerializerTest {
         assertEquals(6, root.get("matches").size());
         assertEquals(24, root.get("totalTimeslots").asInt());
         assertEquals(24, root.get("availableTimeslots").asInt());
-        assertEquals(8, root.get("occupation").asInt());
-        assertEquals(0.333, root.get("occupationRatio").asDouble(), 0.001);
+        assertEquals(12, root.get("occupation").asInt());
+        assertEquals(0.5, root.get("occupationRatio").asDouble(), 0.001);
     }
 
     @Test
@@ -88,8 +88,8 @@ public class ScheduleSerializerTest {
             assertEquals(8, root.get("scheduleValues").get(i).size());
         assertEquals(16, root.get("totalTimeslots").asInt());
         assertEquals(16, root.get("availableTimeslots").asInt());
-        assertEquals(4, root.get("occupation").asInt());
-        assertEquals(0.25, root.get("occupationRatio").asDouble(), 0.001);
+        assertEquals(8, root.get("occupation").asInt());
+        assertEquals(0.5, root.get("occupationRatio").asDouble(), 0.001);
     }
 
     @Test

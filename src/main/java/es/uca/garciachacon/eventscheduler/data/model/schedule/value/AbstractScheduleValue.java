@@ -94,6 +94,16 @@ public abstract class AbstractScheduleValue {
     }
 
     /**
+     * Comprueba si el hueco de horario es jugable, es decir, que esté libre o que un partido ya tenga lugar en él.
+     * Los <i>breaks</i>, huecos limitados, no disponibles o fuera de dominio no son jugables.
+     *
+     * @return <code>true</code> si el hueco de horario es jugable; <code>si no</code>
+     */
+    public boolean isPlayable() {
+        return isOccupied() || isContinuation() || isFree();
+    }
+
+    /**
      * Devuelve los posibles valores que puede tomar la representación interna del hueco de horario.
      *
      * @return lista de posibles valores

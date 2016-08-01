@@ -399,7 +399,7 @@ public class TournamentSolverTest {
     public void tournamentWithTeamsCaseTest() throws ValidationException {
         Event event = new Event("Event",
                 TournamentUtils.buildGenericPlayers(18, "Player"),
-                TournamentUtils.buildGenericLocalizations(1, "Court"),
+                TournamentUtils.buildGenericLocalizations(2, "Court"),
                 TournamentUtils.buildSimpleTimeslots(6)
         );
         event.setPlayersPerMatch(6);

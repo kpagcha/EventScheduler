@@ -73,11 +73,41 @@ public class TournamentSchedule extends Schedule {
             }
         }
 
+        calculateOccupation();
+
         matches = tournament.getEventSchedules()
                 .values()
                 .stream()
                 .flatMap(l -> l.getMatches().stream())
                 .sorted((m1, m2) -> -m1.getStartTimeslot().compareTo(m2.getStartTimeslot()))
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Devuelve el número de <i>timeslots</i> disponibles, es decir, el número total de huecos disponibles en el
+     * total de localizaciones de juego donde partidos pueden tener lugar.
+     *
+     * @return el número de <i>timeslots</i> disponibles, no negativo
+     */
+    public int getAvailableTimeslots() {
+        if (availableTimeslots == -1)
+            calculateAvailableTimeslots();
+        return availableTimeslots;
+    }
+
+    /**
+     * Calcula el número de <i>timeslots</i> disponibles del horario del torneo.
+     *
+     */
+    protected void calculateAvailableTimeslots() {
+        availableTimeslots = new InverseSchedule(tournament).getAvailableTimeslots();
+    }
+
+    /**
+     * Calcula la ocupación total de timeslots del horario del torneo como la suma de las ocupaciones parciales de
+     * los horarios de cada categoría del mismo.
+     */
+    protected void calculateOccupation() {
+        occupation = tournament.getEventSchedules().values().stream().mapToInt(Schedule::getOccupation).sum();
     }
 }
