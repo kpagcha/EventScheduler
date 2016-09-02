@@ -3,8 +3,10 @@ package es.uca.garciachacon.eventscheduler.solver;
 import es.uca.garciachacon.eventscheduler.data.model.schedule.EventSchedule;
 import es.uca.garciachacon.eventscheduler.data.model.tournament.*;
 import es.uca.garciachacon.eventscheduler.solver.constraint.*;
+import org.chocosolver.solver.ResolutionPolicy;
 import org.chocosolver.solver.Solver;
 import org.chocosolver.solver.constraints.Constraint;
+import org.chocosolver.solver.constraints.IntConstraintFactory;
 import org.chocosolver.solver.search.loop.monitors.SearchMonitorFactory;
 import org.chocosolver.solver.search.strategy.IntStrategyFactory;
 import org.chocosolver.solver.variables.IntVar;
@@ -178,6 +180,16 @@ public class TournamentSolver {
      * Información sobre el problema y la resolución del mismo
      */
     private ResolutionData resolutionData;
+
+    /**
+     * Indica si se aplicará el objetivo como un problema de optimización (1 sola solución) o no (todas las soluciones)
+     */
+    private boolean objective = false;
+
+    /**
+     * Puntuación objetivo
+     */
+    private IntVar score;
 
     /**
      * Construye un <i>solver</i> a partir de la información del torneo.
@@ -380,6 +392,10 @@ public class TournamentSolver {
         return resolutionData;
     }
 
+    public void setObjective(boolean objective ) {
+        this.objective = objective;
+    }
+
     /**
      * Construye y modela el problema, configura las estrategias de búsqueda e inicia el proceso de resolución
      *
@@ -397,6 +413,9 @@ public class TournamentSolver {
         buildModel();
 
         configureSearch();
+
+        if (objective)
+            postObjective();
 
         return solve();
     }
@@ -768,6 +787,9 @@ public class TournamentSolver {
 
         resolutionState = ResolutionState.COMPUTING;
 
+        if (objective)
+            solver.findOptimalSolution(ResolutionPolicy.MAXIMIZE, score);
+
         boolean solutionFound = solver.findSolution();
 
         if (solutionFound) {
@@ -953,5 +975,79 @@ public class TournamentSolver {
         }
 
         return sb.toString();
+    }
+
+    private void postObjective() {
+        List<Event> events = tournament.getEvents();
+
+        // Puntuación de cada categoría
+        int n = events.size();
+        IntVar[] scores = new IntVar[n];
+
+        int objMin = 0;
+        int objMax = 0;
+
+        for (int e = 0; e < n; e++) {
+            Event event = events.get(e);
+            int nPlayers = event.getPlayers().size();
+            int nLocalizations = event.getLocalizations().size();
+            int nTimeslots = event.getTimeslots().size();
+
+            int nMatches = nPlayers * event.getMatchesPerPlayer();
+
+            // la puntuación mínima de una categoría es que todos los partidos estén concentrados en el timeslot con
+            // menor puntuación (1)
+            int min = nMatches;
+
+            // la puntuación máxima de uan categoría es que todos los partidos estén concentrados en el timeslot con
+            // mayor puntuación (nTimeslots)
+            int max = nMatches * nTimeslots;
+
+            objMin += min;
+            objMax += max;
+
+            // Puntuación de esta categoría
+            scores[e] = VariableFactory.bounded("category_" + e + "_score", min, max, solver);
+
+            // Puntuaciones totales por separado de cada columna (timeslots) de esta categoría. El mínimo es 0 (no
+            // hay ningún partido que puntúe) y el máximo es que todos los partidos estén en la columna que más puntúa
+            IntVar[] categoryScores =
+                    VariableFactory.boundedArray("category_" + e + "_scores", nTimeslots, 0, max, solver);
+
+            for (int t = 0; t < nTimeslots; t++) {
+                // Todas las puntuaciones particulares de cada hueco c,p en este t
+                List<IntVar> timeslotScores = new ArrayList<>(nLocalizations * nPlayers);
+
+                for (int c = 0; c < nLocalizations; c++) {
+                    for (int p = 0; p < nPlayers; p++) {
+                        // La puntuación de un hueco está entre 0 (0 * score_t) y el máximo individual (1 * n_timeslots)
+                        IntVar value = VariableFactory.bounded("val_" + e + "," + p + "," + c + "," + t,
+                                0,
+                                nTimeslots,
+                                solver
+                        );
+
+                        // El valor del hueco score_t es el producto de ese hueco (0 ó 1, según se juegue o no) y el
+                        // multiplicador decreciente (n_timeslots - t) según la posición del timeslot
+                        solver.post(IntConstraintFactory.times(g[e][p][c][t], nTimeslots - t, value));
+
+                        timeslotScores.add(value);
+                    }
+                }
+
+                // La puntuación de la categoría para el timeslot_t es la suma de las puntuaciones parciales de cada
+                // hueco en t
+                solver.post(IntConstraintFactory.sum(timeslotScores.toArray(new IntVar[timeslotScores.size()]),
+                        categoryScores[t]
+                ));
+            }
+
+            // La puntuación de esta categoría es la suma de las puntuaciones parciales de cada columna (timeslot)
+            solver.post(IntConstraintFactory.sum(categoryScores, scores[e]));
+        }
+
+        // La puntuación total es la suma de las de cada categoría
+        score = VariableFactory.bounded("score", objMin, objMax, solver);
+        solver.post(IntConstraintFactory.sum(scores, score));
     }
 }
