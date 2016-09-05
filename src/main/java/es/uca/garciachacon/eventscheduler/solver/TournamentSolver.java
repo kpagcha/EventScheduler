@@ -7,6 +7,7 @@ import org.chocosolver.solver.ResolutionPolicy;
 import org.chocosolver.solver.Solver;
 import org.chocosolver.solver.constraints.Constraint;
 import org.chocosolver.solver.constraints.IntConstraintFactory;
+import org.chocosolver.solver.objective.ObjectiveManager;
 import org.chocosolver.solver.search.loop.monitors.SearchMonitorFactory;
 import org.chocosolver.solver.search.strategy.IntStrategyFactory;
 import org.chocosolver.solver.variables.IntVar;
@@ -111,6 +112,31 @@ public class TournamentSolver {
     }
 
     /**
+     * Modo de optimización en la búsqueda de la solución
+     */
+    public enum OptimizationMode {
+        /**
+         * Sin optimización. Se seleccionan todas las soluciones al problema
+         */
+        NONE,
+
+        /**
+         * Solución óptima (tanto maximizando como minimizando)
+         */
+        OPTIMAL,
+
+        /**
+         * Cada solución es mejor o igual que la anterior
+         */
+        STEP,
+
+        /**
+         * Cada solución es estrictamente mejor que la anterior
+         */
+        STEP_STRICT
+    }
+
+    /**
      * Logger del solver
      */
     private static final Logger LOGGER = Logger.getLogger(TournamentSolver.class.getName());
@@ -164,7 +190,7 @@ public class TournamentSolver {
      * Para las estrategias de búsqueda minDom_UB y minDom_LB indicar si priorizar <i>timeslots</i>
      * (<code>true</code>) o localizaciones (<code>false</code>) a la hora de hacer las asignaciones de horario
      */
-    private boolean prioritizeTimeslots = true;
+    private boolean prioritizeTimeslots = false;
 
     /**
      * Tiempo máximo de resolución en milisegundos. 0 significa sin límite
@@ -182,12 +208,17 @@ public class TournamentSolver {
     private ResolutionData resolutionData;
 
     /**
-     * Indica si se aplicará el objetivo como un problema de optimización (1 sola solución) o no (todas las soluciones)
+     * Modo de optimización en la búsqueda de la solución
      */
-    private boolean objective = false;
+    private OptimizationMode optimizationMode = OptimizationMode.NONE;
 
     /**
-     * Puntuación objetivo
+     * Política de resolución en los problemas de optimización
+     */
+    private ResolutionPolicy resolutionPolicy = ResolutionPolicy.MAXIMIZE;
+
+    /**
+     * Puntuación objetivo (para problemas de optimización)
      */
     private IntVar score;
 
@@ -392,12 +423,57 @@ public class TournamentSolver {
         return resolutionData;
     }
 
-    public void setObjective(boolean objective ) {
-        this.objective = objective;
+    /**
+     * Establece el modo de optimización en la resolución del problema y si se debe maximizar o minimizar la función
+     * objetivo.
+     *
+     * La función objetivo se define como la mayor concentración de partidos en los <i>timeslots</i> más tempranos de
+     * cada categoría del torneo.
+     *
+     * @param optimizationMode modo de optimización a aplicar
+     * @param resolutionPolicy maximización o minimización de la puntuación
+     */
+    public void setOptimization(OptimizationMode optimizationMode, ResolutionPolicy resolutionPolicy) {
+        this.optimizationMode = optimizationMode;
+        this.resolutionPolicy = resolutionPolicy;
     }
 
     /**
-     * Construye y modela el problema, configura las estrategias de búsqueda e inicia el proceso de resolución
+     * Establece el modo de optimización en la resolución del problema. Por omisión, se maximizará el objetivo. O si
+     * el modo de optimización es {@link OptimizationMode#NONE} se ignorará la maximización o minimización.
+     *
+     * La función objetivo se define como la mayor concentración de partidos en los <i>timeslots</i> más tempranos de
+     * cada categoría del torneo.
+     *
+     * @param optimizationMode modo de optimización a aplicar
+     */
+    public void setOptimization(OptimizationMode optimizationMode) {
+        setOptimization(optimizationMode, ResolutionPolicy.MAXIMIZE);
+    }
+
+    /**
+     * Devuelve la puntuación (valor de la función objetivo) de la solución actual. Al llamar este método debe haber
+     * configurado un modo de optimización y una solución calculada.
+     *
+     * @return un entero que representa la puntuación de la solución actual como problema de optimización
+     *
+     * @throws IllegalStateException si no existe una solución
+     * @throws IllegalStateException si el problema actual no es de optimización
+     */
+    public int getScore() {
+        if (resolutionState != ResolutionState.STARTED || foundSolutions == 0)
+            throw new IllegalStateException("There cannot be a score if there is no solution");
+
+        if (optimizationMode == OptimizationMode.NONE)
+            throw new IllegalStateException("No optimization mode was configured");
+
+        return score.getValue();
+    }
+
+    /**
+     * Construye y modela el problema, configura las estrategias de búsqueda e inicia el proceso de resolución. Si
+     * hay un modo de optimización configurado éste será aplicado en la búsqueda de la solución y afectará al
+     * conjunto final de soluciones.
      *
      * @return true si se ha encontrado una solución, false si no
      */
@@ -414,7 +490,7 @@ public class TournamentSolver {
 
         configureSearch();
 
-        if (objective)
+        if (optimizationMode != OptimizationMode.NONE)
             postObjective();
 
         return solve();
@@ -787,8 +863,17 @@ public class TournamentSolver {
 
         resolutionState = ResolutionState.COMPUTING;
 
-        if (objective)
-            solver.findOptimalSolution(ResolutionPolicy.MAXIMIZE, score);
+        switch (optimizationMode) {
+            case OPTIMAL:
+                solver.findOptimalSolution(resolutionPolicy, score);
+                break;
+            case STEP:
+                solver.set(new ObjectiveManager(score, resolutionPolicy, false));
+                break;
+            case STEP_STRICT:
+                solver.set(new ObjectiveManager(score, resolutionPolicy, true));
+                break;
+        }
 
         boolean solutionFound = solver.findSolution();
 
@@ -853,6 +938,8 @@ public class TournamentSolver {
                 schedules.clear();
                 buildSchedules();
                 foundSolutions++;
+
+                resolutionData = new ResolutionData(this);
             } else {
                 LOGGER.log(Level.INFO, "All solutions found");
                 schedules = null;

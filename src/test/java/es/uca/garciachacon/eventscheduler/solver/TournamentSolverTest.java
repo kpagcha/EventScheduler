@@ -11,6 +11,7 @@ import es.uca.garciachacon.eventscheduler.data.validation.validable.ValidationEx
 import es.uca.garciachacon.eventscheduler.solver.TournamentSolver.MatchupMode;
 import es.uca.garciachacon.eventscheduler.solver.TournamentSolver.SearchStrategy;
 import es.uca.garciachacon.eventscheduler.utils.TournamentUtils;
+import org.chocosolver.solver.ResolutionPolicy;
 import org.hamcrest.core.StringContains;
 import org.junit.Assert;
 import org.junit.Test;
@@ -1348,8 +1349,8 @@ public class TournamentSolverTest {
         assertEquals(4, schedules.get(cat2).getMatches().size());
         assertEquals(4, schedules.get(cat3).getMatches().size());
 
-        assertEquals(4, schedules.get(cat1).filterMatchesByLocalization(courts.get(0)).size());
-        assertTrue(schedules.get(cat3).filterMatchesByLocalization(courts.get(0)).isEmpty());
+        assertEquals(2, schedules.get(cat1).filterMatchesByLocalization(courts.get(0)).size());
+        assertTrue(schedules.get(cat3).filterMatchesDuringTimeslotRange(timeslots.get(0), timeslots.get(3)).isEmpty());
 
         TournamentSchedule schedule = tournament.getSchedule();
         for (int i = 0; i < timeslots.size(); i += 2) {
@@ -2222,5 +2223,204 @@ public class TournamentSolverTest {
         System.out.print(data.toJsonPretty());
         assertThat(out.toString(), StringContains.containsString("\"searchStrategy\" : \"MINDOM_UB\""));
         assertThat(out.toString(), StringContains.containsString("\"tournament\" : \"Tournament\""));
+    }
+
+    @Test
+    public void maximizeOptimalTest() throws ValidationException {
+        List<Timeslot> timeslots = TournamentUtils.buildSimpleTimeslots(6);
+        Tournament tournament = new Tournament("Tournament", new Event("Event",
+                TournamentUtils.buildGenericPlayers(6, "Player"),
+                TournamentUtils.buildGenericLocalizations(2, "Court"),
+                timeslots
+        ));
+        TournamentSolver solver = tournament.getSolver();
+        solver.setOptimization(TournamentSolver.OptimizationMode.OPTIMAL, ResolutionPolicy.MAXIMIZE);
+
+        assertTrue(tournament.solve());
+
+        TournamentSchedule schedule = tournament.getSchedule();
+        assertEquals(3, schedule.filterMatchesDuringTimeslotRange(timeslots.get(0), timeslots.get(3)).size());
+        assertEquals(0, schedule.filterMatchesDuringTimeslotRange(timeslots.get(4), timeslots.get(5)).size());
+
+        assertEquals(1, solver.getFoundSolutions());
+
+        while (tournament.nextSchedules())
+            ;
+
+        assertEquals(1, solver.getFoundSolutions());
+    }
+
+    @Test
+    public void minimizeOptimalTest() throws ValidationException {
+        List<Timeslot> timeslots = TournamentUtils.buildSimpleTimeslots(6);
+        Tournament tournament = new Tournament("Tournament", new Event("Event",
+                TournamentUtils.buildGenericPlayers(6, "Player"),
+                TournamentUtils.buildGenericLocalizations(2, "Court"),
+                timeslots
+        ));
+        TournamentSolver solver = tournament.getSolver();
+        solver.setOptimization(TournamentSolver.OptimizationMode.OPTIMAL, ResolutionPolicy.MINIMIZE);
+
+        assertTrue(tournament.solve());
+
+        TournamentSchedule schedule = tournament.getSchedule();
+        assertEquals(0, schedule.filterMatchesDuringTimeslotRange(timeslots.get(0), timeslots.get(1)).size());
+        assertEquals(3, schedule.filterMatchesDuringTimeslotRange(timeslots.get(2), timeslots.get(5)).size());
+
+        assertEquals(1, solver.getFoundSolutions());
+
+        while (tournament.nextSchedules())
+            ;
+
+        assertEquals(1, solver.getFoundSolutions());
+    }
+
+    @Test
+    public void maximizeStepOptimizationTest() throws ValidationException {
+        Tournament tournament = new Tournament("Tournament", new Event("Event",
+                TournamentUtils.buildGenericPlayers(6, "Player"),
+                TournamentUtils.buildGenericLocalizations(2, "Court"),
+                TournamentUtils.buildSimpleTimeslots(6)
+        ));
+        TournamentSolver solver = tournament.getSolver();
+        solver.setOptimization(TournamentSolver.OptimizationMode.STEP, ResolutionPolicy.MAXIMIZE);
+
+        assertTrue(tournament.solve());
+
+        int previousScore = solver.getScore();
+        for (int i = 0; i < 10; i++) {
+            tournament.nextSchedules();
+
+            int currentScore = solver.getScore();
+            assertTrue(previousScore <= currentScore);
+
+            previousScore = currentScore;
+        }
+    }
+
+    @Test
+    public void minimizeStepOptimizationTest() throws ValidationException {
+        Tournament tournament = new Tournament("Tournament", new Event("Event",
+                TournamentUtils.buildGenericPlayers(6, "Player"),
+                TournamentUtils.buildGenericLocalizations(2, "Court"),
+                TournamentUtils.buildSimpleTimeslots(6)
+        ));
+        TournamentSolver solver = tournament.getSolver();
+        solver.setOptimization(TournamentSolver.OptimizationMode.STEP, ResolutionPolicy.MINIMIZE);
+
+        assertTrue(tournament.solve());
+
+        int previousScore = solver.getScore();
+        for (int i = 0; i < 10; i++) {
+            tournament.nextSchedules();
+
+            int currentScore = solver.getScore();
+            assertTrue(previousScore >= currentScore);
+
+            previousScore = currentScore;
+        }
+    }
+
+    @Test
+    public void maximizeStepStrictOptimizationTest() throws ValidationException {
+        Tournament tournament = new Tournament("Tournament", new Event("Event",
+                TournamentUtils.buildGenericPlayers(6, "Player"),
+                TournamentUtils.buildGenericLocalizations(2, "Court"),
+                TournamentUtils.buildSimpleTimeslots(6)
+        ));
+        TournamentSolver solver = tournament.getSolver();
+        solver.setOptimization(TournamentSolver.OptimizationMode.STEP_STRICT, ResolutionPolicy.MAXIMIZE);
+
+        assertTrue(tournament.solve());
+
+        int previousScore = solver.getScore();
+        while (tournament.nextSchedules()) {
+            int currentScore = solver.getScore();
+            assertTrue(previousScore < currentScore);
+
+            previousScore = currentScore;
+        }
+    }
+
+    @Test
+    public void minimizeStepStrictOptimizationTest() throws ValidationException {
+        Tournament tournament = new Tournament("Tournament", new Event("Event",
+                TournamentUtils.buildGenericPlayers(6, "Player"),
+                TournamentUtils.buildGenericLocalizations(2, "Court"),
+                TournamentUtils.buildSimpleTimeslots(6)
+        ));
+        TournamentSolver solver = tournament.getSolver();
+        solver.setOptimization(TournamentSolver.OptimizationMode.STEP_STRICT, ResolutionPolicy.MINIMIZE);
+
+        assertTrue(tournament.solve());
+
+        int previousScore = solver.getScore();
+        while (tournament.nextSchedules()) {
+            int currentScore = solver.getScore();
+            assertTrue(previousScore > currentScore);
+
+            previousScore = currentScore;
+        }
+    }
+
+    @Test
+    public void optimizationModeVariablesAndConstraintDifferences() throws ValidationException {
+        Tournament tournament = new Tournament("Tournament", new Event("Event",
+                TournamentUtils.buildGenericPlayers(6, "Player"),
+                TournamentUtils.buildGenericLocalizations(2, "Court"),
+                TournamentUtils.buildSimpleTimeslots(6)
+        ));
+        TournamentSolver solver = tournament.getSolver();
+        solver.setSearchStrategy(SearchStrategy.MINDOM_UB);
+
+        assertTrue(tournament.solve());
+
+        ResolutionData data = solver.getResolutionData();
+        int constraintsWithoutOptimization = data.getConstraints();
+        int variablesWithoutOptimization = data.getVariables();
+
+        solver.setOptimization(TournamentSolver.OptimizationMode.STEP_STRICT, ResolutionPolicy.MAXIMIZE);
+
+        assertTrue(tournament.solve());
+
+        data = solver.getResolutionData();
+        int constraintsWithOptimization = data.getConstraints();
+        int variablesWithOptimization = data.getVariables();
+
+        assertTrue(constraintsWithOptimization > constraintsWithoutOptimization);
+        assertTrue(variablesWithOptimization > variablesWithoutOptimization);
+    }
+
+
+    @Test
+    public void getScoreTest() throws ValidationException {
+        Tournament tournament = new Tournament("Tournament", new Event("Event",
+                TournamentUtils.buildGenericPlayers(6, "Player"),
+                TournamentUtils.buildGenericLocalizations(2, "Court"),
+                TournamentUtils.buildSimpleTimeslots(6)
+        ));
+        TournamentSolver solver = tournament.getSolver();
+        solver.setOptimization(TournamentSolver.OptimizationMode.STEP_STRICT, ResolutionPolicy.MAXIMIZE);
+        solver.setSearchStrategy(SearchStrategy.MINDOM_UB);
+
+        try {
+            solver.getScore();
+            fail("IllegalStateException expected");
+        } catch (IllegalStateException e) {
+            assertEquals("There cannot be a score if there is no solution", e.getMessage());
+        }
+
+        assertTrue(tournament.solve());
+
+        assertEquals(32, solver.getScore());
+
+        solver.setOptimization(TournamentSolver.OptimizationMode.NONE);
+
+        try {
+            solver.getScore();
+            fail("IllegalStateException expected");
+        } catch (IllegalStateException e) {
+            assertEquals("No optimization mode was configured", e.getMessage());
+        }
     }
 }

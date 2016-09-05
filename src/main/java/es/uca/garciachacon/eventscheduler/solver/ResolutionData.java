@@ -209,7 +209,7 @@ public class ResolutionData {
         StringBuilder sb = new StringBuilder();
 
         sb.append(String.format(
-                "Solver [%s] features:\n\tTournament: %s\n\tVariables: %,d\n\tConstraints:%,d\n\t" +
+                "Solver [%s] features:\n\tTournament: %s\n\tVariables: %,d\n\tConstraints: %,d\n\t" +
                         "Default search strategy: %s\n\tCompleted search strategy: %s" +
                         "\n\tSearch strategy: %s\n\tResolution state: %s\n",
                 getSolverName(),
