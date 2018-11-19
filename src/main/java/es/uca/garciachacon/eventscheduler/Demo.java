@@ -22,6 +22,7 @@ public class Demo {
         Tournament tournament = new Tournament("Tournament", event1, event2);
         TournamentSolver solver = tournament.getSolver();
 
+        // solver.setOptimization(TournamentSolver.OptimizationMode.OPTIMAL, ResolutionPolicy.MAXIMIZE);
         solver.setOptimization(TournamentSolver.OptimizationMode.STEP_STRICT, ResolutionPolicy.MAXIMIZE);
         //solver.setSearchStrategy(TournamentSolver.SearchStrategy.MINDOM_UB);
 
